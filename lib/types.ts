@@ -238,3 +238,10 @@ export type ReviewQueueItem = {
   status: CompletionStatus;
   createdAt: string;
 };
+
+export type QuestProgressUpdate = {
+  xpAwarded: number;
+  deltaXp: number;
+  level: number;
+  currentStreak: number;
+};

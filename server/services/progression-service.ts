@@ -1,3 +1,4 @@
+import type { QuestProgressUpdate } from "@/lib/types";
 import { getLevelProgress, getTierMultiplier } from "@/lib/progression";
 import {
   createActivityLogEntry,
@@ -23,7 +24,7 @@ export async function applyQuestRewardTransition({
   questXpReward: number;
   previousAwardedXp: number;
   shouldBeApproved: boolean;
-}) {
+}): Promise<QuestProgressUpdate> {
   const user = await getUserProgressById(userId);
 
   if (!user) {

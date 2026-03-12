@@ -1,4 +1,4 @@
-import type { CompletionStatus, ReviewQueueItem } from "@/lib/types";
+import type { CompletionStatus, QuestProgressUpdate, ReviewQueueItem } from "@/lib/types";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
 import { applyQuestRewardTransition } from "@/server/services/progression-service";
 import {
@@ -79,8 +79,10 @@ export async function submitQuest({
       },
     });
 
+    let progressUpdate: QuestProgressUpdate | null = null;
+
     if (status === "approved") {
-      await applyQuestRewardTransition({
+      progressUpdate = await applyQuestRewardTransition({
         userId: currentUser.id,
         completionId: completion.id,
         questId,
@@ -94,6 +96,7 @@ export async function submitQuest({
     return {
       completion,
       outcome: status,
+      progressUpdate,
       message:
         status === "approved"
           ? `Quiz passed with ${answersCorrect}/${totalQuestions}.`
@@ -122,7 +125,7 @@ export async function submitQuest({
       },
     });
 
-    await applyQuestRewardTransition({
+    const progressUpdate = await applyQuestRewardTransition({
       userId: currentUser.id,
       completionId: completion.id,
       questId,
@@ -135,6 +138,7 @@ export async function submitQuest({
     return {
       completion,
       outcome: "approved" as const,
+      progressUpdate,
       message: "Link visit recorded.",
     };
   }
@@ -164,6 +168,7 @@ export async function submitQuest({
     return {
       completion,
       outcome: "pending" as const,
+      progressUpdate: null,
       message: "Submission sent for review.",
     };
   }
@@ -210,7 +215,7 @@ export async function reviewQuestSubmission({
     throw new Error("Quest not found.");
   }
 
-  await applyQuestRewardTransition({
+  const progressUpdate = await applyQuestRewardTransition({
     userId: completion.userId,
     completionId: completion.id,
     questId: completion.questId,
@@ -220,5 +225,8 @@ export async function reviewQuestSubmission({
     shouldBeApproved: action === "approved",
   });
 
-  return completion;
+  return {
+    completion,
+    progressUpdate,
+  };
 }

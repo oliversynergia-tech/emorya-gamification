@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { Quest } from "@/lib/types";
+import type { Quest, QuestProgressUpdate } from "@/lib/types";
 
 type SubmissionState = Record<string, string>;
 
@@ -28,6 +28,8 @@ export function QuestActionsPanel({
   const [pendingQuestId, setPendingQuestId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progressUpdate, setProgressUpdate] = useState<QuestProgressUpdate | null>(null);
+  const [progressQuestTitle, setProgressQuestTitle] = useState<string | null>(null);
 
   async function submitQuest(
     quest: Quest,
@@ -37,6 +39,8 @@ export function QuestActionsPanel({
     setPendingQuestId(quest.id);
     setMessage(null);
     setError(null);
+    setProgressUpdate(null);
+    setProgressQuestTitle(null);
 
     try {
       const response = await fetch(`/api/quests/${quest.id}/submit`, {
@@ -51,6 +55,7 @@ export function QuestActionsPanel({
         ok: boolean;
         error?: string;
         message?: string;
+        progressUpdate?: QuestProgressUpdate | null;
       };
 
       if (!response.ok || !result.ok) {
@@ -59,6 +64,8 @@ export function QuestActionsPanel({
       }
 
       setMessage(result.message ?? successMessage);
+      setProgressUpdate(result.progressUpdate ?? null);
+      setProgressQuestTitle(result.progressUpdate ? quest.title : null);
       router.refresh();
     } catch {
       setError("Unable to reach the quest service.");
@@ -204,6 +211,33 @@ export function QuestActionsPanel({
         })}
       </div>
       {message ? <p className="status status--success">{message}</p> : null}
+      {progressUpdate ? (
+        <div className="progress-feedback">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Progress updated</p>
+              <h3>{progressQuestTitle}</h3>
+            </div>
+          </div>
+          <div className="profile-meta">
+            <div className="info-card">
+              <span>XP awarded</span>
+              <strong>+{progressUpdate.deltaXp}</strong>
+            </div>
+            <div className="info-card">
+              <span>Current level</span>
+              <strong>{progressUpdate.level}</strong>
+            </div>
+            <div className="info-card">
+              <span>Streak</span>
+              <strong>{progressUpdate.currentStreak} days</strong>
+            </div>
+          </div>
+          <small className="form-note">
+            Total credited for this quest: {progressUpdate.xpAwarded} XP.
+          </small>
+        </div>
+      ) : null}
       {error ? <p className="status status--error">{error}</p> : null}
     </section>
   );

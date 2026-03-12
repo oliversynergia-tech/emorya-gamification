@@ -518,6 +518,14 @@ a {
   gap: 10px;
 }
 
+.progress-feedback {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(240, 214, 160, 0.18);
+  background: linear-gradient(180deg, rgba(240, 214, 160, 0.08), rgba(255, 255, 255, 0.02));
+}
+
 .field {
   display: flex;
   flex-direction: column;
