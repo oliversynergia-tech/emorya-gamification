@@ -1,0 +1,462 @@
+:root {
+  --bg: #120719;
+  --bg-soft: #1f0e2c;
+  --bg-deep: #07030c;
+  --surface: rgba(38, 18, 56, 0.76);
+  --surface-strong: rgba(31, 14, 44, 0.95);
+  --border: rgba(143, 93, 255, 0.28);
+  --text: #faf6ff;
+  --muted: rgba(255, 255, 255, 0.64);
+  --pink: #f0509e;
+  --purple: #8f5dff;
+  --lavender: #dfb6ff;
+  --annual: #f0d6a0;
+  --shadow: 0 24px 80px rgba(3, 0, 12, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(240, 80, 158, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(143, 93, 255, 0.22), transparent 30%),
+    linear-gradient(180deg, var(--bg-soft), var(--bg) 40%, var(--bg-deep));
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.shell {
+  position: relative;
+  overflow: hidden;
+  padding: 32px 24px 80px;
+}
+
+.shell__glow {
+  position: absolute;
+  inset: auto;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.shell__glow--left {
+  top: -80px;
+  left: -120px;
+  background: var(--pink);
+}
+
+.shell__glow--right {
+  top: 140px;
+  right: -100px;
+  background: var(--purple);
+}
+
+.topbar,
+.content,
+.panel,
+.stat-card,
+.metric-card,
+.quest-card,
+.tier-card,
+.info-card,
+.activity-item,
+.achievement-card,
+.admin-card,
+.leaderboard__row,
+.connection-row {
+  position: relative;
+  z-index: 1;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto 32px;
+}
+
+.brandmark {
+  margin: 4px 0 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--lavender);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.nav__link,
+.button,
+.badge,
+.tier-pill,
+.connection-pill {
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.nav__link {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(223, 182, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+}
+
+.nav__link:hover,
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.grid {
+  display: grid;
+  gap: 24px;
+}
+
+.hero,
+.grid--leaderboard {
+  grid-template-columns: 1.35fr 0.95fr;
+}
+
+.grid--dashboard,
+.grid--funnel,
+.grid--profile {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.panel,
+.stat-card,
+.metric-card,
+.quest-card,
+.tier-card,
+.info-card,
+.activity-item,
+.achievement-card,
+.admin-card,
+.leaderboard__row,
+.connection-row {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(31, 14, 44, 0.92), rgba(18, 7, 25, 0.94));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+}
+
+.panel {
+  padding: 24px;
+  border-radius: 28px;
+}
+
+.panel--hero {
+  min-height: 420px;
+}
+
+.panel--stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.panel h2,
+.panel h3,
+.panel h4,
+.panel p,
+.panel small {
+  margin-top: 0;
+}
+
+.panel h2 {
+  max-width: 12ch;
+  font-size: clamp(2rem, 5vw, 4.8rem);
+  line-height: 0.95;
+  margin-bottom: 16px;
+}
+
+.panel h3 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.lede,
+.quest-card p,
+.tier-card p,
+.achievement-card p,
+.admin-card p,
+.activity-item p,
+.connection-row small {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.hero__actions,
+.stats-row,
+.info-grid,
+.tier-grid,
+.admin-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.hero__actions {
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  margin: 24px 0;
+}
+
+.stats-row,
+.info-grid,
+.tier-grid,
+.admin-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.stat-card,
+.metric-card,
+.info-card,
+.tier-card,
+.admin-card {
+  padding: 18px;
+  border-radius: 22px;
+}
+
+.stat-card span,
+.metric-card span,
+.info-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+.stat-card strong,
+.metric-card strong,
+.info-card strong,
+.tier-card strong {
+  display: block;
+  font-size: 1.2rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.button--primary {
+  color: #210715;
+  background: linear-gradient(135deg, var(--pink), #ff85bb);
+  box-shadow: 0 12px 32px rgba(240, 80, 158, 0.28);
+}
+
+.button--secondary {
+  border-color: rgba(143, 93, 255, 0.4);
+  background: rgba(143, 93, 255, 0.08);
+}
+
+.badge,
+.tier-pill,
+.connection-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--text);
+  border: 1px solid rgba(223, 182, 255, 0.24);
+  background: rgba(223, 182, 255, 0.09);
+}
+
+.badge--pink,
+.tier-pill--monthly {
+  border-color: rgba(240, 80, 158, 0.36);
+  background: rgba(240, 80, 158, 0.14);
+}
+
+.tier-pill--annual {
+  border-color: rgba(240, 214, 160, 0.4);
+  background: rgba(240, 214, 160, 0.12);
+}
+
+.xp-meter {
+  margin-bottom: 18px;
+}
+
+.xp-meter__meta,
+.quest-card__meta,
+.quest-card__footer,
+.leaderboard__row,
+.connection-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.xp-meter__meta,
+.quest-card__meta {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+  text-transform: capitalize;
+}
+
+.xp-meter__track {
+  overflow: hidden;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.xp-meter__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--purple), var(--pink));
+  box-shadow: 0 0 24px rgba(240, 80, 158, 0.35);
+}
+
+.quest-list,
+.quest-grid,
+.moment-list,
+.activity-list,
+.achievement-list,
+.connections,
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.quest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.quest-card,
+.achievement-card,
+.activity-item,
+.connection-row,
+.leaderboard__row {
+  padding: 18px;
+  border-radius: 22px;
+}
+
+.quest-card--locked {
+  opacity: 0.82;
+}
+
+.quest-card--board {
+  min-height: 220px;
+}
+
+.moment-item {
+  padding: 16px 18px;
+  border-left: 3px solid rgba(240, 80, 158, 0.5);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 18px;
+  color: var(--muted);
+}
+
+.leaderboard__row--annual {
+  border-color: rgba(240, 214, 160, 0.35);
+}
+
+.leaderboard__row--monthly {
+  border-color: rgba(240, 80, 158, 0.4);
+}
+
+.activity-item span {
+  color: var(--lavender);
+}
+
+.connection-pill--on {
+  background: rgba(223, 182, 255, 0.16);
+}
+
+@media (max-width: 960px) {
+  .hero,
+  .grid--dashboard,
+  .grid--funnel,
+  .grid--leaderboard,
+  .grid--profile {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero__actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding-inline: 16px;
+  }
+
+  .panel,
+  .stat-card,
+  .metric-card,
+  .quest-card,
+  .tier-card,
+  .info-card,
+  .activity-item,
+  .achievement-card,
+  .admin-card,
+  .leaderboard__row,
+  .connection-row {
+    border-radius: 20px;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+}

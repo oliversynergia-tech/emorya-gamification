@@ -1,0 +1,125 @@
+# Emorya Architecture
+
+## Locked choices
+
+This project will use a single Next.js application for both the product UI and backend API surface.
+
+- Runtime: Next.js App Router with Route Handlers
+- Deployment target: Vercel-first, with Railway-compatible PostgreSQL hosting
+- Primary database: PostgreSQL
+- Auth model: custom account system with email/password plus MultiversX wallet linking into one user record
+- Session model: signed HTTP-only cookie sessions issued by the server
+- Verification model: server-side verification adapters by quest type
+
+## Why these choices
+
+### Next.js as the full stack
+
+The brief already targets React or Next.js with a TypeScript backend. Keeping UI, server routes, and admin tools in one codebase reduces duplication and gives a straightforward deployment path.
+
+Route Handlers are the backend boundary for:
+
+- auth
+- profile updates
+- quest submissions
+- leaderboard reads
+- admin actions
+- scheduled jobs
+
+### PostgreSQL as the source of truth
+
+The platform needs relational joins, recurring jobs, progression snapshots, moderation state, and auditability. PostgreSQL is the right default for:
+
+- users and linked identities
+- quests and completions
+- achievements
+- referrals
+- leaderboard snapshots
+- UGC moderation
+- activity log
+
+### Custom auth instead of wallet-only auth
+
+The brief explicitly requires dual authentication with linked identities. That means the backend must support:
+
+- an email/password credential on the user account
+- one or more linked wallet addresses
+- a linking flow from either side
+- server-side session ownership checks
+
+This is easier to model cleanly with a custom user and identity schema than with a wallet-only campaign system.
+
+## Service boundaries
+
+### App layer
+
+- App Router pages for onboarding, dashboard, profile, leaderboard, and admin
+- Server Components for initial data fetches
+- Client Components only where interaction or animation is needed
+
+### API layer
+
+- `app/api/auth/*` for sign-up, sign-in, sign-out, session, and account linking
+- `app/api/quests/*` for quest listing, submissions, and review actions
+- `app/api/profile/*` for profile edits and social connection state
+- `app/api/leaderboard/*` for all-time, weekly, monthly, and referral boards
+- `app/api/admin/*` for admin-only moderation and analytics
+- `app/api/cron/*` for snapshotting, streak evaluation, and scheduled events
+
+### Data layer
+
+- SQL schema owned inside this repo
+- thin repository functions in `server/`
+- business logic separated from route handlers
+
+## Initial folder contract
+
+```text
+/app
+  /api
+  /admin
+  /dashboard
+  /leaderboard
+  /profile
+/components
+/docs
+/lib
+  config.ts
+  types.ts
+/server
+  auth/
+  db/
+  services/
+```
+
+## Environment contract
+
+Required immediately:
+
+- `APP_URL`
+- `DATABASE_URL`
+- `SESSION_SECRET`
+- `NEXT_PUBLIC_MULTIVERSX_CHAIN`
+
+Needed before auth and integrations land:
+
+- `NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID`
+- `MULTIVERSX_API_URL`
+- `TWITTER_API_BEARER_TOKEN`
+- `TELEGRAM_BOT_TOKEN`
+- `DISCORD_CLIENT_ID`
+- `DISCORD_CLIENT_SECRET`
+
+## What this means for the next step
+
+Step 3 should build the real domain model and data access layer around this shape:
+
+- create SQL schema files for users, identities, quests, completions, achievements, referrals, snapshots, UGC, and activity log
+- add server repositories and service functions
+- replace current mock data imports with server-side reads
+
+## Reference points
+
+- Next.js Route Handlers: https://nextjs.org/docs/app/building-your-application/routing/route-handlers
+- Supabase auth docs for email/password patterns: https://supabase.com/docs/guides/auth/passwords
+- MultiversX wallet and dapp docs: https://docs.multiversx.com/wallet/introduction/
