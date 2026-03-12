@@ -40,3 +40,7 @@ export function getConfig(): AppConfig {
 export function getMissingRequiredEnv(): RequiredEnvKey[] {
   return requiredEnvKeys.filter((key) => !process.env[key]);
 }
+
+export function hasDatabaseConfig(): boolean {
+  return Boolean(process.env.DATABASE_URL);
+}

@@ -1,12 +1,12 @@
-import { achievements, activityFeed, adminStats, currentUser, leaderboard, premiumMoments, quests } from "@/lib/mock-data";
 import { getLevelProgress, getTierLabel, getTierMultiplier } from "@/lib/progression";
+import type { AdminOverviewData, DashboardData, SubscriptionTier } from "@/lib/types";
 
-function tierClass(tier: "free" | "monthly" | "annual") {
+function tierClass(tier: SubscriptionTier) {
   return `tier-pill tier-pill--${tier}`;
 }
 
-export function HeroSection() {
-  const progress = getLevelProgress(currentUser.totalXp);
+export function HeroSection({ data }: { data: DashboardData }) {
+  const progress = getLevelProgress(data.user.totalXp);
 
   return (
     <section className="hero grid">
@@ -32,7 +32,7 @@ export function HeroSection() {
           </div>
           <div className="stat-card">
             <span>User tier</span>
-            <strong>{getTierLabel(currentUser.tier)}</strong>
+            <strong>{getTierLabel(data.user.tier)}</strong>
           </div>
           <div className="stat-card">
             <span>Time to next level</span>
@@ -43,12 +43,12 @@ export function HeroSection() {
       <div className="panel panel--stack">
         <div className="metric-card">
           <span>Current streak</span>
-          <strong>{currentUser.currentStreak} days</strong>
+          <strong>{data.user.currentStreak} days</strong>
           <small>Complete one quest today to keep it alive.</small>
         </div>
         <div className="metric-card">
           <span>XP multiplier</span>
-          <strong>{getTierMultiplier(currentUser.tier)}x</strong>
+          <strong>{getTierMultiplier(data.user.tier)}x</strong>
           <small>Annual doubles every verified action.</small>
         </div>
         <div className="metric-card">
@@ -61,8 +61,8 @@ export function HeroSection() {
   );
 }
 
-export function DashboardSnapshot() {
-  const progress = getLevelProgress(currentUser.totalXp);
+export function DashboardSnapshot({ data }: { data: DashboardData }) {
+  const progress = getLevelProgress(data.user.totalXp);
 
   return (
     <section className="grid grid--dashboard">
@@ -70,14 +70,14 @@ export function DashboardSnapshot() {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Player state</p>
-            <h3>{currentUser.displayName}</h3>
+            <h3>{data.user.displayName}</h3>
           </div>
-          <span className={tierClass(currentUser.tier)}>{getTierLabel(currentUser.tier)}</span>
+          <span className={tierClass(data.user.tier)}>{getTierLabel(data.user.tier)}</span>
         </div>
         <div className="xp-meter">
           <div className="xp-meter__meta">
             <span>Level {progress.level}</span>
-            <span>{currentUser.totalXp} XP</span>
+            <span>{data.user.totalXp} XP</span>
           </div>
           <div className="xp-meter__track">
             <div className="xp-meter__fill" style={{ width: `${progress.progress * 100}%` }} />
@@ -87,11 +87,11 @@ export function DashboardSnapshot() {
         <div className="info-grid">
           <div className="info-card">
             <span>Rank</span>
-            <strong>#{currentUser.rank}</strong>
+            <strong>#{data.user.rank}</strong>
           </div>
           <div className="info-card">
             <span>Referral code</span>
-            <strong>{currentUser.referralCode}</strong>
+            <strong>{data.user.referralCode}</strong>
           </div>
           <div className="info-card">
             <span>Nearest target</span>
@@ -108,7 +108,7 @@ export function DashboardSnapshot() {
           <span className="badge">Up to 155 XP</span>
         </div>
         <div className="quest-list">
-          {quests.slice(0, 4).map((quest) => (
+          {data.quests.slice(0, 4).map((quest) => (
             <article key={quest.id} className="quest-card">
               <div>
                 <div className="quest-card__meta">
@@ -130,7 +130,7 @@ export function DashboardSnapshot() {
   );
 }
 
-export function PremiumFunnelSection() {
+export function PremiumFunnelSection({ data }: { data: DashboardData }) {
   return (
     <section className="grid grid--funnel">
       <div className="panel">
@@ -142,7 +142,7 @@ export function PremiumFunnelSection() {
           <span className="badge badge--pink">Save 44 EUR annually</span>
         </div>
         <div className="moment-list">
-          {premiumMoments.map((moment) => (
+          {data.premiumMoments.map((moment) => (
             <div key={moment} className="moment-item">
               {moment}
             </div>
@@ -178,7 +178,7 @@ export function PremiumFunnelSection() {
   );
 }
 
-export function QuestBoardSection() {
+export function QuestBoardSection({ data }: { data: DashboardData }) {
   return (
     <section className="panel">
       <div className="panel__header">
@@ -188,7 +188,7 @@ export function QuestBoardSection() {
         </div>
       </div>
       <div className="quest-grid">
-        {quests.map((quest) => (
+        {data.quests.map((quest) => (
           <article
             key={quest.id}
             className={`quest-card quest-card--board ${quest.status === "locked" ? "quest-card--locked" : ""}`}
@@ -211,7 +211,7 @@ export function QuestBoardSection() {
   );
 }
 
-export function LeaderboardSection() {
+export function LeaderboardSection({ data }: { data: DashboardData }) {
   return (
     <section className="grid grid--leaderboard">
       <div className="panel">
@@ -223,7 +223,7 @@ export function LeaderboardSection() {
           <span className="badge">Weekly reset Monday 00:00 UTC</span>
         </div>
         <div className="leaderboard">
-          {leaderboard.map((entry) => (
+          {data.leaderboard.map((entry) => (
             <div key={`${entry.rank}-${entry.displayName}`} className={`leaderboard__row leaderboard__row--${entry.tier}`}>
               <span>#{entry.rank}</span>
               <strong>{entry.displayName}</strong>
@@ -242,7 +242,7 @@ export function LeaderboardSection() {
           </div>
         </div>
         <div className="activity-list">
-          {activityFeed.map((item) => (
+          {data.activityFeed.map((item) => (
             <article key={item.id} className="activity-item">
               <strong>{item.actor}</strong>
               <p>
@@ -257,7 +257,7 @@ export function LeaderboardSection() {
   );
 }
 
-export function ProfileSection() {
+export function ProfileSection({ data }: { data: DashboardData }) {
   return (
     <section className="grid grid--profile">
       <div className="panel">
@@ -268,7 +268,7 @@ export function ProfileSection() {
           </div>
         </div>
         <div className="connections">
-          {currentUser.connectedAccounts.map((account) => (
+          {data.user.connectedAccounts.map((account) => (
             <div key={account.platform} className="connection-row">
               <div>
                 <strong>{account.platform}</strong>
@@ -289,7 +289,7 @@ export function ProfileSection() {
           </div>
         </div>
         <div className="achievement-list">
-          {achievements.map((achievement) => (
+          {data.achievements.map((achievement) => (
             <article key={achievement.id} className="achievement-card">
               <div>
                 <strong>{achievement.name}</strong>
@@ -304,7 +304,7 @@ export function ProfileSection() {
   );
 }
 
-export function AdminSection() {
+export function AdminSection({ data }: { data: AdminOverviewData }) {
   return (
     <section className="panel">
       <div className="panel__header">
@@ -314,7 +314,7 @@ export function AdminSection() {
         </div>
       </div>
       <div className="stats-row">
-        {adminStats.map((stat) => (
+        {data.stats.map((stat) => (
           <div key={stat.label} className="stat-card">
             <span>{stat.label}</span>
             <strong>{stat.value}</strong>

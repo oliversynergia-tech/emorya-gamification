@@ -1,20 +1,26 @@
 import Link from "next/link";
 import { ReactNode } from "react";
 
+import { SignOutButton } from "@/components/sign-out-button";
+import type { AuthUser } from "@/lib/types";
+
 const navItems = [
   { href: "/", label: "Overview" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
+  { href: "/auth", label: "Auth" },
   { href: "/admin", label: "Admin" },
 ];
 
 export function SiteShell({
   children,
   eyebrow = "Emorya Gamification Platform",
+  currentUser = null,
 }: {
   children: ReactNode;
   eyebrow?: string;
+  currentUser?: AuthUser | null;
 }) {
   return (
     <div className="shell">
@@ -25,13 +31,30 @@ export function SiteShell({
           <p className="eyebrow">{eyebrow}</p>
           <h1 className="brandmark">Emorya</h1>
         </div>
-        <nav className="nav">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="nav__link">
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <div className="topbar__controls">
+          <nav className="nav">
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href} className="nav__link">
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="session-chip">
+            {currentUser ? (
+              <>
+                <div>
+                  <strong>{currentUser.displayName}</strong>
+                  <small>{currentUser.email ?? "Wallet-only account"}</small>
+                </div>
+                <SignOutButton />
+              </>
+            ) : (
+              <Link href="/auth" className="button button--secondary">
+                Sign in
+              </Link>
+            )}
+          </div>
+        </div>
       </header>
       <main className="content">{children}</main>
     </div>

@@ -118,6 +118,21 @@ Step 3 should build the real domain model and data access layer around this shap
 - add server repositories and service functions
 - replace current mock data imports with server-side reads
 
+Step 3 status:
+
+- `server/db/schema.sql` defines the first core schema
+- `server/db/seed.sql` provides local sample data for the current UI shape
+- `server/repositories/platform-repository-db.ts` reads dashboard and admin views from PostgreSQL
+- `app/api/dashboard/route.ts` is the first route that reports whether data came from PostgreSQL or the mock fallback
+
+Wallet-link status:
+
+- `app/api/auth/wallet/challenge` issues signed-message challenges for the authenticated user
+- `app/api/auth/wallet/complete` attaches a MultiversX identity to the current account
+- challenge persistence is real and stored in PostgreSQL
+- cryptographic verification now uses the official MultiversX SDK on the server
+- browser-side wallet-provider integration is still pending, so the current UI expects the user to paste a signature
+
 ## Reference points
 
 - Next.js Route Handlers: https://nextjs.org/docs/app/building-your-application/routing/route-handlers

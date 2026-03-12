@@ -1,15 +1,20 @@
 import { DashboardSnapshot, HeroSection, LeaderboardSection, PremiumFunnelSection, ProfileSection, QuestBoardSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
+import { resolveCurrentSession } from "@/server/auth/current-user";
+import { loadDashboardOverview } from "@/server/services/platform-overview";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await resolveCurrentSession();
+  const data = await loadDashboardOverview(session?.user ?? null);
+
   return (
-    <SiteShell eyebrow="Fresh scaffold from the Emorya build brief">
-      <HeroSection />
-      <DashboardSnapshot />
-      <PremiumFunnelSection />
-      <QuestBoardSection />
-      <LeaderboardSection />
-      <ProfileSection />
+    <SiteShell eyebrow="Fresh scaffold from the Emorya build brief" currentUser={session?.user ?? null}>
+      <HeroSection data={data} />
+      <DashboardSnapshot data={data} />
+      <PremiumFunnelSection data={data} />
+      <QuestBoardSection data={data} />
+      <LeaderboardSection data={data} />
+      <ProfileSection data={data} />
     </SiteShell>
   );
 }
