@@ -1,6 +1,5 @@
-import { DashboardSnapshot, PremiumFunnelSection, QuestBoardSection } from "@/components/sections";
+import { DashboardExperience } from "@/components/dashboard-experience";
 import { SiteShell } from "@/components/site-shell";
-import { QuestActionsPanel } from "@/components/quest-actions-panel";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -10,10 +9,7 @@ export default async function DashboardPage() {
 
   return (
     <SiteShell eyebrow="Daily loop" currentUser={session?.user ?? null}>
-      <DashboardSnapshot data={data} />
-      <QuestBoardSection data={data} />
-      <QuestActionsPanel quests={data.quests} isAuthenticated={Boolean(session)} />
-      <PremiumFunnelSection data={data} />
+      <DashboardExperience initialData={data} isAuthenticated={Boolean(session)} />
     </SiteShell>
   );
 }

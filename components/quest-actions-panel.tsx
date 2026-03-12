@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import type { Quest, QuestProgressUpdate } from "@/lib/types";
 
@@ -10,11 +9,16 @@ type SubmissionState = Record<string, string>;
 export function QuestActionsPanel({
   quests,
   isAuthenticated,
+  onQuestResult,
 }: {
   quests: Quest[];
   isAuthenticated: boolean;
+  onQuestResult?: (result: {
+    questId: string;
+    outcome: "approved" | "pending" | "rejected";
+    progressUpdate: QuestProgressUpdate | null;
+  }) => void;
 }) {
-  const router = useRouter();
   const actionableQuests = useMemo(
     () =>
       quests.filter((quest) =>
@@ -55,6 +59,7 @@ export function QuestActionsPanel({
         ok: boolean;
         error?: string;
         message?: string;
+        outcome?: "approved" | "pending" | "rejected";
         progressUpdate?: QuestProgressUpdate | null;
       };
 
@@ -66,7 +71,13 @@ export function QuestActionsPanel({
       setMessage(result.message ?? successMessage);
       setProgressUpdate(result.progressUpdate ?? null);
       setProgressQuestTitle(result.progressUpdate ? quest.title : null);
-      router.refresh();
+      if (result.outcome) {
+        onQuestResult?.({
+          questId: quest.id,
+          outcome: result.outcome,
+          progressUpdate: result.progressUpdate ?? null,
+        });
+      }
     } catch {
       setError("Unable to reach the quest service.");
     } finally {

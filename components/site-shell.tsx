@@ -27,9 +27,18 @@ export function SiteShell({
       <div className="shell__glow shell__glow--left" />
       <div className="shell__glow shell__glow--right" />
       <header className="topbar">
-        <div>
-          <p className="eyebrow">{eyebrow}</p>
-          <h1 className="brandmark">Emorya</h1>
+        <div className="brand-block">
+          <Link href="/" className="brand-link" aria-label="Emorya home">
+            <img
+              className="brand-logo"
+              src="https://emorya.com/_next/image?url=%2Ficons%2Flogo.png&w=640&q=100"
+              alt="Emorya logo"
+            />
+          </Link>
+          <div className="brand-copy">
+            <p className="eyebrow">{eyebrow}</p>
+            <h1 className="brandmark">Healthy habits, real rewards</h1>
+          </div>
         </div>
         <div className="topbar__controls">
           <nav className="nav">
