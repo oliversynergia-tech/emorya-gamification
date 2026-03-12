@@ -1,5 +1,6 @@
 import type { CompletionStatus, ReviewQueueItem } from "@/lib/types";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
+import { applyQuestRewardTransition } from "@/server/services/progression-service";
 import {
   getPendingReviewQueue,
   getQuestCompletionForUser,
@@ -67,6 +68,7 @@ export async function submitQuest({
       userId: currentUser.id,
       questId,
       status,
+      awardedXp: existingCompletion?.awardedXp ?? 0,
       reviewedBy: currentUser.id,
       completedAt: status === "approved" ? submittedAt : null,
       submissionData: {
@@ -76,6 +78,18 @@ export async function submitQuest({
         submittedAt,
       },
     });
+
+    if (status === "approved") {
+      await applyQuestRewardTransition({
+        userId: currentUser.id,
+        completionId: completion.id,
+        questId,
+        questTitle: quest.title,
+        questXpReward: quest.xp_reward,
+        previousAwardedXp: existingCompletion?.awardedXp ?? 0,
+        shouldBeApproved: true,
+      });
+    }
 
     return {
       completion,
@@ -98,6 +112,7 @@ export async function submitQuest({
       userId: currentUser.id,
       questId,
       status: "approved",
+      awardedXp: existingCompletion?.awardedXp ?? 0,
       reviewedBy: currentUser.id,
       completedAt: submittedAt,
       submissionData: {
@@ -105,6 +120,16 @@ export async function submitQuest({
         visited: true,
         submittedAt,
       },
+    });
+
+    await applyQuestRewardTransition({
+      userId: currentUser.id,
+      completionId: completion.id,
+      questId,
+      questTitle: quest.title,
+      questXpReward: quest.xp_reward,
+      previousAwardedXp: existingCompletion?.awardedXp ?? 0,
+      shouldBeApproved: true,
     });
 
     return {
@@ -126,6 +151,7 @@ export async function submitQuest({
       userId: currentUser.id,
       questId,
       status: "pending",
+      awardedXp: existingCompletion?.awardedXp ?? 0,
       reviewedBy: null,
       completedAt: null,
       submissionData: {
@@ -177,6 +203,22 @@ export async function reviewQuestSubmission({
   if (!completion) {
     throw new Error("Submission not found.");
   }
+
+  const quest = await getQuestDefinitionById(completion.questId);
+
+  if (!quest) {
+    throw new Error("Quest not found.");
+  }
+
+  await applyQuestRewardTransition({
+    userId: completion.userId,
+    completionId: completion.id,
+    questId: completion.questId,
+    questTitle: quest.title,
+    questXpReward: quest.xp_reward,
+    previousAwardedXp: completion.awardedXp,
+    shouldBeApproved: action === "approved",
+  });
 
   return completion;
 }

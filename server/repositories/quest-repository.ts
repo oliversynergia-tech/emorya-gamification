@@ -15,6 +15,7 @@ type UserQuestAccessRow = QueryResultRow & {
 type QuestDefinitionRow = QueryResultRow & {
   id: string;
   title: string;
+  xp_reward: number;
   verification_type: VerificationType;
   recurrence: "one-time" | "daily" | "weekly";
   required_level: number;
@@ -28,6 +29,7 @@ type QuestCompletionRow = QueryResultRow & {
   quest_id: string;
   status: CompletionStatus;
   submission_data: Record<string, string | number | boolean | null>;
+  awarded_xp: number;
   reviewed_by: string | null;
   completed_at: string | null;
   created_at: string;
@@ -51,6 +53,19 @@ const tierRank: Record<SubscriptionTier, number> = {
   annual: 2,
 };
 
+function mapQuestCompletion(row: QuestCompletionRow): QuestCompletionRecord {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    questId: row.quest_id,
+    status: row.status,
+    submissionData: row.submission_data,
+    awardedXp: row.awarded_xp,
+    reviewedBy: row.reviewed_by,
+    completedAt: row.completed_at,
+  };
+}
+
 export async function getUserQuestAccess(userId: string) {
   const result = await runQuery<UserQuestAccessRow>(
     `SELECT id, display_name, level, subscription_tier
@@ -65,7 +80,7 @@ export async function getUserQuestAccess(userId: string) {
 
 export async function getQuestDefinitionById(questId: string) {
   const result = await runQuery<QuestDefinitionRow>(
-    `SELECT id, title, verification_type, recurrence, required_level, required_tier, metadata
+    `SELECT id, title, xp_reward, verification_type, recurrence, required_level, required_tier, metadata
      FROM quest_definitions
      WHERE id = $1 AND is_active = TRUE
      LIMIT 1`,
@@ -77,14 +92,14 @@ export async function getQuestDefinitionById(questId: string) {
 
 export async function getQuestCompletionForUser(userId: string, questId: string) {
   const result = await runQuery<QuestCompletionRow>(
-    `SELECT id, user_id, quest_id, status, submission_data, reviewed_by, completed_at, created_at
+    `SELECT id, user_id, quest_id, status, submission_data, awarded_xp, reviewed_by, completed_at, created_at
      FROM quest_completions
      WHERE user_id = $1 AND quest_id = $2
      LIMIT 1`,
     [userId, questId],
   );
 
-  return result.rows[0] ?? null;
+  return result.rows[0] ? mapQuestCompletion(result.rows[0]) : null;
 }
 
 export async function upsertQuestCompletionForUser({
@@ -92,6 +107,7 @@ export async function upsertQuestCompletionForUser({
   questId,
   status,
   submissionData,
+  awardedXp,
   reviewedBy,
   completedAt,
 }: {
@@ -99,33 +115,35 @@ export async function upsertQuestCompletionForUser({
   questId: string;
   status: CompletionStatus;
   submissionData: Record<string, string | number | boolean | null>;
+  awardedXp?: number;
   reviewedBy?: string | null;
   completedAt?: string | null;
 }): Promise<QuestCompletionRecord> {
   const result = await runQuery<QuestCompletionRow>(
-    `INSERT INTO quest_completions (id, user_id, quest_id, status, submission_data, reviewed_by, completed_at)
-     VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7)
+    `INSERT INTO quest_completions (id, user_id, quest_id, status, submission_data, awarded_xp, reviewed_by, completed_at)
+     VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8)
      ON CONFLICT (user_id, quest_id)
      DO UPDATE SET
        status = EXCLUDED.status,
        submission_data = EXCLUDED.submission_data,
+       awarded_xp = EXCLUDED.awarded_xp,
        reviewed_by = EXCLUDED.reviewed_by,
        completed_at = EXCLUDED.completed_at
-     RETURNING id, user_id, quest_id, status, submission_data, reviewed_by, completed_at`,
-    [randomUUID(), userId, questId, status, JSON.stringify(submissionData), reviewedBy ?? null, completedAt ?? null],
+     RETURNING id, user_id, quest_id, status, submission_data, awarded_xp, reviewed_by, completed_at`,
+    [
+      randomUUID(),
+      userId,
+      questId,
+      status,
+      JSON.stringify(submissionData),
+      awardedXp ?? 0,
+      reviewedBy ?? null,
+      completedAt ?? null,
+    ],
   );
 
   const row = result.rows[0];
-
-  return {
-    id: row.id,
-    userId: row.user_id,
-    questId: row.quest_id,
-    status: row.status,
-    submissionData: row.submission_data,
-    reviewedBy: row.reviewed_by,
-    completedAt: row.completed_at,
-  };
+  return mapQuestCompletion(row);
 }
 
 export async function updateQuestCompletionReview({
@@ -143,11 +161,29 @@ export async function updateQuestCompletionReview({
          reviewed_by = $3,
          completed_at = CASE WHEN $2 = 'approved' THEN NOW() ELSE NULL END
      WHERE id = $1
-     RETURNING id, user_id, quest_id, status, submission_data, reviewed_by, completed_at, created_at`,
+     RETURNING id, user_id, quest_id, status, submission_data, awarded_xp, reviewed_by, completed_at, created_at`,
     [completionId, status, reviewerId],
   );
 
-  return result.rows[0] ?? null;
+  return result.rows[0] ? mapQuestCompletion(result.rows[0]) : null;
+}
+
+export async function setQuestCompletionAwardedXp({
+  completionId,
+  awardedXp,
+}: {
+  completionId: string;
+  awardedXp: number;
+}) {
+  const result = await runQuery<QuestCompletionRow>(
+    `UPDATE quest_completions
+     SET awarded_xp = $2
+     WHERE id = $1
+     RETURNING id, user_id, quest_id, status, submission_data, awarded_xp, reviewed_by, completed_at, created_at`,
+    [completionId, awardedXp],
+  );
+
+  return result.rows[0] ? mapQuestCompletion(result.rows[0]) : null;
 }
 
 export async function getPendingReviewQueue() {

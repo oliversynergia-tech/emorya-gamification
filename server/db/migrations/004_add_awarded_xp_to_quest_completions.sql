@@ -1,0 +1,2 @@
+ALTER TABLE quest_completions
+ADD COLUMN IF NOT EXISTS awarded_xp INTEGER NOT NULL DEFAULT 0;

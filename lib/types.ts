@@ -116,6 +116,7 @@ export type QuestCompletionRecord = {
   submissionData: Record<string, string | number | boolean | null>;
   reviewedBy: string | null;
   completedAt: string | null;
+  awardedXp: number;
 };
 
 export type AchievementRecord = {

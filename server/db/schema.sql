@@ -101,6 +101,7 @@ CREATE TABLE quest_completions (
   quest_id UUID NOT NULL REFERENCES quest_definitions(id) ON DELETE CASCADE,
   status completion_status NOT NULL DEFAULT 'pending',
   submission_data JSONB NOT NULL DEFAULT '{}'::JSONB,
+  awarded_xp INTEGER NOT NULL DEFAULT 0,
   reviewed_by UUID REFERENCES users(id),
   completed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
