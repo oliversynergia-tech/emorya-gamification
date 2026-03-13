@@ -117,6 +117,25 @@ INSERT INTO user_roles (user_id, role, granted_by) VALUES
   ('6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'admin'::app_role, NULL)
 ON CONFLICT (user_id, role) DO NOTHING;
 
+INSERT INTO user_identities (id, user_id, provider, provider_subject, status, created_at) VALUES
+  (
+    'f62d4e31-b801-4669-bc44-b447acfbf4ce',
+    '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
+    'multiversx',
+    'erd1emoryaoliverwallet0000000000000000000000000000000000000',
+    'active',
+    NOW() - INTERVAL '13 days'
+  ),
+  (
+    '8b0d2cc8-08ab-4465-9aa8-e8f2296c1108',
+    '2196480b-b0fc-4e15-8837-e1d02177c7ed',
+    'multiversx',
+    'erd1emoryalinaannual000000000000000000000000000000000000000',
+    'active',
+    NOW() - INTERVAL '44 days'
+  )
+ON CONFLICT (provider, provider_subject) DO NOTHING;
+
 INSERT INTO social_connections (id, user_id, platform, handle, verified, connected_at) VALUES
   ('7bb59c4d-42f4-471d-82f3-8a96a55bcb0f', '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'X', '@oliver_moves', TRUE, NOW() - INTERVAL '13 days'),
   ('118e1e4c-dcbc-428f-bf72-c833f7f28d56', '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'Telegram', 'olivermoves', TRUE, NOW() - INTERVAL '13 days'),
@@ -156,7 +175,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"status":"available"}'::jsonb
+    '{"track":"social","rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '4cbda570-89a7-4c9d-bcdc-3e482ed02ae3',
@@ -172,7 +191,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"passScore":4,"totalQuestions":5}'::jsonb
+    '{"track":"quiz","passScore":4,"totalQuestions":5,"rewardConfig":{"xp":{"base":45,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":16}}}'::jsonb
   ),
   (
     'd19f442f-3b81-454c-aa94-6f33b7524d59',
@@ -188,7 +207,87 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"targetUrl":"https://example.com/premium-explainer"}'::jsonb
+    '{"track":"starter","targetUrl":"https://example.com/premium-explainer","rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+  ),
+  (
+    'ca8d9fdd-aa13-4e69-8ae7-615f7a2a0f83',
+    'complete-welcome-setup',
+    'Complete your welcome setup',
+    'Open your profile hub, review your starter path, and confirm your first unlocks.',
+    'app',
+    30,
+    'easy',
+    'link-visit',
+    'one-time',
+    'free',
+    1,
+    FALSE,
+    TRUE,
+    '{"track":"starter","targetUrl":"https://example.com/welcome-setup","rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+  ),
+  (
+    '5a425a67-b7ab-4bca-9629-a90a507663e5',
+    'open-the-xportal-setup-guide',
+    'Open the xPortal setup guide',
+    'Walk through the xPortal connection flow so your reward rail is ready.',
+    'learn',
+    35,
+    'easy',
+    'link-visit',
+    'one-time',
+    'free',
+    1,
+    FALSE,
+    TRUE,
+    '{"track":"wallet","targetUrl":"https://example.com/xportal-setup","rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}}}'::jsonb
+  ),
+  (
+    'c90f8fab-a89d-41cc-ad69-73527891e7e2',
+    'connect-your-first-community-channel',
+    'Connect your first community channel',
+    'Link one Emorya social surface so higher-yield growth quests can unlock.',
+    'social',
+    40,
+    'easy',
+    'link-visit',
+    'one-time',
+    'free',
+    1,
+    FALSE,
+    TRUE,
+    '{"track":"starter","targetUrl":"https://example.com/community-connect","rewardConfig":{"xp":{"base":40,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+  ),
+  (
+    '7cc727ca-e6eb-4bb1-917d-ef9b6d9bf9bd',
+    'daily-recovery-check-in',
+    'Daily recovery check-in',
+    'Open today''s recovery prompt and log one intentional action for your body.',
+    'app',
+    28,
+    'easy',
+    'link-visit',
+    'daily',
+    'free',
+    1,
+    FALSE,
+    TRUE,
+    '{"track":"daily","targetUrl":"https://example.com/daily-recovery","rewardConfig":{"xp":{"base":28,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+  ),
+  (
+    'ef257868-6d9d-4fcf-9ce9-3ee1920548e4',
+    'hydration-reset-week',
+    'Hydration reset week',
+    'Submit one hydration check snapshot to keep your weekly wellness bar moving.',
+    'app',
+    55,
+    'easy',
+    'manual-review',
+    'weekly',
+    'free',
+    2,
+    FALSE,
+    TRUE,
+    '{"track":"daily","rewardConfig":{"xp":{"base":55,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":15}},"cooldownHours":24}'::jsonb
   ),
   (
     'e62bc5b8-3280-4d18-b2fd-a1524c21b453',
@@ -204,7 +303,71 @@ INSERT INTO quest_definitions (
     6,
     FALSE,
     TRUE,
-    '{"status":"in-progress"}'::jsonb
+    '{"track":"daily","rewardConfig":{"xp":{"base":60,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":20}},"cooldownHours":20}'::jsonb
+  ),
+  (
+    'df10d884-7c1a-403d-9bd5-aeb4ee7f95a4',
+    'complete-the-community-triangle',
+    'Complete the community triangle',
+    'Visit the X, Telegram, and Discord hubs and clear the social growth trio.',
+    'social',
+    75,
+    'medium',
+    'link-visit',
+    'weekly',
+    'free',
+    3,
+    FALSE,
+    TRUE,
+    '{"track":"social","targetUrl":"https://example.com/community-triangle","unlockRules":{"all":[{"type":"connected_social_count","value":1}]},"rewardConfig":{"xp":{"base":75,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":22}}}'::jsonb
+  ),
+  (
+    '3275f8ca-13cd-4297-94fc-f0f45458d225',
+    'send-your-first-referral-wave',
+    'Send your first referral wave',
+    'Share your referral code with a friend and confirm your invite push.',
+    'referral',
+    35,
+    'easy',
+    'link-visit',
+    'daily',
+    'free',
+    2,
+    FALSE,
+    TRUE,
+    '{"track":"referral","targetUrl":"https://example.com/referral-wave","rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+  ),
+  (
+    '0baa67a0-0d57-42fd-87e5-d77052986842',
+    'three-friend-momentum-push',
+    'Three-friend momentum push',
+    'Stack three successful signups to unlock the next referral lane.',
+    'referral',
+    95,
+    'medium',
+    'link-visit',
+    'weekly',
+    'free',
+    4,
+    FALSE,
+    TRUE,
+    '{"track":"referral","targetUrl":"https://example.com/referral-push","unlockRules":{"all":[{"type":"successful_referrals","value":1}]},"rewardConfig":{"xp":{"base":95,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":25}}}'::jsonb
+  ),
+  (
+    '379b37d0-8cdd-4e93-95bc-f8b1b5a6afe0',
+    'monthly-momentum-sprint',
+    'Monthly momentum sprint',
+    'Clear a premium-only momentum sprint that boosts your weekly reward ceiling.',
+    'limited',
+    110,
+    'medium',
+    'link-visit',
+    'weekly',
+    'monthly',
+    5,
+    TRUE,
+    TRUE,
+    '{"track":"premium","targetUrl":"https://example.com/monthly-sprint","unlockRules":{"all":[{"type":"subscription_tier","value":"monthly"},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":110,"premiumMultiplierEligible":true},"tokenEffect":"token_bonus","tokenBonus":{"multiplier":1.2}}}'::jsonb
   ),
   (
     '8ec2112e-eebc-48dd-a32c-a2ca6c705c5a',
@@ -220,7 +383,7 @@ INSERT INTO quest_definitions (
     7,
     FALSE,
     TRUE,
-    '{"status":"available"}'::jsonb
+    '{"track":"creative","rewardConfig":{"xp":{"base":80,"premiumMultiplierEligible":true},"tokenEffect":"none"},"cooldownHours":48}'::jsonb
   ),
   (
     '76d48c0e-38b3-4087-8863-68d308ee60b8',
@@ -236,7 +399,23 @@ INSERT INTO quest_definitions (
     9,
     TRUE,
     TRUE,
-    '{"status":"locked","walletCheckMode":"linked-wallet-ownership","requiredWalletPrefix":"erd"}'::jsonb
+    '{"track":"wallet","walletCheckMode":"linked-wallet-ownership","requiredWalletPrefix":"erd","unlockRules":{"all":[{"type":"min_level","value":9},{"type":"wallet_linked","value":true},{"type":"subscription_tier","value":"monthly"},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":180,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":35}},"previewConfig":{"label":"Wallet Rewards"}}'::jsonb
+  ),
+  (
+    '9e8dc739-f0d7-4ed5-b3a4-eb3ff7c8b6ed',
+    'annual-team-reward-surge',
+    'Annual team reward surge',
+    'Run an annual-member referral surge and unlock an instant token spike for your team.',
+    'limited',
+    210,
+    'hard',
+    'link-visit',
+    'weekly',
+    'annual',
+    10,
+    TRUE,
+    TRUE,
+    '{"track":"premium","targetUrl":"https://example.com/annual-surge","timebox":"Flash reward day window","unlockRules":{"all":[{"type":"subscription_tier","value":"annual"},{"type":"successful_referrals","value":3},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":210,"premiumMultiplierEligible":true},"tokenEffect":"direct_token_reward","directTokenReward":{"asset":"EMR","amount":18,"requiresWallet":true}}}'::jsonb
   ),
   (
     '2833c51d-e8f6-49d2-8c38-f4fd032f6af7',
@@ -252,7 +431,7 @@ INSERT INTO quest_definitions (
     10,
     TRUE,
     TRUE,
-    '{"status":"locked","timebox":"Ends in 2d 11h"}'::jsonb
+    '{"track":"ambassador","timebox":"Ends in 2d 11h","unlockRules":{"all":[{"type":"ambassador_candidate","value":true},{"type":"subscription_tier","value":"annual"}]},"rewardConfig":{"xp":{"base":240,"premiumMultiplierEligible":true},"tokenEffect":"direct_token_reward","directTokenReward":{"asset":"EMR","amount":25,"requiresWallet":true}}}'::jsonb
   )
 ON CONFLICT (id) DO UPDATE SET
   slug = EXCLUDED.slug,

@@ -339,6 +339,7 @@ async function getQuestBoard(user: UserRow): Promise<Quest[]> {
       category: quest.category,
       verificationType: quest.verification_type,
       isPremiumPreview: quest.is_premium_preview,
+      metadata: quest.metadata,
     });
     const cadence = mapQuestCadence(quest.recurrence, quest.metadata);
     const tokenEffect = inferTokenEffect(track, quest.metadata);

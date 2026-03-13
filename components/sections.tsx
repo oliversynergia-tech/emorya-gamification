@@ -1,9 +1,89 @@
 import { getLevelProgress, getTierLabel, getTierMultiplier } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
-import type { AdminOverviewData, DashboardData, SubscriptionTier } from "@/lib/types";
+import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionTier } from "@/lib/types";
 
 function tierClass(tier: SubscriptionTier) {
   return `tier-pill tier-pill--${tier}`;
+}
+
+function getTrackLabel(track: QuestTrack) {
+  switch (track) {
+    case "starter":
+      return "Starter Track";
+    case "daily":
+      return "Daily Momentum";
+    case "social":
+      return "Social Growth";
+    case "wallet":
+      return "Wallet Track";
+    case "referral":
+      return "Referral Track";
+    case "premium":
+      return "Premium Track";
+    case "ambassador":
+      return "Ambassador Track";
+    case "creative":
+      return "Creator Track";
+    case "campaign":
+      return "Campaign Track";
+    default:
+      return "Quest Track";
+  }
+}
+
+function getTrackDescription(track: QuestTrack) {
+  switch (track) {
+    case "starter":
+      return "Low-friction onboarding wins that push identity and first momentum.";
+    case "daily":
+      return "Habit-forming quests designed to build streaks and weekly yield.";
+    case "social":
+      return "Community and distribution actions that unlock stronger growth lanes.";
+    case "wallet":
+      return "xPortal-linked actions that move users toward token-ready status.";
+    case "referral":
+      return "Team-building milestones with the strongest long-term upside.";
+    case "premium":
+      return "Higher-yield member quests that accelerate progression and rewards.";
+    case "ambassador":
+      return "High-trust creator and campaign-lead actions for top performers.";
+    case "creative":
+      return "Manual-review creative missions that build prestige and campaign energy.";
+    case "campaign":
+      return "Time-bound activations and ecosystem moments.";
+    default:
+      return "Progression-aligned quests grouped by the user journey.";
+  }
+}
+
+function renderQuestCard(quest: Quest) {
+  return (
+    <article
+      key={quest.id}
+      className={`quest-card quest-card--board quest-card--state-${quest.status} ${quest.status === "locked" ? "quest-card--locked" : ""}`}
+    >
+      <div className="quest-card__meta">
+        <span>{quest.category}</span>
+        <span>Lv {quest.requiredLevel}+</span>
+      </div>
+      <h4>{quest.title}</h4>
+      <p>{quest.description}</p>
+      <small className="quest-card__note">
+        {quest.status === "locked" && quest.unlockHint ? quest.unlockHint : getQuestStatusNote(quest.status)}
+      </small>
+      <div className="quest-card__footer">
+        <span>{quest.projectedXp ?? quest.xpReward} XP</span>
+        <strong>
+          {quest.status === "locked"
+            ? quest.requiredTier === "free"
+              ? "Locked"
+              : `${getTierLabel(quest.requiredTier)}`
+            : getQuestStatusLabel(quest.status)}
+        </strong>
+      </div>
+      {quest.timebox ? <small>{quest.timebox}</small> : null}
+    </article>
+  );
 }
 
 export function HeroSection({ data }: { data: DashboardData }) {
@@ -252,42 +332,50 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
 }
 
 export function QuestBoardSection({ data }: { data: DashboardData }) {
+  const activeQuests = data.quests.filter((quest) => quest.status !== "locked");
+  const lockedPreviews = data.quests.filter((quest) => quest.status === "locked");
+  const orderedTracks: QuestTrack[] = ["starter", "daily", "social", "wallet", "referral", "premium", "creative", "ambassador", "campaign", "quiz"];
+  const groupedActiveTracks = orderedTracks
+    .map((track) => ({
+      track,
+      quests: activeQuests.filter((quest) => quest.track === track),
+    }))
+    .filter((group) => group.quests.length > 0);
+
   return (
     <section className="panel">
       <div className="panel__header">
         <div>
           <p className="eyebrow">Quest board</p>
-          <h3>Mixed free, monthly, and annual visibility</h3>
+          <h3>Track-based progression view with active quests and previewed unlocks</h3>
         </div>
+        <span className="badge">{activeQuests.length} active / {lockedPreviews.length} previewed</span>
       </div>
-      <div className="quest-grid">
-        {data.quests.map((quest) => (
-          <article
-            key={quest.id}
-            className={`quest-card quest-card--board quest-card--state-${quest.status} ${quest.status === "locked" ? "quest-card--locked" : ""}`}
-          >
-            <div className="quest-card__meta">
-              <span>{quest.category}</span>
-              <span>Lv {quest.requiredLevel}+</span>
+      <div className="track-board">
+        {groupedActiveTracks.map((group) => (
+          <section key={group.track} className="panel panel--glass">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Active track</p>
+                <h3>{getTrackLabel(group.track)}</h3>
+              </div>
+              <span className="badge">{group.quests.length} live</span>
             </div>
-            <h4>{quest.title}</h4>
-            <p>{quest.description}</p>
-            <small className="quest-card__note">
-              {quest.status === "locked" && quest.unlockHint ? quest.unlockHint : getQuestStatusNote(quest.status)}
-            </small>
-            <div className="quest-card__footer">
-              <span>{quest.projectedXp ?? quest.xpReward} XP</span>
-              <strong>
-                {quest.status === "locked"
-                  ? quest.requiredTier === "free"
-                    ? "Locked"
-                    : `${getTierLabel(quest.requiredTier)}`
-                  : getQuestStatusLabel(quest.status)}
-              </strong>
-            </div>
-            {quest.timebox ? <small>{quest.timebox}</small> : null}
-          </article>
+            <p className="form-note">{getTrackDescription(group.track)}</p>
+            <div className="quest-grid">{group.quests.map(renderQuestCard)}</div>
+          </section>
         ))}
+        <section className="panel panel--glass">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Locked previews</p>
+              <h3>High-value tracks waiting behind the next milestone</h3>
+            </div>
+          </div>
+          <div className="quest-grid">
+            {lockedPreviews.map(renderQuestCard)}
+          </div>
+        </section>
       </div>
     </section>
   );

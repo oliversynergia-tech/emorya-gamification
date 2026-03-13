@@ -608,6 +608,11 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
 }
 
+.track-board {
+  display: grid;
+  gap: 20px;
+}
+
 .quest-card,
 .achievement-card,
 .activity-item,
