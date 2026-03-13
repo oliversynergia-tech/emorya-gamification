@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
 
@@ -29,10 +30,13 @@ export function SiteShell({
       <header className="topbar">
         <div className="brand-block">
           <Link href="/" className="brand-link" aria-label="Emorya home">
-            <img
+            <Image
               className="brand-logo"
               src="https://emorya.com/_next/image?url=%2Ficons%2Flogo.png&w=640&q=100"
               alt="Emorya logo"
+              width={52}
+              height={52}
+              unoptimized
             />
           </Link>
           <div className="brand-copy">
