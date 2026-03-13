@@ -25,7 +25,7 @@ import {
   syncLeaderboardSnapshotsForToday,
 } from "@/server/repositories/leaderboard-repository";
 import { getPendingReviewQueue, getRecentReviewHistory } from "@/server/repositories/quest-repository";
-import { getReferralSummary } from "@/server/repositories/referral-repository";
+import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/referral-repository";
 import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
 
 type UserRow = QueryResultRow & {
@@ -325,7 +325,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, reviewQueue, reviewHistory] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, reviewQueue, reviewHistory] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -340,6 +340,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
        FROM activity_log
        WHERE created_at >= NOW() - INTERVAL '7 days'`,
     ),
+    getReferralAnalytics(),
     getPendingReviewQueue(),
     getRecentReviewHistory(),
   ]);
@@ -354,6 +355,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       { label: "Annual Premium Users", value: annualCount },
       { label: "Weekly Active Users", value: weeklyActives.rows[0]?.count ?? "0" },
     ],
+    referralAnalytics,
     reviewQueue,
     reviewHistory,
   };

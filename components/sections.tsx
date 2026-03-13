@@ -651,6 +651,52 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
           <p>Track free-to-monthly and monthly-to-annual funnel movement alongside quest completion.</p>
         </article>
       </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Referral analytics</p>
+            <h3>Invite performance and premium conversion pull</h3>
+          </div>
+          <span className="badge badge--pink">{Math.round(data.referralAnalytics.conversionRate * 100)}% conversion</span>
+        </div>
+        <div className="info-grid">
+          <div className="info-card">
+            <span>Total invited</span>
+            <strong>{data.referralAnalytics.invitedCount}</strong>
+          </div>
+          <div className="info-card">
+            <span>Total converted</span>
+            <strong>{data.referralAnalytics.convertedCount}</strong>
+          </div>
+          <div className="info-card">
+            <span>Referral XP earned</span>
+            <strong>{data.referralAnalytics.rewardXpEarned}</strong>
+          </div>
+          <div className="info-card">
+            <span>Pending referral XP</span>
+            <strong>{data.referralAnalytics.pendingConversionXp}</strong>
+          </div>
+        </div>
+        <div className="achievement-list">
+          {data.referralAnalytics.topReferrers.map((referrer) => (
+            <article key={referrer.displayName} className="achievement-card">
+              <div>
+                <strong>{referrer.displayName}</strong>
+                <p>
+                  {referrer.invitedCount} invited, {referrer.convertedCount} converted
+                </p>
+              </div>
+              <div className="achievement-card__side">
+                <span className={tierClass(referrer.tier)}>{getTierLabel(referrer.tier)}</span>
+                <strong>{referrer.rewardXpEarned} XP</strong>
+              </div>
+            </article>
+          ))}
+          {data.referralAnalytics.topReferrers.length === 0 ? (
+            <p className="form-note">No referral activity has been recorded yet.</p>
+          ) : null}
+        </div>
+      </div>
     </section>
   );
 }

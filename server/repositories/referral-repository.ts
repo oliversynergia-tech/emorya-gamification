@@ -37,6 +37,21 @@ type RecentReferralRow = QueryResultRow & {
   referee_subscribed: boolean;
 };
 
+type ReferralAnalyticsSummaryRow = QueryResultRow & {
+  invited_count: string;
+  converted_count: string;
+  reward_xp_earned: string;
+  pending_conversion_xp: string;
+};
+
+type ReferralTopReferrerRow = QueryResultRow & {
+  display_name: string;
+  subscription_tier: SubscriptionTier;
+  invited_count: string;
+  converted_count: string;
+  reward_xp_earned: string;
+};
+
 export async function findReferrerByCode(referralCode: string) {
   const result = await runQuery<ReferrerRow>(
     `SELECT id
@@ -154,6 +169,56 @@ export async function getReferralSummary(userId: string) {
       tier: row.subscription_tier,
       status: row.referee_subscribed ? ("converted" as const) : ("joined" as const),
       joinedAt: row.created_at,
+    })),
+  };
+}
+
+export async function getReferralAnalytics() {
+  const [summaryResult, topReferrersResult] = await Promise.all([
+    runQuery<ReferralAnalyticsSummaryRow>(
+      `SELECT COUNT(*)::text AS invited_count,
+              COUNT(*) FILTER (WHERE referee_subscribed = TRUE)::text AS converted_count,
+              COALESCE(SUM(signup_reward_xp + conversion_reward_xp), 0)::text AS reward_xp_earned,
+              COALESCE(SUM(
+                CASE
+                  WHEN referee_subscribed = FALSE THEN GREATEST(120 - conversion_reward_xp, 0)
+                  ELSE 0
+                END
+              ), 0)::text AS pending_conversion_xp
+       FROM referrals`,
+    ),
+    runQuery<ReferralTopReferrerRow>(
+      `SELECT u.display_name,
+              u.subscription_tier,
+              COUNT(r.id)::text AS invited_count,
+              COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE)::text AS converted_count,
+              COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0)::text AS reward_xp_earned
+       FROM users u
+       INNER JOIN referrals r ON r.referrer_user_id = u.id
+       GROUP BY u.id, u.display_name, u.subscription_tier, u.created_at
+       ORDER BY COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0) DESC,
+                COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE) DESC,
+                u.created_at ASC
+       LIMIT 5`,
+    ),
+  ]);
+
+  const summary = summaryResult.rows[0];
+  const invitedCount = Number(summary?.invited_count ?? 0);
+  const convertedCount = Number(summary?.converted_count ?? 0);
+
+  return {
+    invitedCount,
+    convertedCount,
+    conversionRate: invitedCount > 0 ? convertedCount / invitedCount : 0,
+    rewardXpEarned: Number(summary?.reward_xp_earned ?? 0),
+    pendingConversionXp: Number(summary?.pending_conversion_xp ?? 0),
+    topReferrers: topReferrersResult.rows.map((row) => ({
+      displayName: row.display_name,
+      tier: row.subscription_tier,
+      invitedCount: Number(row.invited_count),
+      convertedCount: Number(row.converted_count),
+      rewardXpEarned: Number(row.reward_xp_earned),
     })),
   };
 }

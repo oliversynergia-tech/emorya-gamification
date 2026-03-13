@@ -222,6 +222,20 @@ export type AdminOverviewData = {
     label: string;
     value: string;
   }>;
+  referralAnalytics: {
+    invitedCount: number;
+    convertedCount: number;
+    conversionRate: number;
+    rewardXpEarned: number;
+    pendingConversionXp: number;
+    topReferrers: Array<{
+      displayName: string;
+      tier: SubscriptionTier;
+      invitedCount: number;
+      convertedCount: number;
+      rewardXpEarned: number;
+    }>;
+  };
   reviewQueue: ReviewQueueItem[];
   reviewHistory: ReviewHistoryItem[];
 };
