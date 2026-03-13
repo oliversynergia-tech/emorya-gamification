@@ -62,6 +62,7 @@ npm run dev:db:snapshot:all-time
 npm run dev:db:snapshot:referral
 npm run dev:db:snapshot:weekly
 npm run dev:db:snapshot:monthly
+npm run dev:db:snapshot:scheduled
 ```
 
 Or run a specific period/date manually:
@@ -109,3 +110,4 @@ npm run build
 - These commands assume your local Postgres instance is reachable from `DATABASE_URL`
 - `dev:db:seed` is safe for iterative local reseeding only if the SQL uses idempotent inserts/updates for the rows you care about
 - snapshot commands upsert rows into `leaderboard_snapshots` for the chosen period/date
+- scheduled snapshot guidance is documented in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/snapshot-scheduling.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/snapshot-scheduling.md)

@@ -160,6 +160,14 @@ DO UPDATE SET xp = EXCLUDED.xp, rank = EXCLUDED.rank;
   runPsql(["-c", query], "Writing leaderboard snapshot");
 }
 
+function snapshotScheduled(snapshotDate) {
+  const periods = ["all-time", "referral", "weekly", "monthly"];
+
+  for (const period of periods) {
+    snapshot(period, snapshotDate);
+  }
+}
+
 const command = process.argv[2];
 
 switch (command) {
@@ -178,7 +186,10 @@ switch (command) {
   case "snapshot":
     snapshot(process.argv[3], process.argv[4]);
     break;
+  case "snapshot-scheduled":
+    snapshotScheduled(process.argv[3]);
+    break;
   default:
-    console.error("Usage: node scripts/dev.mjs <migrate|seed|reset|doctor|snapshot [period] [YYYY-MM-DD]>");
+    console.error("Usage: node scripts/dev.mjs <migrate|seed|reset|doctor|snapshot [period] [YYYY-MM-DD]|snapshot-scheduled [YYYY-MM-DD]>");
     process.exit(1);
 }

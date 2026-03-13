@@ -109,3 +109,13 @@ Use this:
 4. push the branch only after the walkthrough changes are stable
 
 This is simpler than deploying every small UI adjustment.
+
+## Scheduled operations
+
+If the environment should maintain leaderboard movement properly after deploy, schedule:
+
+```bash
+npm run dev:db:snapshot:scheduled
+```
+
+The detailed scheduling guidance lives in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/snapshot-scheduling.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/snapshot-scheduling.md).
