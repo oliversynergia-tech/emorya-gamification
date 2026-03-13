@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emorya Gamification Campaign Brief</title>
+    <style>
+      :root {
+        --bg: #120719;
+        --bg-soft: #1f0e2c;
+        --surface: #20102e;
+        --surface-soft: #2a163d;
+        --text: #faf6ff;
+        --muted: #d6c7e5;
+        --pink: #f0509e;
+        --purple: #8f5dff;
+        --lavender: #dfb6ff;
+        --border: rgba(255, 255, 255, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top right, rgba(240, 80, 158, 0.16), transparent 22%),
+          radial-gradient(circle at top left, rgba(143, 93, 255, 0.16), transparent 24%),
+          linear-gradient(180deg, var(--bg-soft) 0%, var(--bg) 50%, #09040f 100%);
+      }
+
+      .page {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 56px 44px 80px;
+      }
+
+      .hero {
+        padding: 36px;
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+        box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: var(--lavender);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      h1, h2, h3 {
+        font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+        letter-spacing: -0.04em;
+        margin: 0 0 14px;
+      }
+
+      h1 {
+        font-size: 42px;
+        line-height: 1;
+      }
+
+      h2 {
+        font-size: 26px;
+        margin-top: 34px;
+      }
+
+      h3 {
+        font-size: 18px;
+      }
+
+      p, li {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.65;
+      }
+
+      .lede {
+        font-size: 17px;
+        color: var(--text);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 24px;
+      }
+
+      .card {
+        padding: 22px;
+        border-radius: 22px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(42,22,61,0.95), rgba(18,7,25,0.92));
+        page-break-inside: avoid;
+      }
+
+      .highlight {
+        border-color: rgba(240, 80, 158, 0.35);
+        background:
+          radial-gradient(circle at top right, rgba(240, 80, 158, 0.08), transparent 35%),
+          linear-gradient(180deg, rgba(42,22,61,0.98), rgba(18,7,25,0.95));
+      }
+
+      .section {
+        margin-top: 28px;
+      }
+
+      ul {
+        padding-left: 20px;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .pill {
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        font-size: 12px;
+        color: var(--text);
+        background: rgba(255,255,255,0.04);
+      }
+
+      .accent {
+        color: var(--text);
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 22px;
+        align-items: start;
+      }
+
+      .footer-note {
+        margin-top: 30px;
+        font-size: 13px;
+        color: #b8a8ca;
+      }
+
+      @media print {
+        .page {
+          padding: 28px 26px 36px;
+        }
+
+        .hero,
+        .card {
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <p class="eyebrow">Emorya Campaign Brief</p>
+        <h1>Gamified health campaign platform with wallet-linked identity, token rewards, and premium conversion loops.</h1>
+        <p class="lede">
+          Emorya is being shaped as a full campaign operating system, not a landing page. The finished product is
+          designed to turn audience acquisition into measurable, repeatable behaviors: sign-up, xPortal wallet
+          connection, quest completion, referral loops, token-aligned participation, premium upgrades, and leaderboard
+          competition.
+        </p>
+        <div class="pill-row">
+          <span class="pill">Next.js App Router</span>
+          <span class="pill">PostgreSQL</span>
+          <span class="pill">Email + Password Auth</span>
+          <span class="pill">MultiversX Wallet Linking</span>
+          <span class="pill">xPortal / WalletConnect</span>
+          <span class="pill">Admin Moderation</span>
+        </div>
+      </section>
+
+      <section class="section two-col">
+        <div class="card">
+          <h2>What We Are Building</h2>
+          <p>
+            Emorya is being implemented as a quest-based engagement and conversion platform. Users can join with email,
+            link a MultiversX wallet, complete campaigns and challenges, earn XP, level up, unlock achievements,
+            compete on leaderboards, and trigger referral rewards. Admins can moderate submissions, manage roles, and
+            review campaign analytics from a dedicated operating surface.
+          </p>
+          <ul>
+            <li>Authentication with linked identities, not fragmented accounts</li>
+            <li>Quest engine covering quiz, manual review, link visit, and wallet-based verification</li>
+            <li>Progression system with XP, levels, streaks, achievements, and token reward pathways</li>
+            <li>Referral rewards and leaderboards tied to real database state</li>
+            <li>Admin moderation, queue analytics, and protected role management</li>
+          </ul>
+        </div>
+        <div class="card highlight">
+          <h2>Why It Matters</h2>
+          <p>
+            The final product is meant to convert campaign attention into owned user behavior and auditable retention,
+            not just impressions. Every meaningful action can become a measurable event with identity, progression,
+            token economics, and conversion context behind it.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>XPortal And MultiversX Value Proposition</h2>
+        <div class="grid">
+          <article class="card highlight">
+            <h3>xPortal is the campaign trust bridge</h3>
+            <p>
+              xPortal gives the campaign a familiar mobile wallet identity layer. A connected wallet is not just a
+              login method; it becomes a portable proof surface for campaign participation, gated experiences, and
+              wallet-linked quest rewards.
+            </p>
+          </article>
+          <article class="card">
+            <h3>MultiversX makes the campaign verifiable</h3>
+            <p>
+              MultiversX lets Emorya move beyond generic web gamification. Wallet ownership, staking-related missions,
+              token or NFT-based access, on-chain proof, and direct token reward distribution can all become
+              first-class campaign mechanics.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Why xPortal should care</h3>
+            <p>
+              This creates a practical consumer-facing use case for xPortal beyond simple wallet storage: acquisition,
+              activation, campaign participation, token reward collection, referrals, and repeat engagement inside a
+              wellness-oriented branded experience.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Why MultiversX should care</h3>
+            <p>
+              The campaign can showcase MultiversX as the infrastructure layer for real-world brand engagement,
+              on-chain identity, token movement, and measurable recurring usage, rather than abstract ecosystem
+              messaging.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Concrete Reasons For xPortal And MultiversX To Get Involved</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>1. Repeated wallet opens, not one-time connects</h3>
+            <p>
+              A quest loop gives people a reason to come back regularly. That is better for wallet and ecosystem
+              stickiness than a one-off connect prompt attached to a campaign microsite.
+            </p>
+          </article>
+          <article class="card">
+            <h3>2. Clear onboarding funnel</h3>
+            <p>
+              Users can start with email, then link xPortal later. That lowers friction for mainstream acquisition
+              while still creating a strong upgrade path into wallet participation.
+            </p>
+          </article>
+          <article class="card">
+            <h3>3. Wallet-linked premium campaign moments</h3>
+            <p>
+              Wallet connection can unlock higher-value missions, staking-style quests, collectible or token-gated
+              rewards, and leaderboard prestige tied to verifiable identity.
+            </p>
+          </article>
+          <article class="card">
+            <h3>4. Better attribution for ecosystem partnerships</h3>
+            <p>
+              The app already tracks referrals, progression, and conversions. That makes it possible to show how wallet
+              participants perform versus non-wallet users, which is valuable to partners and sponsors.
+            </p>
+          </article>
+          <article class="card">
+            <h3>5. Real admin visibility</h3>
+            <p>
+              Emorya’s admin layer can already monitor review queues, referral performance, and live progression.
+              MultiversX-linked quest data can slot into a controlled operational workflow rather than staying ad hoc.
+            </p>
+          </article>
+          <article class="card">
+            <h3>6. Direct token rewards can invigorate ecosystem usage</h3>
+            <p>
+              Participants do not have to be rewarded only with off-chain XP. The final product can reward verified
+              actions directly with tokens, giving users a real economic reason to connect xPortal, complete quests,
+              and stay active inside the MultiversX ecosystem.
+            </p>
+          </article>
+          <article class="card">
+            <h3>7. Expandable on-chain roadmap</h3>
+            <p>
+              The platform architecture already supports wallet-linked verification. The next layer can add stake
+              checks, token ownership checks, reward claims, or campaign collectibles without re-architecting the
+              product.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Why Token Rewards Matter</h2>
+        <div class="grid">
+          <article class="card highlight">
+            <h3>XP drives status. Tokens drive real demand.</h3>
+            <p>
+              XP is effective for internal progression, but token rewards create a stronger reason to connect a wallet,
+              complete more quests, and remain active across campaign cycles. That makes the system more meaningful to
+              users and more valuable to MultiversX.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Campaign rewards can become ecosystem actions</h3>
+            <p>
+              A finished Emorya campaign can reward verified users with tokens for wallet-linked participation,
+              high-value missions, referrals, streak milestones, or limited seasonal events. That moves reward value
+              from a closed points system into the wider chain economy.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Better retention through economic participation</h3>
+            <p>
+              If users earn tokens through xPortal-connected campaign actions, the campaign becomes an acquisition and
+              retention engine for MultiversX itself, not just for Emorya. That is a much stronger partnership story.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Flexible reward design</h3>
+            <p>
+              The final product can use a blended reward model: XP for in-app status and progression, tokens for
+              milestone rewards, premium challenges, partner campaigns, or wallet-only quest tracks.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Final Product Vision</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Identity</h3>
+            <ul>
+              <li>Email/password sign-up and sign-in</li>
+              <li>xPortal wallet connection as a first-class campaign identity</li>
+              <li>Linked user account with email and MultiversX wallet in one profile</li>
+              <li>Wallet-based proof for gated quests, status, and rewards</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Progression</h3>
+            <ul>
+              <li>XP, levels, streaks, and achievement prestige</li>
+              <li>Token rewards for selected verified campaign actions</li>
+              <li>Referral rewards and referral leaderboard</li>
+              <li>Wallet-linked quest verification and premium progression loops</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Moderation And Admin</h3>
+            <ul>
+              <li>Quest review queue, audit history, and drill-down analytics</li>
+              <li>Bulk moderation with safeguards and SLA visibility</li>
+              <li>Protected role management and admin controls</li>
+              <li>Campaign analytics tied to identity, wallet, referral, and conversion behavior</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Campaign Utility</h3>
+            <ul>
+              <li>Partner-funded quests and token reward drops</li>
+              <li>Wallet-gated access, collectible mechanics, or staking-related challenges</li>
+              <li>Leaderboard pressure, creator participation, and referral loops</li>
+              <li>Case-study quality attribution for ecosystem partners</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Near-Term Strategic Opportunities</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Wallet-verified health campaigns</h3>
+            <p>
+              Campaigns can use linked-wallet status as proof of deeper commitment, creating branded missions with
+              higher perceived legitimacy and more durable identity.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Staking and loyalty loops</h3>
+            <p>
+              MultiversX staking or token-holding states can become progression triggers, loyalty milestones, or gated
+              premium community moments inside Emorya.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Partner-funded quests and rewards</h3>
+            <p>
+              The platform can become a campaign layer where partners sponsor verified quests, referral pushes,
+              collectibles, or seasonal rankings tied to wallet-connected users.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Data-backed case study potential</h3>
+            <p>
+              Because the platform measures sign-up, wallet link, quest submission, premium conversion, and referrals,
+              it can produce a credible case study for xPortal and MultiversX adoption impact.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section card">
+        <h2>Summary</h2>
+        <p class="accent">
+          Emorya is being positioned as a live campaign system where xPortal and MultiversX are not decorative logos,
+          but functional infrastructure for identity, verification, token rewards, prestige, and repeat usage. The
+          strongest partnership angle is simple: wallet connection can become a measurable campaign behavior, and token
+          rewards can turn campaign participation into real MultiversX economic activity.
+        </p>
+        <p class="footer-note">
+          Prepared from the current Emorya gamification product build in `/Users/olivermills/Documents/Emorya
+          Gamify/emorya-gamification` on March 14, 2026.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
