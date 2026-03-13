@@ -19,6 +19,7 @@
     "ops:db:migrate": "node scripts/ops.mjs migrate",
     "ops:db:migrate:status": "node scripts/ops.mjs migrate-status",
     "ops:db:snapshot:scheduled": "node scripts/ops.mjs snapshot-scheduled",
+    "ops:env:check": "node scripts/env-check.mjs",
     "dev:boot": "npm run dev:setup && npm run dev",
     "build": "next build",
     "start": "next start",

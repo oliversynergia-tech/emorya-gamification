@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { getMissingRequiredEnv } from "@/lib/config";
+import { getDeploymentWarnings, getMissingRequiredEnv } from "@/lib/config";
 
 export async function GET() {
   const missingEnv = getMissingRequiredEnv();
+  const deploymentWarnings = getDeploymentWarnings();
 
   return NextResponse.json({
     ok: missingEnv.length === 0,
@@ -17,6 +18,7 @@ export async function GET() {
     },
     env: {
       missingRequired: missingEnv,
+      deploymentWarnings,
     },
   });
 }

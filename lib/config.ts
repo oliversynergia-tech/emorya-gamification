@@ -44,3 +44,34 @@ export function getMissingRequiredEnv(): RequiredEnvKey[] {
 export function hasDatabaseConfig(): boolean {
   return Boolean(process.env.DATABASE_URL);
 }
+
+export function getDeploymentWarnings() {
+  const warnings: string[] = [];
+  const appUrl = process.env.APP_URL ?? "";
+  const sessionSecret = process.env.SESSION_SECRET ?? "";
+  const walletConnectProjectId = process.env.NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID ?? "";
+  const multiversxApiUrl = process.env.MULTIVERSX_API_URL ?? "";
+  const cronSnapshotsEnabled = process.env.CRON_SNAPSHOTS_ENABLED ?? "";
+
+  if (!appUrl.startsWith("https://")) {
+    warnings.push("APP_URL should use https:// in deployed environments.");
+  }
+
+  if (sessionSecret.length < 32) {
+    warnings.push("SESSION_SECRET should be at least 32 characters.");
+  }
+
+  if (!walletConnectProjectId) {
+    warnings.push("NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID is missing.");
+  }
+
+  if (!multiversxApiUrl.startsWith("https://")) {
+    warnings.push("MULTIVERSX_API_URL should use https://.");
+  }
+
+  if (cronSnapshotsEnabled !== "true") {
+    warnings.push("CRON_SNAPSHOTS_ENABLED is not enabled for scheduled leaderboard maintenance.");
+  }
+
+  return warnings;
+}
