@@ -654,6 +654,49 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
           <div>
+            <p className="eyebrow">Queue health</p>
+            <h3>Moderation SLA and backlog pressure</h3>
+          </div>
+          <span className="badge badge--pink">{data.queueMetrics.staleCount} stale</span>
+        </div>
+        <div className="info-grid">
+          <div className="info-card">
+            <span>Pending now</span>
+            <strong>{data.queueMetrics.pendingCount}</strong>
+          </div>
+          <div className="info-card">
+            <span>Oldest pending</span>
+            <strong>{data.queueMetrics.oldestPendingMinutes} min</strong>
+          </div>
+          <div className="info-card">
+            <span>Average age</span>
+            <strong>{data.queueMetrics.averagePendingMinutes} min</strong>
+          </div>
+          <div className="info-card">
+            <span>Over 24h</span>
+            <strong>{data.queueMetrics.staleCount}</strong>
+          </div>
+        </div>
+        <div className="achievement-list">
+          {data.queueMetrics.byVerificationType.map((entry) => (
+            <article key={entry.verificationType} className="achievement-card">
+              <div>
+                <strong>{entry.verificationType}</strong>
+                <p>Pending items in this verification lane</p>
+              </div>
+              <div className="achievement-card__side">
+                <strong>{entry.count}</strong>
+              </div>
+            </article>
+          ))}
+          {data.queueMetrics.byVerificationType.length === 0 ? (
+            <p className="form-note">The pending queue is empty right now.</p>
+          ) : null}
+        </div>
+      </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
             <p className="eyebrow">Reviewer workload</p>
             <h3>Who is carrying moderation right now</h3>
           </div>

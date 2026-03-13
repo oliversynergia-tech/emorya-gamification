@@ -230,6 +230,13 @@ export type AdminOverviewData = {
     subscriptionTier: SubscriptionTier;
     roles: Array<"admin" | "reviewer">;
   }>;
+  adminDirectory: Array<{
+    userId: string;
+    displayName: string;
+    email: string | null;
+    grantedAt: string | null;
+    grantedByDisplayName: string | null;
+  }>;
   referralAnalytics: {
     invitedCount: number;
     convertedCount: number;
@@ -261,6 +268,16 @@ export type AdminOverviewData = {
     approvals: number;
     rejections: number;
   }>;
+  queueMetrics: {
+    pendingCount: number;
+    oldestPendingMinutes: number;
+    averagePendingMinutes: number;
+    staleCount: number;
+    byVerificationType: Array<{
+      verificationType: VerificationType;
+      count: number;
+    }>;
+  };
 };
 
 export type AuthUser = {

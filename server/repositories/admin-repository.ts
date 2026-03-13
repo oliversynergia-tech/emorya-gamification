@@ -14,6 +14,14 @@ type RoleDirectoryRow = QueryResultRow & {
   roles: Array<"admin" | "reviewer"> | null;
 };
 
+type AdminDirectoryRow = QueryResultRow & {
+  user_id: string;
+  display_name: string;
+  email: string | null;
+  created_at: string | null;
+  granted_by_display_name: string | null;
+};
+
 export async function getUserRoles(userId: string) {
   const result = await runQuery<UserRoleRow>(
     `SELECT role
@@ -92,4 +100,54 @@ export async function revokeUserRole({
        AND role = $2`,
     [userId, role],
   );
+}
+
+export async function listAdminUsers() {
+  const result = await runQuery<AdminDirectoryRow>(
+    `SELECT u.id AS user_id,
+            u.display_name,
+            u.email,
+            ur.created_at,
+            granted_by.display_name AS granted_by_display_name
+     FROM user_roles ur
+     INNER JOIN users u ON u.id = ur.user_id
+     LEFT JOIN users granted_by ON granted_by.id = ur.granted_by
+     WHERE ur.role = 'admin'
+     ORDER BY ur.created_at ASC, u.display_name ASC`,
+  );
+
+  return result.rows.map((row) => ({
+    userId: row.user_id,
+    displayName: row.display_name,
+    email: row.email,
+    grantedAt: row.created_at,
+    grantedByDisplayName: row.granted_by_display_name,
+  }));
+}
+
+export async function countUsersWithRole(role: "admin" | "reviewer") {
+  const result = await runQuery<{ count: string }>(
+    `SELECT COUNT(*)::text AS count
+     FROM user_roles
+     WHERE role = $1`,
+    [role],
+  );
+
+  return Number(result.rows[0]?.count ?? 0);
+}
+
+export async function findUserByEmailForRoleDirectory(email: string) {
+  const result = await runQuery<{
+    user_id: string;
+    display_name: string;
+    email: string | null;
+  }>(
+    `SELECT id AS user_id, display_name, email
+     FROM users
+     WHERE lower(email) = lower($1)
+     LIMIT 1`,
+    [email],
+  );
+
+  return result.rows[0] ?? null;
 }

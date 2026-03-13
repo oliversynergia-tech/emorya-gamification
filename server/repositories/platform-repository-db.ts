@@ -18,6 +18,7 @@ import type {
 } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
 import { listUsersWithRoles } from "@/server/repositories/admin-repository";
+import { listAdminUsers } from "@/server/repositories/admin-repository";
 import {
   getCurrentAllTimeRankForUser,
   getCurrentReferralRankForUser,
@@ -194,6 +195,36 @@ function deriveQuestStatus(user: UserRow, quest: QuestRow): Quest["status"] {
   return "available";
 }
 
+function buildQueueMetrics(reviewQueue: AdminOverviewData["reviewQueue"]): AdminOverviewData["queueMetrics"] {
+  if (reviewQueue.length === 0) {
+    return {
+      pendingCount: 0,
+      oldestPendingMinutes: 0,
+      averagePendingMinutes: 0,
+      staleCount: 0,
+      byVerificationType: [],
+    };
+  }
+
+  const now = Date.now();
+  const pendingAges = reviewQueue.map((item) => Math.max(Math.round((now - new Date(item.createdAt).getTime()) / 60000), 0));
+  const byVerificationType = new Map<VerificationType, number>();
+
+  for (const item of reviewQueue) {
+    byVerificationType.set(item.verificationType, (byVerificationType.get(item.verificationType) ?? 0) + 1);
+  }
+
+  return {
+    pendingCount: reviewQueue.length,
+    oldestPendingMinutes: Math.max(...pendingAges),
+    averagePendingMinutes: Math.round(pendingAges.reduce((sum, age) => sum + age, 0) / pendingAges.length),
+    staleCount: pendingAges.filter((age) => age >= 24 * 60).length,
+    byVerificationType: Array.from(byVerificationType.entries())
+      .map(([verificationType, count]) => ({ verificationType, count }))
+      .sort((left, right) => right.count - left.count || left.verificationType.localeCompare(right.verificationType)),
+  };
+}
+
 async function getQuestBoard(user: UserRow): Promise<Quest[]> {
   const result = await runQuery<QuestRow>(
     `SELECT q.id, q.title, q.description, q.category, q.xp_reward, q.difficulty, q.verification_type,
@@ -342,7 +373,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, reviewQueue, reviewHistory, reviewerWorkload] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -359,6 +390,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     ),
     getReferralAnalytics(),
     listUsersWithRoles(),
+    listAdminUsers(),
     getPendingReviewQueue(),
     getRecentReviewHistory(),
     getReviewerWorkload(),
@@ -375,9 +407,11 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       { label: "Weekly Active Users", value: weeklyActives.rows[0]?.count ?? "0" },
     ],
     roleDirectory,
+    adminDirectory,
     referralAnalytics,
     reviewQueue,
     reviewHistory,
     reviewerWorkload,
+    queueMetrics: buildQueueMetrics(reviewQueue),
   };
 }

@@ -70,7 +70,7 @@ export default async function AdminPage() {
         </div>
       </section>
       <AdminSection data={data} />
-      <RoleManagementPanel initialUsers={data.roleDirectory} />
+      <RoleManagementPanel initialUsers={data.roleDirectory} initialAdmins={data.adminDirectory} />
       <ReviewQueuePanel
         initialQueue={data.reviewQueue}
         initialHistory={data.reviewHistory}

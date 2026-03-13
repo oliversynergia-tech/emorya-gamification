@@ -9,12 +9,19 @@ type RoleDirectoryItem = AdminOverviewData["roleDirectory"][number];
 
 export function RoleManagementPanel({
   initialUsers,
+  initialAdmins,
 }: {
   initialUsers: RoleDirectoryItem[];
+  initialAdmins: AdminOverviewData["adminDirectory"];
 }) {
   const router = useRouter();
   const [users, setUsers] = useState(initialUsers);
+  const [admins, setAdmins] = useState(initialAdmins);
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
+  const [pendingAdminAction, setPendingAdminAction] = useState<string | null>(null);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [grantConfirmation, setGrantConfirmation] = useState("");
+  const [revokeConfirmation, setRevokeConfirmation] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,12 +67,168 @@ export function RoleManagementPanel({
     }
   }
 
+  async function submitAdminGrant() {
+    setPendingAdminAction("grant");
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/admin-roles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: adminEmail,
+          confirmation: grantConfirmation,
+        }),
+      });
+
+      const result = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        roleDirectory?: RoleDirectoryItem[];
+        adminDirectory?: AdminOverviewData["adminDirectory"];
+      };
+
+      if (!response.ok || !result.ok || !result.roleDirectory || !result.adminDirectory) {
+        setError(result.error ?? "Unable to grant admin access.");
+        return;
+      }
+
+      setUsers(result.roleDirectory);
+      setAdmins(result.adminDirectory);
+      setAdminEmail("");
+      setGrantConfirmation("");
+      setMessage("Admin role granted.");
+      router.refresh();
+    } catch {
+      setError("Unable to reach the admin role service.");
+    } finally {
+      setPendingAdminAction(null);
+    }
+  }
+
+  async function revokeAdmin(userId: string) {
+    setPendingAdminAction(userId);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/admin-roles", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          confirmation: revokeConfirmation[userId] ?? "",
+        }),
+      });
+
+      const result = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        roleDirectory?: RoleDirectoryItem[];
+        adminDirectory?: AdminOverviewData["adminDirectory"];
+      };
+
+      if (!response.ok || !result.ok || !result.roleDirectory || !result.adminDirectory) {
+        setError(result.error ?? "Unable to revoke admin access.");
+        return;
+      }
+
+      setUsers(result.roleDirectory);
+      setAdmins(result.adminDirectory);
+      setRevokeConfirmation((current) => ({ ...current, [userId]: "" }));
+      setMessage("Admin role revoked.");
+      router.refresh();
+    } catch {
+      setError("Unable to reach the admin role service.");
+    } finally {
+      setPendingAdminAction(null);
+    }
+  }
+
   return (
     <section className="panel">
       <div className="panel__header">
         <div>
           <p className="eyebrow">Permissions</p>
           <h3>Reviewer role management</h3>
+        </div>
+      </div>
+      <div className="panel panel--glass">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Protected admin grants</p>
+            <h3>Separate elevated-access workflow</h3>
+          </div>
+        </div>
+        <div className="profile-grid">
+          <label className="field">
+            <span>User email</span>
+            <input
+              type="email"
+              value={adminEmail}
+              placeholder="user@example.com"
+              onChange={(event) => setAdminEmail(event.target.value)}
+            />
+          </label>
+          <label className="field">
+            <span>Type GRANT ADMIN</span>
+            <input
+              value={grantConfirmation}
+              placeholder="GRANT ADMIN"
+              onChange={(event) => setGrantConfirmation(event.target.value)}
+            />
+          </label>
+        </div>
+        <div className="review-bulk-actions">
+          <button
+            className="button button--primary button--small"
+            type="button"
+            disabled={pendingAdminAction === "grant"}
+            onClick={submitAdminGrant}
+          >
+            {pendingAdminAction === "grant" ? "Granting..." : "Grant admin"}
+          </button>
+          <p className="form-note">Admin access requires an explicit confirmation phrase and uses a separate API path.</p>
+        </div>
+        <div className="review-history__list">
+          {admins.map((admin) => (
+            <article key={admin.userId} className="review-history__item">
+              <div className="quest-card__meta">
+                <span>{admin.email ?? "No email"}</span>
+                <span>{admin.grantedAt ? new Date(admin.grantedAt).toLocaleDateString() : "Legacy grant"}</span>
+              </div>
+              <h4>{admin.displayName}</h4>
+              <div className="review-history__meta">
+                <span>Granted by: {admin.grantedByDisplayName ?? "System seed"}</span>
+              </div>
+              <label className="field">
+                <span>Type REVOKE ADMIN</span>
+                <input
+                  value={revokeConfirmation[admin.userId] ?? ""}
+                  placeholder="REVOKE ADMIN"
+                  onChange={(event) =>
+                    setRevokeConfirmation((current) => ({
+                      ...current,
+                      [admin.userId]: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <button
+                className="button button--secondary button--small"
+                type="button"
+                disabled={pendingAdminAction === admin.userId}
+                onClick={() => revokeAdmin(admin.userId)}
+              >
+                {pendingAdminAction === admin.userId ? "Updating..." : "Revoke admin"}
+              </button>
+            </article>
+          ))}
         </div>
       </div>
       <div className="review-history__list">
