@@ -207,6 +207,7 @@ function buildQueueMetrics(reviewQueue: AdminOverviewData["reviewQueue"]): Admin
       oldestPendingMinutes: 0,
       averagePendingMinutes: 0,
       staleCount: 0,
+      alerts: [],
       byVerificationType: [],
     };
   }
@@ -219,11 +220,49 @@ function buildQueueMetrics(reviewQueue: AdminOverviewData["reviewQueue"]): Admin
     byVerificationType.set(item.verificationType, (byVerificationType.get(item.verificationType) ?? 0) + 1);
   }
 
+  const oldestPendingMinutes = Math.max(...pendingAges);
+  const averagePendingMinutes = Math.round(pendingAges.reduce((sum, age) => sum + age, 0) / pendingAges.length);
+  const staleCount = pendingAges.filter((age) => age >= 24 * 60).length;
+  const alerts: AdminOverviewData["queueMetrics"]["alerts"] = [];
+
+  if (staleCount > 0) {
+    alerts.push({
+      severity: "critical",
+      title: "SLA breach in queue",
+      detail: `${staleCount} submission${staleCount === 1 ? "" : "s"} have been pending for more than 24 hours.`,
+    });
+  }
+
+  if (oldestPendingMinutes >= 6 * 60) {
+    alerts.push({
+      severity: staleCount > 0 ? "critical" : "warning",
+      title: "Oldest submission is aging out",
+      detail: `The oldest pending submission is ${oldestPendingMinutes} minutes old.`,
+    });
+  }
+
+  if (reviewQueue.length >= 8) {
+    alerts.push({
+      severity: reviewQueue.length >= 15 ? "critical" : "warning",
+      title: "Backlog pressure is rising",
+      detail: `${reviewQueue.length} submissions are waiting for review across all verification lanes.`,
+    });
+  }
+
+  if (averagePendingMinutes >= 90) {
+    alerts.push({
+      severity: "warning",
+      title: "Average response time is slipping",
+      detail: `Average pending age is ${averagePendingMinutes} minutes.`,
+    });
+  }
+
   return {
     pendingCount: reviewQueue.length,
-    oldestPendingMinutes: Math.max(...pendingAges),
-    averagePendingMinutes: Math.round(pendingAges.reduce((sum, age) => sum + age, 0) / pendingAges.length),
-    staleCount: pendingAges.filter((age) => age >= 24 * 60).length,
+    oldestPendingMinutes,
+    averagePendingMinutes,
+    staleCount,
+    alerts,
     byVerificationType: Array.from(byVerificationType.entries())
       .map(([verificationType, count]) => ({ verificationType, count }))
       .sort((left, right) => right.count - left.count || left.verificationType.localeCompare(right.verificationType)),

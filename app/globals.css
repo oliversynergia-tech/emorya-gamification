@@ -920,6 +920,39 @@ a {
   margin: 14px 0;
 }
 
+.admin-alert-stack {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-alert-card {
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(223, 182, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-alert-card strong {
+  display: block;
+  margin-top: 4px;
+}
+
+.admin-alert-card p:last-child {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.admin-alert-card--warning {
+  border-color: rgba(240, 214, 160, 0.28);
+  background: linear-gradient(180deg, rgba(240, 214, 160, 0.1), rgba(255, 255, 255, 0.02));
+}
+
+.admin-alert-card--critical {
+  border-color: rgba(240, 80, 158, 0.32);
+  background: linear-gradient(180deg, rgba(240, 80, 158, 0.14), rgba(255, 255, 255, 0.02));
+}
+
 .review-outcome-card {
   padding: 18px;
   border-radius: 20px;

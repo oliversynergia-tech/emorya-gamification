@@ -1,9 +1,11 @@
 import type { QueryResultRow } from "pg";
 
+import type { AppRole } from "@/lib/types";
+
 import { runQuery } from "@/server/db/client";
 
 type UserRoleRow = QueryResultRow & {
-  role: "admin" | "reviewer";
+  role: AppRole;
 };
 
 type RoleDirectoryRow = QueryResultRow & {
@@ -11,13 +13,14 @@ type RoleDirectoryRow = QueryResultRow & {
   display_name: string;
   email: string | null;
   subscription_tier: "free" | "monthly" | "annual";
-  roles: Array<"admin" | "reviewer"> | null;
+  roles: AppRole[] | null;
 };
 
 type AdminDirectoryRow = QueryResultRow & {
   user_id: string;
   display_name: string;
   email: string | null;
+  role: Extract<AppRole, "super_admin" | "admin">;
   created_at: string | null;
   granted_by_display_name: string | null;
 };
@@ -34,7 +37,7 @@ export async function getUserRoles(userId: string) {
   return result.rows.map((row) => row.role);
 }
 
-export async function userHasRole(userId: string, role: "admin" | "reviewer") {
+export async function userHasRole(userId: string, role: AppRole) {
   const result = await runQuery<{ exists: boolean }>(
     `SELECT EXISTS(
        SELECT 1
@@ -76,7 +79,7 @@ export async function grantUserRole({
   grantedBy,
 }: {
   userId: string;
-  role: "admin" | "reviewer";
+  role: AppRole;
   grantedBy: string | null;
 }) {
   await runQuery(
@@ -92,7 +95,7 @@ export async function revokeUserRole({
   role,
 }: {
   userId: string;
-  role: "admin" | "reviewer";
+  role: AppRole;
 }) {
   await runQuery(
     `DELETE FROM user_roles
@@ -107,25 +110,27 @@ export async function listAdminUsers() {
     `SELECT u.id AS user_id,
             u.display_name,
             u.email,
+            ur.role,
             ur.created_at,
             granted_by.display_name AS granted_by_display_name
      FROM user_roles ur
      INNER JOIN users u ON u.id = ur.user_id
      LEFT JOIN users granted_by ON granted_by.id = ur.granted_by
-     WHERE ur.role = 'admin'
-     ORDER BY ur.created_at ASC, u.display_name ASC`,
+     WHERE ur.role IN ('super_admin', 'admin')
+     ORDER BY CASE ur.role WHEN 'super_admin' THEN 0 ELSE 1 END, ur.created_at ASC, u.display_name ASC`,
   );
 
   return result.rows.map((row) => ({
     userId: row.user_id,
     displayName: row.display_name,
     email: row.email,
+    role: row.role,
     grantedAt: row.created_at,
     grantedByDisplayName: row.granted_by_display_name,
   }));
 }
 
-export async function countUsersWithRole(role: "admin" | "reviewer") {
+export async function countUsersWithRole(role: AppRole) {
   const result = await runQuery<{ count: string }>(
     `SELECT COUNT(*)::text AS count
      FROM user_roles

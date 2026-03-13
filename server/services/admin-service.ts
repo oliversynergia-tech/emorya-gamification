@@ -1,4 +1,4 @@
-import { assertAdminUser } from "@/server/auth/admin";
+import { assertAdminUser, assertSuperAdminUser } from "@/server/auth/admin";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
 import {
   countUsersWithRole,
@@ -11,14 +11,14 @@ import {
 
 export async function getRoleDirectory() {
   const currentUser = await getAuthenticatedUser();
-  await assertAdminUser(currentUser);
+  await assertSuperAdminUser(currentUser);
 
   return listUsersWithRoles();
 }
 
 export async function getAdminDirectory() {
   const currentUser = await getAuthenticatedUser();
-  await assertAdminUser(currentUser);
+  await assertSuperAdminUser(currentUser);
 
   return listAdminUsers();
 }
@@ -122,7 +122,7 @@ export async function revokeAdminRole({
   const adminCount = await countUsersWithRole("admin");
 
   if (adminCount <= 1) {
-    throw new Error("At least one admin must remain assigned.");
+    throw new Error("At least one standard admin must remain assigned.");
   }
 
   await revokeUserRole({

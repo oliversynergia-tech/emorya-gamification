@@ -113,7 +113,8 @@ INSERT INTO users (
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO user_roles (user_id, role, granted_by) VALUES
-  ('6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'admin', NULL)
+  ('6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'super_admin'::app_role, NULL),
+  ('6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'admin'::app_role, NULL)
 ON CONFLICT (user_id, role) DO NOTHING;
 
 INSERT INTO social_connections (id, user_id, platform, handle, verified, connected_at) VALUES

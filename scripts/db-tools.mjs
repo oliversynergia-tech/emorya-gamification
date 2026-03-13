@@ -4,6 +4,19 @@ import { createHash } from "crypto";
 
 import { Client } from "pg";
 
+export const supportedDbCommands = [
+  "migrate",
+  "migrate-status",
+  "seed",
+  "reset",
+  "doctor",
+  "snapshot",
+  "snapshot-scheduled",
+];
+
+export const dbToolUsage =
+  "Usage: <migrate|migrate-status|seed|reset|doctor|snapshot [period] [YYYY-MM-DD]|snapshot-scheduled [YYYY-MM-DD]>";
+
 export function createDbToolContext(rootDir) {
   const dbDir = resolve(rootDir, "server/db");
   const migrationsDir = resolve(dbDir, "migrations");
@@ -308,7 +321,7 @@ DO UPDATE SET xp = EXCLUDED.xp, rank = EXCLUDED.rank;
         await snapshotScheduled(args[0]);
         break;
       default:
-        console.error("Usage: <migrate|migrate-status|seed|reset|doctor|snapshot [period] [YYYY-MM-DD]|snapshot-scheduled [YYYY-MM-DD]>");
+        console.error(dbToolUsage);
         process.exit(1);
     }
   }

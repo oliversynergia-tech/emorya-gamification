@@ -1,4 +1,5 @@
 export type SubscriptionTier = "free" | "monthly" | "annual";
+export type AppRole = "super_admin" | "admin" | "reviewer";
 export type AuthProvider = "email" | "multiversx";
 export type IdentityStatus = "active" | "pending" | "revoked";
 export type VerificationType =
@@ -228,12 +229,13 @@ export type AdminOverviewData = {
     displayName: string;
     email: string | null;
     subscriptionTier: SubscriptionTier;
-    roles: Array<"admin" | "reviewer">;
+    roles: AppRole[];
   }>;
   adminDirectory: Array<{
     userId: string;
     displayName: string;
     email: string | null;
+    role: Extract<AppRole, "super_admin" | "admin">;
     grantedAt: string | null;
     grantedByDisplayName: string | null;
   }>;
@@ -273,6 +275,11 @@ export type AdminOverviewData = {
     oldestPendingMinutes: number;
     averagePendingMinutes: number;
     staleCount: number;
+    alerts: Array<{
+      severity: "warning" | "critical";
+      title: string;
+      detail: string;
+    }>;
     byVerificationType: Array<{
       verificationType: VerificationType;
       count: number;

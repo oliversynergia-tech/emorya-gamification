@@ -10,9 +10,11 @@ type RoleDirectoryItem = AdminOverviewData["roleDirectory"][number];
 export function RoleManagementPanel({
   initialUsers,
   initialAdmins,
+  canManageAdmins,
 }: {
   initialUsers: RoleDirectoryItem[];
   initialAdmins: AdminOverviewData["adminDirectory"];
+  canManageAdmins: boolean;
 }) {
   const router = useRouter();
   const [users, setUsers] = useState(initialUsers);
@@ -188,12 +190,16 @@ export function RoleManagementPanel({
           <button
             className="button button--primary button--small"
             type="button"
-            disabled={pendingAdminAction === "grant"}
+            disabled={pendingAdminAction === "grant" || !canManageAdmins}
             onClick={submitAdminGrant}
           >
             {pendingAdminAction === "grant" ? "Granting..." : "Grant admin"}
           </button>
-          <p className="form-note">Admin access requires an explicit confirmation phrase and uses a separate API path.</p>
+          <p className="form-note">
+            {canManageAdmins
+              ? "Admin access requires an explicit confirmation phrase and uses a separate API path."
+              : "Only super admins can grant or revoke admin access. Standard admins can still moderate and manage reviewer roles."}
+          </p>
         </div>
         <div className="review-history__list">
           {admins.map((admin) => (
@@ -204,6 +210,7 @@ export function RoleManagementPanel({
               </div>
               <h4>{admin.displayName}</h4>
               <div className="review-history__meta">
+                <span>Role: {admin.role === "super_admin" ? "Super admin" : "Admin"}</span>
                 <span>Granted by: {admin.grantedByDisplayName ?? "System seed"}</span>
               </div>
               <label className="field">
@@ -222,10 +229,14 @@ export function RoleManagementPanel({
               <button
                 className="button button--secondary button--small"
                 type="button"
-                disabled={pendingAdminAction === admin.userId}
+                disabled={pendingAdminAction === admin.userId || !canManageAdmins || admin.role === "super_admin"}
                 onClick={() => revokeAdmin(admin.userId)}
               >
-                {pendingAdminAction === admin.userId ? "Updating..." : "Revoke admin"}
+                {admin.role === "super_admin"
+                  ? "Super admin locked"
+                  : pendingAdminAction === admin.userId
+                    ? "Updating..."
+                    : "Revoke admin"}
               </button>
             </article>
           ))}
@@ -233,6 +244,7 @@ export function RoleManagementPanel({
       </div>
       <div className="review-history__list">
         {users.map((user) => {
+          const isSuperAdmin = user.roles.includes("super_admin");
           const isAdmin = user.roles.includes("admin");
           const isReviewer = user.roles.includes("reviewer");
 
@@ -247,6 +259,7 @@ export function RoleManagementPanel({
                 <span>Roles: {user.roles.length ? user.roles.join(", ") : "none"}</span>
               </div>
               <div className="role-pill-row">
+                <span className={`badge ${isSuperAdmin ? "badge--pink" : ""}`}>Super admin {isSuperAdmin ? "on" : "off"}</span>
                 <span className={`badge ${isAdmin ? "badge--pink" : ""}`}>Admin {isAdmin ? "on" : "off"}</span>
                 <span className="badge">Reviewer {isReviewer ? "on" : "off"}</span>
               </div>

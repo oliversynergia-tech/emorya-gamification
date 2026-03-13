@@ -137,8 +137,10 @@ Wallet-link status:
 Admin authorization status:
 
 - admin review routes are protected by database-backed roles in `user_roles`
-- only signed-in accounts with the `admin` role can access `/admin`, load the review queue, or approve/reject submissions
-- local seed/migrations grant the admin role to the primary development accounts for continuity
+- signed-in accounts with either `admin` or `super_admin` can access `/admin`, load the review queue, and approve/reject submissions
+- only `super_admin` accounts can grant or revoke standard admin access
+- queue-health alerts now derive from live pending age and backlog thresholds so SLA pressure is visible in the admin surface
+- local seed/migrations grant both `super_admin` and `admin` continuity to the primary development account
 
 Referral system status:
 

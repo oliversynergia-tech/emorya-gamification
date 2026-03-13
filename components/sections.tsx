@@ -659,6 +659,24 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
           </div>
           <span className="badge badge--pink">{data.queueMetrics.staleCount} stale</span>
         </div>
+        {data.queueMetrics.alerts.length > 0 ? (
+          <div className="admin-alert-stack">
+            {data.queueMetrics.alerts.map((alert) => (
+              <article
+                key={`${alert.severity}-${alert.title}`}
+                className={`admin-alert-card admin-alert-card--${alert.severity}`}
+              >
+                <div>
+                  <p className="eyebrow">{alert.severity === "critical" ? "Immediate attention" : "Heads up"}</p>
+                  <strong>{alert.title}</strong>
+                </div>
+                <p>{alert.detail}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="form-note">Queue age and backlog are currently inside the target moderation window.</p>
+        )}
         <div className="info-grid">
           <div className="info-card">
             <span>Pending now</span>

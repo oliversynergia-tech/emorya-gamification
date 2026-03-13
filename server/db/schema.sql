@@ -12,7 +12,7 @@ CREATE TYPE verification_type AS ENUM (
 );
 CREATE TYPE quest_recurrence AS ENUM ('one-time', 'daily', 'weekly');
 CREATE TYPE completion_status AS ENUM ('pending', 'approved', 'rejected');
-CREATE TYPE app_role AS ENUM ('admin', 'reviewer');
+CREATE TYPE app_role AS ENUM ('super_admin', 'admin', 'reviewer');
 
 CREATE TABLE users (
   id UUID PRIMARY KEY,

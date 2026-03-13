@@ -2,7 +2,7 @@ import { AdminSection } from "@/components/sections";
 import { RoleManagementPanel } from "@/components/role-management-panel";
 import { ReviewQueuePanel } from "@/components/review-queue-panel";
 import { SiteShell } from "@/components/site-shell";
-import { isAdminUser } from "@/server/auth/admin";
+import { isAdminUser, isSuperAdminUser } from "@/server/auth/admin";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadAdminOverview } from "@/server/services/platform-overview";
 
@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const session = await resolveCurrentSession();
   const hasAdminAccess = await isAdminUser(session?.user);
+  const hasSuperAdminAccess = await isSuperAdminUser(session?.user);
 
   if (!session || !hasAdminAccess) {
     return (
@@ -27,7 +28,7 @@ export default async function AdminPage() {
             <div className="metric-card">
               <span>Access model</span>
               <strong>Database roles</strong>
-              <small>Only users with an admin role can load review state or act on submissions.</small>
+              <small>Admins can moderate. Super admins can also manage admin grants.</small>
             </div>
           </div>
         </section>
@@ -39,7 +40,7 @@ export default async function AdminPage() {
             </div>
           </div>
           <p className="form-note">
-            Sign in with an account that has the admin role to review submissions and access moderation data.
+            Sign in with an account that has the admin or super admin role to review submissions and access moderation data.
           </p>
         </section>
       </SiteShell>
@@ -70,7 +71,11 @@ export default async function AdminPage() {
         </div>
       </section>
       <AdminSection data={data} />
-      <RoleManagementPanel initialUsers={data.roleDirectory} initialAdmins={data.adminDirectory} />
+      <RoleManagementPanel
+        initialUsers={data.roleDirectory}
+        initialAdmins={data.adminDirectory}
+        canManageAdmins={hasSuperAdminAccess}
+      />
       <ReviewQueuePanel
         initialQueue={data.reviewQueue}
         initialHistory={data.reviewHistory}
