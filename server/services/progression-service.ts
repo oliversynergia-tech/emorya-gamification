@@ -2,6 +2,7 @@ import type { QuestProgressUpdate } from "@/lib/types";
 import { calculateQuestRewardTransition } from "@/server/services/progression-rules";
 import {
   getAchievementDefinitions,
+  getAchievementProgressContext,
   getUserAchievementsByUserId,
   upsertUserAchievement,
 } from "@/server/repositories/achievement-repository";
@@ -33,19 +34,24 @@ async function syncAchievementProgress({
   userId,
   displayName,
   currentStreak,
+  level,
   subscriptionTier,
+  totalXp,
   attributionSource,
 }: {
   userId: string;
   displayName: string;
   currentStreak: number;
+  level: number;
   subscriptionTier: string;
+  totalXp: number;
   attributionSource: string | null;
 }) {
   const [definitions, userAchievements] = await Promise.all([
     getAchievementDefinitions(),
     getUserAchievementsByUserId(userId),
   ]);
+  const metrics = await getAchievementProgressContext(userId);
 
   const unlockedAchievements: string[] = [];
 
@@ -67,6 +73,31 @@ async function syncAchievementProgress({
       const tierTarget = normalizeAchievementTarget(definition.condition.tier);
       const userTier = normalizeAchievementTarget(subscriptionTier);
       progress = tierTarget !== null && userTier === tierTarget ? 1 : 0;
+    }
+
+    if (definition.slug === "quest-climber") {
+      const questTarget = Number(definition.condition.approvedQuests ?? 0);
+      progress = questTarget > 0 ? Math.min(metrics.approvedQuestCount / questTarget, 1) : 0;
+    }
+
+    if (definition.slug === "referral-catalyst") {
+      const inviteTarget = Number(definition.condition.invitedCount ?? 0);
+      progress = inviteTarget > 0 ? Math.min(metrics.invitedCount / inviteTarget, 1) : 0;
+    }
+
+    if (definition.slug === "conversion-closer") {
+      const conversionTarget = Number(definition.condition.convertedCount ?? 0);
+      progress = conversionTarget > 0 ? Math.min(metrics.convertedCount / conversionTarget, 1) : 0;
+    }
+
+    if (definition.slug === "level-ascendant") {
+      const levelTarget = Number(definition.condition.level ?? 0);
+      progress = levelTarget > 0 ? Math.min(level / levelTarget, 1) : 0;
+    }
+
+    if (definition.slug === "xp-collector") {
+      const xpTarget = Number(definition.condition.totalXp ?? 0);
+      progress = xpTarget > 0 ? Math.min(totalXp / xpTarget, 1) : 0;
     }
 
     const existing = userAchievements.get(definition.slug);
@@ -98,6 +129,34 @@ async function syncAchievementProgress({
   }
 
   return unlockedAchievements;
+}
+
+export async function syncAchievementProgressForUser({
+  userId,
+  displayName,
+  currentStreak,
+  level,
+  subscriptionTier,
+  totalXp,
+  attributionSource,
+}: {
+  userId: string;
+  displayName: string;
+  currentStreak: number;
+  level: number;
+  subscriptionTier: string;
+  totalXp: number;
+  attributionSource: string | null;
+}) {
+  return syncAchievementProgress({
+    userId,
+    displayName,
+    currentStreak,
+    level,
+    subscriptionTier,
+    totalXp,
+    attributionSource,
+  });
 }
 
 export async function applyQuestRewardTransition({
@@ -153,7 +212,9 @@ export async function applyQuestRewardTransition({
       userId,
       displayName: user.display_name,
       currentStreak: user.current_streak,
+      level: user.level,
       subscriptionTier: user.subscription_tier,
+      totalXp: user.total_xp,
       attributionSource: user.attribution_source,
     });
 
@@ -184,7 +245,9 @@ export async function applyQuestRewardTransition({
     userId,
     displayName: achievementUser.display_name,
     currentStreak: rewardState.currentStreak,
+    level: rewardState.level,
     subscriptionTier: achievementUser.subscription_tier,
+    totalXp: rewardState.totalXp,
     attributionSource: achievementUser.attribution_source,
   });
 

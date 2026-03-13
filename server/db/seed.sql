@@ -320,6 +320,46 @@ INSERT INTO achievements (id, slug, name, description, category, condition) VALU
     'Annual Premium badge with top-tier leaderboard prestige.',
     'subscription',
     '{"tier":"annual"}'::jsonb
+  ),
+  (
+    '18e97076-e0c1-4446-a723-64f500cb4555',
+    'quest-climber',
+    'Quest Climber',
+    'Finish five approved quests and prove the loop is sticking.',
+    'quests',
+    '{"approvedQuests":5}'::jsonb
+  ),
+  (
+    'f8a5272b-d010-44a1-9635-1524f4b7e1d2',
+    'referral-catalyst',
+    'Referral Catalyst',
+    'Bring in three new people with your code.',
+    'referral',
+    '{"invitedCount":3}'::jsonb
+  ),
+  (
+    '1541ef42-e14d-4817-afb0-d0cf9174e421',
+    'conversion-closer',
+    'Conversion Closer',
+    'Drive two invited users into a paid tier.',
+    'referral',
+    '{"convertedCount":2}'::jsonb
+  ),
+  (
+    '7c1d67b8-c20e-42fc-9b7e-d0d987eb5f24',
+    'level-ascendant',
+    'Level Ascendant',
+    'Reach level 10 and hold a meaningful presence on the board.',
+    'progression',
+    '{"level":10}'::jsonb
+  ),
+  (
+    'c92b84d2-e9a9-4cb7-a22f-f3b02be029b3',
+    'xp-collector',
+    'XP Collector',
+    'Accumulate 5,000 total XP across quests, referrals, and streak play.',
+    'progression',
+    '{"totalXp":5000}'::jsonb
   )
 ON CONFLICT (id) DO NOTHING;
 

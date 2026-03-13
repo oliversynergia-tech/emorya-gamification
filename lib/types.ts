@@ -174,6 +174,7 @@ export type Achievement = {
   id: string;
   name: string;
   description: string;
+  category?: string;
   progress: number;
   unlocked: boolean;
 };
@@ -235,6 +236,15 @@ export type AdminOverviewData = {
     conversionRate: number;
     rewardXpEarned: number;
     pendingConversionXp: number;
+    sourceBreakdown: Array<{
+      source: string;
+      invitedCount: number;
+      convertedCount: number;
+    }>;
+    conversionWindows: Array<{
+      label: string;
+      count: number;
+    }>;
     topReferrers: Array<{
       displayName: string;
       tier: SubscriptionTier;

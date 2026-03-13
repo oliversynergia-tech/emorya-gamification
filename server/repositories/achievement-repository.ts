@@ -13,6 +13,12 @@ type UserAchievementRow = QueryResultRow & {
   earned_at: string | null;
 };
 
+type AchievementProgressContextRow = QueryResultRow & {
+  approved_quest_count: string;
+  invited_count: string;
+  converted_count: string;
+};
+
 export async function getAchievementDefinitions() {
   const result = await runQuery<AchievementDefinitionRow>(
     `SELECT id, slug, condition
@@ -62,4 +68,34 @@ export async function upsertUserAchievement({
        earned_at = COALESCE(user_achievements.earned_at, EXCLUDED.earned_at)`,
     [userId, achievementId, progress, earnedAt],
   );
+}
+
+export async function getAchievementProgressContext(userId: string) {
+  const result = await runQuery<AchievementProgressContextRow>(
+    `SELECT
+       COALESCE((
+         SELECT COUNT(*)
+         FROM quest_completions qc
+         WHERE qc.user_id = $1
+           AND qc.status = 'approved'
+       ), 0)::text AS approved_quest_count,
+       COALESCE((
+         SELECT COUNT(*)
+         FROM referrals r
+         WHERE r.referrer_user_id = $1
+       ), 0)::text AS invited_count,
+       COALESCE((
+         SELECT COUNT(*)
+         FROM referrals r
+         WHERE r.referrer_user_id = $1
+           AND r.referee_subscribed = TRUE
+       ), 0)::text AS converted_count`,
+    [userId],
+  );
+
+  return {
+    approvedQuestCount: Number(result.rows[0]?.approved_quest_count ?? 0),
+    invitedCount: Number(result.rows[0]?.invited_count ?? 0),
+    convertedCount: Number(result.rows[0]?.converted_count ?? 0),
+  };
 }

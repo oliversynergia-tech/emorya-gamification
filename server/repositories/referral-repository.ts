@@ -52,6 +52,17 @@ type ReferralTopReferrerRow = QueryResultRow & {
   reward_xp_earned: string;
 };
 
+type ReferralSourceBreakdownRow = QueryResultRow & {
+  source: string | null;
+  invited_count: string;
+  converted_count: string;
+};
+
+type ReferralConversionWindowRow = QueryResultRow & {
+  label: string;
+  count: string;
+};
+
 export async function findReferrerByCode(referralCode: string) {
   const result = await runQuery<ReferrerRow>(
     `SELECT id
@@ -174,7 +185,7 @@ export async function getReferralSummary(userId: string) {
 }
 
 export async function getReferralAnalytics() {
-  const [summaryResult, topReferrersResult] = await Promise.all([
+  const [summaryResult, topReferrersResult, sourceBreakdownResult, conversionWindowResult] = await Promise.all([
     runQuery<ReferralAnalyticsSummaryRow>(
       `SELECT COUNT(*)::text AS invited_count,
               COUNT(*) FILTER (WHERE referee_subscribed = TRUE)::text AS converted_count,
@@ -199,7 +210,37 @@ export async function getReferralAnalytics() {
        ORDER BY COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0) DESC,
                 COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE) DESC,
                 u.created_at ASC
-       LIMIT 5`,
+      LIMIT 5`,
+    ),
+    runQuery<ReferralSourceBreakdownRow>(
+      `SELECT COALESCE(NULLIF(TRIM(LOWER(u.attribution_source)), ''), 'unknown') AS source,
+              COUNT(r.id)::text AS invited_count,
+              COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE)::text AS converted_count
+       FROM referrals r
+       INNER JOIN users u ON u.id = r.referee_user_id
+       GROUP BY source
+       ORDER BY COUNT(r.id) DESC, source ASC`,
+    ),
+    runQuery<ReferralConversionWindowRow>(
+      `WITH windows AS (
+         SELECT CASE
+                  WHEN r.conversion_rewarded_at IS NULL THEN 'Pending conversion'
+                  WHEN r.conversion_rewarded_at <= r.created_at + INTERVAL '7 days' THEN 'Converted in 7d'
+                  WHEN r.conversion_rewarded_at <= r.created_at + INTERVAL '30 days' THEN 'Converted in 30d'
+                  ELSE 'Converted after 30d'
+                END AS label,
+                COUNT(*)::text AS count
+         FROM referrals r
+         GROUP BY 1
+       )
+       SELECT label, count
+       FROM windows
+       ORDER BY CASE label
+         WHEN 'Converted in 7d' THEN 1
+         WHEN 'Converted in 30d' THEN 2
+         WHEN 'Converted after 30d' THEN 3
+         ELSE 4
+       END`,
     ),
   ]);
 
@@ -213,6 +254,15 @@ export async function getReferralAnalytics() {
     conversionRate: invitedCount > 0 ? convertedCount / invitedCount : 0,
     rewardXpEarned: Number(summary?.reward_xp_earned ?? 0),
     pendingConversionXp: Number(summary?.pending_conversion_xp ?? 0),
+    sourceBreakdown: sourceBreakdownResult.rows.map((row) => ({
+      source: row.source ?? "unknown",
+      invitedCount: Number(row.invited_count),
+      convertedCount: Number(row.converted_count),
+    })),
+    conversionWindows: conversionWindowResult.rows.map((row) => ({
+      label: row.label,
+      count: Number(row.count),
+    })),
     topReferrers: topReferrersResult.rows.map((row) => ({
       displayName: row.display_name,
       tier: row.subscription_tier,

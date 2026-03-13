@@ -721,6 +721,33 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
             <p className="form-note">No referral activity has been recorded yet.</p>
           ) : null}
         </div>
+        <div className="achievement-list">
+          {data.referralAnalytics.sourceBreakdown.map((source) => (
+            <article key={source.source} className="achievement-card">
+              <div>
+                <strong>{source.source}</strong>
+                <p>Attribution source among referred users</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{source.invitedCount} invited</span>
+                <span>{source.convertedCount} converted</span>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.referralAnalytics.conversionWindows.map((window) => (
+            <article key={window.label} className="achievement-card">
+              <div>
+                <strong>{window.label}</strong>
+                <p>How quickly referred users move into paid tiers</p>
+              </div>
+              <div className="achievement-card__side">
+                <strong>{window.count}</strong>
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

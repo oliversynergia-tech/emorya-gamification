@@ -28,11 +28,13 @@ import {
 import { getPendingReviewQueue, getRecentReviewHistory } from "@/server/repositories/quest-repository";
 import { getReviewerWorkload } from "@/server/repositories/quest-repository";
 import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/referral-repository";
+import { syncAchievementProgressForUser } from "@/server/services/progression-service";
 import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
 
 type UserRow = QueryResultRow & {
   id: string;
   display_name: string;
+  attribution_source: string | null;
   level: number;
   total_xp: number;
   current_streak: number;
@@ -70,6 +72,7 @@ type AchievementRow = QueryResultRow & {
   slug: string;
   name: string;
   description: string;
+  category: string;
   progress: number | string;
   earned_at: string | null;
 };
@@ -115,7 +118,7 @@ async function resolveDashboardUserId(currentUser?: AuthUser | null) {
 
 async function getDashboardUser(userId: string): Promise<UserRow> {
   const userResult = await runQuery<UserRow>(
-    `SELECT id, display_name, level, total_xp, current_streak, subscription_tier, referral_code
+    `SELECT id, display_name, attribution_source, level, total_xp, current_streak, subscription_tier, referral_code
      FROM users
      WHERE id = $1`,
     [userId],
@@ -225,10 +228,12 @@ async function getQuestBoard(user: UserRow): Promise<Quest[]> {
 
 async function getAchievements(userId: string): Promise<Achievement[]> {
   const result = await runQuery<AchievementRow>(
-    `SELECT a.slug, a.name, a.description, ua.progress, ua.earned_at
-     FROM user_achievements ua
-     INNER JOIN achievements a ON a.id = ua.achievement_id
-     WHERE ua.user_id = $1
+    `SELECT a.slug, a.name, a.description, a.category,
+            COALESCE(ua.progress, 0) AS progress, ua.earned_at
+     FROM achievements a
+     LEFT JOIN user_achievements ua
+       ON ua.achievement_id = a.id
+      AND ua.user_id = $1
      ORDER BY a.name ASC`,
     [userId],
   );
@@ -237,6 +242,7 @@ async function getAchievements(userId: string): Promise<Achievement[]> {
     id: achievement.slug,
     name: achievement.name,
     description: achievement.description,
+    category: achievement.category,
     progress: Number(achievement.progress),
     unlocked: Boolean(achievement.earned_at),
   }));
@@ -300,6 +306,15 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   await syncReferralRewardsForReferrer(userId);
   await syncLeaderboardSnapshotsForToday();
   const dashboardUser = await getDashboardUser(userId);
+  await syncAchievementProgressForUser({
+    userId: dashboardUser.id,
+    displayName: dashboardUser.display_name,
+    currentStreak: dashboardUser.current_streak,
+    level: dashboardUser.level,
+    subscriptionTier: dashboardUser.subscription_tier,
+    totalXp: dashboardUser.total_xp,
+    attributionSource: dashboardUser.attribution_source,
+  });
 
   const [user, quests, achievements, leaderboard, referralLeaderboard, activityFeed] = await Promise.all([
     getUserSnapshot(dashboardUser),
