@@ -27,48 +27,64 @@ type SnapshotSourceRow = QueryResultRow & {
   rank: number;
 };
 
-export async function syncLeaderboardSnapshotsForToday() {
-  const today = new Date().toISOString().slice(0, 10);
+type SnapshotPeriod = "all-time" | "referral" | "weekly" | "monthly";
 
-  const [allTimeResult, referralResult] = await Promise.all([
-    runQuery<SnapshotSourceRow>(
-      `SELECT u.id AS user_id,
-              u.total_xp AS xp,
-              RANK() OVER (ORDER BY u.total_xp DESC, u.level DESC, u.created_at ASC) AS rank
-       FROM users u`,
-    ),
-    runQuery<SnapshotSourceRow>(
+function getSnapshotDate(snapshotDate?: string) {
+  return snapshotDate ?? new Date().toISOString().slice(0, 10);
+}
+
+async function getSnapshotSource(period: SnapshotPeriod) {
+  if (period === "referral") {
+    return runQuery<SnapshotSourceRow>(
       `SELECT u.id AS user_id,
               COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0)::int AS xp,
               RANK() OVER (
                 ORDER BY COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0) DESC,
+                         COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE) DESC,
                          u.created_at ASC
               ) AS rank
        FROM users u
        LEFT JOIN referrals r ON r.referrer_user_id = u.id
        GROUP BY u.id, u.created_at`,
-    ),
+    );
+  }
+
+  return runQuery<SnapshotSourceRow>(
+    `SELECT u.id AS user_id,
+            u.total_xp AS xp,
+            RANK() OVER (ORDER BY u.total_xp DESC, u.level DESC, u.created_at ASC) AS rank
+     FROM users u`,
+  );
+}
+
+export async function syncLeaderboardSnapshot({
+  period,
+  snapshotDate,
+}: {
+  period: SnapshotPeriod;
+  snapshotDate?: string;
+}) {
+  const source = await getSnapshotSource(period);
+  const resolvedSnapshotDate = getSnapshotDate(snapshotDate);
+
+  for (const row of source.rows) {
+    await runQuery(
+      `INSERT INTO leaderboard_snapshots (id, user_id, period, xp, rank, snapshot_date)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (user_id, period, snapshot_date)
+       DO UPDATE SET xp = EXCLUDED.xp, rank = EXCLUDED.rank`,
+      [randomUUID(), row.user_id, period, row.xp, row.rank, resolvedSnapshotDate],
+    );
+  }
+}
+
+export async function syncLeaderboardSnapshotsForToday() {
+  const today = getSnapshotDate();
+
+  await Promise.all([
+    syncLeaderboardSnapshot({ period: "all-time", snapshotDate: today }),
+    syncLeaderboardSnapshot({ period: "referral", snapshotDate: today }),
   ]);
-
-  for (const row of allTimeResult.rows) {
-    await runQuery(
-      `INSERT INTO leaderboard_snapshots (id, user_id, period, xp, rank, snapshot_date)
-       VALUES ($1, $2, 'all-time', $3, $4, $5)
-       ON CONFLICT (user_id, period, snapshot_date)
-       DO UPDATE SET xp = EXCLUDED.xp, rank = EXCLUDED.rank`,
-      [randomUUID(), row.user_id, row.xp, row.rank, today],
-    );
-  }
-
-  for (const row of referralResult.rows) {
-    await runQuery(
-      `INSERT INTO leaderboard_snapshots (id, user_id, period, xp, rank, snapshot_date)
-       VALUES ($1, $2, 'referral', $3, $4, $5)
-       ON CONFLICT (user_id, period, snapshot_date)
-       DO UPDATE SET xp = EXCLUDED.xp, rank = EXCLUDED.rank`,
-      [randomUUID(), row.user_id, row.xp, row.rank, today],
-    );
-  }
 }
 
 export async function getCurrentAllTimeRankForUser(userId: string) {

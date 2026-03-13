@@ -55,6 +55,21 @@ Re-apply the seed file without dropping data first:
 npm run dev:db:seed
 ```
 
+Write explicit leaderboard snapshots:
+
+```bash
+npm run dev:db:snapshot:all-time
+npm run dev:db:snapshot:referral
+npm run dev:db:snapshot:weekly
+npm run dev:db:snapshot:monthly
+```
+
+Or run a specific period/date manually:
+
+```bash
+node scripts/dev.mjs snapshot weekly 2026-03-13
+```
+
 Reset the local database completely:
 
 ```bash
@@ -93,3 +108,4 @@ npm run build
 - The helper script reads `DATABASE_URL` from `.env.local` first, then `.env`
 - These commands assume your local Postgres instance is reachable from `DATABASE_URL`
 - `dev:db:seed` is safe for iterative local reseeding only if the SQL uses idempotent inserts/updates for the rows you care about
+- snapshot commands upsert rows into `leaderboard_snapshots` for the chosen period/date

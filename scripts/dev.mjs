@@ -111,6 +111,55 @@ function doctor() {
   runPsql(["-c", "SELECT current_database(), current_user;"], "Running database check");
 }
 
+function snapshot(period = "all-time", snapshotDate) {
+  const supportedPeriods = new Set(["all-time", "referral", "weekly", "monthly"]);
+
+  if (!supportedPeriods.has(period)) {
+    console.error(`Unsupported snapshot period: ${period}`);
+    process.exit(1);
+  }
+
+  const dateClause = snapshotDate ? `'${snapshotDate}'::date` : "CURRENT_DATE";
+  const xpExpression =
+    period === "referral"
+      ? "COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0)::int"
+      : "u.total_xp";
+  const rankOrder =
+    period === "referral"
+      ? `${xpExpression} DESC, COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE) DESC, u.created_at ASC`
+      : "u.total_xp DESC, u.level DESC, u.created_at ASC";
+
+  const query = `
+WITH snapshot_source AS (
+  SELECT u.id AS user_id,
+         ${xpExpression} AS xp,
+         RANK() OVER (ORDER BY ${rankOrder}) AS rank
+  FROM users u
+  LEFT JOIN referrals r ON r.referrer_user_id = u.id
+  GROUP BY u.id, u.total_xp, u.level, u.created_at
+)
+INSERT INTO leaderboard_snapshots (id, user_id, period, xp, rank, snapshot_date)
+SELECT (
+         substr(md5(user_id::text || '${period}' || ${dateClause}::text), 1, 8) || '-' ||
+         substr(md5(user_id::text || '${period}' || ${dateClause}::text), 9, 4) || '-' ||
+         substr(md5(user_id::text || '${period}' || ${dateClause}::text), 13, 4) || '-' ||
+         substr(md5(user_id::text || '${period}' || ${dateClause}::text), 17, 4) || '-' ||
+         substr(md5(user_id::text || '${period}' || ${dateClause}::text), 21, 12)
+       )::uuid,
+       user_id,
+       '${period}',
+       xp,
+       rank,
+       ${dateClause}
+FROM snapshot_source
+ON CONFLICT (user_id, period, snapshot_date)
+DO UPDATE SET xp = EXCLUDED.xp, rank = EXCLUDED.rank;
+`;
+
+  console.log(`\n==> Writing ${period} leaderboard snapshot${snapshotDate ? ` for ${snapshotDate}` : ""}`);
+  runPsql(["-c", query], "Writing leaderboard snapshot");
+}
+
 const command = process.argv[2];
 
 switch (command) {
@@ -126,7 +175,10 @@ switch (command) {
   case "doctor":
     doctor();
     break;
+  case "snapshot":
+    snapshot(process.argv[3], process.argv[4]);
+    break;
   default:
-    console.error("Usage: node scripts/dev.mjs <migrate|seed|reset|doctor>");
+    console.error("Usage: node scripts/dev.mjs <migrate|seed|reset|doctor|snapshot [period] [YYYY-MM-DD]>");
     process.exit(1);
 }
