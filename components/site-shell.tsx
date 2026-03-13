@@ -33,11 +33,10 @@ export function SiteShell({
           <Link href="/" className="brand-link" aria-label="Emorya home">
             <Image
               className="brand-logo"
-              src="https://emorya.com/_next/image?url=%2Ficons%2Flogo.png&w=640&q=100"
-              alt="Emorya logo"
-              width={52}
-              height={52}
-              unoptimized
+              src="/brand/emorya-wordmark.svg"
+              alt="Emorya"
+              width={432}
+              height={96}
             />
           </Link>
           <div className="brand-copy">

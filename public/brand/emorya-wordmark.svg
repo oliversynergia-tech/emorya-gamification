@@ -1,0 +1,21 @@
+<svg width="432" height="96" viewBox="0 0 432 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="emoryaBadge" x1="24" y1="12" x2="72" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F0509E"/>
+      <stop offset="1" stop-color="#8F5DFF"/>
+    </linearGradient>
+    <linearGradient id="emoryaText" x1="104" y1="18" x2="302" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FAF6FF"/>
+      <stop offset="1" stop-color="#DFB6FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="80" height="80" rx="28" fill="url(#emoryaBadge)"/>
+  <path d="M28 48C28 36.9543 36.9543 28 48 28C59.0457 28 68 36.9543 68 48C68 59.0457 59.0457 68 48 68C36.9543 68 28 59.0457 28 48Z" fill="white" fill-opacity="0.16"/>
+  <path d="M40 36H56V44H64V60H48V52H40V36Z" fill="white"/>
+  <path d="M48 20L53.6406 28H42.3594L48 20Z" fill="white"/>
+  <path d="M76 48L68 53.6406V42.3594L76 48Z" fill="white"/>
+  <path d="M48 76L42.3594 68H53.6406L48 76Z" fill="white"/>
+  <path d="M20 48L28 42.3594V53.6406L20 48Z" fill="white"/>
+  <text x="108" y="58" fill="url(#emoryaText)" font-family="'Avenir Next', 'Segoe UI', sans-serif" font-size="42" font-weight="700" letter-spacing="-0.06em">Emorya</text>
+  <text x="111" y="78" fill="#DFB6FF" fill-opacity="0.9" font-family="'Helvetica Neue', 'Segoe UI', sans-serif" font-size="15" font-weight="600" letter-spacing="0.18em">HEALTHY HABITS • REAL REWARDS</text>
+</svg>

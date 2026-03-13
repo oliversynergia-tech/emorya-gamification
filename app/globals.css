@@ -1,6 +1,22 @@
+@font-face {
+  font-family: "Emorya Display";
+  src:
+    local("Space Grotesk"),
+    url("/fonts/SpaceGrotesk-Variable.woff2") format("woff2");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Emorya Body";
+  src:
+    local("Manrope"),
+    url("/fonts/Manrope-Variable.woff2") format("woff2");
+  font-display: swap;
+}
+
 :root {
-  --font-display: "Avenir Next", "Segoe UI", sans-serif;
-  --font-body: "Helvetica Neue", "Segoe UI", sans-serif;
+  --font-display: "Emorya Display", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Emorya Body", "Helvetica Neue", "Segoe UI", sans-serif;
   --bg: #120719;
   --bg-soft: #1f0e2c;
   --bg-deep: #07030c;
