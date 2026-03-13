@@ -35,6 +35,7 @@ export function ReviewQueuePanel({
   const [historyQuery, setHistoryQuery] = useState("");
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkConfirmation, setBulkConfirmation] = useState("");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [moderationNotes, setModerationNotes] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export function ReviewQueuePanel({
     ),
   );
   const historyTypes = Array.from(new Set(history.map((item) => item.verificationType)));
+  const selectedQueueItems = queue.filter((item) => selectedIds.includes(item.id));
 
   const filteredHistory = history.filter((item) => {
     if (historyStatusFilter !== "all" && item.status !== historyStatusFilter) {
@@ -164,19 +166,35 @@ export function ReviewQueuePanel({
         body: JSON.stringify({
           completionIds: selectedIds,
           action,
+          expectedCount: selectedIds.length,
         }),
       });
 
-      const result = (await response.json()) as { ok: boolean; error?: string; reviewedCount?: number };
+      const result = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        reviewedCount?: number;
+        failedCount?: number;
+        failures?: Array<{ completionId: string; error: string }>;
+      };
 
       if (!response.ok || !result.ok) {
         setError(result.error ?? "Unable to process bulk review.");
         return;
       }
 
-      setQueue((current) => current.filter((entry) => !selectedIds.includes(entry.id)));
+      const failedIds = new Set((result.failures ?? []).map((entry) => entry.completionId));
+      setQueue((current) => current.filter((entry) => failedIds.has(entry.id) || !selectedIds.includes(entry.id)));
       setSelectedIds([]);
-      setMessage(`${result.reviewedCount ?? selectedIds.length} submissions ${action === "approved" ? "approved" : "rejected"}.`);
+      setBulkConfirmation("");
+      setMessage(
+        result.failedCount
+          ? `${result.reviewedCount ?? 0} submissions processed, ${result.failedCount} remained pending.`
+          : `${result.reviewedCount ?? selectedIds.length} submissions ${action === "approved" ? "approved" : "rejected"}.`,
+      );
+      if (result.failedCount) {
+        setError(result.failures?.map((failure) => failure.error).join(" | ") ?? "Some submissions could not be processed.");
+      }
       router.refresh();
     } catch {
       setError("Unable to reach the review service.");
@@ -347,10 +365,21 @@ export function ReviewQueuePanel({
       {queue.length === 0 ? <p className="form-note">No pending submissions right now.</p> : null}
       {queue.length > 0 ? (
         <div className="review-bulk-actions">
+          <p className="form-note">
+            {selectedQueueItems.length} selected across {new Set(selectedQueueItems.map((item) => item.verificationType)).size || 0} verification lanes.
+          </p>
+          <label className="field">
+            <span>Type BULK {selectedIds.length}</span>
+            <input
+              value={bulkConfirmation}
+              placeholder={`BULK ${selectedIds.length}`}
+              onChange={(event) => setBulkConfirmation(event.target.value)}
+            />
+          </label>
           <button
             className="button button--secondary button--small"
             type="button"
-            disabled={!isAuthenticated || pendingId === "bulk"}
+            disabled={!isAuthenticated || pendingId === "bulk" || bulkConfirmation.trim() !== `BULK ${selectedIds.length}`}
             onClick={() => bulkReview("approved")}
           >
             {pendingId === "bulk" ? "Working..." : `Approve selected (${selectedIds.length})`}
@@ -358,7 +387,7 @@ export function ReviewQueuePanel({
           <button
             className="button button--secondary button--small"
             type="button"
-            disabled={!isAuthenticated || pendingId === "bulk"}
+            disabled={!isAuthenticated || pendingId === "bulk" || bulkConfirmation.trim() !== `BULK ${selectedIds.length}`}
             onClick={() => bulkReview("rejected")}
           >
             Reject selected

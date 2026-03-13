@@ -379,23 +379,39 @@ export async function bulkReviewQuestSubmissions({
   action: "approved" | "rejected";
   moderationNote?: string;
 }) {
+  const uniqueCompletionIds = Array.from(new Set(completionIds));
+
+  if (uniqueCompletionIds.length > 20) {
+    throw new Error("Bulk review is limited to 20 submissions at a time.");
+  }
+
   const outcomes = [];
+  const failures = [];
 
-  for (const completionId of completionIds) {
-    const result = await reviewQuestSubmission({
-      completionId,
-      action,
-      moderationNote,
-    });
+  for (const completionId of uniqueCompletionIds) {
+    try {
+      const result = await reviewQuestSubmission({
+        completionId,
+        action,
+        moderationNote,
+      });
 
-    outcomes.push({
-      completionId,
-      progressUpdate: result.progressUpdate,
-    });
+      outcomes.push({
+        completionId,
+        progressUpdate: result.progressUpdate,
+      });
+    } catch (error) {
+      failures.push({
+        completionId,
+        error: error instanceof Error ? error.message : "Unable to review submission.",
+      });
+    }
   }
 
   return {
     reviewedCount: outcomes.length,
+    failedCount: failures.length,
     outcomes,
+    failures,
   };
 }

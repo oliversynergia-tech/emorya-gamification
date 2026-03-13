@@ -17,6 +17,7 @@ export async function PATCH(request: Request) {
       completionIds?: string[];
       action?: "approved" | "rejected";
       moderationNote?: string;
+      expectedCount?: number;
     };
 
     if (!Array.isArray(body.completionIds) || body.completionIds.length === 0) {
@@ -25,6 +26,13 @@ export async function PATCH(request: Request) {
 
     if (body.action !== "approved" && body.action !== "rejected") {
       return NextResponse.json({ ok: false, error: "Action must be approved or rejected." }, { status: 400 });
+    }
+
+    if (typeof body.expectedCount !== "number" || body.expectedCount !== body.completionIds.length) {
+      return NextResponse.json(
+        { ok: false, error: "Bulk review confirmation count did not match the selected submissions." },
+        { status: 400 },
+      );
     }
 
     const result = await bulkReviewQuestSubmissions({
