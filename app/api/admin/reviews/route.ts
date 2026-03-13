@@ -1,22 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { handleReviewQueueRequest } from "@/server/http/quest-handlers";
 import { listPendingQuestReviews } from "@/server/services/quest-service";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  try {
-    const queue = await listPendingQuestReviews();
+  const result = await handleReviewQueueRequest(listPendingQuestReviews);
 
-    return NextResponse.json({ ok: true, queue });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to load the review queue.";
-    const status = message.includes("signed in")
-      ? 401
-      : message.includes("Admin access")
-        ? 403
-        : 400;
-
-    return NextResponse.json({ ok: false, error: message }, { status });
-  }
+  return NextResponse.json(result.body, { status: result.status });
 }

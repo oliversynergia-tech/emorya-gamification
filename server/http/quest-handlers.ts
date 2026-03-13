@@ -1,0 +1,102 @@
+import type { QuestProgressUpdate, ReviewHistoryItem, ReviewQueueItem } from "@/lib/types";
+
+export async function handleQuestSubmitRequest(
+  {
+    questId,
+    payload,
+  }: {
+    questId: string;
+    payload: Record<string, unknown>;
+  },
+  submitQuest: (input: {
+    questId: string;
+    payload: Record<string, unknown>;
+  }) => Promise<unknown>,
+) {
+  try {
+    const result = await submitQuest({ questId, payload });
+
+    return {
+      status: 200,
+      body: { ok: true, ...((result as Record<string, unknown>) ?? {}) },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to submit quest.";
+
+    return {
+      status: message.includes("signed in") ? 401 : message.includes("not unlocked") ? 403 : 400,
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleReviewQueueRequest(
+  listPendingQuestReviews: () => Promise<ReviewQueueItem[]>,
+) {
+  try {
+    const queue = await listPendingQuestReviews();
+
+    return {
+      status: 200,
+      body: { ok: true, queue },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load the review queue.";
+
+    return {
+      status: message.includes("signed in") ? 401 : message.includes("Admin access") ? 403 : 400,
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleReviewPatchRequest(
+  {
+    completionId,
+    body,
+  }: {
+    completionId: string;
+    body: { action?: "approved" | "rejected"; moderationNote?: string };
+  },
+  reviewQuestSubmission: (input: {
+    completionId: string;
+    action: "approved" | "rejected";
+    moderationNote?: string;
+  }) => Promise<{
+    progressUpdate?: QuestProgressUpdate | null;
+    reviewHistory?: ReviewHistoryItem[];
+  } & Record<string, unknown>>,
+) {
+  if (body.action !== "approved" && body.action !== "rejected") {
+    return {
+      status: 400,
+      body: { ok: false, error: "Action must be approved or rejected." },
+    };
+  }
+
+  try {
+    const result = await reviewQuestSubmission({
+      completionId,
+      action: body.action,
+      moderationNote: body.moderationNote,
+    });
+
+    return {
+      status: 200,
+      body: { ok: true, ...result },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to review submission.";
+
+    return {
+      status: message.includes("signed in")
+        ? 401
+        : message.includes("Admin access")
+          ? 403
+          : message.includes("not found")
+            ? 404
+            : 400,
+      body: { ok: false, error: message },
+    };
+  }
+}
