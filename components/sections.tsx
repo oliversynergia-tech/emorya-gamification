@@ -503,6 +503,123 @@ export function ProfileSection({ data }: { data: DashboardData }) {
   );
 }
 
+export function AchievementsHubSection({ data }: { data: DashboardData }) {
+  const unlockedAchievements = data.achievements.filter((achievement) => achievement.unlocked);
+  const progressingAchievements = data.achievements
+    .filter((achievement) => !achievement.unlocked)
+    .sort((left, right) => right.progress - left.progress);
+  const completionRate = data.achievements.length
+    ? Math.round((unlockedAchievements.length / data.achievements.length) * 100)
+    : 0;
+  const nextAchievement = progressingAchievements[0] ?? null;
+
+  return (
+    <section className="grid grid--profile">
+      <div className="panel">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Progress overview</p>
+            <h3>Prestige at a glance</h3>
+          </div>
+          <span className="badge badge--pink">{completionRate}% complete</span>
+        </div>
+        <div className="info-grid">
+          <div className="info-card">
+            <span>Unlocked</span>
+            <strong>{unlockedAchievements.length}</strong>
+          </div>
+          <div className="info-card">
+            <span>Total badges</span>
+            <strong>{data.achievements.length}</strong>
+          </div>
+          <div className="info-card">
+            <span>Current streak</span>
+            <strong>{data.user.currentStreak} days</strong>
+          </div>
+          <div className="info-card">
+            <span>Current tier</span>
+            <strong>{getTierLabel(data.user.tier)}</strong>
+          </div>
+        </div>
+        {nextAchievement ? (
+          <div className="achievement-spotlight">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Closest next unlock</p>
+                <h3>{nextAchievement.name}</h3>
+              </div>
+              <span className="badge">{Math.round(nextAchievement.progress * 100)}%</span>
+            </div>
+            <p>{nextAchievement.description}</p>
+            <div className="achievement-progress">
+              <div
+                className="achievement-progress__fill"
+                style={{ width: `${nextAchievement.progress * 100}%` }}
+              />
+            </div>
+          </div>
+        ) : (
+          <p className="form-note">Every currently tracked achievement is unlocked.</p>
+        )}
+      </div>
+      <div className="panel">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Unlocked badges</p>
+            <h3>Your completed prestige markers</h3>
+          </div>
+        </div>
+        <div className="achievement-list">
+          {unlockedAchievements.length ? (
+            unlockedAchievements.map((achievement) => (
+              <article key={achievement.id} className="achievement-card achievement-card--unlocked">
+                <div>
+                  <strong>{achievement.name}</strong>
+                  <p>{achievement.description}</p>
+                </div>
+                <span className="badge">Unlocked</span>
+              </article>
+            ))
+          ) : (
+            <p className="form-note">No unlocked badges yet. Keep pushing the quest loop.</p>
+          )}
+        </div>
+      </div>
+      <div className="panel">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">In progress</p>
+            <h3>What to chase next</h3>
+          </div>
+        </div>
+        <div className="achievement-list">
+          {progressingAchievements.length ? (
+            progressingAchievements.map((achievement) => (
+              <article key={achievement.id} className="achievement-card achievement-card--progress">
+                <div>
+                  <strong>{achievement.name}</strong>
+                  <p>{achievement.description}</p>
+                </div>
+                <div className="achievement-card__side">
+                  <span>{Math.round(achievement.progress * 100)}%</span>
+                  <div className="achievement-progress">
+                    <div
+                      className="achievement-progress__fill"
+                      style={{ width: `${achievement.progress * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </article>
+            ))
+          ) : (
+            <p className="form-note">No active progress items right now.</p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function AdminSection({ data }: { data: AdminOverviewData }) {
   return (
     <section className="panel">

@@ -8,6 +8,7 @@ import type { AuthUser } from "@/lib/types";
 const navItems = [
   { href: "/", label: "Overview" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/achievements", label: "Achievements" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
   { href: "/auth", label: "Auth" },
