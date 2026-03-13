@@ -100,6 +100,21 @@ async function syncAchievementProgress({
       progress = xpTarget > 0 ? Math.min(totalXp / xpTarget, 1) : 0;
     }
 
+    if (definition.slug === "wallet-synced") {
+      const walletTarget = Number(definition.condition.linkedWallets ?? 0);
+      progress = walletTarget > 0 ? Math.min(metrics.linkedWalletCount / walletTarget, 1) : 0;
+    }
+
+    if (definition.slug === "creator-signal") {
+      const creatorTarget = Number(definition.condition.manualReviewApprovals ?? 0);
+      progress = creatorTarget > 0 ? Math.min(metrics.approvedManualReviewCount / creatorTarget, 1) : 0;
+    }
+
+    if (definition.slug === "daily-ritual") {
+      const dailyTarget = Number(definition.condition.dailyApprovals ?? 0);
+      progress = dailyTarget > 0 ? Math.min(metrics.approvedDailyQuestCount / dailyTarget, 1) : 0;
+    }
+
     const existing = userAchievements.get(definition.slug);
     const clampedProgress = Math.max(progress, existing?.progress ?? 0);
     const shouldUnlock = clampedProgress >= 1;

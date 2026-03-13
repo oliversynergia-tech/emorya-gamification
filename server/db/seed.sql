@@ -360,6 +360,30 @@ INSERT INTO achievements (id, slug, name, description, category, condition) VALU
     'Accumulate 5,000 total XP across quests, referrals, and streak play.',
     'progression',
     '{"totalXp":5000}'::jsonb
+  ),
+  (
+    'b944662a-f5d7-4d55-a942-1d03fe6bd6d0',
+    'wallet-synced',
+    'Wallet Synced',
+    'Link a MultiversX wallet and bring on-chain identity into the account.',
+    'wallet',
+    '{"linkedWallets":1}'::jsonb
+  ),
+  (
+    'db806fd0-f7dc-42ff-8f5a-0f13869e4b2e',
+    'creator-signal',
+    'Creator Signal',
+    'Get two manual-review creator quests approved.',
+    'creative',
+    '{"manualReviewApprovals":2}'::jsonb
+  ),
+  (
+    '1dc2f179-c55e-445d-b33d-389fca6a1593',
+    'daily-ritual',
+    'Daily Ritual',
+    'Complete five approved daily quests.',
+    'consistency',
+    '{"dailyApprovals":5}'::jsonb
   )
 ON CONFLICT (id) DO NOTHING;
 

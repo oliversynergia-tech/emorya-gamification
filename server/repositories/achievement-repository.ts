@@ -17,6 +17,9 @@ type AchievementProgressContextRow = QueryResultRow & {
   approved_quest_count: string;
   invited_count: string;
   converted_count: string;
+  linked_wallet_count: string;
+  approved_manual_review_count: string;
+  approved_daily_quest_count: string;
 };
 
 export async function getAchievementDefinitions() {
@@ -89,7 +92,30 @@ export async function getAchievementProgressContext(userId: string) {
          FROM referrals r
          WHERE r.referrer_user_id = $1
            AND r.referee_subscribed = TRUE
-       ), 0)::text AS converted_count`,
+       ), 0)::text AS converted_count,
+       COALESCE((
+         SELECT COUNT(*)
+         FROM user_identities ui
+         WHERE ui.user_id = $1
+           AND ui.provider = 'multiversx'
+           AND ui.status = 'active'
+       ), 0)::text AS linked_wallet_count,
+       COALESCE((
+         SELECT COUNT(*)
+         FROM quest_completions qc
+         INNER JOIN quest_definitions q ON q.id = qc.quest_id
+         WHERE qc.user_id = $1
+           AND qc.status = 'approved'
+           AND q.verification_type = 'manual-review'
+       ), 0)::text AS approved_manual_review_count,
+       COALESCE((
+         SELECT COUNT(*)
+         FROM quest_completions qc
+         INNER JOIN quest_definitions q ON q.id = qc.quest_id
+         WHERE qc.user_id = $1
+           AND qc.status = 'approved'
+           AND q.recurrence = 'daily'
+       ), 0)::text AS approved_daily_quest_count`,
     [userId],
   );
 
@@ -97,5 +123,8 @@ export async function getAchievementProgressContext(userId: string) {
     approvedQuestCount: Number(result.rows[0]?.approved_quest_count ?? 0),
     invitedCount: Number(result.rows[0]?.invited_count ?? 0),
     convertedCount: Number(result.rows[0]?.converted_count ?? 0),
+    linkedWalletCount: Number(result.rows[0]?.linked_wallet_count ?? 0),
+    approvedManualReviewCount: Number(result.rows[0]?.approved_manual_review_count ?? 0),
+    approvedDailyQuestCount: Number(result.rows[0]?.approved_daily_quest_count ?? 0),
   };
 }
