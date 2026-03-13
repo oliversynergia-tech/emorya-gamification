@@ -229,14 +229,14 @@ export async function submitQuest({
 
 export async function listPendingQuestReviews(): Promise<ReviewQueueItem[]> {
   const currentUser = await getAuthenticatedUser();
-  assertAdminUser(currentUser);
+  await assertAdminUser(currentUser);
 
   return getPendingReviewQueue();
 }
 
 export async function listRecentQuestReviews(): Promise<ReviewHistoryItem[]> {
   const currentUser = await getAuthenticatedUser();
-  assertAdminUser(currentUser);
+  await assertAdminUser(currentUser);
 
   return getRecentReviewHistory();
 }
@@ -251,7 +251,11 @@ export async function reviewQuestSubmission({
   moderationNote?: string;
 }) {
   const currentUser = await getAuthenticatedUser();
-  assertAdminUser(currentUser);
+  await assertAdminUser(currentUser);
+
+  if (!currentUser) {
+    throw new Error("You must be signed in to access admin controls.");
+  }
 
   const existingCompletion = await getPendingReviewQueue().then((queue) =>
     queue.find((item) => item.id === completionId) ?? null,

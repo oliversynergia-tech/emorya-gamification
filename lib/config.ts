@@ -14,7 +14,6 @@ type AppConfig = {
   multiversxChain: string;
   multiversxWalletConnectProjectId?: string;
   multiversxApiUrl: string;
-  adminEmailAllowlist: string[];
 };
 
 function readEnv(key: RequiredEnvKey): string {
@@ -35,7 +34,6 @@ export function getConfig(): AppConfig {
     multiversxChain: readEnv("NEXT_PUBLIC_MULTIVERSX_CHAIN"),
     multiversxWalletConnectProjectId: process.env.NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID,
     multiversxApiUrl: process.env.MULTIVERSX_API_URL ?? "https://api.multiversx.com",
-    adminEmailAllowlist: getAdminEmailAllowlist(),
   };
 }
 
@@ -45,13 +43,4 @@ export function getMissingRequiredEnv(): RequiredEnvKey[] {
 
 export function hasDatabaseConfig(): boolean {
   return Boolean(process.env.DATABASE_URL);
-}
-
-export function getAdminEmailAllowlist(): string[] {
-  const value = process.env.ADMIN_EMAIL_ALLOWLIST ?? "";
-
-  return value
-    .split(",")
-    .map((entry) => entry.trim().toLowerCase())
-    .filter(Boolean);
 }

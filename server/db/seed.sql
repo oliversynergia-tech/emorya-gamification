@@ -112,6 +112,10 @@ INSERT INTO users (
   )
 ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO user_roles (user_id, role, granted_by) VALUES
+  ('6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'admin', NULL)
+ON CONFLICT (user_id, role) DO NOTHING;
+
 INSERT INTO social_connections (id, user_id, platform, handle, verified, connected_at) VALUES
   ('7bb59c4d-42f4-471d-82f3-8a96a55bcb0f', '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'X', '@oliver_moves', TRUE, NOW() - INTERVAL '13 days'),
   ('118e1e4c-dcbc-428f-bf72-c833f7f28d56', '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'Telegram', 'olivermoves', TRUE, NOW() - INTERVAL '13 days'),

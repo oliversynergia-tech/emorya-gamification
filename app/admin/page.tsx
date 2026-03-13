@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const session = await resolveCurrentSession();
-  const hasAdminAccess = isAdminUser(session?.user);
+  const hasAdminAccess = await isAdminUser(session?.user);
 
   if (!session || !hasAdminAccess) {
     return (
@@ -19,14 +19,14 @@ export default async function AdminPage() {
             <p className="eyebrow">Moderation layer</p>
             <h2>Admin surfaces now match the rest of the product shell, even when access is restricted.</h2>
             <p className="lede">
-              Review actions, progression effects, and moderation notes sit behind an allowlisted admin gate.
+              Review actions, progression effects, and moderation notes sit behind database-backed role checks.
             </p>
           </div>
           <div className="panel panel--stack page-aside">
             <div className="metric-card">
               <span>Access model</span>
-              <strong>Email allowlist</strong>
-              <small>Only approved admin accounts can load review state or act on submissions.</small>
+              <strong>Database roles</strong>
+              <small>Only users with an admin role can load review state or act on submissions.</small>
             </div>
           </div>
         </section>
@@ -38,7 +38,7 @@ export default async function AdminPage() {
             </div>
           </div>
           <p className="form-note">
-            Sign in with an allowlisted admin account to review submissions and access moderation data.
+            Sign in with an account that has the admin role to review submissions and access moderation data.
           </p>
         </section>
       </SiteShell>

@@ -1,25 +1,21 @@
 import type { AuthSession, AuthUser } from "@/lib/types";
-import { getAdminEmailAllowlist } from "@/lib/config";
 import { resolveCurrentSession } from "@/server/auth/current-user";
+import { userHasRole } from "@/server/repositories/admin-repository";
 
-export function isAdminUser(user: Pick<AuthUser, "email"> | null | undefined): boolean {
-  if (!user?.email) {
+export async function isAdminUser(user: Pick<AuthUser, "id"> | null | undefined): Promise<boolean> {
+  if (!user?.id) {
     return false;
   }
 
-  const allowlist = getAdminEmailAllowlist();
-
-  return allowlist.includes(user.email.trim().toLowerCase());
+  return userHasRole(user.id, "admin");
 }
 
-export function assertAdminUser(
-  user: AuthUser | null | undefined,
-): asserts user is AuthUser & { email: string } {
+export async function assertAdminUser(user: AuthUser | null | undefined): Promise<void> {
   if (!user) {
     throw new Error("You must be signed in to access admin controls.");
   }
 
-  if (!isAdminUser(user)) {
+  if (!(await isAdminUser(user))) {
     throw new Error("Admin access is required for this action.");
   }
 }
@@ -31,6 +27,6 @@ export async function requireAdminSession(): Promise<AuthSession> {
     throw new Error("You must be signed in to access admin controls.");
   }
 
-  assertAdminUser(session.user);
+  await assertAdminUser(session.user);
   return session;
 }

@@ -12,6 +12,7 @@ CREATE TYPE verification_type AS ENUM (
 );
 CREATE TYPE quest_recurrence AS ENUM ('one-time', 'daily', 'weekly');
 CREATE TYPE completion_status AS ENUM ('pending', 'approved', 'rejected');
+CREATE TYPE app_role AS ENUM ('admin', 'reviewer');
 
 CREATE TABLE users (
   id UUID PRIMARY KEY,
@@ -50,6 +51,14 @@ CREATE TABLE user_sessions (
   expires_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE user_roles (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role app_role NOT NULL,
+  granted_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, role)
 );
 
 CREATE TABLE wallet_link_challenges (
@@ -170,6 +179,7 @@ CREATE TABLE activity_log (
 
 CREATE INDEX idx_users_subscription_tier ON users(subscription_tier);
 CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id, expires_at DESC);
+CREATE INDEX idx_user_roles_role ON user_roles(role, created_at DESC);
 CREATE INDEX idx_wallet_link_challenges_user_id ON wallet_link_challenges(user_id, created_at DESC);
 CREATE INDEX idx_quest_definitions_category ON quest_definitions(category);
 CREATE INDEX idx_quest_completions_status ON quest_completions(status);

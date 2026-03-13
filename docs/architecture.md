@@ -105,7 +105,6 @@ Needed before auth and integrations land:
 
 - `NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID`
 - `MULTIVERSX_API_URL`
-- `ADMIN_EMAIL_ALLOWLIST`
 - `TWITTER_API_BEARER_TOKEN`
 - `TELEGRAM_BOT_TOKEN`
 - `DISCORD_CLIENT_ID`
@@ -136,9 +135,9 @@ Wallet-link status:
 
 Admin authorization status:
 
-- admin review routes are protected by an explicit email allowlist in `ADMIN_EMAIL_ALLOWLIST`
-- only allowlisted signed-in accounts can access `/admin`, load the review queue, or approve/reject submissions
-- this is the temporary authorization layer until a first-class role model is added to the database
+- admin review routes are protected by database-backed roles in `user_roles`
+- only signed-in accounts with the `admin` role can access `/admin`, load the review queue, or approve/reject submissions
+- local seed/migrations grant the admin role to the primary development accounts for continuity
 
 Referral system status:
 
