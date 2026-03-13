@@ -18,7 +18,7 @@ export type QuestCategory =
   | "referral"
   | "limited";
 
-export type QuestStatus = "available" | "locked" | "in-progress" | "completed";
+export type QuestStatus = "available" | "locked" | "in-progress" | "completed" | "rejected";
 export type CompletionStatus = "pending" | "approved" | "rejected";
 
 export type Quest = {
@@ -244,4 +244,5 @@ export type QuestProgressUpdate = {
   deltaXp: number;
   level: number;
   currentStreak: number;
+  unlockedAchievements?: string[];
 };

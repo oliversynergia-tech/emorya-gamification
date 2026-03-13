@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 
+import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { Quest, QuestProgressUpdate } from "@/lib/types";
 
 type SubmissionState = Record<string, string>;
@@ -137,13 +138,14 @@ export function QuestActionsPanel({
           const pending = pendingQuestId === quest.id;
 
           return (
-            <article key={quest.id} className="quest-action-card">
+            <article key={quest.id} className={`quest-action-card quest-card--state-${quest.status}`}>
               <div className="quest-card__meta">
                 <span>{quest.verificationType}</span>
-                <span>{quest.status}</span>
+                <span>{getQuestStatusLabel(quest.status)}</span>
               </div>
               <h4>{quest.title}</h4>
               <p>{quest.description}</p>
+              <small className="quest-card__note">{getQuestStatusNote(quest.status)}</small>
               {quest.verificationType === "quiz" ? (
                 <form className="form-stack" onSubmit={(event) => handleQuizSubmit(event, quest)}>
                   <label className="field">
@@ -213,7 +215,7 @@ export function QuestActionsPanel({
                   {quest.status === "locked"
                     ? "Unlock this quest by reaching the required level or tier."
                     : quest.status === "completed"
-                      ? "This quest is already completed."
+                      ? "This quest is already approved and cannot be resubmitted."
                       : "Sign in to submit."}
                 </small>
               ) : null}
@@ -247,6 +249,11 @@ export function QuestActionsPanel({
           <small className="form-note">
             Total credited for this quest: {progressUpdate.xpAwarded} XP.
           </small>
+          {progressUpdate.unlockedAchievements?.length ? (
+            <small className="form-note">
+              Unlocked: {progressUpdate.unlockedAchievements.join(", ")}
+            </small>
+          ) : null}
         </div>
       ) : null}
       {error ? <p className="status status--error">{error}</p> : null}

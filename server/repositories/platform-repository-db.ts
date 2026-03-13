@@ -72,6 +72,9 @@ type LeaderboardRow = QueryResultRow & {
 
 type ActivityRow = QueryResultRow & {
   id: string;
+  action_type: string;
+  created_at: string;
+  display_name: string | null;
   metadata: { actor?: string; action?: string; detail?: string; timeAgo?: string };
 };
 
@@ -215,6 +218,10 @@ function deriveQuestStatus(user: UserRow, quest: QuestRow): Quest["status"] {
     return "in-progress";
   }
 
+  if (quest.completion_status === "rejected") {
+    return "rejected";
+  }
+
   return "available";
 }
 
@@ -294,19 +301,42 @@ async function getLeaderboard(): Promise<LeaderboardEntry[]> {
 }
 
 async function getActivityFeed(): Promise<ActivityItem[]> {
+  function getRelativeTimeLabel(isoDate: string) {
+    const diffMs = Date.now() - new Date(isoDate).getTime();
+    const diffMinutes = Math.max(Math.round(diffMs / 60000), 0);
+
+    if (diffMinutes < 1) {
+      return "just now";
+    }
+
+    if (diffMinutes < 60) {
+      return `${diffMinutes}m ago`;
+    }
+
+    const diffHours = Math.round(diffMinutes / 60);
+
+    if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    }
+
+    const diffDays = Math.round(diffHours / 24);
+    return `${diffDays}d ago`;
+  }
+
   const result = await runQuery<ActivityRow>(
-    `SELECT id, metadata
-     FROM activity_log
+    `SELECT al.id, al.action_type, al.created_at, u.display_name, al.metadata
+     FROM activity_log al
+     INNER JOIN users u ON u.id = al.user_id
      ORDER BY created_at DESC
      LIMIT 8`,
   );
 
   return result.rows.map((row) => ({
     id: row.id,
-    actor: row.metadata?.actor ?? "User",
-    action: row.metadata?.action ?? "completed a quest",
+    actor: row.metadata?.actor ?? row.display_name ?? "User",
+    action: row.metadata?.action ?? row.action_type.replaceAll("-", " "),
     detail: row.metadata?.detail ?? "activity event",
-    timeAgo: row.metadata?.timeAgo ?? "just now",
+    timeAgo: getRelativeTimeLabel(row.created_at),
   }));
 }
 

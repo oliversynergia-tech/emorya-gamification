@@ -8,6 +8,7 @@ import { runQuery } from "@/server/db/client";
 type UserProgressRow = QueryResultRow & {
   id: string;
   display_name: string;
+  attribution_source: string | null;
   subscription_tier: SubscriptionTier;
   total_xp: number;
   level: number;
@@ -17,7 +18,7 @@ type UserProgressRow = QueryResultRow & {
 
 export async function getUserProgressById(userId: string) {
   const result = await runQuery<UserProgressRow>(
-    `SELECT id, display_name, subscription_tier, total_xp, level, current_streak, longest_streak
+    `SELECT id, display_name, attribution_source, subscription_tier, total_xp, level, current_streak, longest_streak
      FROM users
      WHERE id = $1
      LIMIT 1`,
@@ -48,7 +49,7 @@ export async function updateUserProgressById({
          longest_streak = $5,
          updated_at = NOW()
      WHERE id = $1
-     RETURNING id, display_name, subscription_tier, total_xp, level, current_streak, longest_streak`,
+     RETURNING id, display_name, attribution_source, subscription_tier, total_xp, level, current_streak, longest_streak`,
     [userId, totalXp, level, currentStreak, longestStreak],
   );
 

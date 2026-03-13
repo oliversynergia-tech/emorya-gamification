@@ -13,7 +13,7 @@ function getQuestStatusFromOutcome(outcome: "approved" | "pending" | "rejected")
     case "pending":
       return "in-progress";
     default:
-      return "available";
+      return "rejected";
   }
 }
 
@@ -68,6 +68,15 @@ export function DashboardExperience({
           totalXp: current.user.totalXp + progressUpdate.deltaXp,
           currentStreak: progressUpdate.currentStreak,
         },
+        achievements: current.achievements.map((achievement) =>
+          progressUpdate.unlockedAchievements?.includes(achievement.name)
+            ? {
+                ...achievement,
+                unlocked: true,
+                progress: 1,
+              }
+            : achievement,
+        ),
         quests: nextQuests,
       };
     });

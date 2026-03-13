@@ -1,4 +1,5 @@
 import { getLevelProgress, getTierLabel, getTierMultiplier } from "@/lib/progression";
+import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { AdminOverviewData, DashboardData, SubscriptionTier } from "@/lib/types";
 
 function tierClass(tier: SubscriptionTier) {
@@ -109,7 +110,10 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
         </div>
         <div className="quest-list">
           {data.quests.slice(0, 4).map((quest) => (
-            <article key={quest.id} className="quest-card">
+            <article
+              key={quest.id}
+              className={`quest-card quest-card--state-${quest.status}`}
+            >
               <div>
                 <div className="quest-card__meta">
                   <span>{quest.category}</span>
@@ -117,10 +121,11 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                 </div>
                 <h4>{quest.title}</h4>
                 <p>{quest.description}</p>
+                <small className="quest-card__note">{getQuestStatusNote(quest.status)}</small>
               </div>
               <div className="quest-card__footer">
                 <span>{quest.xpReward} XP</span>
-                <strong>{quest.status}</strong>
+                <strong>{getQuestStatusLabel(quest.status)}</strong>
               </div>
             </article>
           ))}
@@ -191,7 +196,7 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
         {data.quests.map((quest) => (
           <article
             key={quest.id}
-            className={`quest-card quest-card--board ${quest.status === "locked" ? "quest-card--locked" : ""}`}
+            className={`quest-card quest-card--board quest-card--state-${quest.status} ${quest.status === "locked" ? "quest-card--locked" : ""}`}
           >
             <div className="quest-card__meta">
               <span>{quest.category}</span>
@@ -199,9 +204,16 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
             </div>
             <h4>{quest.title}</h4>
             <p>{quest.description}</p>
+            <small className="quest-card__note">{getQuestStatusNote(quest.status)}</small>
             <div className="quest-card__footer">
               <span>{quest.xpReward} XP</span>
-              <strong>{quest.requiredTier === "free" ? "Open" : `${getTierLabel(quest.requiredTier)}`}</strong>
+              <strong>
+                {quest.status === "locked"
+                  ? quest.requiredTier === "free"
+                    ? "Locked"
+                    : `${getTierLabel(quest.requiredTier)}`
+                  : getQuestStatusLabel(quest.status)}
+              </strong>
             </div>
             {quest.timebox ? <small>{quest.timebox}</small> : null}
           </article>

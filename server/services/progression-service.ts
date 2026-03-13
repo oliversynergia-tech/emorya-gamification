@@ -1,12 +1,104 @@
 import type { QuestProgressUpdate } from "@/lib/types";
 import { getLevelProgress, getTierMultiplier } from "@/lib/progression";
 import {
+  getAchievementDefinitions,
+  getUserAchievementsByUserId,
+  upsertUserAchievement,
+} from "@/server/repositories/achievement-repository";
+import {
   createActivityLogEntry,
   getUserProgressById,
   hasQuestApprovalActivityToday,
   updateUserProgressById,
 } from "@/server/repositories/progression-repository";
 import { setQuestCompletionAwardedXp } from "@/server/repositories/quest-repository";
+
+function normalizeAchievementTarget(value: string | number | boolean | null | undefined) {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    return value.trim().toLowerCase();
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  return null;
+}
+
+async function syncAchievementProgress({
+  userId,
+  displayName,
+  currentStreak,
+  subscriptionTier,
+  attributionSource,
+}: {
+  userId: string;
+  displayName: string;
+  currentStreak: number;
+  subscriptionTier: string;
+  attributionSource: string | null;
+}) {
+  const [definitions, userAchievements] = await Promise.all([
+    getAchievementDefinitions(),
+    getUserAchievementsByUserId(userId),
+  ]);
+
+  const unlockedAchievements: string[] = [];
+
+  for (const definition of definitions) {
+    let progress = 0;
+
+    if (definition.slug === "zealy-veteran") {
+      const sourceTarget = normalizeAchievementTarget(definition.condition.source);
+      const userSource = normalizeAchievementTarget(attributionSource);
+      progress = sourceTarget !== null && userSource === sourceTarget ? 1 : 0;
+    }
+
+    if (definition.slug === "streak-machine") {
+      const dayTarget = Number(definition.condition.days ?? 0);
+      progress = dayTarget > 0 ? Math.min(currentStreak / dayTarget, 1) : 0;
+    }
+
+    if (definition.slug === "premium-champion") {
+      const tierTarget = normalizeAchievementTarget(definition.condition.tier);
+      const userTier = normalizeAchievementTarget(subscriptionTier);
+      progress = tierTarget !== null && userTier === tierTarget ? 1 : 0;
+    }
+
+    const existing = userAchievements.get(definition.slug);
+    const clampedProgress = Math.max(progress, existing?.progress ?? 0);
+    const shouldUnlock = clampedProgress >= 1;
+    const earnedAt = shouldUnlock ? existing?.earnedAt ?? new Date().toISOString() : null;
+
+    await upsertUserAchievement({
+      userId,
+      achievementId: definition.id,
+      progress: clampedProgress,
+      earnedAt,
+    });
+
+    if (shouldUnlock && !existing?.earnedAt) {
+      unlockedAchievements.push(definition.name);
+      await createActivityLogEntry({
+        userId,
+        actionType: "achievement-unlocked",
+        xpEarned: 0,
+        metadata: {
+          actor: displayName,
+          action: "unlocked an achievement",
+          detail: definition.name,
+          achievement: definition.slug,
+        },
+      });
+    }
+  }
+
+  return unlockedAchievements;
+}
 
 export async function applyQuestRewardTransition({
   userId,
@@ -47,11 +139,20 @@ export async function applyQuestRewardTransition({
   const deltaXp = targetAward - previousAwardedXp;
 
   if (deltaXp === 0) {
+    const unlockedAchievements = await syncAchievementProgress({
+      userId,
+      displayName: user.display_name,
+      currentStreak: user.current_streak,
+      subscriptionTier: user.subscription_tier,
+      attributionSource: user.attribution_source,
+    });
+
     return {
       xpAwarded: targetAward,
       deltaXp,
       level: user.level,
       currentStreak: user.current_streak,
+      unlockedAchievements,
     };
   }
 
@@ -70,12 +171,26 @@ export async function applyQuestRewardTransition({
     }
   }
 
-  await updateUserProgressById({
+  const updatedUser = await updateUserProgressById({
     userId,
     totalXp: nextTotalXp,
     level: nextLevel,
     currentStreak: nextCurrentStreak,
     longestStreak: nextLongestStreak,
+  });
+
+  const achievementUser = updatedUser ?? {
+    display_name: user.display_name,
+    subscription_tier: user.subscription_tier,
+    attribution_source: user.attribution_source,
+  };
+
+  const unlockedAchievements = await syncAchievementProgress({
+    userId,
+    displayName: achievementUser.display_name,
+    currentStreak: nextCurrentStreak,
+    subscriptionTier: achievementUser.subscription_tier,
+    attributionSource: achievementUser.attribution_source,
   });
 
   await createActivityLogEntry({
@@ -103,5 +218,6 @@ export async function applyQuestRewardTransition({
     deltaXp,
     level: nextLevel,
     currentStreak: nextCurrentStreak,
+    unlockedAchievements,
   };
 }

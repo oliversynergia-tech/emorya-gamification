@@ -17,12 +17,12 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ ok: false, error: "Action must be approved or rejected." }, { status: 400 });
     }
 
-    const completion = await reviewQuestSubmission({
+    const result = await reviewQuestSubmission({
       completionId,
       action: body.action,
     });
 
-    return NextResponse.json({ ok: true, completion });
+    return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to review submission.";
     const status = message.includes("signed in") ? 401 : message.includes("not found") ? 404 : 400;

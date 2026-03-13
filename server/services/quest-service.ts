@@ -1,5 +1,6 @@
 import type { CompletionStatus, QuestProgressUpdate, ReviewQueueItem } from "@/lib/types";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
+import { createActivityLogEntry, getUserProgressById } from "@/server/repositories/progression-repository";
 import { applyQuestRewardTransition } from "@/server/services/progression-service";
 import {
   getPendingReviewQueue,
@@ -18,6 +19,39 @@ function normalizeText(value: unknown) {
 function normalizeNumber(value: unknown) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : NaN;
+}
+
+async function logQuestActivity({
+  userId,
+  actor,
+  actionType,
+  action,
+  detail,
+  questId,
+  questTitle,
+  xpEarned = 0,
+}: {
+  userId: string;
+  actor: string;
+  actionType: string;
+  action: string;
+  detail: string;
+  questId: string;
+  questTitle: string;
+  xpEarned?: number;
+}) {
+  await createActivityLogEntry({
+    userId,
+    actionType,
+    xpEarned,
+    metadata: {
+      actor,
+      action,
+      detail,
+      questId,
+      questTitle,
+    },
+  });
 }
 
 export async function submitQuest({
@@ -90,6 +124,16 @@ export async function submitQuest({
         questXpReward: quest.xp_reward,
         previousAwardedXp: existingCompletion?.awardedXp ?? 0,
         shouldBeApproved: true,
+      });
+    } else {
+      await logQuestActivity({
+        userId: currentUser.id,
+        actor: currentUser.displayName,
+        actionType: "quest-rejected",
+        action: "missed a quest check",
+        detail: `${quest.title} did not meet the required score`,
+        questId,
+        questTitle: quest.title,
       });
     }
 
@@ -165,6 +209,16 @@ export async function submitQuest({
       },
     });
 
+    await logQuestActivity({
+      userId: currentUser.id,
+      actor: currentUser.displayName,
+      actionType: "quest-submitted",
+      action: "submitted a quest",
+      detail: `${quest.title} is waiting for review`,
+      questId,
+      questTitle: quest.title,
+    });
+
     return {
       completion,
       outcome: "pending" as const,
@@ -224,6 +278,22 @@ export async function reviewQuestSubmission({
     previousAwardedXp: completion.awardedXp,
     shouldBeApproved: action === "approved",
   });
+
+  if (action === "rejected") {
+    const reviewedUser = await getUserProgressById(completion.userId);
+
+    if (reviewedUser) {
+      await logQuestActivity({
+        userId: completion.userId,
+        actor: reviewedUser.display_name,
+        actionType: "quest-rejected",
+        action: "needs a quest revision",
+        detail: `${quest.title} was rejected and can be resubmitted`,
+        questId: completion.questId,
+        questTitle: quest.title,
+      });
+    }
+  }
 
   return {
     completion,
