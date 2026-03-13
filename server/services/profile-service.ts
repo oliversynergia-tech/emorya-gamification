@@ -1,4 +1,4 @@
-import { supportedSocialPlatforms } from "@/lib/social-platforms";
+import { supportedSocialPlatforms, validateSocialHandle } from "@/lib/social-platforms";
 import type { ProfileData, SocialConnectionState } from "@/lib/types";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
 import { getProfileByUserId, updateProfileByUserId } from "@/server/repositories/profile-repository";
@@ -31,15 +31,18 @@ function normalizeSocialConnections(connections: SocialConnectionState[]) {
 
     seen.add(connection.platform);
 
-    const handle = connection.handle?.trim() || null;
+    const { normalized, error } = validateSocialHandle(
+      connection.platform as (typeof supportedSocialPlatforms)[number],
+      connection.handle,
+    );
 
-    if (handle && handle.length > 60) {
-      throw new Error(`${connection.platform} handle must be 60 characters or fewer.`);
+    if (error) {
+      throw new Error(error);
     }
 
     return {
       platform: connection.platform,
-      handle,
+      handle: normalized,
       verified: Boolean(connection.verified),
       connectedAt: connection.verified ? connection.connectedAt ?? new Date().toISOString() : null,
     };

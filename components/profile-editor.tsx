@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { defaultConnectionRewards } from "@/lib/social-platforms";
+import { defaultConnectionRewards, socialPlatformMeta, validateSocialHandle } from "@/lib/social-platforms";
 import type { ProfileData, SocialConnectionState } from "@/lib/types";
 
 export function ProfileEditor({ profile }: { profile: ProfileData }) {
@@ -26,11 +26,32 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
     );
   }
 
+  const connectionErrors = Object.fromEntries(
+    socialConnections.map((connection) => {
+      const platform = connection.platform as keyof typeof socialPlatformMeta;
+      const validation = validateSocialHandle(platform, connection.handle ?? null);
+      const missingVerifiedHandle =
+        connection.verified && !validation.normalized
+          ? `Add a ${connection.platform} handle before marking this connection live.`
+          : null;
+
+      return [connection.platform, missingVerifiedHandle ?? validation.error];
+    }),
+  ) as Record<string, string | null>;
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setMessage(null);
     setError(null);
+
+    const firstConnectionError = Object.values(connectionErrors).find(Boolean);
+
+    if (firstConnectionError) {
+      setError(firstConnectionError);
+      setPending(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/profile", {
@@ -118,6 +139,12 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
           <div className="social-editor__list">
             {socialConnections.map((connection) => (
               <article key={connection.platform} className="social-editor__item">
+                {(() => {
+                  const platformMeta = socialPlatformMeta[connection.platform as keyof typeof socialPlatformMeta];
+                  const validationError = connectionErrors[connection.platform];
+
+                  return (
+                    <>
                 <div className="social-editor__meta">
                   <div>
                     <strong>{connection.platform}</strong>
@@ -152,9 +179,14 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
                         handle: event.target.value,
                       })
                     }
-                    placeholder={connection.platform === "X" ? "@handle" : "Username or ID"}
+                    placeholder={platformMeta.placeholder}
                   />
                 </label>
+                <p className="form-note">{platformMeta.hint}</p>
+                {validationError ? <p className="status status--error">{validationError}</p> : null}
+                    </>
+                  );
+                })()}
               </article>
             ))}
           </div>
