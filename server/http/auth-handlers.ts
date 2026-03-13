@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/lib/types";
+import type { AuthSession, AuthUser } from "@/lib/types";
 
 export async function handleSignUpRequest(
   body: {
@@ -78,4 +78,29 @@ export async function handleSignInRequest(
       body: { ok: false, error: error instanceof Error ? error.message : "Unable to sign in." },
     };
   }
+}
+
+export async function handleSignOutRequest(signOutCurrentSession: () => Promise<void>) {
+  await signOutCurrentSession();
+
+  return {
+    status: 200,
+    body: { ok: true },
+  };
+}
+
+export async function handleSessionLookupRequest(
+  getAuthenticatedSession: () => Promise<AuthSession | null>,
+) {
+  const session = await getAuthenticatedSession();
+
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      authenticated: Boolean(session),
+      user: session?.user ?? null,
+      walletAddresses: session?.walletAddresses ?? [],
+    },
+  };
 }
