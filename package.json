@@ -4,6 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:setup": "node scripts/dev.mjs migrate && node scripts/dev.mjs seed",
+    "dev:reset": "node scripts/dev.mjs reset",
+    "dev:db:doctor": "node scripts/dev.mjs doctor",
+    "dev:db:migrate": "node scripts/dev.mjs migrate",
+    "dev:db:seed": "node scripts/dev.mjs seed",
+    "dev:boot": "npm run dev:setup && npm run dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."

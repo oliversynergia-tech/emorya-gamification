@@ -10,3 +10,5 @@ Planned modules:
 - referral rewards are issued from server services, not the UI, so invite XP remains idempotent and auditable
 
 Route handlers should stay thin and call into this layer.
+
+Local workflow shortcuts are documented in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/local-development.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/local-development.md), with matching npm commands in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/package.json`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/package.json).

@@ -159,6 +159,12 @@ Leaderboard status:
 - daily snapshots remain in PostgreSQL for historical comparison and movement deltas
 - the app now upserts fresh `all-time` and `referral` snapshots for the current date so rank changes can be compared against prior snapshot days
 
+Developer workflow status:
+
+- repeatable local commands now exist for migration, reseeding, DB health checks, and full reset
+- the repo-level entry points are `npm run dev:setup`, `npm run dev:reset`, `npm run dev:db:migrate`, `npm run dev:db:seed`, and `npm run dev:boot`
+- the implementation lives in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/scripts/dev.mjs`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/scripts/dev.mjs)
+
 ## Reference points
 
 - Next.js Route Handlers: https://nextjs.org/docs/app/building-your-application/routing/route-handlers
