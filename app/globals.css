@@ -890,6 +890,13 @@ a {
   gap: 14px;
 }
 
+.role-pill-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+
 .review-outcome-card {
   padding: 18px;
   border-radius: 20px;

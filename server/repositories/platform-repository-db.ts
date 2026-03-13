@@ -17,6 +17,7 @@ import type {
   VerificationType,
 } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
+import { listUsersWithRoles } from "@/server/repositories/admin-repository";
 import {
   getCurrentAllTimeRankForUser,
   getCurrentReferralRankForUser,
@@ -325,7 +326,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, reviewQueue, reviewHistory] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, reviewQueue, reviewHistory] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -341,6 +342,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
        WHERE created_at >= NOW() - INTERVAL '7 days'`,
     ),
     getReferralAnalytics(),
+    listUsersWithRoles(),
     getPendingReviewQueue(),
     getRecentReviewHistory(),
   ]);
@@ -355,6 +357,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       { label: "Annual Premium Users", value: annualCount },
       { label: "Weekly Active Users", value: weeklyActives.rows[0]?.count ?? "0" },
     ],
+    roleDirectory,
     referralAnalytics,
     reviewQueue,
     reviewHistory,

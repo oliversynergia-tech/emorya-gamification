@@ -222,6 +222,13 @@ export type AdminOverviewData = {
     label: string;
     value: string;
   }>;
+  roleDirectory: Array<{
+    userId: string;
+    displayName: string;
+    email: string | null;
+    subscriptionTier: SubscriptionTier;
+    roles: Array<"admin" | "reviewer">;
+  }>;
   referralAnalytics: {
     invitedCount: number;
     convertedCount: number;

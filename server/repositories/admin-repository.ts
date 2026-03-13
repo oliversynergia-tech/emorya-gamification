@@ -6,6 +6,14 @@ type UserRoleRow = QueryResultRow & {
   role: "admin" | "reviewer";
 };
 
+type RoleDirectoryRow = QueryResultRow & {
+  user_id: string;
+  display_name: string;
+  email: string | null;
+  subscription_tier: "free" | "monthly" | "annual";
+  roles: Array<"admin" | "reviewer"> | null;
+};
+
 export async function getUserRoles(userId: string) {
   const result = await runQuery<UserRoleRow>(
     `SELECT role
@@ -30,4 +38,58 @@ export async function userHasRole(userId: string, role: "admin" | "reviewer") {
   );
 
   return result.rows[0]?.exists ?? false;
+}
+
+export async function listUsersWithRoles() {
+  const result = await runQuery<RoleDirectoryRow>(
+    `SELECT u.id AS user_id,
+            u.display_name,
+            u.email,
+            u.subscription_tier,
+            COALESCE(array_agg(ur.role ORDER BY ur.role) FILTER (WHERE ur.role IS NOT NULL), ARRAY[]::app_role[]) AS roles
+     FROM users u
+     LEFT JOIN user_roles ur ON ur.user_id = u.id
+     GROUP BY u.id, u.display_name, u.email, u.subscription_tier, u.created_at
+     ORDER BY u.created_at ASC`,
+  );
+
+  return result.rows.map((row) => ({
+    userId: row.user_id,
+    displayName: row.display_name,
+    email: row.email,
+    subscriptionTier: row.subscription_tier,
+    roles: row.roles ?? [],
+  }));
+}
+
+export async function grantUserRole({
+  userId,
+  role,
+  grantedBy,
+}: {
+  userId: string;
+  role: "admin" | "reviewer";
+  grantedBy: string | null;
+}) {
+  await runQuery(
+    `INSERT INTO user_roles (user_id, role, granted_by)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (user_id, role) DO NOTHING`,
+    [userId, role, grantedBy],
+  );
+}
+
+export async function revokeUserRole({
+  userId,
+  role,
+}: {
+  userId: string;
+  role: "admin" | "reviewer";
+}) {
+  await runQuery(
+    `DELETE FROM user_roles
+     WHERE user_id = $1
+       AND role = $2`,
+    [userId, role],
+  );
 }

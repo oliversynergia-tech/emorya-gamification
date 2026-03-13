@@ -1,4 +1,5 @@
 import { AdminSection } from "@/components/sections";
+import { RoleManagementPanel } from "@/components/role-management-panel";
 import { ReviewQueuePanel } from "@/components/review-queue-panel";
 import { SiteShell } from "@/components/site-shell";
 import { isAdminUser } from "@/server/auth/admin";
@@ -69,6 +70,7 @@ export default async function AdminPage() {
         </div>
       </section>
       <AdminSection data={data} />
+      <RoleManagementPanel initialUsers={data.roleDirectory} />
       <ReviewQueuePanel
         initialQueue={data.reviewQueue}
         initialHistory={data.reviewHistory}
