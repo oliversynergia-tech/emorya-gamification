@@ -284,7 +284,7 @@ export function QuestActionsPanel({
               {disabled ? (
                 <small className="form-note">
                   {quest.status === "locked"
-                    ? "Unlock this quest by reaching the required level or tier."
+                    ? quest.unlockHint ?? "Unlock this quest by reaching the required level or tier."
                     : quest.status === "completed"
                       ? "This quest is already approved and cannot be resubmitted."
                       : "Sign in to submit."}

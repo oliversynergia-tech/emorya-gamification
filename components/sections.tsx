@@ -272,9 +272,11 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
             </div>
             <h4>{quest.title}</h4>
             <p>{quest.description}</p>
-            <small className="quest-card__note">{getQuestStatusNote(quest.status)}</small>
+            <small className="quest-card__note">
+              {quest.status === "locked" && quest.unlockHint ? quest.unlockHint : getQuestStatusNote(quest.status)}
+            </small>
             <div className="quest-card__footer">
-              <span>{quest.xpReward} XP</span>
+              <span>{quest.projectedXp ?? quest.xpReward} XP</span>
               <strong>
                 {quest.status === "locked"
                   ? quest.requiredTier === "free"

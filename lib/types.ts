@@ -1,5 +1,28 @@
 export type SubscriptionTier = "free" | "monthly" | "annual";
 export type AppRole = "super_admin" | "admin" | "reviewer";
+export type QuestTrack =
+  | "starter"
+  | "daily"
+  | "social"
+  | "wallet"
+  | "referral"
+  | "premium"
+  | "ambassador"
+  | "quiz"
+  | "creative"
+  | "campaign";
+export type QuestCadence = "one_time" | "daily" | "weekly" | "campaign_limited";
+export type TokenEffect = "none" | "eligibility_progress" | "token_bonus" | "direct_token_reward";
+export type TrustScoreBand = "low" | "medium" | "high";
+export type UserJourneyState =
+  | "visitor"
+  | "signed_up_free"
+  | "activated_free"
+  | "reward_eligible_free"
+  | "monthly_premium"
+  | "annual_premium"
+  | "ambassador_candidate"
+  | "ambassador";
 export type AuthProvider = "email" | "multiversx";
 export type IdentityStatus = "active" | "pending" | "revoked";
 export type VerificationType =
@@ -27,10 +50,17 @@ export type Quest = {
   title: string;
   description: string;
   category: QuestCategory;
+  track?: QuestTrack;
+  cadence?: QuestCadence;
   xpReward: number;
+  projectedXp?: number;
+  tokenEffect?: TokenEffect;
   difficulty: "easy" | "medium" | "hard";
   verificationType: VerificationType;
   status: QuestStatus;
+  lockedReason?: string | null;
+  unlockHint?: string | null;
+  recommended?: boolean;
   requiredLevel: number;
   requiredTier: SubscriptionTier;
   premiumPreview?: boolean;
@@ -112,7 +142,7 @@ export type QuestDefinitionRecord = {
   requiredLevel: number;
   isPremiumPreview: boolean;
   isActive: boolean;
-  metadata: Record<string, string | number | boolean | null>;
+  metadata: Record<string, unknown>;
   createdAt: string;
 };
 
@@ -310,6 +340,121 @@ export type AuthUser = {
 export type AuthSession = {
   user: AuthUser;
   walletAddresses: string[];
+};
+
+export type UnlockRule =
+  | { type: "min_level"; value: number }
+  | { type: "wallet_linked"; value: true }
+  | { type: "starter_path_complete"; value: true }
+  | { type: "subscription_tier"; value: Extract<SubscriptionTier, "monthly" | "annual"> }
+  | { type: "connected_social_count"; value: number }
+  | { type: "connected_social"; value: string }
+  | { type: "successful_referrals"; value: number }
+  | { type: "monthly_premium_referrals"; value: number }
+  | { type: "annual_premium_referrals"; value: number }
+  | { type: "ambassador_candidate"; value: true }
+  | { type: "ambassador_active"; value: true }
+  | { type: "campaign_source"; value: "direct" | "zealy" | "galxe" | "layer3" }
+  | { type: "trust_score_band"; value: Exclude<TrustScoreBand, "low"> }
+  | { type: "wallet_age_days"; value: number }
+  | { type: "quest_completed"; value: string }
+  | { type: "weekly_xp_min"; value: number }
+  | { type: "runtime_flag"; value: "flashRewardDay" | "referralBoostWeek" };
+
+export type UnlockRuleGroup = {
+  all?: UnlockRule[];
+  any?: UnlockRule[];
+};
+
+export type RewardConfig = {
+  xp: {
+    base: number;
+    premiumMultiplierEligible: boolean;
+  };
+  tokenEffect?: TokenEffect;
+  tokenEligibility?: {
+    progressPoints: number;
+  };
+  tokenBonus?: {
+    multiplier: number;
+  };
+  directTokenReward?: {
+    asset: "EMR" | "EGLD" | "PARTNER";
+    amount: number;
+    requiresWallet: boolean;
+  };
+  referralBonus?: {
+    xpBonus: number;
+    tokenBonusMultiplier?: number;
+  };
+};
+
+export type CompletionRuleGroup = {
+  cooldownHours?: number;
+  requiresReview?: boolean;
+  requiresWalletOwnership?: boolean;
+  requiresLinkedSocial?: string[];
+  quizPassScore?: number;
+  minWalletAgeDays?: number;
+  campaignWindowRequired?: boolean;
+};
+
+export type PreviewConfig = {
+  desirability?: number;
+  label?: string;
+};
+
+export type UserProgressState = {
+  userId: string;
+  level: number;
+  totalXp: number;
+  currentStreak: number;
+  weeklyXp: number;
+  starterPathComplete: boolean;
+  rewardEligible: boolean;
+  walletLinked: boolean;
+  walletAgeDays: number;
+  trustScoreBand: TrustScoreBand;
+  subscriptionTier: SubscriptionTier;
+  connectedSocials: string[];
+  successfulReferralCount: number;
+  monthlyPremiumReferralCount: number;
+  annualPremiumReferralCount: number;
+  connectedSocialCount: number;
+  approvedQuestCount: number;
+  starterQuestCount: number;
+  wellnessQuestCount: number;
+  socialQuestCount: number;
+  completedQuestSlugs: string[];
+  ambassadorCandidate: boolean;
+  ambassadorActive: boolean;
+  campaignSource: "direct" | "zealy" | "galxe" | "layer3" | null;
+};
+
+export type QuestRuntimeContext = {
+  now: string;
+  activeCampaignSlugs: string[];
+  flashRewardDay: boolean;
+  referralBoostWeek: boolean;
+};
+
+export type EvaluatedQuest = {
+  id: string;
+  title: string;
+  track: QuestTrack;
+  status: "active" | "locked" | "completed" | "in_progress" | "cooldown" | "rejected";
+  visible: boolean;
+  lockedReason: string | null;
+  unlockHint: string | null;
+  projectedReward: {
+    xp: number;
+    tokenEffect: TokenEffect;
+    directTokenReward?: {
+      asset: string;
+      amount: number;
+    };
+  };
+  sortScore: number;
 };
 
 export type ProfileData = {
