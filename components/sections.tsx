@@ -64,6 +64,11 @@ export function HeroSection({ data }: { data: DashboardData }) {
 
 export function DashboardSnapshot({ data }: { data: DashboardData }) {
   const progress = getLevelProgress(data.user.totalXp);
+  const unlockedAchievements = data.achievements.filter((achievement) => achievement.unlocked);
+  const upcomingAchievements = data.achievements
+    .filter((achievement) => !achievement.unlocked)
+    .sort((left, right) => right.progress - left.progress)
+    .slice(0, 2);
 
   return (
     <section className="grid grid--dashboard">
@@ -123,6 +128,40 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
           ) : (
             <small className="form-note">No referred users yet. Share your code to start the referral loop.</small>
           )}
+        </div>
+        <div className="achievement-spotlight">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Achievement spotlight</p>
+              <h3>{unlockedAchievements.length} badges unlocked</h3>
+            </div>
+            <span className="badge badge--pink">Prestige</span>
+          </div>
+          <div className="achievement-grid">
+            {unlockedAchievements.slice(0, 2).map((achievement) => (
+              <article key={achievement.id} className="achievement-card achievement-card--unlocked">
+                <div className="quest-card__meta">
+                  <span>Unlocked</span>
+                  <span>100%</span>
+                </div>
+                <strong>{achievement.name}</strong>
+                <p>{achievement.description}</p>
+              </article>
+            ))}
+            {upcomingAchievements.map((achievement) => (
+              <article key={achievement.id} className="achievement-card achievement-card--progress">
+                <div className="quest-card__meta">
+                  <span>In progress</span>
+                  <span>{Math.round(achievement.progress * 100)}%</span>
+                </div>
+                <strong>{achievement.name}</strong>
+                <p>{achievement.description}</p>
+                <div className="achievement-progress">
+                  <div className="achievement-progress__fill" style={{ width: `${achievement.progress * 100}%` }} />
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </div>
       <div className="panel">
@@ -295,6 +334,11 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
 }
 
 export function ProfileSection({ data }: { data: DashboardData }) {
+  const unlockedAchievements = data.achievements.filter((achievement) => achievement.unlocked);
+  const progressingAchievements = data.achievements
+    .filter((achievement) => !achievement.unlocked)
+    .sort((left, right) => right.progress - left.progress);
+
   return (
     <section className="grid grid--profile">
       <div className="panel">
@@ -351,17 +395,54 @@ export function ProfileSection({ data }: { data: DashboardData }) {
             <p className="eyebrow">Achievements</p>
             <h3>Prestige markers</h3>
           </div>
+          <span className="badge">{unlockedAchievements.length} unlocked</span>
         </div>
-        <div className="achievement-list">
-          {data.achievements.map((achievement) => (
-            <article key={achievement.id} className="achievement-card">
-              <div>
-                <strong>{achievement.name}</strong>
-                <p>{achievement.description}</p>
-              </div>
-              <span>{achievement.unlocked ? "Unlocked" : `${Math.round(achievement.progress * 100)}%`}</span>
-            </article>
-          ))}
+        <div className="achievement-stack">
+          <div className="achievement-group">
+            <div className="quest-card__meta">
+              <span>Unlocked badges</span>
+              <span>{unlockedAchievements.length}</span>
+            </div>
+            <div className="achievement-list">
+              {unlockedAchievements.map((achievement) => (
+                <article key={achievement.id} className="achievement-card achievement-card--unlocked">
+                  <div>
+                    <strong>{achievement.name}</strong>
+                    <p>{achievement.description}</p>
+                  </div>
+                  <span className="badge">Unlocked</span>
+                </article>
+              ))}
+            </div>
+          </div>
+          <div className="achievement-group">
+            <div className="quest-card__meta">
+              <span>Closest next badges</span>
+              <span>{progressingAchievements.length}</span>
+            </div>
+            <div className="achievement-list">
+              {progressingAchievements.map((achievement) => (
+                <article key={achievement.id} className="achievement-card achievement-card--progress">
+                  <div>
+                    <strong>{achievement.name}</strong>
+                    <p>{achievement.description}</p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{Math.round(achievement.progress * 100)}%</span>
+                    <div className="achievement-progress">
+                      <div
+                        className="achievement-progress__fill"
+                        style={{ width: `${achievement.progress * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+          {!unlockedAchievements.length && !progressingAchievements.length ? (
+            <p className="form-note">No achievements available yet.</p>
+          ) : null}
         </div>
       </div>
     </section>

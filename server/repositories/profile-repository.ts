@@ -1,6 +1,9 @@
+import { randomUUID } from "crypto";
+
 import type { QueryResultRow } from "pg";
 
-import type { ProfileData, SubscriptionTier } from "@/lib/types";
+import { supportedSocialPlatforms } from "@/lib/social-platforms";
+import type { ProfileData, SocialConnectionState, SubscriptionTier } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
 import { findWalletAddressesForUser } from "@/server/repositories/auth-repository";
 
@@ -13,6 +16,44 @@ type ProfileRow = QueryResultRow & {
   subscription_tier: SubscriptionTier;
   referral_code: string;
 };
+
+type SocialConnectionRow = QueryResultRow & {
+  platform: string;
+  handle: string | null;
+  verified: boolean;
+  connected_at: string | null;
+};
+
+async function getSocialConnectionsByUserId(userId: string): Promise<SocialConnectionState[]> {
+  const result = await runQuery<SocialConnectionRow>(
+    `SELECT platform, handle, verified, connected_at
+     FROM social_connections
+     WHERE user_id = $1
+     ORDER BY platform ASC`,
+    [userId],
+  );
+
+  const byPlatform = new Map(
+    result.rows.map((row) => [
+      row.platform,
+      {
+        platform: row.platform,
+        handle: row.handle,
+        verified: row.verified,
+        connectedAt: row.connected_at,
+      },
+    ]),
+  );
+
+  return supportedSocialPlatforms.map((platform) => (
+    byPlatform.get(platform) ?? {
+      platform,
+      handle: null,
+      verified: false,
+      connectedAt: null,
+    }
+  ));
+}
 
 export async function getProfileByUserId(userId: string): Promise<ProfileData | null> {
   const result = await runQuery<ProfileRow>(
@@ -29,7 +70,10 @@ export async function getProfileByUserId(userId: string): Promise<ProfileData | 
     return null;
   }
 
-  const walletAddresses = await findWalletAddressesForUser(userId);
+  const [walletAddresses, socialConnections] = await Promise.all([
+    findWalletAddressesForUser(userId),
+    getSocialConnectionsByUserId(userId),
+  ]);
 
   return {
     id: row.id,
@@ -40,6 +84,7 @@ export async function getProfileByUserId(userId: string): Promise<ProfileData | 
     subscriptionTier: row.subscription_tier,
     referralCode: row.referral_code,
     walletAddresses,
+    socialConnections,
   };
 }
 
@@ -48,11 +93,13 @@ export async function updateProfileByUserId({
   displayName,
   avatarUrl,
   attributionSource,
+  socialConnections,
 }: {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
   attributionSource: string | null;
+  socialConnections: SocialConnectionState[];
 }) {
   await runQuery(
     `UPDATE users
@@ -63,6 +110,26 @@ export async function updateProfileByUserId({
      WHERE id = $1`,
     [userId, displayName, avatarUrl, attributionSource],
   );
+
+  for (const connection of socialConnections) {
+    await runQuery(
+      `INSERT INTO social_connections (id, user_id, platform, handle, verified, connected_at)
+       VALUES ($6, $1, $2, $3, $4, $5)
+       ON CONFLICT (user_id, platform)
+       DO UPDATE SET
+         handle = EXCLUDED.handle,
+         verified = EXCLUDED.verified,
+         connected_at = EXCLUDED.connected_at`,
+      [
+        userId,
+        connection.platform,
+        connection.handle,
+        connection.verified,
+        connection.connectedAt,
+        randomUUID(),
+      ],
+    );
+  }
 
   return getProfileByUserId(userId);
 }

@@ -5,6 +5,8 @@ import { isAdminUser } from "@/server/auth/admin";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadAdminOverview } from "@/server/services/platform-overview";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPage() {
   const session = await resolveCurrentSession();
   const hasAdminAccess = isAdminUser(session?.user);

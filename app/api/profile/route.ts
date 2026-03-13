@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import type { SocialConnectionState } from "@/lib/types";
 import { getCurrentProfile, updateCurrentProfile } from "@/server/services/profile-service";
 
 export const dynamic = "force-dynamic";
@@ -20,11 +21,13 @@ export async function PATCH(request: Request) {
       displayName?: string;
       avatarUrl?: string | null;
       attributionSource?: string | null;
+      socialConnections?: SocialConnectionState[];
     };
 
     const displayName = body.displayName?.trim();
     const avatarUrl = body.avatarUrl?.trim() || null;
     const attributionSource = body.attributionSource?.trim() || null;
+    const socialConnections = Array.isArray(body.socialConnections) ? body.socialConnections : [];
 
     if (!displayName) {
       return NextResponse.json(
@@ -37,6 +40,7 @@ export async function PATCH(request: Request) {
       displayName,
       avatarUrl,
       attributionSource,
+      socialConnections,
     });
 
     return NextResponse.json({ ok: true, profile });

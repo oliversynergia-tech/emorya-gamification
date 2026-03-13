@@ -3,6 +3,8 @@ import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 
+export const dynamic = "force-dynamic";
+
 export default async function AuthPage() {
   const session = await resolveCurrentSession();
 

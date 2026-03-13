@@ -8,6 +8,8 @@ import { resolveCurrentSession } from "@/server/auth/current-user";
 import { getCurrentProfile } from "@/server/services/profile-service";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProfilePage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);

@@ -90,6 +90,13 @@ export type SocialConnectionRecord = {
   connectedAt: string | null;
 };
 
+export type SocialConnectionState = {
+  platform: string;
+  handle: string | null;
+  verified: boolean;
+  connectedAt: string | null;
+};
+
 export type QuestDefinitionRecord = {
   id: string;
   slug: string;
@@ -237,6 +244,7 @@ export type ProfileData = {
   subscriptionTier: SubscriptionTier;
   referralCode: string;
   walletAddresses: string[];
+  socialConnections: SocialConnectionState[];
 };
 
 export type ReviewQueueItem = {

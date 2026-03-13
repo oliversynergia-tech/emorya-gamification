@@ -1,4 +1,3 @@
-import { achievements, activityFeed, adminStats, currentUser as mockCurrentUser, leaderboard, premiumMoments, quests, reviewQueue } from "@/lib/mock-data";
 import type { AdminOverviewData, AuthUser, DashboardData } from "@/lib/types";
 import {
   getAdminOverviewDataFromDb,
@@ -6,37 +5,33 @@ import {
   isDatabaseEnabled,
 } from "@/server/repositories/platform-repository-db";
 
-export async function getDashboardData(currentUser?: AuthUser | null): Promise<DashboardData> {
-  if (isDatabaseEnabled()) {
-    try {
-      return await getDashboardDataFromDb(currentUser);
-    } catch {
-      // Keep builds and unprovisioned environments working even when DATABASE_URL exists
-      // but the process cannot reach Postgres.
-    }
+function assertDatabaseEnabled() {
+  if (!isDatabaseEnabled()) {
+    throw new Error("DATABASE_URL is required for dashboard and admin data.");
   }
+}
 
-  return {
-    user: mockCurrentUser,
-    quests,
-    achievements,
-    leaderboard,
-    activityFeed,
-    premiumMoments,
-  };
+function wrapPlatformError(error: unknown, area: "dashboard" | "admin"): never {
+  const message = error instanceof Error ? error.message : `Unable to load ${area} data.`;
+  throw new Error(`PostgreSQL ${area} load failed: ${message}`);
+}
+
+export async function getDashboardData(currentUser?: AuthUser | null): Promise<DashboardData> {
+  assertDatabaseEnabled();
+
+  try {
+    return await getDashboardDataFromDb(currentUser);
+  } catch (error) {
+    wrapPlatformError(error, "dashboard");
+  }
 }
 
 export async function getAdminOverviewData(): Promise<AdminOverviewData> {
-  if (isDatabaseEnabled()) {
-    try {
-      return await getAdminOverviewDataFromDb();
-    } catch {
-      // Same fallback behavior as the dashboard overview.
-    }
-  }
+  assertDatabaseEnabled();
 
-  return {
-    stats: adminStats,
-    reviewQueue,
-  };
+  try {
+    return await getAdminOverviewDataFromDb();
+  } catch (error) {
+    wrapPlatformError(error, "admin");
+  }
 }

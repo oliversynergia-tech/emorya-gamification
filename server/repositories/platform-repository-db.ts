@@ -2,6 +2,8 @@ import type { QueryResultRow } from "pg";
 
 import { hasDatabaseConfig } from "@/lib/config";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
+import { defaultConnectionRewards } from "@/lib/social-platforms";
+import type { SupportedSocialPlatform } from "@/lib/social-platforms";
 import type {
   Achievement,
   ActivityItem,
@@ -35,7 +37,7 @@ type UserRow = QueryResultRow & {
 };
 
 type SocialConnectionRow = QueryResultRow & {
-  platform: string;
+  platform: SupportedSocialPlatform;
   verified: boolean;
 };
 
@@ -86,15 +88,6 @@ type ReviewQueueRow = QueryResultRow & {
   submission_data: Record<string, string | number | boolean | null>;
   status: "pending" | "approved" | "rejected";
   created_at: string;
-};
-
-const defaultConnectionRewards: Record<string, number> = {
-  X: 15,
-  Telegram: 15,
-  Discord: 15,
-  TikTok: 20,
-  Instagram: 20,
-  CoinMarketCap: 20,
 };
 
 const tierRank: Record<SubscriptionTier, number> = {

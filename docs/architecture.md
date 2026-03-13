@@ -124,7 +124,7 @@ Step 3 status:
 - `server/db/schema.sql` defines the first core schema
 - `server/db/seed.sql` provides local sample data for the current UI shape
 - `server/repositories/platform-repository-db.ts` reads dashboard and admin views from PostgreSQL
-- `app/api/dashboard/route.ts` is the first route that reports whether data came from PostgreSQL or the mock fallback
+- `app/api/dashboard/route.ts` now reports PostgreSQL-backed dashboard data directly and returns explicit errors instead of silently swapping to mock data
 
 Wallet-link status:
 

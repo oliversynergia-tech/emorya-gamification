@@ -1,6 +1,50 @@
-import type { ProfileData } from "@/lib/types";
+import { supportedSocialPlatforms } from "@/lib/social-platforms";
+import type { ProfileData, SocialConnectionState } from "@/lib/types";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
 import { getProfileByUserId, updateProfileByUserId } from "@/server/repositories/profile-repository";
+
+function normalizeUrl(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.toString();
+  } catch {
+    throw new Error("Avatar URL must be a valid absolute URL.");
+  }
+}
+
+function normalizeSocialConnections(connections: SocialConnectionState[]) {
+  const supported = new Set(supportedSocialPlatforms);
+  const seen = new Set<string>();
+
+  return connections.map((connection) => {
+    if (!supported.has(connection.platform as (typeof supportedSocialPlatforms)[number])) {
+      throw new Error(`Unsupported social platform: ${connection.platform}`);
+    }
+
+    if (seen.has(connection.platform)) {
+      throw new Error(`Duplicate social platform: ${connection.platform}`);
+    }
+
+    seen.add(connection.platform);
+
+    const handle = connection.handle?.trim() || null;
+
+    if (handle && handle.length > 60) {
+      throw new Error(`${connection.platform} handle must be 60 characters or fewer.`);
+    }
+
+    return {
+      platform: connection.platform,
+      handle,
+      verified: Boolean(connection.verified),
+      connectedAt: connection.verified ? connection.connectedAt ?? new Date().toISOString() : null,
+    };
+  });
+}
 
 export async function getCurrentProfile(): Promise<ProfileData | null> {
   const currentUser = await getAuthenticatedUser();
@@ -16,10 +60,12 @@ export async function updateCurrentProfile({
   displayName,
   avatarUrl,
   attributionSource,
+  socialConnections,
 }: {
   displayName: string;
   avatarUrl: string | null;
   attributionSource: string | null;
+  socialConnections: SocialConnectionState[];
 }) {
   const currentUser = await getAuthenticatedUser();
 
@@ -29,8 +75,9 @@ export async function updateCurrentProfile({
 
   return updateProfileByUserId({
     userId: currentUser.id,
-    displayName,
-    avatarUrl,
-    attributionSource,
+    displayName: displayName.trim(),
+    avatarUrl: normalizeUrl(avatarUrl),
+    attributionSource: attributionSource?.trim() || null,
+    socialConnections: normalizeSocialConnections(socialConnections),
   });
 }

@@ -7,13 +7,27 @@ import { isDatabaseEnabled } from "@/server/repositories/platform-repository-db"
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const currentUser = await resolveCurrentUser();
-  const data = await getDashboardData(currentUser);
+  try {
+    const currentUser = await resolveCurrentUser();
+    const data = await getDashboardData(currentUser);
 
-  return NextResponse.json({
-    ok: true,
-    source: isDatabaseEnabled() ? "postgresql" : "mock-fallback",
-    currentUser,
-    data,
-  });
+    return NextResponse.json({
+      ok: true,
+      source: isDatabaseEnabled() ? "postgresql" : "unavailable",
+      currentUser,
+      data,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load dashboard data.";
+    const status = message.includes("DATABASE_URL") ? 503 : 500;
+
+    return NextResponse.json(
+      {
+        ok: false,
+        source: "postgresql",
+        error: message,
+      },
+      { status },
+    );
+  }
 }
