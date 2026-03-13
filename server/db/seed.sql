@@ -11,6 +11,7 @@ INSERT INTO users (
   longest_streak,
   subscription_tier,
   referral_code,
+  referred_by,
   created_at
 ) VALUES
   (
@@ -26,6 +27,7 @@ INSERT INTO users (
     14,
     'free',
     'EMORYA-8W3K9R',
+    NULL,
     NOW() - INTERVAL '14 days'
   ),
   (
@@ -41,6 +43,7 @@ INSERT INTO users (
     31,
     'annual',
     'EMORYA-LINA18',
+    NULL,
     NOW() - INTERVAL '60 days'
   ),
   (
@@ -56,6 +59,7 @@ INSERT INTO users (
     24,
     'annual',
     'EMORYA-KAI17',
+    NULL,
     NOW() - INTERVAL '52 days'
   ),
   (
@@ -71,6 +75,7 @@ INSERT INTO users (
     20,
     'monthly',
     'EMORYA-MIA16',
+    NULL,
     NOW() - INTERVAL '46 days'
   ),
   (
@@ -86,6 +91,7 @@ INSERT INTO users (
     13,
     'free',
     'EMORYA-NICO08',
+    '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
     NOW() - INTERVAL '16 days'
   ),
   (
@@ -101,6 +107,7 @@ INSERT INTO users (
     12,
     'monthly',
     'EMORYA-AYA08',
+    '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
     NOW() - INTERVAL '18 days'
   )
 ON CONFLICT (id) DO NOTHING;
@@ -317,6 +324,41 @@ INSERT INTO user_achievements (user_id, achievement_id, progress, earned_at) VAL
   ('6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'd8d2c5c2-f553-4a78-aa29-e1c8162c66a6', 0.47, NULL),
   ('6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'd66dfc8f-00b0-45d6-80f8-cfe481f672dc', 0, NULL)
 ON CONFLICT (user_id, achievement_id) DO NOTHING;
+
+INSERT INTO referrals (
+  id,
+  referrer_user_id,
+  referee_user_id,
+  referee_subscribed,
+  signup_reward_xp,
+  conversion_reward_xp,
+  signup_rewarded_at,
+  conversion_rewarded_at,
+  created_at
+) VALUES
+  (
+    '63b9d1aa-1303-4c3a-9f7d-0c79dc8f42a2',
+    '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
+    '8cc801df-004b-4e20-a5c1-cf5f0f1f642d',
+    FALSE,
+    40,
+    0,
+    NOW() - INTERVAL '16 days',
+    NULL,
+    NOW() - INTERVAL '16 days'
+  ),
+  (
+    '64e0700d-5f73-4286-8f85-ef4c16c0cf62',
+    '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
+    '2b74bcd9-98e8-455a-bede-d1a5876775fd',
+    TRUE,
+    40,
+    120,
+    NOW() - INTERVAL '18 days',
+    NOW() - INTERVAL '10 days',
+    NOW() - INTERVAL '18 days'
+  )
+ON CONFLICT (referrer_user_id, referee_user_id) DO NOTHING;
 
 INSERT INTO leaderboard_snapshots (id, user_id, period, xp, rank, snapshot_date) VALUES
   ('55730039-a930-421a-bea5-f02e7a0685f7', '2196480b-b0fc-4e15-8837-e1d02177c7ed', 'all-time', 37140, 1, CURRENT_DATE),

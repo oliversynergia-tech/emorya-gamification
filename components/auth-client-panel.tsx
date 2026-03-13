@@ -16,6 +16,7 @@ export function AuthClientPanel() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +28,9 @@ export function AuthClientPanel() {
     setError(null);
 
     const endpoint = mode === "signin" ? "/api/auth/signin" : "/api/auth/signup";
-    const payload = mode === "signin" ? { email, password } : { email, password, displayName };
+    const payload = mode === "signin"
+      ? { email, password }
+      : { email, password, displayName, referralCode };
 
     try {
       const response = await fetch(endpoint, {
@@ -81,10 +84,20 @@ export function AuthClientPanel() {
       </div>
       <form className="form-stack" onSubmit={handleSubmit}>
         {mode === "signup" ? (
-          <label className="field">
-            <span>Display name</span>
-            <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} required />
-          </label>
+          <>
+            <label className="field">
+              <span>Display name</span>
+              <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} required />
+            </label>
+            <label className="field">
+              <span>Referral code</span>
+              <input
+                value={referralCode}
+                onChange={(event) => setReferralCode(event.target.value.toUpperCase())}
+                placeholder="Optional"
+              />
+            </label>
+          </>
         ) : null}
         <label className="field">
           <span>Email</span>
@@ -113,7 +126,7 @@ export function AuthClientPanel() {
       {message ? <p className="status status--success">{message}</p> : null}
       {error ? <p className="status status--error">{error}</p> : null}
       <p className="form-note">
-        Sign-up requires a password of at least 10 characters. Session cookies are issued automatically on success.
+        Sign-up requires a password of at least 10 characters. Referral codes are optional and issue rewards to the inviter automatically.
       </p>
     </section>
   );

@@ -180,6 +180,18 @@ export type UserSnapshot = {
   tier: SubscriptionTier;
   rank: number;
   referralCode: string;
+  referral: {
+    invitedCount: number;
+    convertedCount: number;
+    rewardXpEarned: number;
+    pendingConversionXp: number;
+    recentReferrals: Array<{
+      displayName: string;
+      tier: SubscriptionTier;
+      status: "joined" | "converted";
+      joinedAt: string;
+    }>;
+  };
   connectedAccounts: Array<{
     platform: string;
     connected: boolean;

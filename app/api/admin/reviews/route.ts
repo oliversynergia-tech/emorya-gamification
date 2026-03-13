@@ -11,7 +11,11 @@ export async function GET() {
     return NextResponse.json({ ok: true, queue });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to load the review queue.";
-    const status = message.includes("signed in") ? 401 : 400;
+    const status = message.includes("signed in")
+      ? 401
+      : message.includes("Admin access")
+        ? 403
+        : 400;
 
     return NextResponse.json({ ok: false, error: message }, { status });
   }

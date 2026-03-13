@@ -16,6 +16,26 @@ export const currentUser: UserSnapshot = {
   tier: "free",
   rank: 34,
   referralCode: "EMORYA-8W3K9R",
+  referral: {
+    invitedCount: 2,
+    convertedCount: 1,
+    rewardXpEarned: 160,
+    pendingConversionXp: 120,
+    recentReferrals: [
+      {
+        displayName: "Aya",
+        tier: "monthly",
+        status: "converted",
+        joinedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 18).toISOString(),
+      },
+      {
+        displayName: "Nico",
+        tier: "free",
+        status: "joined",
+        joinedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 16).toISOString(),
+      },
+    ],
+  },
   connectedAccounts: [
     { platform: "X", connected: true, rewardXp: 15 },
     { platform: "Telegram", connected: true, rewardXp: 15 },

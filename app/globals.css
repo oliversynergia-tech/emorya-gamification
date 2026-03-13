@@ -389,6 +389,35 @@ a {
   font-size: 1.2rem;
 }
 
+.referral-summary {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.referral-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.referral-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.referral-item small {
+  display: block;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
 .button {
   display: inline-flex;
   align-items: center;

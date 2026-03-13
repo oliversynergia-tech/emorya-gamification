@@ -54,21 +54,24 @@ export async function createEmailUser({
   email,
   displayName,
   passwordHash,
+  referredByUserId,
 }: {
   email: string;
   displayName: string;
   passwordHash: string;
+  referredByUserId?: string | null;
 }) {
   const userId = randomUUID();
   const identityId = randomUUID();
+  const referralId = randomUUID();
   const referralCode = `EMORYA-${randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 
   const result = await runQuery<UserRow>(
     `WITH inserted_user AS (
        INSERT INTO users (
-         id, email, password_hash, display_name, referral_code
+         id, email, password_hash, display_name, referral_code, referred_by
        ) VALUES (
-         $1, $2, $3, $4, $5
+         $1, $2, $3, $4, $5, $6
        )
        RETURNING id, email, password_hash, display_name, subscription_tier
      ),
@@ -76,13 +79,22 @@ export async function createEmailUser({
        INSERT INTO user_identities (
          id, user_id, provider, provider_subject, status
        ) VALUES (
-         $6, $1, 'email', $2, 'active'
+         $7, $1, 'email', $2, 'active'
        )
        RETURNING user_id
+     ),
+     inserted_referral AS (
+       INSERT INTO referrals (
+         id, referrer_user_id, referee_user_id
+       )
+       SELECT $8, $6, $1
+       WHERE $6 IS NOT NULL
+       ON CONFLICT (referrer_user_id, referee_user_id) DO NOTHING
+       RETURNING referee_user_id
      )
      SELECT id, email, password_hash, display_name, subscription_tier
      FROM inserted_user`,
-    [userId, email, passwordHash, displayName, referralCode, identityId],
+    [userId, email, passwordHash, displayName, referralCode, referredByUserId ?? null, identityId, referralId],
   );
 
   return result.rows[0];

@@ -95,9 +95,34 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             <strong>{data.user.referralCode}</strong>
           </div>
           <div className="info-card">
-            <span>Nearest target</span>
-            <strong>35 XP to #33</strong>
+            <span>Invited</span>
+            <strong>{data.user.referral.invitedCount}</strong>
           </div>
+          <div className="info-card">
+            <span>Referral XP</span>
+            <strong>{data.user.referral.rewardXpEarned}</strong>
+          </div>
+        </div>
+        <div className="referral-summary">
+          <div className="quest-card__meta">
+            <span>{data.user.referral.convertedCount} converted</span>
+            <span>{data.user.referral.pendingConversionXp} XP still available</span>
+          </div>
+          {data.user.referral.recentReferrals.length ? (
+            <div className="referral-list">
+              {data.user.referral.recentReferrals.map((referral) => (
+                <article key={`${referral.displayName}-${referral.joinedAt}`} className="referral-item">
+                  <div>
+                    <strong>{referral.displayName}</strong>
+                    <small>{referral.status === "converted" ? "Premium conversion" : "Joined with your code"}</small>
+                  </div>
+                  <span className={tierClass(referral.tier)}>{getTierLabel(referral.tier)}</span>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <small className="form-note">No referred users yet. Share your code to start the referral loop.</small>
+          )}
         </div>
       </div>
       <div className="panel">
@@ -291,6 +316,33 @@ export function ProfileSection({ data }: { data: DashboardData }) {
               </span>
             </div>
           ))}
+        </div>
+      </div>
+      <div className="panel">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Referral loop</p>
+            <h3>Invite performance</h3>
+          </div>
+          <span className="badge">{data.user.referralCode}</span>
+        </div>
+        <div className="info-grid">
+          <div className="info-card">
+            <span>Invited</span>
+            <strong>{data.user.referral.invitedCount}</strong>
+          </div>
+          <div className="info-card">
+            <span>Converted</span>
+            <strong>{data.user.referral.convertedCount}</strong>
+          </div>
+          <div className="info-card">
+            <span>Reward XP</span>
+            <strong>{data.user.referral.rewardXpEarned}</strong>
+          </div>
+          <div className="info-card">
+            <span>Still available</span>
+            <strong>{data.user.referral.pendingConversionXp}</strong>
+          </div>
         </div>
       </div>
       <div className="panel">

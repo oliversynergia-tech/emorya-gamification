@@ -16,6 +16,8 @@ import type {
   VerificationType,
 } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
+import { getReferralSummary } from "@/server/repositories/referral-repository";
+import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
 
 type UserRow = QueryResultRow & {
   id: string;
@@ -164,23 +166,24 @@ async function getDashboardUser(userId: string): Promise<UserRow> {
 }
 
 async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
-  
-  const connectionsResult = await runQuery<SocialConnectionRow>(
-    `SELECT platform, verified
-     FROM social_connections
-     WHERE user_id = $1
-     ORDER BY platform ASC`,
-    [user.id],
-  );
-
-  const rankResult = await runQuery<{ rank: number }>(
-    `SELECT rank
-     FROM leaderboard_snapshots
-     WHERE user_id = $1 AND period = 'all-time'
-     ORDER BY snapshot_date DESC
-     LIMIT 1`,
-    [user.id],
-  );
+  const [connectionsResult, rankResult, referral] = await Promise.all([
+    runQuery<SocialConnectionRow>(
+      `SELECT platform, verified
+       FROM social_connections
+       WHERE user_id = $1
+       ORDER BY platform ASC`,
+      [user.id],
+    ),
+    runQuery<{ rank: number }>(
+      `SELECT rank
+       FROM leaderboard_snapshots
+       WHERE user_id = $1 AND period = 'all-time'
+       ORDER BY snapshot_date DESC
+       LIMIT 1`,
+      [user.id],
+    ),
+    getReferralSummary(user.id),
+  ]);
 
   const nextLevelXp = getLevelProgress(user.total_xp).nextThreshold;
 
@@ -193,6 +196,7 @@ async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
     tier: user.subscription_tier,
     rank: rankResult.rows[0]?.rank ?? 0,
     referralCode: user.referral_code,
+    referral,
     connectedAccounts: connectionsResult.rows.map((connection) => ({
       platform: connection.platform,
       connected: connection.verified,
@@ -372,6 +376,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     throw new Error("No users found in the database. Run the seed file first.");
   }
 
+  await syncReferralRewardsForReferrer(userId);
   const dashboardUser = await getDashboardUser(userId);
 
   const [user, quests, achievements, leaderboard, activityFeed] = await Promise.all([

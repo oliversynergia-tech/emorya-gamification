@@ -130,6 +130,10 @@ CREATE TABLE referrals (
   referrer_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   referee_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   referee_subscribed BOOLEAN NOT NULL DEFAULT FALSE,
+  signup_reward_xp INTEGER NOT NULL DEFAULT 0,
+  conversion_reward_xp INTEGER NOT NULL DEFAULT 0,
+  signup_rewarded_at TIMESTAMPTZ,
+  conversion_rewarded_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (referrer_user_id, referee_user_id)
 );

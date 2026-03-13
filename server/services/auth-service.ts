@@ -2,15 +2,18 @@ import type { AuthSession, AuthUser } from "@/lib/types";
 import { clearSessionCookie, generateSessionToken, getSessionExpiryDate, hashSessionToken, readSessionCookie, setSessionCookie } from "@/server/auth/session";
 import { hashPassword, verifyPassword } from "@/server/auth/passwords";
 import { createEmailUser, createSession, deleteSessionByTokenHash, findSessionByTokenHash, findUserByEmail, findUserBySessionTokenHash } from "@/server/repositories/auth-repository";
+import { resolveReferrerUserId, syncReferralRewardsForReferrer } from "@/server/services/referral-service";
 
 export async function signUpWithEmail({
   email,
   password,
   displayName,
+  referralCode,
 }: {
   email: string;
   password: string;
   displayName: string;
+  referralCode?: string;
 }): Promise<AuthUser> {
   const existingUser = await findUserByEmail(email);
 
@@ -18,11 +21,22 @@ export async function signUpWithEmail({
     throw new Error("An account already exists for that email.");
   }
 
+  const referredByUserId = await resolveReferrerUserId(referralCode);
+
+  if (referralCode && !referredByUserId) {
+    throw new Error("Referral code not found.");
+  }
+
   const user = await createEmailUser({
     email,
     displayName,
     passwordHash: hashPassword(password),
+    referredByUserId,
   });
+
+  if (referredByUserId) {
+    await syncReferralRewardsForReferrer(referredByUserId);
+  }
 
   await issueSessionForUser(user.id);
 

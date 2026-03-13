@@ -105,6 +105,7 @@ Needed before auth and integrations land:
 
 - `NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID`
 - `MULTIVERSX_API_URL`
+- `ADMIN_EMAIL_ALLOWLIST`
 - `TWITTER_API_BEARER_TOKEN`
 - `TELEGRAM_BOT_TOKEN`
 - `DISCORD_CLIENT_ID`
@@ -132,6 +133,19 @@ Wallet-link status:
 - challenge persistence is real and stored in PostgreSQL
 - cryptographic verification now uses the official MultiversX SDK on the server
 - browser-side wallet-provider integration is still pending, so the current UI expects the user to paste a signature
+
+Admin authorization status:
+
+- admin review routes are protected by an explicit email allowlist in `ADMIN_EMAIL_ALLOWLIST`
+- only allowlisted signed-in accounts can access `/admin`, load the review queue, or approve/reject submissions
+- this is the temporary authorization layer until a first-class role model is added to the database
+
+Referral system status:
+
+- sign-up accepts an optional referral code and persists both `users.referred_by` and a `referrals` row
+- referral rewards are tracked in PostgreSQL with separate signup and conversion XP fields
+- referrers earn 40 XP when an invited user joins and 120 XP when that invited user upgrades above the free tier
+- dashboard and profile surfaces now read referral progress from the database instead of showing only a static code
 
 ## Reference points
 

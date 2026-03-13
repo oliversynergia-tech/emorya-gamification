@@ -1,4 +1,5 @@
 import type { CompletionStatus, QuestProgressUpdate, ReviewQueueItem } from "@/lib/types";
+import { assertAdminUser } from "@/server/auth/admin";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
 import { createActivityLogEntry, getUserProgressById } from "@/server/repositories/progression-repository";
 import { applyQuestRewardTransition } from "@/server/services/progression-service";
@@ -232,10 +233,7 @@ export async function submitQuest({
 
 export async function listPendingQuestReviews(): Promise<ReviewQueueItem[]> {
   const currentUser = await getAuthenticatedUser();
-
-  if (!currentUser) {
-    throw new Error("You must be signed in to view the review queue.");
-  }
+  assertAdminUser(currentUser);
 
   return getPendingReviewQueue();
 }
@@ -248,10 +246,7 @@ export async function reviewQuestSubmission({
   action: "approved" | "rejected";
 }) {
   const currentUser = await getAuthenticatedUser();
-
-  if (!currentUser) {
-    throw new Error("You must be signed in to review submissions.");
-  }
+  assertAdminUser(currentUser);
 
   const completion = await updateQuestCompletionReview({
     completionId,

@@ -8,6 +8,7 @@ export async function POST(request: Request) {
       email?: string;
       password?: string;
       displayName?: string;
+      referralCode?: string;
     };
 
     const email = body.email?.trim().toLowerCase();
@@ -28,7 +29,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await signUpWithEmail({ email, password, displayName });
+    const referralCode = body.referralCode?.trim().toUpperCase() || undefined;
+
+    const user = await signUpWithEmail({ email, password, displayName, referralCode });
 
     return NextResponse.json({ ok: true, user }, { status: 201 });
   } catch (error) {
