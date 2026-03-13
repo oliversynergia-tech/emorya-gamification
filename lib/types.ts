@@ -55,6 +55,10 @@ export type Quest = {
   xpReward: number;
   projectedXp?: number;
   tokenEffect?: TokenEffect;
+  projectedDirectTokenReward?: {
+    asset: "EMR" | "EGLD" | "PARTNER";
+    amount: number;
+  };
   difficulty: "easy" | "medium" | "hard";
   verificationType: VerificationType;
   status: QuestStatus;
@@ -243,6 +247,20 @@ export type UserSnapshot = {
     maxThreshold: number;
     progress: number;
   };
+  tokenProgram: {
+    status: "locked" | "earning" | "redeemable";
+    asset: "EMR" | "EGLD" | "PARTNER";
+    eligibilityPoints: number;
+    minimumPoints: number;
+    projectedRedemptionAmount: number;
+    nextRedemptionPoints: number | null;
+    tierMultiplier: number;
+    scheduledDirectRewards: Array<{
+      asset: "EMR" | "EGLD" | "PARTNER";
+      amount: number;
+    }>;
+    nextStep: string;
+  };
   referral: {
     rank: number;
     invitedCount: number;
@@ -353,6 +371,14 @@ export type AdminOverviewData = {
       count: number;
     }>;
   };
+  moderationNotifications: Array<{
+    channel: "inbox" | "webhook";
+    enabled: boolean;
+    status: "idle" | "armed";
+    destination: string;
+    title: string;
+    detail: string;
+  }>;
   reviewInsights: {
     byVerificationType: Array<{
       verificationType: VerificationType;
@@ -425,6 +451,26 @@ export type RewardConfig = {
     xpBonus: number;
     tokenBonusMultiplier?: number;
   };
+};
+
+export type QueueAlertThresholds = {
+  staleMinutes: number;
+  oldestWarningMinutes: number;
+  backlogWarningCount: number;
+  backlogCriticalCount: number;
+  averageWarningMinutes: number;
+};
+
+export type ModerationAlertChannelConfig = {
+  inboxEnabled: boolean;
+  webhookUrl: string | null;
+};
+
+export type TokenRedemptionProgram = {
+  asset: "EMR" | "EGLD" | "PARTNER";
+  minimumEligibilityPoints: number;
+  pointsPerToken: number;
+  tierMultipliers: Record<SubscriptionTier, number>;
 };
 
 export type CompletionRuleGroup = {

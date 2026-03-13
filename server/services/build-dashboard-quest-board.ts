@@ -71,6 +71,12 @@ function mapEvaluatedQuestToQuest({
     xpReward: quest.xp_reward,
     projectedXp: evaluatedQuest.projectedReward.xp,
     tokenEffect: evaluatedQuest.projectedReward.tokenEffect,
+    projectedDirectTokenReward: evaluatedQuest.projectedReward.directTokenReward
+      ? {
+          asset: evaluatedQuest.projectedReward.directTokenReward.asset as "EMR" | "EGLD" | "PARTNER",
+          amount: evaluatedQuest.projectedReward.directTokenReward.amount,
+        }
+      : undefined,
     difficulty: quest.difficulty,
     verificationType: quest.verification_type,
     status:

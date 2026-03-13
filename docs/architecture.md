@@ -140,6 +140,7 @@ Admin authorization status:
 - signed-in accounts with either `admin` or `super_admin` can access `/admin`, load the review queue, and approve/reject submissions
 - only `super_admin` accounts can grant or revoke standard admin access
 - queue-health alerts now derive from live pending age and backlog thresholds so SLA pressure is visible in the admin surface
+- queue-health thresholds are now env-configurable via `MODERATION_ALERT_*` settings, and the admin surface shows which inbox/webhook notification routes are armed
 - local seed/migrations grant both `super_admin` and `admin` continuity to the primary development account
 
 Referral system status:
@@ -167,6 +168,23 @@ Developer workflow status:
 - the repo-level entry points are `npm run dev:setup`, `npm run dev:reset`, `npm run dev:db:migrate`, `npm run dev:db:migrate:status`, `npm run dev:db:seed`, and `npm run dev:boot`
 - the implementation lives in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/scripts/dev.mjs`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/scripts/dev.mjs)
 - migrations are tracked in `schema_migrations`, so the deploy path applies only pending files and detects checksum drift instead of replaying every SQL migration blindly
+
+Quest-definition contract status:
+
+- structured quest metadata now has an explicit authoring contract in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/quest-definition-contract.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/quest-definition-contract.md)
+- the rules engine expects `track`, `rewardConfig`, `unlockRules`, and optional `previewConfig` to be authored consistently in `quest_definitions.metadata`
+
+Token program status:
+
+- token eligibility points are now accumulated from approved quests whose `rewardConfig.tokenEligibility.progressPoints` are defined
+- dashboard/profile surfaces now project an explicit redemption path using the current program rules:
+  - minimum unlock: `100` eligibility points
+  - base conversion: `20` points per `1 EMR`
+  - tier multipliers:
+    - free: `1.0x`
+    - monthly: `1.15x`
+    - annual: `1.3x`
+- direct token campaign rewards remain metadata-driven via `rewardConfig.directTokenReward`
 
 ## Reference points
 

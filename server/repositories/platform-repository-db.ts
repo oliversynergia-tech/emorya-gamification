@@ -1,8 +1,16 @@
 import type { QueryResultRow } from "pg";
 
-import { hasDatabaseConfig } from "@/lib/config";
 import {
+  getModerationAlertChannelConfig,
+  getQueueAlertThresholds,
+  hasDatabaseConfig,
+} from "@/lib/config";
+import {
+  buildRewardConfig,
   getWeeklyProgressBand,
+  inferQuestTrack,
+  inferTokenEffect,
+  projectTokenRedemption,
   starterPathRequirements,
 } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
@@ -39,6 +47,7 @@ import {
 } from "@/server/repositories/quest-repository";
 import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/referral-repository";
 import { buildDashboardQuestBoard } from "@/server/services/build-dashboard-quest-board";
+import { buildModerationNotifications } from "@/server/services/moderation-notifications";
 import { syncAchievementProgressForUser } from "@/server/services/progression-service";
 import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
 import { getUserProgressState } from "@/server/services/user-progress-state";
@@ -93,6 +102,15 @@ type ActivityRow = QueryResultRow & {
   created_at: string;
   display_name: string | null;
   metadata: { actor?: string; action?: string; detail?: string; timeAgo?: string };
+};
+
+type ApprovedRewardQuestRow = QueryResultRow & {
+  slug: string;
+  category: Quest["category"];
+  xp_reward: number;
+  verification_type: VerificationType;
+  is_premium_preview: boolean;
+  metadata: Record<string, unknown>;
 };
 
 export function isDatabaseEnabled() {
@@ -204,7 +222,7 @@ function buildStarterPathProgress(progressState: UserProgressState) {
 }
 
 async function getUserSnapshot(user: UserRow, progressState: UserProgressState, journeyState: UserJourneyState): Promise<UserSnapshot> {
-  const [connectionsResult, rankResult, referralRank, referral] = await Promise.all([
+  const [connectionsResult, rankResult, referralRank, referral, approvedRewardQuestResult] = await Promise.all([
     runQuery<SocialConnectionRow>(
       `SELECT platform, verified
        FROM social_connections
@@ -215,10 +233,57 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
     getCurrentAllTimeRankForUser(user.id),
     getCurrentReferralRankForUser(user.id),
     getReferralSummary(user.id),
+    runQuery<ApprovedRewardQuestRow>(
+      `SELECT q.slug, q.category, q.xp_reward, q.verification_type, q.is_premium_preview, q.metadata
+       FROM quest_completions qc
+       INNER JOIN quest_definitions q ON q.id = qc.quest_id
+       WHERE qc.user_id = $1
+         AND qc.status = 'approved'`,
+      [user.id],
+    ),
   ]);
 
   const nextLevelXp = getLevelProgress(user.total_xp).nextThreshold;
   const weeklyProgress = getWeeklyProgressBand(progressState.weeklyXp);
+  const rewardSummaries = approvedRewardQuestResult.rows.map((quest) => {
+    const track = inferQuestTrack({
+      slug: quest.slug,
+      category: quest.category,
+      verificationType: quest.verification_type,
+      isPremiumPreview: quest.is_premium_preview,
+      metadata: quest.metadata,
+    });
+    const tokenEffect = inferTokenEffect(track, quest.metadata);
+
+    return buildRewardConfig({
+      baseXp: quest.xp_reward,
+      tokenEffect,
+      metadata: quest.metadata,
+    });
+  });
+  const eligibilityPoints = rewardSummaries.reduce(
+    (sum, reward) => sum + (reward.tokenEligibility?.progressPoints ?? 0),
+    0,
+  );
+  const scheduledDirectRewardMap = new Map<"EMR" | "EGLD" | "PARTNER", number>();
+
+  for (const reward of rewardSummaries) {
+    if (!reward.directTokenReward) {
+      continue;
+    }
+
+    scheduledDirectRewardMap.set(
+      reward.directTokenReward.asset,
+      (scheduledDirectRewardMap.get(reward.directTokenReward.asset) ?? 0) + reward.directTokenReward.amount,
+    );
+  }
+
+  const redemptionProjection = projectTokenRedemption({
+    eligibilityPoints,
+    subscriptionTier: user.subscription_tier,
+    rewardEligible: progressState.rewardEligible,
+    walletLinked: progressState.walletLinked,
+  });
 
   return {
     displayName: user.display_name,
@@ -238,6 +303,25 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
       nextRequirement: getNextRewardRequirement(progressState, journeyState),
     },
     weeklyProgress,
+    tokenProgram: {
+      status: redemptionProjection.status,
+      asset: redemptionProjection.asset,
+      eligibilityPoints,
+      minimumPoints: redemptionProjection.minimumPoints,
+      projectedRedemptionAmount: redemptionProjection.projectedRedemptionAmount,
+      nextRedemptionPoints: redemptionProjection.nextRedemptionPoints,
+      tierMultiplier: redemptionProjection.tierMultiplier,
+      scheduledDirectRewards: Array.from(scheduledDirectRewardMap.entries()).map(([asset, amount]) => ({
+        asset,
+        amount,
+      })),
+      nextStep:
+        redemptionProjection.status === "redeemable"
+          ? `Redeem ${redemptionProjection.asset} once payout rails are enabled.`
+          : progressState.walletLinked
+            ? `Reach ${redemptionProjection.minimumPoints} eligibility points to unlock your first redemption.`
+            : "Connect xPortal to unlock token redemption.",
+    },
     referral: {
       rank: referralRank,
       ...referral,
@@ -265,6 +349,8 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
 }
 
 function buildQueueMetrics(reviewQueue: AdminOverviewData["reviewQueue"]): AdminOverviewData["queueMetrics"] {
+  const thresholds = getQueueAlertThresholds();
+
   if (reviewQueue.length === 0) {
     return {
       pendingCount: 0,
@@ -286,18 +372,18 @@ function buildQueueMetrics(reviewQueue: AdminOverviewData["reviewQueue"]): Admin
 
   const oldestPendingMinutes = Math.max(...pendingAges);
   const averagePendingMinutes = Math.round(pendingAges.reduce((sum, age) => sum + age, 0) / pendingAges.length);
-  const staleCount = pendingAges.filter((age) => age >= 24 * 60).length;
+  const staleCount = pendingAges.filter((age) => age >= thresholds.staleMinutes).length;
   const alerts: AdminOverviewData["queueMetrics"]["alerts"] = [];
 
   if (staleCount > 0) {
     alerts.push({
       severity: "critical",
       title: "SLA breach in queue",
-      detail: `${staleCount} submission${staleCount === 1 ? "" : "s"} have been pending for more than 24 hours.`,
+      detail: `${staleCount} submission${staleCount === 1 ? "" : "s"} have been pending for more than ${thresholds.staleMinutes} minutes.`,
     });
   }
 
-  if (oldestPendingMinutes >= 6 * 60) {
+  if (oldestPendingMinutes >= thresholds.oldestWarningMinutes) {
     alerts.push({
       severity: staleCount > 0 ? "critical" : "warning",
       title: "Oldest submission is aging out",
@@ -305,15 +391,15 @@ function buildQueueMetrics(reviewQueue: AdminOverviewData["reviewQueue"]): Admin
     });
   }
 
-  if (reviewQueue.length >= 8) {
+  if (reviewQueue.length >= thresholds.backlogWarningCount) {
     alerts.push({
-      severity: reviewQueue.length >= 15 ? "critical" : "warning",
+      severity: reviewQueue.length >= thresholds.backlogCriticalCount ? "critical" : "warning",
       title: "Backlog pressure is rising",
       detail: `${reviewQueue.length} submissions are waiting for review across all verification lanes.`,
     });
   }
 
-  if (averagePendingMinutes >= 90) {
+  if (averagePendingMinutes >= thresholds.averageWarningMinutes) {
     alerts.push({
       severity: "warning",
       title: "Average response time is slipping",
@@ -508,6 +594,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
   const annualCount = usersByTier.rows.find((row) => row.subscription_tier === "annual")?.count ?? "0";
+  const queueMetrics = buildQueueMetrics(reviewQueue);
+  const moderationNotifications = buildModerationNotifications({
+    alerts: queueMetrics.alerts,
+    thresholds: getQueueAlertThresholds(),
+    channels: getModerationAlertChannelConfig(),
+  });
 
   return {
     stats: [
@@ -522,7 +614,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     reviewQueue,
     reviewHistory,
     reviewerWorkload,
-    queueMetrics: buildQueueMetrics(reviewQueue),
+    queueMetrics,
+    moderationNotifications,
     reviewInsights: {
       byVerificationType: reviewBreakdownByVerificationType,
       reviewerTypeMatrix,

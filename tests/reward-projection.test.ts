@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createDefaultQuestRuntimeContext } from "../lib/progression-rules.ts";
+import { createDefaultQuestRuntimeContext, projectTokenRedemption } from "../lib/progression-rules.ts";
 import { projectQuestReward } from "../server/services/project-quest-reward.ts";
 
 test("projectQuestReward applies the rules-engine premium multiplier", () => {
@@ -60,5 +60,41 @@ test("projectQuestReward only projects direct token payouts when wallet requirem
   assert.deepEqual(withWallet.directTokenReward, {
     asset: "EMR",
     amount: 25,
+  });
+});
+
+test("projectTokenRedemption remains locked until reward eligibility and wallet conditions are met", () => {
+  const result = projectTokenRedemption({
+    eligibilityPoints: 140,
+    subscriptionTier: "monthly",
+    rewardEligible: false,
+    walletLinked: false,
+  });
+
+  assert.deepEqual(result, {
+    asset: "EMR",
+    minimumPoints: 100,
+    projectedRedemptionAmount: 0,
+    nextRedemptionPoints: 100,
+    tierMultiplier: 1.15,
+    status: "locked",
+  });
+});
+
+test("projectTokenRedemption projects a tier-adjusted redemption amount once unlocked", () => {
+  const result = projectTokenRedemption({
+    eligibilityPoints: 200,
+    subscriptionTier: "annual",
+    rewardEligible: true,
+    walletLinked: true,
+  });
+
+  assert.deepEqual(result, {
+    asset: "EMR",
+    minimumPoints: 100,
+    projectedRedemptionAmount: 13,
+    nextRedemptionPoints: null,
+    tierMultiplier: 1.3,
+    status: "redeemable",
   });
 });

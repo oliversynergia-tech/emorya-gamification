@@ -50,6 +50,61 @@ export async function handleReviewQueueRequest(
   }
 }
 
+export async function handleBulkReviewRequest(
+  body: {
+    completionIds?: string[];
+    action?: "approved" | "rejected";
+    moderationNote?: string;
+    expectedCount?: number;
+  },
+  bulkReviewQuestSubmissions: (input: {
+    completionIds: string[];
+    action: "approved" | "rejected";
+    moderationNote?: string;
+  }) => Promise<Record<string, unknown>>,
+) {
+  if (!Array.isArray(body.completionIds) || body.completionIds.length === 0) {
+    return {
+      status: 400,
+      body: { ok: false, error: "completionIds are required." },
+    };
+  }
+
+  if (body.action !== "approved" && body.action !== "rejected") {
+    return {
+      status: 400,
+      body: { ok: false, error: "Action must be approved or rejected." },
+    };
+  }
+
+  if (typeof body.expectedCount !== "number" || body.expectedCount !== body.completionIds.length) {
+    return {
+      status: 400,
+      body: { ok: false, error: "Bulk review confirmation count did not match the selected submissions." },
+    };
+  }
+
+  try {
+    const result = await bulkReviewQuestSubmissions({
+      completionIds: body.completionIds,
+      action: body.action,
+      moderationNote: body.moderationNote,
+    });
+
+    return {
+      status: 200,
+      body: { ok: true, ...result },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to process bulk review.";
+
+    return {
+      status: message.includes("signed in") ? 401 : message.includes("Admin access") ? 403 : 400,
+      body: { ok: false, error: message },
+    };
+  }
+}
+
 export async function handleReviewPatchRequest(
   {
     completionId,

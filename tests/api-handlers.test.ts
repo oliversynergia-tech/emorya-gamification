@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { handleSignInRequest, handleSignUpRequest } from "../server/http/auth-handlers.ts";
 import {
+  handleBulkReviewRequest,
   handleQuestSubmitRequest,
   handleReviewPatchRequest,
   handleReviewQueueRequest,
@@ -115,5 +116,89 @@ test("handleReviewQueueRequest maps admin auth failures to 403", async () => {
   assert.deepEqual(result.body, {
     ok: false,
     error: "Admin access is required for this action.",
+  });
+});
+
+test("handleReviewPatchRequest maps admin auth failures to 403", async () => {
+  const result = await handleReviewPatchRequest(
+    {
+      completionId: "completion-1",
+      body: { action: "approved" },
+    },
+    async () => {
+      throw new Error("Admin access is required for this action.");
+    },
+  );
+
+  assert.equal(result.status, 403);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Admin access is required for this action.",
+  });
+});
+
+test("handleBulkReviewRequest rejects mismatched confirmation counts", async () => {
+  const result = await handleBulkReviewRequest(
+    {
+      completionIds: ["one", "two"],
+      action: "approved",
+      expectedCount: 1,
+    },
+    async () => {
+      throw new Error("should not be called");
+    },
+  );
+
+  assert.equal(result.status, 400);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Bulk review confirmation count did not match the selected submissions.",
+  });
+});
+
+test("handleBulkReviewRequest maps admin auth failures to 403", async () => {
+  const result = await handleBulkReviewRequest(
+    {
+      completionIds: ["one"],
+      action: "rejected",
+      expectedCount: 1,
+    },
+    async () => {
+      throw new Error("Admin access is required for this action.");
+    },
+  );
+
+  assert.equal(result.status, 403);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Admin access is required for this action.",
+  });
+});
+
+test("handleBulkReviewRequest returns service payload on success", async () => {
+  const result = await handleBulkReviewRequest(
+    {
+      completionIds: ["one", "two"],
+      action: "approved",
+      moderationNote: "Looks good",
+      expectedCount: 2,
+    },
+    async ({ completionIds, action, moderationNote }) => {
+      assert.deepEqual(completionIds, ["one", "two"]);
+      assert.equal(action, "approved");
+      assert.equal(moderationNote, "Looks good");
+
+      return {
+        reviewedCount: 2,
+        failedCount: 0,
+      };
+    },
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    reviewedCount: 2,
+    failedCount: 0,
   });
 });

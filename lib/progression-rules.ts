@@ -1,10 +1,12 @@
 import type {
   CompletionRuleGroup,
+  Quest,
   QuestCadence,
   QuestTrack,
   QuestRuntimeContext,
   RewardConfig,
   SubscriptionTier,
+  TokenRedemptionProgram,
   TokenEffect,
   UnlockRuleGroup,
 } from "@/lib/types";
@@ -21,6 +23,16 @@ export const firstTokenEligibilityLevel = 5;
 export const ambassadorMinimumLevel = 10;
 export const ambassadorReferralRequirement = 10;
 export const weeklyProgressThresholds = [100, 250, 450, 700] as const;
+export const tokenRedemptionProgram: TokenRedemptionProgram = {
+  asset: "EMR",
+  minimumEligibilityPoints: 100,
+  pointsPerToken: 20,
+  tierMultipliers: {
+    free: 1,
+    monthly: 1.15,
+    annual: 1.3,
+  },
+};
 
 export const rulesEngineTierMultipliers: Record<SubscriptionTier, number> = {
   free: 1,
@@ -30,6 +42,62 @@ export const rulesEngineTierMultipliers: Record<SubscriptionTier, number> = {
 
 export function getRulesEngineTierMultiplier(tier: SubscriptionTier) {
   return rulesEngineTierMultipliers[tier];
+}
+
+export function projectTokenRedemption({
+  eligibilityPoints,
+  subscriptionTier,
+  rewardEligible,
+  walletLinked,
+}: {
+  eligibilityPoints: number;
+  subscriptionTier: SubscriptionTier;
+  rewardEligible: boolean;
+  walletLinked: boolean;
+}) {
+  const normalizedPoints = Math.max(Math.floor(eligibilityPoints), 0);
+  const minimumPoints = tokenRedemptionProgram.minimumEligibilityPoints;
+  const tierMultiplier = tokenRedemptionProgram.tierMultipliers[subscriptionTier];
+  const unlocked = rewardEligible && walletLinked;
+  const redeemablePoints = unlocked && normalizedPoints >= minimumPoints ? normalizedPoints : 0;
+  const projectedRedemptionAmount =
+    redeemablePoints > 0
+      ? Math.floor((redeemablePoints / tokenRedemptionProgram.pointsPerToken) * tierMultiplier)
+      : 0;
+
+  let nextRedemptionPoints: number | null = null;
+
+  if (!unlocked) {
+    nextRedemptionPoints = minimumPoints;
+  } else if (normalizedPoints < minimumPoints) {
+    nextRedemptionPoints = minimumPoints;
+  } else {
+    const nextWholeTokenStep =
+      Math.ceil(normalizedPoints / tokenRedemptionProgram.pointsPerToken) * tokenRedemptionProgram.pointsPerToken;
+    nextRedemptionPoints = nextWholeTokenStep > normalizedPoints ? nextWholeTokenStep : null;
+  }
+
+  return {
+    asset: tokenRedemptionProgram.asset,
+    minimumPoints,
+    projectedRedemptionAmount,
+    nextRedemptionPoints,
+    tierMultiplier,
+    status: !unlocked ? "locked" : normalizedPoints >= minimumPoints ? "redeemable" : "earning",
+  } as const;
+}
+
+export function getTokenEffectLabel(quest: Pick<Quest, "tokenEffect">) {
+  switch (quest.tokenEffect) {
+    case "eligibility_progress":
+      return "Token eligibility";
+    case "token_bonus":
+      return "Token bonus";
+    case "direct_token_reward":
+      return "Direct token reward";
+    default:
+      return "XP only";
+  }
 }
 
 export function getWeeklyProgressBand(weeklyXp: number) {

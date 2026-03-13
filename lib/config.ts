@@ -16,6 +16,18 @@ type AppConfig = {
   multiversxApiUrl: string;
 };
 
+function readNumberEnv(key: string, fallback: number) {
+  const raw = process.env[key];
+
+  if (!raw) {
+    return fallback;
+  }
+
+  const parsed = Number(raw);
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
 function readEnv(key: RequiredEnvKey): string {
   const value = process.env[key];
 
@@ -74,4 +86,21 @@ export function getDeploymentWarnings() {
   }
 
   return warnings;
+}
+
+export function getQueueAlertThresholds() {
+  return {
+    staleMinutes: readNumberEnv("MODERATION_ALERT_STALE_MINUTES", 24 * 60),
+    oldestWarningMinutes: readNumberEnv("MODERATION_ALERT_OLDEST_WARNING_MINUTES", 6 * 60),
+    backlogWarningCount: readNumberEnv("MODERATION_ALERT_BACKLOG_WARNING_COUNT", 8),
+    backlogCriticalCount: readNumberEnv("MODERATION_ALERT_BACKLOG_CRITICAL_COUNT", 15),
+    averageWarningMinutes: readNumberEnv("MODERATION_ALERT_AVERAGE_WARNING_MINUTES", 90),
+  };
+}
+
+export function getModerationAlertChannelConfig() {
+  return {
+    inboxEnabled: process.env.MODERATION_ALERT_INBOX_ENABLED !== "false",
+    webhookUrl: process.env.MODERATION_ALERT_WEBHOOK_URL?.trim() || null,
+  };
 }

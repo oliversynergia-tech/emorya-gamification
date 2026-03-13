@@ -1,3 +1,4 @@
+import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel, getTierMultiplier } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionTier } from "@/lib/types";
@@ -56,19 +57,6 @@ function getTrackDescription(track: QuestTrack) {
   }
 }
 
-function getTokenEffectLabel(quest: Quest) {
-  switch (quest.tokenEffect) {
-    case "eligibility_progress":
-      return "Token path";
-    case "token_bonus":
-      return "Token bonus";
-    case "direct_token_reward":
-      return "Direct EMR";
-    default:
-      return null;
-  }
-}
-
 function renderQuestCard(quest: Quest) {
   return (
     <article
@@ -77,7 +65,7 @@ function renderQuestCard(quest: Quest) {
     >
       <div className="quest-card__meta">
         <span>{quest.category}</span>
-        <span>{getTokenEffectLabel(quest) ?? `Lv ${quest.requiredLevel}+`}</span>
+        <span>{quest.tokenEffect && quest.tokenEffect !== "none" ? getTokenEffectLabel(quest) : `Lv ${quest.requiredLevel}+`}</span>
       </div>
       <h4>{quest.title}</h4>
       <p>{quest.description}</p>
@@ -94,6 +82,11 @@ function renderQuestCard(quest: Quest) {
             : getQuestStatusLabel(quest.status)}
         </strong>
       </div>
+      {quest.projectedDirectTokenReward ? (
+        <small>
+          +{quest.projectedDirectTokenReward.amount} {quest.projectedDirectTokenReward.asset} direct reward
+        </small>
+      ) : null}
       {quest.timebox ? <small>{quest.timebox}</small> : null}
     </article>
   );
@@ -258,6 +251,57 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
               ? `Reward eligible with ${data.user.rewardEligibility.trustScoreBand} trust status.`
               : `Next requirement: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing"}.`}
           </p>
+        </div>
+        <div className="panel panel--glass">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Token conversion</p>
+              <h3>{data.user.tokenProgram.status === "redeemable" ? "Redemption unlocked" : "Eligibility pipeline"}</h3>
+            </div>
+            <span className="badge badge--pink">{data.user.tokenProgram.eligibilityPoints} pts</span>
+          </div>
+          <div className="info-grid">
+            <div className="info-card">
+              <span>Projected redemption</span>
+              <strong>
+                {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
+              </strong>
+            </div>
+            <div className="info-card">
+              <span>Minimum unlock</span>
+              <strong>{data.user.tokenProgram.minimumPoints} pts</strong>
+            </div>
+            <div className="info-card">
+              <span>Tier multiplier</span>
+              <strong>{data.user.tokenProgram.tierMultiplier.toFixed(2)}x</strong>
+            </div>
+            <div className="info-card">
+              <span>Status</span>
+              <strong>{data.user.tokenProgram.status.replaceAll("_", " ")}</strong>
+            </div>
+          </div>
+          <p className="form-note">{data.user.tokenProgram.nextStep}</p>
+          {data.user.tokenProgram.nextRedemptionPoints ? (
+            <p className="form-note">
+              {Math.max(data.user.tokenProgram.nextRedemptionPoints - data.user.tokenProgram.eligibilityPoints, 0)} more
+              eligibility points to the next redemption step.
+            </p>
+          ) : null}
+          {data.user.tokenProgram.scheduledDirectRewards.length > 0 ? (
+            <div className="achievement-list">
+              {data.user.tokenProgram.scheduledDirectRewards.map((reward) => (
+                <article key={`${reward.asset}-${reward.amount}`} className="achievement-card">
+                  <div>
+                    <strong>Scheduled direct reward</strong>
+                    <p>Partner and campaign quests can bypass XP conversion when direct payout rules apply.</p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{reward.amount} {reward.asset}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : null}
         </div>
         <div className="referral-summary">
           <div className="quest-card__meta">
@@ -655,6 +699,21 @@ export function ProfileSection({ data }: { data: DashboardData }) {
               <span>{data.user.weeklyProgress.xp} weekly XP</span>
             </div>
           </article>
+          <article className="achievement-card">
+            <div>
+              <strong>Token redemption path</strong>
+              <p>
+                {data.user.tokenProgram.eligibilityPoints} eligibility points banked.{" "}
+                {data.user.tokenProgram.status === "redeemable"
+                  ? `Projected redemption: ${data.user.tokenProgram.projectedRedemptionAmount} ${data.user.tokenProgram.asset}.`
+                  : data.user.tokenProgram.nextStep}
+              </p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{data.user.tokenProgram.status}</span>
+              <span>{data.user.tokenProgram.tierMultiplier.toFixed(2)}x tier bonus</span>
+            </div>
+          </article>
         </div>
       </div>
       <div className="panel">
@@ -924,6 +983,28 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
           {data.queueMetrics.byVerificationType.length === 0 ? (
             <p className="form-note">The pending queue is empty right now.</p>
           ) : null}
+        </div>
+      </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Notification routing</p>
+            <h3>Where moderation alerts can escalate next</h3>
+          </div>
+        </div>
+        <div className="achievement-list">
+          {data.moderationNotifications.map((notification) => (
+            <article key={`${notification.channel}-${notification.destination}`} className="achievement-card">
+              <div>
+                <strong>{notification.title}</strong>
+                <p>{notification.detail}</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{notification.channel}</span>
+                <span>{notification.status}</span>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
       <div className="panel panel--glass admin-analytics">
