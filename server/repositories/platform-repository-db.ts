@@ -12,7 +12,6 @@ import type {
   DashboardData,
   LeaderboardEntry,
   Quest,
-  ReviewQueueItem,
   SubscriptionTier,
   UserSnapshot,
   VerificationType,
@@ -23,6 +22,7 @@ import {
   getLiveAllTimeLeaderboard,
   syncLeaderboardSnapshotsForToday,
 } from "@/server/repositories/leaderboard-repository";
+import { getPendingReviewQueue, getRecentReviewHistory } from "@/server/repositories/quest-repository";
 import { getReferralSummary } from "@/server/repositories/referral-repository";
 import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
 
@@ -76,18 +76,6 @@ type ActivityRow = QueryResultRow & {
   created_at: string;
   display_name: string | null;
   metadata: { actor?: string; action?: string; detail?: string; timeAgo?: string };
-};
-
-type ReviewQueueRow = QueryResultRow & {
-  id: string;
-  quest_id: string;
-  quest_title: string;
-  display_name: string;
-  email: string | null;
-  verification_type: VerificationType;
-  submission_data: Record<string, string | number | boolean | null>;
-  status: "pending" | "approved" | "rejected";
-  created_at: string;
 };
 
 const tierRank: Record<SubscriptionTier, number> = {
@@ -290,31 +278,6 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
   }));
 }
 
-async function getReviewQueue(): Promise<ReviewQueueItem[]> {
-  const result = await runQuery<ReviewQueueRow>(
-    `SELECT qc.id, qc.quest_id, q.title AS quest_title, u.display_name, u.email,
-            q.verification_type, qc.submission_data, qc.status, qc.created_at
-     FROM quest_completions qc
-     INNER JOIN quest_definitions q ON q.id = qc.quest_id
-     INNER JOIN users u ON u.id = qc.user_id
-     WHERE qc.status = 'pending'
-     ORDER BY qc.created_at ASC
-     LIMIT 25`,
-  );
-
-  return result.rows.map((row) => ({
-    id: row.id,
-    questId: row.quest_id,
-    questTitle: row.quest_title,
-    userDisplayName: row.display_name,
-    userEmail: row.email,
-    verificationType: row.verification_type,
-    submissionData: row.submission_data,
-    status: row.status,
-    createdAt: row.created_at,
-  }));
-}
-
 export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Promise<DashboardData> {
   const userId = await resolveDashboardUserId(currentUser);
 
@@ -350,7 +313,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, reviewQueue] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, reviewQueue, reviewHistory] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -365,7 +328,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
        FROM activity_log
        WHERE created_at >= NOW() - INTERVAL '7 days'`,
     ),
-    getReviewQueue(),
+    getPendingReviewQueue(),
+    getRecentReviewHistory(),
   ]);
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -379,5 +343,6 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       { label: "Weekly Active Users", value: weeklyActives.rows[0]?.count ?? "0" },
     ],
     reviewQueue,
+    reviewHistory,
   };
 }

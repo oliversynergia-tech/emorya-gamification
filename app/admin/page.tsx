@@ -69,7 +69,11 @@ export default async function AdminPage() {
         </div>
       </section>
       <AdminSection data={data} />
-      <ReviewQueuePanel initialQueue={data.reviewQueue} isAuthenticated={hasAdminAccess} />
+      <ReviewQueuePanel
+        initialQueue={data.reviewQueue}
+        initialHistory={data.reviewHistory}
+        isAuthenticated={hasAdminAccess}
+      />
     </SiteShell>
   );
 }

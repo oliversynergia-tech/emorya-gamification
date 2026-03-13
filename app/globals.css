@@ -820,6 +820,38 @@ a {
   margin-bottom: 18px;
 }
 
+.review-history {
+  margin-bottom: 20px;
+}
+
+.review-history__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.review-history__item {
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(223, 182, 255, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    rgba(20, 10, 33, 0.94);
+}
+
+.review-history__item h4 {
+  margin: 10px 0 8px;
+}
+
+.review-history__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .review-outcome-card {
   padding: 18px;
   border-radius: 20px;

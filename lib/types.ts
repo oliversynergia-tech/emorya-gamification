@@ -221,6 +221,7 @@ export type AdminOverviewData = {
     value: string;
   }>;
   reviewQueue: ReviewQueueItem[];
+  reviewHistory: ReviewHistoryItem[];
 };
 
 export type AuthUser = {
@@ -257,6 +258,20 @@ export type ReviewQueueItem = {
   submissionData: Record<string, string | number | boolean | null>;
   status: CompletionStatus;
   createdAt: string;
+};
+
+export type ReviewHistoryItem = {
+  id: string;
+  questId: string;
+  questTitle: string;
+  userDisplayName: string;
+  userEmail: string | null;
+  reviewerDisplayName: string | null;
+  verificationType: VerificationType;
+  submissionData: Record<string, string | number | boolean | null>;
+  status: Extract<CompletionStatus, "approved" | "rejected">;
+  awardedXp: number;
+  reviewedAt: string;
 };
 
 export type ManualReviewSubmission = {

@@ -1,4 +1,10 @@
-import type { CompletionStatus, ManualReviewSubmission, QuestProgressUpdate, ReviewQueueItem } from "@/lib/types";
+import type {
+  CompletionStatus,
+  ManualReviewSubmission,
+  QuestProgressUpdate,
+  ReviewHistoryItem,
+  ReviewQueueItem,
+} from "@/lib/types";
 import { assertAdminUser } from "@/server/auth/admin";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
 import { createActivityLogEntry, getUserProgressById } from "@/server/repositories/progression-repository";
@@ -7,6 +13,7 @@ import {
   getPendingReviewQueue,
   getQuestCompletionForUser,
   getQuestDefinitionById,
+  getRecentReviewHistory,
   getUserQuestAccess,
   updateQuestCompletionReview,
   upsertQuestCompletionForUser,
@@ -249,6 +256,13 @@ export async function listPendingQuestReviews(): Promise<ReviewQueueItem[]> {
   assertAdminUser(currentUser);
 
   return getPendingReviewQueue();
+}
+
+export async function listRecentQuestReviews(): Promise<ReviewHistoryItem[]> {
+  const currentUser = await getAuthenticatedUser();
+  assertAdminUser(currentUser);
+
+  return getRecentReviewHistory();
 }
 
 export async function reviewQuestSubmission({

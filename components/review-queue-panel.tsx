@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { QuestProgressUpdate, ReviewQueueItem } from "@/lib/types";
+import type { QuestProgressUpdate, ReviewHistoryItem, ReviewQueueItem } from "@/lib/types";
 
 type ReviewOutcome = {
   completionId: string;
@@ -11,17 +11,21 @@ type ReviewOutcome = {
   questTitle: string;
   userDisplayName: string;
   progressUpdate: QuestProgressUpdate | null;
+  moderationNote?: string | null;
 };
 
 export function ReviewQueuePanel({
   initialQueue,
+  initialHistory,
   isAuthenticated,
 }: {
   initialQueue: ReviewQueueItem[];
+  initialHistory: ReviewHistoryItem[];
   isAuthenticated: boolean;
 }) {
   const router = useRouter();
   const [queue, setQueue] = useState(initialQueue);
+  const [history] = useState(initialHistory);
   const [recentOutcomes, setRecentOutcomes] = useState<ReviewOutcome[]>([]);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [moderationNotes, setModerationNotes] = useState<Record<string, string>>({});
@@ -64,6 +68,7 @@ export function ReviewQueuePanel({
           questTitle: item.questTitle,
           userDisplayName: item.userDisplayName,
           progressUpdate: result.progressUpdate ?? null,
+          moderationNote: moderationNotes[item.id] ?? null,
         },
         ...current,
       ].slice(0, 4));
@@ -123,8 +128,43 @@ export function ReviewQueuePanel({
               ) : (
                 null
               )}
+              {outcome.moderationNote ? (
+                <p className="form-note">Note: {outcome.moderationNote}</p>
+              ) : null}
             </article>
           ))}
+        </div>
+      ) : null}
+      {history.length > 0 ? (
+        <div className="review-history">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Recent audit trail</p>
+              <h3>Reviewed submissions</h3>
+            </div>
+          </div>
+          <div className="review-history__list">
+            {history.map((item) => (
+              <article key={item.id} className="review-history__item">
+                <div className="quest-card__meta">
+                  <span>{item.status === "approved" ? "Approved" : "Rejected"}</span>
+                  <span>{new Date(item.reviewedAt).toLocaleString()}</span>
+                </div>
+                <h4>{item.questTitle}</h4>
+                <p>
+                  {item.userDisplayName}
+                  {item.userEmail ? ` · ${item.userEmail}` : ""}
+                </p>
+                <div className="review-history__meta">
+                  <span>Reviewer: {item.reviewerDisplayName ?? "Unknown"}</span>
+                  <span>XP: {item.awardedXp}</span>
+                </div>
+                {item.submissionData.moderationNote ? (
+                  <p className="form-note">Note: {String(item.submissionData.moderationNote)}</p>
+                ) : null}
+              </article>
+            ))}
+          </div>
         </div>
       ) : null}
       {queue.length === 0 ? <p className="form-note">No pending submissions right now.</p> : null}

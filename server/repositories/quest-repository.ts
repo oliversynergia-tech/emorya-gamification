@@ -2,7 +2,14 @@ import { randomUUID } from "crypto";
 
 import type { QueryResultRow } from "pg";
 
-import type { CompletionStatus, ManualReviewSubmission, QuestCompletionRecord, SubscriptionTier, VerificationType } from "@/lib/types";
+import type {
+  CompletionStatus,
+  ManualReviewSubmission,
+  QuestCompletionRecord,
+  ReviewHistoryItem,
+  SubscriptionTier,
+  VerificationType,
+} from "@/lib/types";
 import { runQuery } from "@/server/db/client";
 
 type UserQuestAccessRow = QueryResultRow & {
@@ -45,6 +52,20 @@ type ReviewQueueRow = QueryResultRow & {
   submission_data: Record<string, string | number | boolean | null>;
   status: CompletionStatus;
   created_at: string;
+};
+
+type ReviewHistoryRow = QueryResultRow & {
+  id: string;
+  quest_id: string;
+  quest_title: string;
+  display_name: string;
+  email: string | null;
+  reviewer_display_name: string | null;
+  verification_type: VerificationType;
+  submission_data: Record<string, string | number | boolean | null>;
+  status: Extract<CompletionStatus, "approved" | "rejected">;
+  awarded_xp: number;
+  reviewed_at: string;
 };
 
 const tierRank: Record<SubscriptionTier, number> = {
@@ -210,6 +231,45 @@ export async function getPendingReviewQueue() {
     submissionData: row.submission_data,
     status: row.status,
     createdAt: row.created_at,
+  }));
+}
+
+export async function getRecentReviewHistory(limit = 12): Promise<ReviewHistoryItem[]> {
+  const result = await runQuery<ReviewHistoryRow>(
+    `SELECT qc.id, qc.quest_id, q.title AS quest_title, u.display_name, u.email,
+            reviewer.display_name AS reviewer_display_name,
+            q.verification_type, qc.submission_data, qc.status, qc.awarded_xp,
+            COALESCE(
+              NULLIF(qc.submission_data->>'moderatedAt', '')::timestamptz,
+              qc.completed_at,
+              qc.created_at
+            )::text AS reviewed_at
+     FROM quest_completions qc
+     INNER JOIN quest_definitions q ON q.id = qc.quest_id
+     INNER JOIN users u ON u.id = qc.user_id
+     LEFT JOIN users reviewer ON reviewer.id = qc.reviewed_by
+     WHERE qc.status IN ('approved', 'rejected')
+     ORDER BY COALESCE(
+       NULLIF(qc.submission_data->>'moderatedAt', '')::timestamptz,
+       qc.completed_at,
+       qc.created_at
+     ) DESC
+     LIMIT $1`,
+    [limit],
+  );
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    questId: row.quest_id,
+    questTitle: row.quest_title,
+    userDisplayName: row.display_name,
+    userEmail: row.email,
+    reviewerDisplayName: row.reviewer_display_name,
+    verificationType: row.verification_type,
+    submissionData: row.submission_data,
+    status: row.status,
+    awardedXp: row.awarded_xp,
+    reviewedAt: row.reviewed_at,
   }));
 }
 
