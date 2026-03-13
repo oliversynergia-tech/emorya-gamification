@@ -4,6 +4,7 @@ import type { QueryResultRow } from "pg";
 
 import type { LeaderboardEntry, SubscriptionTier } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
+import { mapLeaderboardDelta } from "@/server/repositories/leaderboard-rules";
 
 type CurrentRankRow = QueryResultRow & {
   rank: number;
@@ -25,14 +26,6 @@ type SnapshotSourceRow = QueryResultRow & {
   xp: number;
   rank: number;
 };
-
-function mapDelta(currentRank: number, previousRank: number | null) {
-  if (!previousRank) {
-    return 0;
-  }
-
-  return previousRank - currentRank;
-}
 
 export async function syncLeaderboardSnapshotsForToday() {
   const today = new Date().toISOString().slice(0, 10);
@@ -138,6 +131,6 @@ export async function getLiveAllTimeLeaderboard(limit = 12): Promise<Leaderboard
     xp: entry.xp,
     badges: entry.badge_count,
     tier: entry.subscription_tier,
-    delta: mapDelta(entry.rank, entry.previous_rank),
+    delta: mapLeaderboardDelta(entry.rank, entry.previous_rank),
   }));
 }

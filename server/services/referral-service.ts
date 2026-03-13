@@ -1,4 +1,3 @@
-import { getLevelProgress } from "@/lib/progression";
 import { createActivityLogEntry, getUserProgressById, updateUserProgressById } from "@/server/repositories/progression-repository";
 import {
   findReferrerByCode,
@@ -6,9 +5,7 @@ import {
   listReferralRewardStates,
   updateReferralRewardState,
 } from "@/server/repositories/referral-repository";
-
-const REFERRAL_SIGNUP_REWARD_XP = 40;
-const REFERRAL_CONVERSION_REWARD_XP = 120;
+import { calculateReferralRewardState } from "@/server/services/referral-rules";
 
 export async function resolveReferrerUserId(referralCode?: string | null) {
   const normalized = referralCode?.trim();
@@ -30,26 +27,39 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
     return;
   }
 
-  let totalXp = referrer.total_xp;
-  let level = referrer.level;
+  const rewardState = calculateReferralRewardState({
+    totalXp: referrer.total_xp,
+    level: referrer.level,
+    referrals: referrals.map((referral) => ({
+      id: referral.id,
+      refereeDisplayName: referral.referee_display_name,
+      refereeSubscribed: referral.referee_subscribed,
+      signupRewardXp: referral.signup_reward_xp,
+      conversionRewardXp: referral.conversion_reward_xp,
+    })),
+  });
 
   for (const referral of referrals) {
-    let signupRewardXp = referral.signup_reward_xp;
-    let conversionRewardXp = referral.conversion_reward_xp;
-    let signupRewardedAt = referral.signup_rewarded_at;
-    let conversionRewardedAt = referral.conversion_rewarded_at;
+    const update = rewardState.updates.find((entry) => entry.id === referral.id);
 
-    if (signupRewardXp < REFERRAL_SIGNUP_REWARD_XP) {
-      const deltaXp = REFERRAL_SIGNUP_REWARD_XP - signupRewardXp;
-      totalXp += deltaXp;
-      level = getLevelProgress(totalXp).level;
-      signupRewardXp = REFERRAL_SIGNUP_REWARD_XP;
-      signupRewardedAt = new Date().toISOString();
+    if (!update) {
+      continue;
+    }
 
+    const signupRewardedAt =
+      update.signupRewardXp > referral.signup_reward_xp
+        ? new Date().toISOString()
+        : referral.signup_rewarded_at;
+    const conversionRewardedAt =
+      update.conversionRewardXp > referral.conversion_reward_xp
+        ? new Date().toISOString()
+        : referral.conversion_rewarded_at;
+
+    if (update.signupRewardXp > referral.signup_reward_xp) {
       await createActivityLogEntry({
         userId: referrerUserId,
         actionType: "referral-signup-reward",
-        xpEarned: deltaXp,
+        xpEarned: update.signupRewardXp - referral.signup_reward_xp,
         metadata: {
           actor: referrer.display_name,
           action: "earned a referral reward",
@@ -60,17 +70,11 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
       });
     }
 
-    if (referral.referee_subscribed && conversionRewardXp < REFERRAL_CONVERSION_REWARD_XP) {
-      const deltaXp = REFERRAL_CONVERSION_REWARD_XP - conversionRewardXp;
-      totalXp += deltaXp;
-      level = getLevelProgress(totalXp).level;
-      conversionRewardXp = REFERRAL_CONVERSION_REWARD_XP;
-      conversionRewardedAt = new Date().toISOString();
-
+    if (update.conversionRewardXp > referral.conversion_reward_xp) {
       await createActivityLogEntry({
         userId: referrerUserId,
         actionType: "referral-conversion-reward",
-        xpEarned: deltaXp,
+        xpEarned: update.conversionRewardXp - referral.conversion_reward_xp,
         metadata: {
           actor: referrer.display_name,
           action: "earned a conversion reward",
@@ -83,19 +87,19 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
 
     await updateReferralRewardState({
       referralId: referral.id,
-      signupRewardXp,
-      conversionRewardXp,
+      signupRewardXp: update.signupRewardXp,
+      conversionRewardXp: update.conversionRewardXp,
       signupRewardedAt,
       conversionRewardedAt,
       refereeSubscribed: referral.referee_subscribed,
     });
   }
 
-  if (totalXp !== referrer.total_xp || level !== referrer.level) {
+  if (rewardState.totalXp !== referrer.total_xp || rewardState.level !== referrer.level) {
     await updateUserProgressById({
       userId: referrerUserId,
-      totalXp,
-      level,
+      totalXp: rewardState.totalXp,
+      level: rewardState.level,
       currentStreak: referrer.current_streak,
       longestStreak: referrer.longest_streak,
     });
