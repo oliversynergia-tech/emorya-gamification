@@ -792,6 +792,42 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
           ))}
         </div>
       </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Review drill-down</p>
+            <h3>Reviewer and quest-type performance</h3>
+          </div>
+        </div>
+        <div className="achievement-list">
+          {data.reviewInsights.byVerificationType.map((entry) => (
+            <article key={entry.verificationType} className="achievement-card">
+              <div>
+                <strong>{entry.verificationType}</strong>
+                <p>Pending, approved, and rejected flow by verification lane</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>P {entry.pendingCount}</span>
+                <span>A {entry.approvedCount}</span>
+                <span>R {entry.rejectedCount}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.reviewInsights.reviewerTypeMatrix.map((entry) => (
+            <article key={`${entry.reviewerDisplayName}-${entry.verificationType}`} className="achievement-card">
+              <div>
+                <strong>{entry.reviewerDisplayName}</strong>
+                <p>{entry.verificationType}</p>
+              </div>
+              <div className="achievement-card__side">
+                <strong>{entry.reviewCount}</strong>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

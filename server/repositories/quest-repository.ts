@@ -75,6 +75,19 @@ type ReviewerWorkloadRow = QueryResultRow & {
   rejections: string;
 };
 
+type ReviewVerificationBreakdownRow = QueryResultRow & {
+  verification_type: VerificationType;
+  pending_count: string;
+  approved_count: string;
+  rejected_count: string;
+};
+
+type ReviewerTypeMatrixRow = QueryResultRow & {
+  reviewer_display_name: string;
+  verification_type: VerificationType;
+  review_count: string;
+};
+
 const tierRank: Record<SubscriptionTier, number> = {
   free: 0,
   monthly: 1,
@@ -300,6 +313,48 @@ export async function getReviewerWorkload(limit = 6) {
     reviewCount: Number(row.review_count),
     approvals: Number(row.approvals),
     rejections: Number(row.rejections),
+  }));
+}
+
+export async function getReviewBreakdownByVerificationType() {
+  const result = await runQuery<ReviewVerificationBreakdownRow>(
+    `SELECT q.verification_type,
+            COUNT(*) FILTER (WHERE qc.status = 'pending')::text AS pending_count,
+            COUNT(*) FILTER (WHERE qc.status = 'approved')::text AS approved_count,
+            COUNT(*) FILTER (WHERE qc.status = 'rejected')::text AS rejected_count
+     FROM quest_completions qc
+     INNER JOIN quest_definitions q ON q.id = qc.quest_id
+     GROUP BY q.verification_type
+     ORDER BY q.verification_type ASC`,
+  );
+
+  return result.rows.map((row) => ({
+    verificationType: row.verification_type,
+    pendingCount: Number(row.pending_count),
+    approvedCount: Number(row.approved_count),
+    rejectedCount: Number(row.rejected_count),
+  }));
+}
+
+export async function getReviewerTypeMatrix(limit = 10) {
+  const result = await runQuery<ReviewerTypeMatrixRow>(
+    `SELECT reviewer.display_name AS reviewer_display_name,
+            q.verification_type,
+            COUNT(*)::text AS review_count
+     FROM quest_completions qc
+     INNER JOIN users reviewer ON reviewer.id = qc.reviewed_by
+     INNER JOIN quest_definitions q ON q.id = qc.quest_id
+     WHERE qc.status IN ('approved', 'rejected')
+     GROUP BY reviewer.id, reviewer.display_name, q.verification_type
+     ORDER BY COUNT(*) DESC, reviewer.display_name ASC, q.verification_type ASC
+     LIMIT $1`,
+    [limit],
+  );
+
+  return result.rows.map((row) => ({
+    reviewerDisplayName: row.reviewer_display_name,
+    verificationType: row.verification_type,
+    reviewCount: Number(row.review_count),
   }));
 }
 

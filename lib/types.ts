@@ -278,6 +278,19 @@ export type AdminOverviewData = {
       count: number;
     }>;
   };
+  reviewInsights: {
+    byVerificationType: Array<{
+      verificationType: VerificationType;
+      pendingCount: number;
+      approvedCount: number;
+      rejectedCount: number;
+    }>;
+    reviewerTypeMatrix: Array<{
+      reviewerDisplayName: string;
+      verificationType: VerificationType;
+      reviewCount: number;
+    }>;
+  };
 };
 
 export type AuthUser = {

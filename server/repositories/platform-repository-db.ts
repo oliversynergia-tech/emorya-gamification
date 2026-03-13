@@ -26,8 +26,13 @@ import {
   getLiveReferralLeaderboard,
   syncLeaderboardSnapshotsForToday,
 } from "@/server/repositories/leaderboard-repository";
-import { getPendingReviewQueue, getRecentReviewHistory } from "@/server/repositories/quest-repository";
-import { getReviewerWorkload } from "@/server/repositories/quest-repository";
+import {
+  getPendingReviewQueue,
+  getRecentReviewHistory,
+  getReviewBreakdownByVerificationType,
+  getReviewerTypeMatrix,
+  getReviewerWorkload,
+} from "@/server/repositories/quest-repository";
 import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/referral-repository";
 import { syncAchievementProgressForUser } from "@/server/services/progression-service";
 import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
@@ -373,7 +378,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -394,6 +399,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     getPendingReviewQueue(),
     getRecentReviewHistory(),
     getReviewerWorkload(),
+    getReviewBreakdownByVerificationType(),
+    getReviewerTypeMatrix(),
   ]);
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -413,5 +420,9 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     reviewHistory,
     reviewerWorkload,
     queueMetrics: buildQueueMetrics(reviewQueue),
+    reviewInsights: {
+      byVerificationType: reviewBreakdownByVerificationType,
+      reviewerTypeMatrix,
+    },
   };
 }
