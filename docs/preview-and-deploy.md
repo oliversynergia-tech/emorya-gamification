@@ -95,9 +95,9 @@ For the current repo, the cleanest repeatable flow is:
 
 1. Build locally with `npm run test && npm run lint && npm run build`
 2. Push to GitHub
-3. Apply DB migrations in the target environment
+3. Apply DB migrations in the target environment with `npm run ops:db:migrate`
 4. Deploy the app
-5. Run snapshot jobs if the environment is meant to power leaderboard history immediately
+5. Run snapshot jobs if the environment is meant to power leaderboard history immediately with `npm run ops:db:snapshot:scheduled`
 
 ## If you only want a quick stakeholder walkthrough
 
@@ -115,7 +115,7 @@ This is simpler than deploying every small UI adjustment.
 If the environment should maintain leaderboard movement properly after deploy, schedule:
 
 ```bash
-npm run dev:db:snapshot:scheduled
+npm run ops:db:snapshot:scheduled
 ```
 
-The detailed scheduling guidance lives in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/snapshot-scheduling.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/snapshot-scheduling.md).
+The detailed scheduling guidance lives in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/snapshot-scheduling.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/snapshot-scheduling.md), and hosted command usage is documented in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/hosted-operations.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/hosted-operations.md).

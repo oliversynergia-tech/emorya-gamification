@@ -67,7 +67,7 @@ Example daily batch run:
 Use a scheduled job that runs:
 
 ```bash
-npm run dev:db:snapshot:scheduled
+npm run ops:db:snapshot:scheduled
 ```
 
 with the same environment variables as the app.
@@ -77,7 +77,7 @@ with the same environment variables as the app.
 Create a small scheduled worker or cron service that runs:
 
 ```bash
-npm run dev:db:snapshot:scheduled
+npm run ops:db:snapshot:scheduled
 ```
 
 ## Requirements
@@ -85,7 +85,7 @@ npm run dev:db:snapshot:scheduled
 The snapshot command requires:
 
 - `DATABASE_URL`
-- `psql` available in the runtime that executes the command
+- optional `DATABASE_SSL=true|false`
 
 ## Operational note
 
