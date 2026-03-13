@@ -153,6 +153,12 @@ Manual review status:
 - admin review actions can attach a `moderationNote` and moderation timestamp to the same submission record
 - this keeps richer moderation context without forcing a separate submission table yet
 
+Leaderboard status:
+
+- the current all-time leaderboard is now derived from live `users.total_xp` instead of seeded `leaderboard_snapshots` rows
+- daily snapshots remain in PostgreSQL for historical comparison and movement deltas
+- the app now upserts fresh `all-time` and `referral` snapshots for the current date so rank changes can be compared against prior snapshot days
+
 ## Reference points
 
 - Next.js Route Handlers: https://nextjs.org/docs/app/building-your-application/routing/route-handlers

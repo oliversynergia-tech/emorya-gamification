@@ -16,6 +16,11 @@ import type {
   VerificationType,
 } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
+import {
+  getCurrentAllTimeRankForUser,
+  getLiveAllTimeLeaderboard,
+  syncLeaderboardSnapshotsForToday,
+} from "@/server/repositories/leaderboard-repository";
 import { getReferralSummary } from "@/server/repositories/referral-repository";
 import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
 
@@ -63,15 +68,6 @@ type AchievementRow = QueryResultRow & {
   earned_at: string | null;
 };
 
-type LeaderboardRow = QueryResultRow & {
-  rank: number;
-  display_name: string;
-  level: number;
-  xp: number;
-  subscription_tier: SubscriptionTier;
-  badge_count: number;
-};
-
 type ActivityRow = QueryResultRow & {
   id: string;
   action_type: string;
@@ -109,22 +105,6 @@ const tierRank: Record<SubscriptionTier, number> = {
 
 export function isDatabaseEnabled() {
   return hasDatabaseConfig();
-}
-
-function inferLeaderboardDelta(rank: number) {
-  if (rank === 1) {
-    return 2;
-  }
-
-  if (rank === 2) {
-    return -1;
-  }
-
-  if (rank === 3) {
-    return 1;
-  }
-
-  return rank % 2 === 0 ? 3 : -2;
 }
 
 async function getPrimaryUserId() {
@@ -174,14 +154,7 @@ async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
        ORDER BY platform ASC`,
       [user.id],
     ),
-    runQuery<{ rank: number }>(
-      `SELECT rank
-       FROM leaderboard_snapshots
-       WHERE user_id = $1 AND period = 'all-time'
-       ORDER BY snapshot_date DESC
-       LIMIT 1`,
-      [user.id],
-    ),
+    getCurrentAllTimeRankForUser(user.id),
     getReferralSummary(user.id),
   ]);
 
@@ -194,7 +167,7 @@ async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
     currentStreak: user.current_streak,
     nextLevelXp,
     tier: user.subscription_tier,
-    rank: rankResult.rows[0]?.rank ?? 0,
+    rank: rankResult,
     referralCode: user.referral_code,
     referral,
     connectedAccounts: connectionsResult.rows.map((connection) => ({
@@ -281,27 +254,7 @@ async function getAchievements(userId: string): Promise<Achievement[]> {
 }
 
 async function getLeaderboard(): Promise<LeaderboardEntry[]> {
-  const result = await runQuery<LeaderboardRow>(
-    `SELECT ls.rank, u.display_name, u.level, ls.xp, u.subscription_tier,
-            COUNT(ua.achievement_id)::int AS badge_count
-     FROM leaderboard_snapshots ls
-     INNER JOIN users u ON u.id = ls.user_id
-     LEFT JOIN user_achievements ua ON ua.user_id = u.id AND ua.earned_at IS NOT NULL
-     WHERE ls.period = 'all-time'
-     GROUP BY ls.rank, u.display_name, u.level, ls.xp, u.subscription_tier
-     ORDER BY ls.rank ASC
-     LIMIT 12`,
-  );
-
-  return result.rows.map((entry) => ({
-    rank: entry.rank,
-    displayName: entry.display_name,
-    level: entry.level,
-    xp: entry.xp,
-    badges: entry.badge_count,
-    tier: entry.subscription_tier,
-    delta: inferLeaderboardDelta(entry.rank),
-  }));
+  return getLiveAllTimeLeaderboard(12);
 }
 
 async function getActivityFeed(): Promise<ActivityItem[]> {
@@ -377,6 +330,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   }
 
   await syncReferralRewardsForReferrer(userId);
+  await syncLeaderboardSnapshotsForToday();
   const dashboardUser = await getDashboardUser(userId);
 
   const [user, quests, achievements, leaderboard, activityFeed] = await Promise.all([

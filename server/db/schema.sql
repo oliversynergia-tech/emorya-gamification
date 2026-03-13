@@ -144,7 +144,8 @@ CREATE TABLE leaderboard_snapshots (
   period TEXT NOT NULL CHECK (period IN ('weekly', 'monthly', 'all-time', 'referral')),
   xp INTEGER NOT NULL,
   rank INTEGER NOT NULL,
-  snapshot_date DATE NOT NULL
+  snapshot_date DATE NOT NULL,
+  UNIQUE (user_id, period, snapshot_date)
 );
 
 CREATE TABLE ugc_submissions (
