@@ -11,4 +11,4 @@ Planned modules:
 
 Route handlers should stay thin and call into this layer.
 
-Local workflow shortcuts are documented in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/local-development.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/local-development.md), with matching npm commands in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/package.json`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/package.json).
+Local workflow shortcuts are documented in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/local-development.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/local-development.md), with preview/deployment steps in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/preview-and-deploy.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/preview-and-deploy.md) and matching npm commands in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/package.json`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/package.json).
