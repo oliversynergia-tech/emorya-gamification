@@ -217,7 +217,9 @@ export const reviewQueue = [
     userEmail: "oliver@emorya.com",
     verificationType: "manual-review" as const,
     submissionData: {
+      platform: "Instagram",
       contentUrl: "https://example.com/meme-post",
+      screenshotUrl: "https://example.com/meme-proof.png",
       note: "Draft meme ready for review",
     },
     status: "pending" as const,

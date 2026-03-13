@@ -147,6 +147,12 @@ Referral system status:
 - referrers earn 40 XP when an invited user joins and 120 XP when that invited user upgrades above the free tier
 - dashboard and profile surfaces now read referral progress from the database instead of showing only a static code
 
+Manual review status:
+
+- manual-review submissions now capture `platform`, `contentUrl`, `screenshotUrl`, and submitter notes in `quest_completions.submission_data`
+- admin review actions can attach a `moderationNote` and moderation timestamp to the same submission record
+- this keeps richer moderation context without forcing a separate submission table yet
+
 ## Reference points
 
 - Next.js Route Handlers: https://nextjs.org/docs/app/building-your-application/routing/route-handlers

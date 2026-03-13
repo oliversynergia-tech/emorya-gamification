@@ -11,7 +11,7 @@ type RouteContext = {
 export async function PATCH(request: Request, context: RouteContext) {
   try {
     const { completionId } = await context.params;
-    const body = (await request.json()) as { action?: "approved" | "rejected" };
+    const body = (await request.json()) as { action?: "approved" | "rejected"; moderationNote?: string };
 
     if (body.action !== "approved" && body.action !== "rejected") {
       return NextResponse.json({ ok: false, error: "Action must be approved or rejected." }, { status: 400 });
@@ -20,6 +20,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const result = await reviewQuestSubmission({
       completionId,
       action: body.action,
+      moderationNote: body.moderationNote,
     });
 
     return NextResponse.json({ ok: true, ...result });

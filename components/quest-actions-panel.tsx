@@ -29,6 +29,8 @@ export function QuestActionsPanel({
   );
   const [answersCorrect, setAnswersCorrect] = useState<SubmissionState>({});
   const [contentUrls, setContentUrls] = useState<SubmissionState>({});
+  const [screenshotUrls, setScreenshotUrls] = useState<SubmissionState>({});
+  const [platforms, setPlatforms] = useState<SubmissionState>({});
   const [notes, setNotes] = useState<SubmissionState>({});
   const [pendingQuestId, setPendingQuestId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -105,6 +107,8 @@ export function QuestActionsPanel({
       quest,
       {
         contentUrl: contentUrls[quest.id] ?? "",
+        screenshotUrl: screenshotUrls[quest.id] ?? "",
+        platform: platforms[quest.id] ?? "",
         note: notes[quest.id] ?? "",
       },
       "Manual review submitted.",
@@ -169,11 +173,33 @@ export function QuestActionsPanel({
               {quest.verificationType === "manual-review" ? (
                 <form className="form-stack" onSubmit={(event) => handleManualSubmit(event, quest)}>
                   <label className="field">
+                    <span>Platform</span>
+                    <input
+                      value={platforms[quest.id] ?? ""}
+                      onChange={(event) =>
+                        setPlatforms((current) => ({ ...current, [quest.id]: event.target.value }))
+                      }
+                      placeholder="X, TikTok, Instagram..."
+                      disabled={disabled || pending}
+                    />
+                  </label>
+                  <label className="field">
                     <span>Content URL</span>
                     <input
                       value={contentUrls[quest.id] ?? ""}
                       onChange={(event) =>
                         setContentUrls((current) => ({ ...current, [quest.id]: event.target.value }))
+                      }
+                      placeholder="https://..."
+                      disabled={disabled || pending}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Screenshot URL</span>
+                    <input
+                      value={screenshotUrls[quest.id] ?? ""}
+                      onChange={(event) =>
+                        setScreenshotUrls((current) => ({ ...current, [quest.id]: event.target.value }))
                       }
                       placeholder="https://..."
                       disabled={disabled || pending}

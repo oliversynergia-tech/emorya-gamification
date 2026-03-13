@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 
 import type { QueryResultRow } from "pg";
 
-import type { CompletionStatus, QuestCompletionRecord, SubscriptionTier, VerificationType } from "@/lib/types";
+import type { CompletionStatus, ManualReviewSubmission, QuestCompletionRecord, SubscriptionTier, VerificationType } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
 
 type UserQuestAccessRow = QueryResultRow & {
@@ -150,19 +150,22 @@ export async function updateQuestCompletionReview({
   completionId,
   reviewerId,
   status,
+  submissionData,
 }: {
   completionId: string;
   reviewerId: string;
   status: Extract<CompletionStatus, "approved" | "rejected">;
+  submissionData?: ManualReviewSubmission;
 }) {
   const result = await runQuery<QuestCompletionRow>(
     `UPDATE quest_completions
      SET status = $2,
          reviewed_by = $3,
+         submission_data = COALESCE($4::jsonb, submission_data),
          completed_at = CASE WHEN $2 = 'approved' THEN NOW() ELSE NULL END
      WHERE id = $1
      RETURNING id, user_id, quest_id, status, submission_data, awarded_xp, reviewed_by, completed_at, created_at`,
-    [completionId, status, reviewerId],
+    [completionId, status, reviewerId, submissionData ? JSON.stringify(submissionData) : null],
   );
 
   return result.rows[0] ? mapQuestCompletion(result.rows[0]) : null;

@@ -279,7 +279,7 @@ INSERT INTO quest_completions (id, user_id, quest_id, status, submission_data, c
     '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
     'e62bc5b8-3280-4d18-b2fd-a1524c21b453',
     'pending',
-    '{"screenshotUrl":"https://example.com/proof.png"}'::jsonb,
+    '{"platform":"Emorya App","contentUrl":"https://example.com/day-summary","screenshotUrl":"https://example.com/proof.png","note":"Daily steps synced from wearable","submittedAt":"2026-03-12T09:00:00.000Z"}'::jsonb,
     NULL
   ),
   (

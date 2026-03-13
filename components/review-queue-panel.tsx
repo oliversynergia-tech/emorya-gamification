@@ -24,6 +24,7 @@ export function ReviewQueuePanel({
   const [queue, setQueue] = useState(initialQueue);
   const [recentOutcomes, setRecentOutcomes] = useState<ReviewOutcome[]>([]);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [moderationNotes, setModerationNotes] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +39,10 @@ export function ReviewQueuePanel({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({
+          action,
+          moderationNote: moderationNotes[item.id] ?? "",
+        }),
       });
 
       const result = (await response.json()) as {
@@ -137,6 +141,17 @@ export function ReviewQueuePanel({
               {item.userEmail ? ` · ${item.userEmail}` : ""}
             </p>
             <pre className="review-payload">{JSON.stringify(item.submissionData, null, 2)}</pre>
+            <label className="field">
+              <span>Moderation note</span>
+              <input
+                value={moderationNotes[item.id] ?? ""}
+                onChange={(event) =>
+                  setModerationNotes((current) => ({ ...current, [item.id]: event.target.value }))
+                }
+                placeholder="Optional internal or user-facing note"
+                disabled={!isAuthenticated || pendingId === item.id}
+              />
+            </label>
             <div className="review-actions">
               <button
                 className="button button--primary"

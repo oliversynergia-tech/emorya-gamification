@@ -251,6 +251,16 @@ export type ReviewQueueItem = {
   createdAt: string;
 };
 
+export type ManualReviewSubmission = {
+  contentUrl: string;
+  screenshotUrl: string | null;
+  platform: string | null;
+  note: string | null;
+  submittedAt: string;
+  moderationNote?: string | null;
+  moderatedAt?: string | null;
+};
+
 export type QuestProgressUpdate = {
   xpAwarded: number;
   deltaXp: number;

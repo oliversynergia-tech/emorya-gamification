@@ -1,4 +1,4 @@
-import type { CompletionStatus, QuestProgressUpdate, ReviewQueueItem } from "@/lib/types";
+import type { CompletionStatus, ManualReviewSubmission, QuestProgressUpdate, ReviewQueueItem } from "@/lib/types";
 import { assertAdminUser } from "@/server/auth/admin";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
 import { createActivityLogEntry, getUserProgressById } from "@/server/repositories/progression-repository";
@@ -20,6 +20,28 @@ function normalizeText(value: unknown) {
 function normalizeNumber(value: unknown) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : NaN;
+}
+
+function normalizeManualReviewSubmission(
+  payload: Record<string, unknown>,
+  submittedAt: string,
+): ManualReviewSubmission {
+  const contentUrl = normalizeText(payload.contentUrl);
+  const screenshotUrl = normalizeText(payload.screenshotUrl);
+  const platform = normalizeText(payload.platform);
+  const note = normalizeText(payload.note);
+
+  if (!contentUrl) {
+    throw new Error("Manual review quests require a content URL.");
+  }
+
+  return {
+    contentUrl,
+    screenshotUrl: screenshotUrl || null,
+    platform: platform || null,
+    note: note || null,
+    submittedAt,
+  };
 }
 
 async function logQuestActivity({
@@ -189,12 +211,7 @@ export async function submitQuest({
   }
 
   if (quest.verification_type === "manual-review") {
-    const contentUrl = normalizeText(payload.contentUrl);
-    const note = normalizeText(payload.note);
-
-    if (!contentUrl) {
-      throw new Error("Manual review quests require a content URL.");
-    }
+    const submissionData = normalizeManualReviewSubmission(payload, submittedAt);
 
     const completion = await upsertQuestCompletionForUser({
       userId: currentUser.id,
@@ -203,11 +220,7 @@ export async function submitQuest({
       awardedXp: existingCompletion?.awardedXp ?? 0,
       reviewedBy: null,
       completedAt: null,
-      submissionData: {
-        contentUrl,
-        note: note || null,
-        submittedAt,
-      },
+      submissionData,
     });
 
     await logQuestActivity({
@@ -241,17 +254,32 @@ export async function listPendingQuestReviews(): Promise<ReviewQueueItem[]> {
 export async function reviewQuestSubmission({
   completionId,
   action,
+  moderationNote,
 }: {
   completionId: string;
   action: "approved" | "rejected";
+  moderationNote?: string;
 }) {
   const currentUser = await getAuthenticatedUser();
   assertAdminUser(currentUser);
+
+  const existingCompletion = await getPendingReviewQueue().then((queue) =>
+    queue.find((item) => item.id === completionId) ?? null,
+  );
+
+  const nextSubmissionData = existingCompletion
+    ? ({
+        ...existingCompletion.submissionData,
+        moderationNote: normalizeText(moderationNote) || null,
+        moderatedAt: new Date().toISOString(),
+      } as ManualReviewSubmission)
+    : undefined;
 
   const completion = await updateQuestCompletionReview({
     completionId,
     reviewerId: currentUser.id,
     status: action,
+    submissionData: nextSubmissionData,
   });
 
   if (!completion) {
