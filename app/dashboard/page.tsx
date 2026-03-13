@@ -11,7 +11,11 @@ export default async function DashboardPage() {
 
   return (
     <SiteShell eyebrow="Daily loop" currentUser={session?.user ?? null}>
-      <DashboardExperience initialData={data} isAuthenticated={Boolean(session)} />
+      <DashboardExperience
+        initialData={data}
+        isAuthenticated={Boolean(session)}
+        walletAddresses={session?.walletAddresses ?? []}
+      />
     </SiteShell>
   );
 }

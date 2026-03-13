@@ -347,3 +347,9 @@ export type QuestProgressUpdate = {
   currentStreak: number;
   unlockedAchievements?: string[];
 };
+
+export type WalletQuestResult = {
+  walletAddress: string;
+  linkedAt: string;
+  walletAgeDays: number;
+};

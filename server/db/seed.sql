@@ -235,7 +235,7 @@ INSERT INTO quest_definitions (
     9,
     TRUE,
     TRUE,
-    '{"status":"locked"}'::jsonb
+    '{"status":"locked","walletCheckMode":"linked-wallet-ownership","requiredWalletPrefix":"erd"}'::jsonb
   ),
   (
     '2833c51d-e8f6-49d2-8c38-f4fd032f6af7',

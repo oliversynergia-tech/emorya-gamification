@@ -36,6 +36,7 @@ type IdentityOwnerRow = QueryResultRow & {
 
 type WalletIdentityRow = QueryResultRow & {
   provider_subject: string;
+  created_at?: string;
 };
 
 export async function findUserByEmail(email: string) {
@@ -171,6 +172,23 @@ export async function findWalletAddressesForUser(userId: string) {
   );
 
   return result.rows.map((row) => row.provider_subject);
+}
+
+export async function findWalletIdentityDetailsForUser(userId: string) {
+  const result = await runQuery<WalletIdentityRow>(
+    `SELECT provider_subject, created_at::text
+     FROM user_identities
+     WHERE user_id = $1
+       AND provider = 'multiversx'
+       AND status = 'active'
+     ORDER BY created_at ASC`,
+    [userId],
+  );
+
+  return result.rows.map((row) => ({
+    walletAddress: row.provider_subject,
+    linkedAt: row.created_at ?? new Date().toISOString(),
+  }));
 }
 
 export async function findSessionByTokenHash(sessionTokenHash: string): Promise<AuthSession | null> {

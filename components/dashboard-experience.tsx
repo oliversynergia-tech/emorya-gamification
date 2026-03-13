@@ -35,9 +35,11 @@ function applyQuestUpdate(
 export function DashboardExperience({
   initialData,
   isAuthenticated,
+  walletAddresses = [],
 }: {
   initialData: DashboardData;
   isAuthenticated: boolean;
+  walletAddresses?: string[];
 }) {
   const [data, setData] = useState(initialData);
 
@@ -89,6 +91,7 @@ export function DashboardExperience({
       <QuestActionsPanel
         quests={data.quests}
         isAuthenticated={isAuthenticated}
+        walletAddresses={walletAddresses}
         onQuestResult={handleQuestResult}
       />
       <PremiumFunnelSection data={data} />

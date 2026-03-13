@@ -6,6 +6,7 @@ import type {
 } from "@/lib/types";
 import { assertAdminUser } from "@/server/auth/admin";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
+import { findWalletIdentityDetailsForUser } from "@/server/repositories/auth-repository";
 import {
   evaluateQuizSubmission,
   mergeModerationIntoSubmission,
@@ -13,6 +14,7 @@ import {
 } from "@/server/services/quest-rules";
 import { createActivityLogEntry, getUserProgressById } from "@/server/repositories/progression-repository";
 import { applyQuestRewardTransition } from "@/server/services/progression-service";
+import { resolveWalletQuestVerification } from "@/server/services/wallet-quest-rules";
 import {
   getPendingReviewQueue,
   getQuestCompletionForUser,
@@ -222,6 +224,48 @@ export async function submitQuest({
       outcome: "pending" as const,
       progressUpdate: null,
       message: "Submission sent for review.",
+    };
+  }
+
+  if (quest.verification_type === "wallet-check") {
+    const linkedWallets = await findWalletIdentityDetailsForUser(currentUser.id);
+    const walletVerification = resolveWalletQuestVerification({
+      linkedWallets,
+      selectedWalletAddress: payload.walletAddress,
+      metadata: quest.metadata,
+    });
+
+    const completion = await upsertQuestCompletionForUser({
+      userId: currentUser.id,
+      questId,
+      status: "approved",
+      awardedXp: existingCompletion?.awardedXp ?? 0,
+      reviewedBy: currentUser.id,
+      completedAt: submittedAt,
+      submissionData: {
+        walletAddress: walletVerification.walletAddress,
+        linkedAt: walletVerification.linkedAt,
+        walletAgeDays: walletVerification.walletAgeDays,
+        walletCheckMode: String(quest.metadata.walletCheckMode ?? "linked-wallet-ownership"),
+        submittedAt,
+      },
+    });
+
+    const progressUpdate = await applyQuestRewardTransition({
+      userId: currentUser.id,
+      completionId: completion.id,
+      questId,
+      questTitle: quest.title,
+      questXpReward: quest.xp_reward,
+      previousAwardedXp: existingCompletion?.awardedXp ?? 0,
+      shouldBeApproved: true,
+    });
+
+    return {
+      completion,
+      outcome: "approved" as const,
+      progressUpdate,
+      message: "Linked wallet verified for this quest.",
     };
   }
 

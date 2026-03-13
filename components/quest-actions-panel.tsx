@@ -10,10 +10,12 @@ type SubmissionState = Record<string, string>;
 export function QuestActionsPanel({
   quests,
   isAuthenticated,
+  walletAddresses = [],
   onQuestResult,
 }: {
   quests: Quest[];
   isAuthenticated: boolean;
+  walletAddresses?: string[];
   onQuestResult?: (result: {
     questId: string;
     outcome: "approved" | "pending" | "rejected";
@@ -23,7 +25,7 @@ export function QuestActionsPanel({
   const actionableQuests = useMemo(
     () =>
       quests.filter((quest) =>
-        ["quiz", "manual-review", "link-visit"].includes(quest.verificationType),
+        ["quiz", "manual-review", "link-visit", "wallet-check"].includes(quest.verificationType),
       ),
     [quests],
   );
@@ -32,6 +34,7 @@ export function QuestActionsPanel({
   const [screenshotUrls, setScreenshotUrls] = useState<SubmissionState>({});
   const [platforms, setPlatforms] = useState<SubmissionState>({});
   const [notes, setNotes] = useState<SubmissionState>({});
+  const [walletSelections, setWalletSelections] = useState<SubmissionState>({});
   const [pendingQuestId, setPendingQuestId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +125,16 @@ export function QuestActionsPanel({
         targetUrl: quest.targetUrl ?? "",
       },
       "Visit recorded.",
+    );
+  }
+
+  function handleWalletCheck(quest: Quest) {
+    void submitQuest(
+      quest,
+      {
+        walletAddress: walletSelections[quest.id] ?? "",
+      },
+      "Wallet quest submitted.",
     );
   }
 
@@ -234,6 +247,38 @@ export function QuestActionsPanel({
                   >
                     {pending ? "Submitting..." : "Record visit"}
                   </button>
+                </div>
+              ) : null}
+              {quest.verificationType === "wallet-check" ? (
+                <div className="form-stack">
+                  <label className="field">
+                    <span>Linked wallet</span>
+                    <select
+                      value={walletSelections[quest.id] ?? (walletAddresses.length === 1 ? walletAddresses[0] : "")}
+                      onChange={(event) =>
+                        setWalletSelections((current) => ({ ...current, [quest.id]: event.target.value }))
+                      }
+                      disabled={disabled || pending || walletAddresses.length === 0}
+                    >
+                      <option value="">Select linked wallet</option>
+                      {walletAddresses.map((walletAddress) => (
+                        <option key={walletAddress} value={walletAddress}>
+                          {walletAddress}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    className="button button--primary"
+                    type="button"
+                    onClick={() => handleWalletCheck(quest)}
+                    disabled={disabled || pending || walletAddresses.length === 0}
+                  >
+                    {pending ? "Submitting..." : "Verify linked wallet"}
+                  </button>
+                  {walletAddresses.length === 0 ? (
+                    <small className="form-note">Link a MultiversX wallet in Profile or Auth before submitting this quest.</small>
+                  ) : null}
                 </div>
               ) : null}
               {disabled ? (
