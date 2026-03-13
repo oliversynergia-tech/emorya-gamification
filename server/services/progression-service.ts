@@ -1,5 +1,5 @@
 import type { QuestProgressUpdate } from "@/lib/types";
-import { getLevelProgress, getTierMultiplier } from "@/lib/progression";
+import { calculateQuestRewardTransition } from "@/server/services/progression-rules";
 import {
   getAchievementDefinitions,
   getUserAchievementsByUserId,
@@ -123,20 +123,30 @@ export async function applyQuestRewardTransition({
     throw new Error("User not found for progression update.");
   }
 
-  const targetAward = shouldBeApproved
-    ? Math.round(questXpReward * getTierMultiplier(user.subscription_tier))
-    : 0;
+  const rewardState = calculateQuestRewardTransition({
+    subscriptionTier: user.subscription_tier,
+    questXpReward,
+    previousAwardedXp,
+    totalXp: user.total_xp,
+    level: user.level,
+    currentStreak: user.current_streak,
+    longestStreak: user.longest_streak,
+    shouldBeApproved,
+    alreadyApprovedToday: shouldBeApproved
+      ? await hasQuestApprovalActivityToday(userId)
+      : false,
+  });
 
   const completion = await setQuestCompletionAwardedXp({
     completionId,
-    awardedXp: targetAward,
+    awardedXp: rewardState.xpAwarded,
   });
 
   if (!completion) {
     throw new Error("Completion not found for reward update.");
   }
 
-  const deltaXp = targetAward - previousAwardedXp;
+  const deltaXp = rewardState.deltaXp;
 
   if (deltaXp === 0) {
     const unlockedAchievements = await syncAchievementProgress({
@@ -148,7 +158,7 @@ export async function applyQuestRewardTransition({
     });
 
     return {
-      xpAwarded: targetAward,
+      xpAwarded: rewardState.xpAwarded,
       deltaXp,
       level: user.level,
       currentStreak: user.current_streak,
@@ -156,27 +166,12 @@ export async function applyQuestRewardTransition({
     };
   }
 
-  const nextTotalXp = Math.max(user.total_xp + deltaXp, 0);
-  const nextLevel = getLevelProgress(nextTotalXp).level;
-
-  let nextCurrentStreak = user.current_streak;
-  let nextLongestStreak = user.longest_streak;
-
-  if (deltaXp > 0 && shouldBeApproved) {
-    const alreadyApprovedToday = await hasQuestApprovalActivityToday(userId);
-
-    if (!alreadyApprovedToday) {
-      nextCurrentStreak += 1;
-      nextLongestStreak = Math.max(nextLongestStreak, nextCurrentStreak);
-    }
-  }
-
   const updatedUser = await updateUserProgressById({
     userId,
-    totalXp: nextTotalXp,
-    level: nextLevel,
-    currentStreak: nextCurrentStreak,
-    longestStreak: nextLongestStreak,
+    totalXp: rewardState.totalXp,
+    level: rewardState.level,
+    currentStreak: rewardState.currentStreak,
+    longestStreak: rewardState.longestStreak,
   });
 
   const achievementUser = updatedUser ?? {
@@ -188,7 +183,7 @@ export async function applyQuestRewardTransition({
   const unlockedAchievements = await syncAchievementProgress({
     userId,
     displayName: achievementUser.display_name,
-    currentStreak: nextCurrentStreak,
+    currentStreak: rewardState.currentStreak,
     subscriptionTier: achievementUser.subscription_tier,
     attributionSource: achievementUser.attribution_source,
   });
@@ -206,18 +201,18 @@ export async function applyQuestRewardTransition({
           : `${questTitle} adjusted by ${deltaXp} XP`,
       questId,
       questTitle,
-      awardedXp: targetAward,
-      level: nextLevel,
-      streak: nextCurrentStreak,
+      awardedXp: rewardState.xpAwarded,
+      level: rewardState.level,
+      streak: rewardState.currentStreak,
       timeAgo: "just now",
     },
   });
 
   return {
-    xpAwarded: targetAward,
+    xpAwarded: rewardState.xpAwarded,
     deltaXp,
-    level: nextLevel,
-    currentStreak: nextCurrentStreak,
+    level: rewardState.level,
+    currentStreak: rewardState.currentStreak,
     unlockedAchievements,
   };
 }

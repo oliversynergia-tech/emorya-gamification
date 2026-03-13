@@ -1,12 +1,16 @@
 import type {
   CompletionStatus,
-  ManualReviewSubmission,
   QuestProgressUpdate,
   ReviewHistoryItem,
   ReviewQueueItem,
 } from "@/lib/types";
 import { assertAdminUser } from "@/server/auth/admin";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
+import {
+  evaluateQuizSubmission,
+  mergeModerationIntoSubmission,
+  normalizeManualReviewSubmission,
+} from "@/server/services/quest-rules";
 import { createActivityLogEntry, getUserProgressById } from "@/server/repositories/progression-repository";
 import { applyQuestRewardTransition } from "@/server/services/progression-service";
 import {
@@ -22,33 +26,6 @@ import {
 
 function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
-}
-
-function normalizeNumber(value: unknown) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : NaN;
-}
-
-function normalizeManualReviewSubmission(
-  payload: Record<string, unknown>,
-  submittedAt: string,
-): ManualReviewSubmission {
-  const contentUrl = normalizeText(payload.contentUrl);
-  const screenshotUrl = normalizeText(payload.screenshotUrl);
-  const platform = normalizeText(payload.platform);
-  const note = normalizeText(payload.note);
-
-  if (!contentUrl) {
-    throw new Error("Manual review quests require a content URL.");
-  }
-
-  return {
-    contentUrl,
-    screenshotUrl: screenshotUrl || null,
-    platform: platform || null,
-    note: note || null,
-    submittedAt,
-  };
 }
 
 async function logQuestActivity({
@@ -119,15 +96,14 @@ export async function submitQuest({
   const submittedAt = new Date().toISOString();
 
   if (quest.verification_type === "quiz") {
-    const answersCorrect = normalizeNumber(payload.answersCorrect);
     const totalQuestions = Number(quest.metadata.totalQuestions ?? 5);
     const passScore = Number(quest.metadata.passScore ?? totalQuestions);
-
-    if (!Number.isInteger(answersCorrect) || answersCorrect < 0 || answersCorrect > totalQuestions) {
-      throw new Error(`Quiz submissions must include answersCorrect between 0 and ${totalQuestions}.`);
-    }
-
-    const status: CompletionStatus = answersCorrect >= passScore ? "approved" : "rejected";
+    const quizResult = evaluateQuizSubmission({
+      answersCorrect: payload.answersCorrect,
+      totalQuestions,
+      passScore,
+    });
+    const status: CompletionStatus = quizResult.status;
     const completion = await upsertQuestCompletionForUser({
       userId: currentUser.id,
       questId,
@@ -136,9 +112,9 @@ export async function submitQuest({
       reviewedBy: currentUser.id,
       completedAt: status === "approved" ? submittedAt : null,
       submissionData: {
-        answersCorrect,
-        totalQuestions,
-        passScore,
+        answersCorrect: quizResult.answersCorrect,
+        totalQuestions: quizResult.totalQuestions,
+        passScore: quizResult.passScore,
         submittedAt,
       },
     });
@@ -173,8 +149,8 @@ export async function submitQuest({
       progressUpdate,
       message:
         status === "approved"
-          ? `Quiz passed with ${answersCorrect}/${totalQuestions}.`
-          : `Quiz score ${answersCorrect}/${totalQuestions} did not meet the pass score.`,
+          ? `Quiz passed with ${quizResult.answersCorrect}/${totalQuestions}.`
+          : `Quiz score ${quizResult.answersCorrect}/${totalQuestions} did not meet the pass score.`,
     };
   }
 
@@ -282,11 +258,11 @@ export async function reviewQuestSubmission({
   );
 
   const nextSubmissionData = existingCompletion
-    ? ({
-        ...existingCompletion.submissionData,
-        moderationNote: normalizeText(moderationNote) || null,
-        moderatedAt: new Date().toISOString(),
-      } as ManualReviewSubmission)
+    ? mergeModerationIntoSubmission(
+        existingCompletion.submissionData,
+        moderationNote,
+        new Date().toISOString(),
+      )
     : undefined;
 
   const completion = await updateQuestCompletionReview({

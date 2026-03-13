@@ -2,6 +2,7 @@
   "name": "emorya-gamification",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "dev:setup": "node scripts/dev.mjs migrate && node scripts/dev.mjs seed",
@@ -12,7 +13,8 @@
     "dev:boot": "npm run dev:setup && npm run dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
   },
   "dependencies": {
     "@multiversx/sdk-core": "^15.4.0",

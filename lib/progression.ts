@@ -1,4 +1,4 @@
-import type { SubscriptionTier } from "@/lib/types";
+import type { SubscriptionTier } from "./types.ts";
 
 export const levelThresholds = [
   0, 100, 280, 520, 900, 1500, 2350, 3400, 4700, 6500, 8000, 9800, 12000,

@@ -68,6 +68,26 @@ npm run dev:reset
 - apply all migrations
 - apply the seed file
 
+## Verification commands
+
+Run the automated logic test suite:
+
+```bash
+npm run test
+```
+
+Run linting:
+
+```bash
+npm run lint
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
 ## Notes
 
 - The helper script reads `DATABASE_URL` from `.env.local` first, then `.env`
