@@ -9,6 +9,7 @@
     "dev:reset": "node scripts/dev.mjs reset",
     "dev:db:doctor": "node scripts/dev.mjs doctor",
     "dev:db:migrate": "node scripts/dev.mjs migrate",
+    "dev:db:migrate:status": "node scripts/dev.mjs migrate-status",
     "dev:db:seed": "node scripts/dev.mjs seed",
     "dev:db:snapshot:all-time": "node scripts/dev.mjs snapshot all-time",
     "dev:db:snapshot:referral": "node scripts/dev.mjs snapshot referral",

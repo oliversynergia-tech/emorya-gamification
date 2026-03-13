@@ -4,7 +4,6 @@
 
 - Node.js and npm installed
 - PostgreSQL running locally
-- `psql` available in your shell
 - `.env.local` created from [`.env.example`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/.env.example)
 
 ## One-time setup
@@ -47,6 +46,12 @@ Apply only migrations:
 
 ```bash
 npm run dev:db:migrate
+```
+
+Show migration status and checksum drift:
+
+```bash
+npm run dev:db:migrate:status
 ```
 
 Re-apply the seed file without dropping data first:
@@ -107,7 +112,9 @@ npm run build
 ## Notes
 
 - The helper script reads `DATABASE_URL` from `.env.local` first, then `.env`
-- These commands assume your local Postgres instance is reachable from `DATABASE_URL`
+- These commands use the `pg` driver directly, so they do not require a local `psql` binary for the normal migrate/seed/snapshot workflow
+- These commands assume your Postgres instance is reachable from `DATABASE_URL`
 - `dev:db:seed` is safe for iterative local reseeding only if the SQL uses idempotent inserts/updates for the rows you care about
 - snapshot commands upsert rows into `leaderboard_snapshots` for the chosen period/date
 - scheduled snapshot guidance is documented in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/docs/snapshot-scheduling.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/snapshot-scheduling.md)
+- migrations are tracked in `schema_migrations`, and the runner will fail if an already-applied SQL file is edited in place

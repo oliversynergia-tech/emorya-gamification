@@ -162,8 +162,9 @@ Leaderboard status:
 Developer workflow status:
 
 - repeatable local commands now exist for migration, reseeding, DB health checks, and full reset
-- the repo-level entry points are `npm run dev:setup`, `npm run dev:reset`, `npm run dev:db:migrate`, `npm run dev:db:seed`, and `npm run dev:boot`
+- the repo-level entry points are `npm run dev:setup`, `npm run dev:reset`, `npm run dev:db:migrate`, `npm run dev:db:migrate:status`, `npm run dev:db:seed`, and `npm run dev:boot`
 - the implementation lives in [`/Users/olivermills/Documents/Emorya Gamify/emorya-gamification/scripts/dev.mjs`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/scripts/dev.mjs)
+- migrations are tracked in `schema_migrations`, so the deploy path applies only pending files and detects checksum drift instead of replaying every SQL migration blindly
 
 ## Reference points
 

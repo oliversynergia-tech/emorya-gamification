@@ -1,7 +1,9 @@
 import { existsSync, readdirSync, readFileSync } from "fs";
 import { resolve } from "path";
-import { spawnSync } from "child_process";
 import { fileURLToPath } from "url";
+import { createHash } from "crypto";
+
+import { Client } from "pg";
 
 const rootDir = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const dbDir = resolve(rootDir, "server/db");
@@ -52,30 +54,104 @@ function ensureDatabaseUrl() {
   return databaseUrl;
 }
 
-function runPsql(args, label) {
-  const databaseUrl = ensureDatabaseUrl();
-  const result = spawnSync("psql", [databaseUrl, ...args], {
-    cwd: rootDir,
-    stdio: "inherit",
-    env: process.env,
+function shouldUseSsl(connectionString) {
+  const sslOverride = process.env.DATABASE_SSL;
+
+  if (sslOverride === "true") {
+    return true;
+  }
+
+  if (sslOverride === "false") {
+    return false;
+  }
+
+  try {
+    const url = new URL(connectionString);
+    return !["localhost", "127.0.0.1"].includes(url.hostname);
+  } catch {
+    return process.env.NODE_ENV === "production";
+  }
+}
+
+function createClient() {
+  const connectionString = ensureDatabaseUrl();
+  const useSsl = shouldUseSsl(connectionString);
+
+  return new Client({
+    connectionString,
+    ssl: useSsl ? { rejectUnauthorized: false } : false,
   });
+}
 
-  if (result.error) {
-    console.error(`${label} failed:`, result.error.message);
-    process.exit(1);
-  }
+async function withClient(work) {
+  const client = createClient();
 
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1);
+  await client.connect();
+
+  try {
+    return await work(client);
+  } finally {
+    await client.end();
   }
 }
 
-function runSqlFile(filepath, label) {
+async function runSqlText(client, sql, label) {
+  console.log(`\n==> ${label}`);
+  await client.query(sql);
+}
+
+async function runSqlFile(client, filepath, label) {
+  const sql = readFileSync(filepath, "utf8");
   console.log(`\n==> ${label}: ${filepath.replace(`${rootDir}/`, "")}`);
-  runPsql(["-f", filepath], label);
+  await client.query(sql);
 }
 
-function migrate() {
+async function ensureMigrationTable(client) {
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      filename TEXT PRIMARY KEY,
+      checksum TEXT NOT NULL,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+}
+
+function checksumFor(source) {
+  return createHash("sha256").update(source).digest("hex");
+}
+
+async function migrationStatus() {
+  return withClient(async (client) => {
+    await ensureMigrationTable(client);
+
+    const appliedRows = await client.query("SELECT filename, checksum, applied_at FROM schema_migrations ORDER BY filename ASC");
+    const applied = new Map(appliedRows.rows.map((row) => [row.filename, row]));
+    const migrationFiles = readdirSync(migrationsDir)
+      .filter((filename) => filename.endsWith(".sql"))
+      .sort();
+
+    if (migrationFiles.length === 0) {
+      console.log("No migrations found.");
+      return;
+    }
+
+    for (const filename of migrationFiles) {
+      const filepath = resolve(migrationsDir, filename);
+      const checksum = checksumFor(readFileSync(filepath, "utf8"));
+      const existing = applied.get(filename);
+
+      if (!existing) {
+        console.log(`pending  ${filename}`);
+        continue;
+      }
+
+      const state = existing.checksum === checksum ? "applied " : "drift   ";
+      console.log(`${state} ${filename}`);
+    }
+  });
+}
+
+async function migrate() {
   const migrationFiles = readdirSync(migrationsDir)
     .filter((filename) => filename.endsWith(".sql"))
     .sort();
@@ -85,33 +161,72 @@ function migrate() {
     return;
   }
 
-  for (const filename of migrationFiles) {
-    runSqlFile(resolve(migrationsDir, filename), "Applying migration");
-  }
+  await withClient(async (client) => {
+    await ensureMigrationTable(client);
+
+    const appliedRows = await client.query("SELECT filename, checksum FROM schema_migrations");
+    const applied = new Map(appliedRows.rows.map((row) => [row.filename, row.checksum]));
+
+    for (const filename of migrationFiles) {
+      const filepath = resolve(migrationsDir, filename);
+      const source = readFileSync(filepath, "utf8");
+      const checksum = checksumFor(source);
+      const existingChecksum = applied.get(filename);
+
+      if (existingChecksum && existingChecksum !== checksum) {
+        throw new Error(`Migration checksum mismatch for ${filename}. Create a new migration instead of editing an applied file.`);
+      }
+
+      if (existingChecksum) {
+        console.log(`\n==> Skipping already-applied migration: ${filename}`);
+        continue;
+      }
+
+      console.log(`\n==> Applying migration: server/db/migrations/${filename}`);
+
+      try {
+        await client.query("BEGIN");
+        await client.query(source);
+        await client.query(
+          "INSERT INTO schema_migrations (filename, checksum) VALUES ($1, $2)",
+          [filename, checksum],
+        );
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      }
+    }
+  });
 }
 
-function seed() {
-  runSqlFile(resolve(dbDir, "seed.sql"), "Applying seed");
+async function seed() {
+  await withClient(async (client) => {
+    await runSqlFile(client, resolve(dbDir, "seed.sql"), "Applying seed");
+  });
 }
 
-function reset() {
-  console.log("\n==> Resetting local database schema");
-  runPsql(
-    ["-c", "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;"],
-    "Resetting database",
-  );
-  runSqlFile(resolve(dbDir, "schema.sql"), "Applying schema");
-  migrate();
-  seed();
+async function reset() {
+  await withClient(async (client) => {
+    await runSqlText(client, "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;", "Resetting local database schema");
+    await runSqlFile(client, resolve(dbDir, "schema.sql"), "Applying schema");
+  });
+
+  await migrate();
+  await seed();
 }
 
-function doctor() {
-  ensureDatabaseUrl();
-  console.log("DATABASE_URL detected.");
-  runPsql(["-c", "SELECT current_database(), current_user;"], "Running database check");
+async function doctor() {
+  await withClient(async (client) => {
+    console.log("DATABASE_URL detected.");
+    const result = await client.query("SELECT current_database(), current_user");
+    const row = result.rows[0];
+    console.log(`database: ${row.current_database}`);
+    console.log(`user: ${row.current_user}`);
+  });
 }
 
-function snapshot(period = "all-time", snapshotDate) {
+async function snapshot(period = "all-time", snapshotDate) {
   const supportedPeriods = new Set(["all-time", "referral", "weekly", "monthly"]);
 
   if (!supportedPeriods.has(period)) {
@@ -156,40 +271,54 @@ ON CONFLICT (user_id, period, snapshot_date)
 DO UPDATE SET xp = EXCLUDED.xp, rank = EXCLUDED.rank;
 `;
 
-  console.log(`\n==> Writing ${period} leaderboard snapshot${snapshotDate ? ` for ${snapshotDate}` : ""}`);
-  runPsql(["-c", query], "Writing leaderboard snapshot");
+  await withClient(async (client) => {
+    console.log(`\n==> Writing ${period} leaderboard snapshot${snapshotDate ? ` for ${snapshotDate}` : ""}`);
+    await client.query(query);
+  });
 }
 
-function snapshotScheduled(snapshotDate) {
+async function snapshotScheduled(snapshotDate) {
   const periods = ["all-time", "referral", "weekly", "monthly"];
 
   for (const period of periods) {
-    snapshot(period, snapshotDate);
+    await snapshot(period, snapshotDate);
   }
 }
 
 const command = process.argv[2];
 
-switch (command) {
-  case "migrate":
-    migrate();
-    break;
-  case "seed":
-    seed();
-    break;
-  case "reset":
-    reset();
-    break;
-  case "doctor":
-    doctor();
-    break;
-  case "snapshot":
-    snapshot(process.argv[3], process.argv[4]);
-    break;
-  case "snapshot-scheduled":
-    snapshotScheduled(process.argv[3]);
-    break;
-  default:
-    console.error("Usage: node scripts/dev.mjs <migrate|seed|reset|doctor|snapshot [period] [YYYY-MM-DD]|snapshot-scheduled [YYYY-MM-DD]>");
-    process.exit(1);
+try {
+  switch (command) {
+    case "migrate":
+      await migrate();
+      break;
+    case "migrate-status":
+      await migrationStatus();
+      break;
+    case "seed":
+      await seed();
+      break;
+    case "reset":
+      await reset();
+      break;
+    case "doctor":
+      await doctor();
+      break;
+    case "snapshot":
+      await snapshot(process.argv[3], process.argv[4]);
+      break;
+    case "snapshot-scheduled":
+      await snapshotScheduled(process.argv[3]);
+      break;
+    default:
+      console.error("Usage: node scripts/dev.mjs <migrate|migrate-status|seed|reset|doctor|snapshot [period] [YYYY-MM-DD]|snapshot-scheduled [YYYY-MM-DD]>");
+      process.exit(1);
+  }
+} catch (error) {
+  if (error instanceof Error) {
+    console.error(error.stack ?? error.message);
+  } else {
+    console.error(error);
+  }
+  process.exit(1);
 }
