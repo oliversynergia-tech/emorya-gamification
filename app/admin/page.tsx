@@ -12,7 +12,23 @@ export default async function AdminPage() {
   if (!session || !hasAdminAccess) {
     return (
       <SiteShell eyebrow="Admin controls" currentUser={session?.user ?? null}>
-        <section className="panel">
+        <section className="page-hero page-hero--admin">
+          <div className="panel panel--hero panel--hero-compact">
+            <p className="eyebrow">Moderation layer</p>
+            <h2>Admin surfaces now match the rest of the product shell, even when access is restricted.</h2>
+            <p className="lede">
+              Review actions, progression effects, and moderation notes sit behind an allowlisted admin gate.
+            </p>
+          </div>
+          <div className="panel panel--stack page-aside">
+            <div className="metric-card">
+              <span>Access model</span>
+              <strong>Email allowlist</strong>
+              <small>Only approved admin accounts can load review state or act on submissions.</small>
+            </div>
+          </div>
+        </section>
+        <section className="panel panel--glass">
           <div className="panel__header">
             <div>
               <p className="eyebrow">Restricted</p>
@@ -31,6 +47,25 @@ export default async function AdminPage() {
 
   return (
     <SiteShell eyebrow="Admin controls" currentUser={session?.user ?? null}>
+      <section className="page-hero page-hero--admin">
+        <div className="panel panel--hero panel--hero-compact">
+          <p className="eyebrow">Operating view</p>
+          <h2>Moderate quests, watch live progression effects, and steer campaign pressure from one control surface.</h2>
+          <p className="lede">
+            This area now carries the same Emorya atmosphere as the player experience, while keeping the review queue
+            front and center.
+          </p>
+        </div>
+        <div className="panel panel--stack page-aside">
+          {data.stats.slice(0, 2).map((stat) => (
+            <div key={stat.label} className="metric-card">
+              <span>{stat.label}</span>
+              <strong>{stat.value}</strong>
+              <small>Live moderation and conversion context from PostgreSQL.</small>
+            </div>
+          ))}
+        </div>
+      </section>
       <AdminSection data={data} />
       <ReviewQueuePanel initialQueue={data.reviewQueue} isAuthenticated={hasAdminAccess} />
     </SiteShell>

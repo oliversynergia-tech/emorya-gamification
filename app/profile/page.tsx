@@ -12,9 +12,32 @@ export default async function ProfilePage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
   const profile = await getCurrentProfile();
+  const walletCount = session?.walletAddresses.length ?? 0;
 
   return (
     <SiteShell eyebrow="Profile and social connections" currentUser={session?.user ?? null}>
+      <section className="page-hero page-hero--profile">
+        <div className="panel panel--hero panel--hero-compact">
+          <p className="eyebrow">Identity surface</p>
+          <h2>Shape the public face of your account, referral loop, and linked wallet access.</h2>
+          <p className="lede">
+            Profile, achievements, and wallet management now sit inside the same softer Emorya shell as the core
+            dashboard, with the referral story visible beside your connection state.
+          </p>
+        </div>
+        <div className="panel panel--stack page-aside">
+          <div className="metric-card">
+            <span>Connected wallets</span>
+            <strong>{walletCount}</strong>
+            <small>{walletCount > 0 ? "Identity link is active." : "Attach a wallet to unlock chain-aware quests."}</small>
+          </div>
+          <div className="metric-card">
+            <span>Current referral code</span>
+            <strong>{data.user.referralCode}</strong>
+            <small>Share this code to grow invite XP and premium conversions.</small>
+          </div>
+        </div>
+      </section>
       <ProfileSection data={data} />
       {session ? (
         <>
@@ -22,7 +45,7 @@ export default async function ProfilePage() {
           <WalletLinkPanel walletAddresses={session.walletAddresses} />
         </>
       ) : (
-        <section className="panel auth-panel">
+        <section className="panel auth-panel panel--glass">
           <div className="panel__header">
             <div>
               <p className="eyebrow">Wallet link</p>
