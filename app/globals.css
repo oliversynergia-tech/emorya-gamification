@@ -577,6 +577,10 @@ a {
   gap: 14px;
 }
 
+.leaderboard--referral {
+  margin-top: 18px;
+}
+
 .quest-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -629,6 +633,21 @@ a {
   border-left: 3px solid rgba(240, 80, 158, 0.5);
   background: rgba(255, 255, 255, 0.03);
   border-radius: 18px;
+  color: var(--muted);
+}
+
+.referral-campaign-card {
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(240, 80, 158, 0.16);
+  background:
+    radial-gradient(circle at top right, rgba(240, 80, 158, 0.12), transparent 0 34%),
+    linear-gradient(180deg, rgba(223, 182, 255, 0.06), rgba(255, 255, 255, 0.015)),
+    rgba(20, 10, 35, 0.94);
+}
+
+.referral-campaign-card p {
+  margin: 12px 0 18px;
   color: var(--muted);
 }
 

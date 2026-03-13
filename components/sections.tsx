@@ -107,6 +107,10 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             <span>Referral XP</span>
             <strong>{data.user.referral.rewardXpEarned}</strong>
           </div>
+          <div className="info-card">
+            <span>Referral rank</span>
+            <strong>#{data.user.referral.rank}</strong>
+          </div>
         </div>
         <div className="referral-summary">
           <div className="quest-card__meta">
@@ -288,6 +292,8 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
 }
 
 export function LeaderboardSection({ data }: { data: DashboardData }) {
+  const topReferralEntry = data.referralLeaderboard[0];
+
   return (
     <section className="grid grid--leaderboard">
       <div className="panel">
@@ -305,6 +311,54 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
               <strong>{entry.displayName}</strong>
               <span>Lv {entry.level}</span>
               <span>{entry.xp.toLocaleString()} XP</span>
+              <span>{entry.delta > 0 ? `+${entry.delta}` : entry.delta}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="panel">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Referral campaign</p>
+            <h3>Who is converting the strongest invite loop</h3>
+          </div>
+          <span className="badge badge--pink">#{data.user.referral.rank} for you</span>
+        </div>
+        <div className="referral-campaign-card">
+          <div className="quest-card__meta">
+            <span>Current referral leader</span>
+            <span>{topReferralEntry ? `${topReferralEntry.xp} XP` : "No referral XP yet"}</span>
+          </div>
+          <strong>{topReferralEntry ? topReferralEntry.displayName : "Campaign waiting for invites"}</strong>
+          <p>
+            Referral positions rank by earned invite XP first, then converted premium joins, so this board reflects actual conversion quality instead of raw sign-up volume.
+          </p>
+          <div className="info-grid">
+            <div className="info-card">
+              <span>Your referral rank</span>
+              <strong>#{data.user.referral.rank}</strong>
+            </div>
+            <div className="info-card">
+              <span>Converted joins</span>
+              <strong>{data.user.referral.convertedCount}</strong>
+            </div>
+            <div className="info-card">
+              <span>Earned referral XP</span>
+              <strong>{data.user.referral.rewardXpEarned}</strong>
+            </div>
+            <div className="info-card">
+              <span>Still available</span>
+              <strong>{data.user.referral.pendingConversionXp}</strong>
+            </div>
+          </div>
+        </div>
+        <div className="leaderboard leaderboard--referral">
+          {data.referralLeaderboard.map((entry) => (
+            <div key={`referral-${entry.rank}-${entry.displayName}`} className={`leaderboard__row leaderboard__row--${entry.tier}`}>
+              <span>#{entry.rank}</span>
+              <strong>{entry.displayName}</strong>
+              <span>Lv {entry.level}</span>
+              <span>{entry.xp.toLocaleString()} referral XP</span>
               <span>{entry.delta > 0 ? `+${entry.delta}` : entry.delta}</span>
             </div>
           ))}

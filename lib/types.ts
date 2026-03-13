@@ -188,6 +188,7 @@ export type UserSnapshot = {
   rank: number;
   referralCode: string;
   referral: {
+    rank: number;
     invitedCount: number;
     convertedCount: number;
     rewardXpEarned: number;
@@ -211,6 +212,7 @@ export type DashboardData = {
   quests: Quest[];
   achievements: Achievement[];
   leaderboard: LeaderboardEntry[];
+  referralLeaderboard: LeaderboardEntry[];
   activityFeed: ActivityItem[];
   premiumMoments: string[];
 };

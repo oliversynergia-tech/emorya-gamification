@@ -17,6 +17,7 @@ export const currentUser: UserSnapshot = {
   rank: 34,
   referralCode: "EMORYA-8W3K9R",
   referral: {
+    rank: 12,
     invitedCount: 2,
     convertedCount: 1,
     rewardXpEarned: 160,
@@ -168,6 +169,13 @@ export const leaderboard: LeaderboardEntry[] = [
   { rank: 34, displayName: "Oliver", level: 8, xp: 4520, badges: 4, tier: "free", delta: 3 },
   { rank: 35, displayName: "Nico", level: 8, xp: 4485, badges: 4, tier: "free", delta: -2 },
   { rank: 36, displayName: "Aya", level: 8, xp: 4440, badges: 3, tier: "monthly", delta: 5 },
+];
+
+export const referralLeaderboard: LeaderboardEntry[] = [
+  { rank: 1, displayName: "Aya", level: 8, xp: 280, badges: 3, tier: "monthly", delta: 1 },
+  { rank: 2, displayName: "Lina", level: 18, xp: 240, badges: 12, tier: "annual", delta: -1 },
+  { rank: 3, displayName: "Oliver", level: 8, xp: 160, badges: 4, tier: "free", delta: 2 },
+  { rank: 4, displayName: "Kairo", level: 17, xp: 120, badges: 10, tier: "annual", delta: 0 },
 ];
 
 export const activityFeed: ActivityItem[] = [

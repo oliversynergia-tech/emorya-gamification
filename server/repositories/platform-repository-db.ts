@@ -19,7 +19,9 @@ import type {
 import { runQuery } from "@/server/db/client";
 import {
   getCurrentAllTimeRankForUser,
+  getCurrentReferralRankForUser,
   getLiveAllTimeLeaderboard,
+  getLiveReferralLeaderboard,
   syncLeaderboardSnapshotsForToday,
 } from "@/server/repositories/leaderboard-repository";
 import { getPendingReviewQueue, getRecentReviewHistory } from "@/server/repositories/quest-repository";
@@ -127,7 +129,7 @@ async function getDashboardUser(userId: string): Promise<UserRow> {
 }
 
 async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
-  const [connectionsResult, rankResult, referral] = await Promise.all([
+  const [connectionsResult, rankResult, referralRank, referral] = await Promise.all([
     runQuery<SocialConnectionRow>(
       `SELECT platform, verified
        FROM social_connections
@@ -136,6 +138,7 @@ async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
       [user.id],
     ),
     getCurrentAllTimeRankForUser(user.id),
+    getCurrentReferralRankForUser(user.id),
     getReferralSummary(user.id),
   ]);
 
@@ -150,7 +153,10 @@ async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
     tier: user.subscription_tier,
     rank: rankResult,
     referralCode: user.referral_code,
-    referral,
+    referral: {
+      rank: referralRank,
+      ...referral,
+    },
     connectedAccounts: connectionsResult.rows.map((connection) => ({
       platform: connection.platform,
       connected: connection.verified,
@@ -238,6 +244,10 @@ async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   return getLiveAllTimeLeaderboard(12);
 }
 
+async function getReferralLeaderboard(): Promise<LeaderboardEntry[]> {
+  return getLiveReferralLeaderboard(8);
+}
+
 async function getActivityFeed(): Promise<ActivityItem[]> {
   function getRelativeTimeLabel(isoDate: string) {
     const diffMs = Date.now() - new Date(isoDate).getTime();
@@ -289,11 +299,12 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   await syncLeaderboardSnapshotsForToday();
   const dashboardUser = await getDashboardUser(userId);
 
-  const [user, quests, achievements, leaderboard, activityFeed] = await Promise.all([
+  const [user, quests, achievements, leaderboard, referralLeaderboard, activityFeed] = await Promise.all([
     getUserSnapshot(dashboardUser),
     getQuestBoard(dashboardUser),
     getAchievements(userId),
     getLeaderboard(),
+    getReferralLeaderboard(),
     getActivityFeed(),
   ]);
 
@@ -302,6 +313,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     quests,
     achievements,
     leaderboard,
+    referralLeaderboard,
     activityFeed,
     premiumMoments: [
       `Level ${user.level} reached. ${getTierLabel(user.tier)} is your current tier.`,

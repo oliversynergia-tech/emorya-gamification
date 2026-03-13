@@ -88,6 +88,29 @@ export async function getCurrentAllTimeRankForUser(userId: string) {
   return result.rows[0]?.rank ?? 0;
 }
 
+export async function getCurrentReferralRankForUser(userId: string) {
+  const result = await runQuery<CurrentRankRow>(
+    `WITH ranked_referrers AS (
+       SELECT u.id,
+              RANK() OVER (
+                ORDER BY COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0) DESC,
+                         COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE) DESC,
+                         u.created_at ASC
+              ) AS rank
+       FROM users u
+       LEFT JOIN referrals r ON r.referrer_user_id = u.id
+       GROUP BY u.id, u.created_at
+     )
+     SELECT rank
+     FROM ranked_referrers
+     WHERE id = $1
+     LIMIT 1`,
+    [userId],
+  );
+
+  return result.rows[0]?.rank ?? 0;
+}
+
 export async function getLiveAllTimeLeaderboard(limit = 12): Promise<LeaderboardEntry[]> {
   const result = await runQuery<LiveLeaderboardRow>(
     `WITH current_leaderboard AS (
@@ -120,6 +143,59 @@ export async function getLiveAllTimeLeaderboard(limit = 12): Promise<Leaderboard
      LEFT JOIN user_achievements ua ON ua.user_id = cl.user_id AND ua.earned_at IS NOT NULL
      GROUP BY cl.user_id, cl.rank, lps.rank, cl.display_name, cl.level, cl.xp, cl.subscription_tier, cl.created_at
      ORDER BY cl.rank ASC, cl.created_at ASC
+     LIMIT $1`,
+    [limit],
+  );
+
+  return result.rows.map((entry) => ({
+    rank: entry.rank,
+    displayName: entry.display_name,
+    level: entry.level,
+    xp: entry.xp,
+    badges: entry.badge_count,
+    tier: entry.subscription_tier,
+    delta: mapLeaderboardDelta(entry.rank, entry.previous_rank),
+  }));
+}
+
+export async function getLiveReferralLeaderboard(limit = 8): Promise<LeaderboardEntry[]> {
+  const result = await runQuery<LiveLeaderboardRow>(
+    `WITH current_referral_leaderboard AS (
+       SELECT u.id AS user_id,
+              RANK() OVER (
+                ORDER BY COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0) DESC,
+                         COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE) DESC,
+                         u.created_at ASC
+              ) AS rank,
+              u.display_name,
+              u.level,
+              COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0)::int AS xp,
+              u.subscription_tier,
+              u.created_at
+       FROM users u
+       LEFT JOIN referrals r ON r.referrer_user_id = u.id
+       GROUP BY u.id, u.display_name, u.level, u.subscription_tier, u.created_at
+     ),
+     latest_previous_snapshot AS (
+       SELECT DISTINCT ON (ls.user_id) ls.user_id, ls.rank
+       FROM leaderboard_snapshots ls
+       WHERE ls.period = 'referral'
+         AND ls.snapshot_date < CURRENT_DATE
+       ORDER BY ls.user_id, ls.snapshot_date DESC
+     )
+     SELECT crl.user_id,
+            crl.rank,
+            lps.rank AS previous_rank,
+            crl.display_name,
+            crl.level,
+            crl.xp,
+            crl.subscription_tier,
+            COUNT(ua.achievement_id)::int AS badge_count
+     FROM current_referral_leaderboard crl
+     LEFT JOIN latest_previous_snapshot lps ON lps.user_id = crl.user_id
+     LEFT JOIN user_achievements ua ON ua.user_id = crl.user_id AND ua.earned_at IS NOT NULL
+     GROUP BY crl.user_id, crl.rank, lps.rank, crl.display_name, crl.level, crl.xp, crl.subscription_tier, crl.created_at
+     ORDER BY crl.rank ASC, crl.created_at ASC
      LIMIT $1`,
     [limit],
   );

@@ -9,6 +9,7 @@ export default async function LeaderboardPage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
   const topEntry = data.leaderboard[0];
+  const topReferralEntry = data.referralLeaderboard[0];
 
   return (
     <SiteShell eyebrow="Competitive pressure" currentUser={session?.user ?? null}>
@@ -31,6 +32,11 @@ export default async function LeaderboardPage() {
             <span>Your current rank</span>
             <strong>#{data.user.rank}</strong>
             <small>Climb through verified quests, streaks, and referral rewards.</small>
+          </div>
+          <div className="metric-card">
+            <span>Referral campaign lead</span>
+            <strong>{topReferralEntry ? topReferralEntry.displayName : "No referral leader yet"}</strong>
+            <small>{topReferralEntry ? `${topReferralEntry.xp.toLocaleString()} referral XP on the invite board.` : "Referral standings appear once invite rewards start moving."}</small>
           </div>
         </div>
       </section>
