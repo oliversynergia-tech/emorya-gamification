@@ -18,6 +18,7 @@ import {
   getQuestCompletionForUser,
   getQuestDefinitionById,
   getRecentReviewHistory,
+  getReviewerWorkload,
   getUserQuestAccess,
   updateQuestCompletionReview,
   upsertQuestCompletionForUser,
@@ -241,6 +242,13 @@ export async function listRecentQuestReviews(): Promise<ReviewHistoryItem[]> {
   return getRecentReviewHistory();
 }
 
+export async function listReviewerWorkload() {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  return getReviewerWorkload();
+}
+
 export async function reviewQuestSubmission({
   completionId,
   action,
@@ -315,5 +323,35 @@ export async function reviewQuestSubmission({
   return {
     completion,
     progressUpdate,
+  };
+}
+
+export async function bulkReviewQuestSubmissions({
+  completionIds,
+  action,
+  moderationNote,
+}: {
+  completionIds: string[];
+  action: "approved" | "rejected";
+  moderationNote?: string;
+}) {
+  const outcomes = [];
+
+  for (const completionId of completionIds) {
+    const result = await reviewQuestSubmission({
+      completionId,
+      action,
+      moderationNote,
+    });
+
+    outcomes.push({
+      completionId,
+      progressUpdate: result.progressUpdate,
+    });
+  }
+
+  return {
+    reviewedCount: outcomes.length,
+    outcomes,
   };
 }

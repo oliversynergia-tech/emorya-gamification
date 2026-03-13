@@ -26,6 +26,7 @@ import {
   syncLeaderboardSnapshotsForToday,
 } from "@/server/repositories/leaderboard-repository";
 import { getPendingReviewQueue, getRecentReviewHistory } from "@/server/repositories/quest-repository";
+import { getReviewerWorkload } from "@/server/repositories/quest-repository";
 import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/referral-repository";
 import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
 
@@ -326,7 +327,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, reviewQueue, reviewHistory] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, reviewQueue, reviewHistory, reviewerWorkload] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -345,6 +346,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     listUsersWithRoles(),
     getPendingReviewQueue(),
     getRecentReviewHistory(),
+    getReviewerWorkload(),
   ]);
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -361,5 +363,6 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     referralAnalytics,
     reviewQueue,
     reviewHistory,
+    reviewerWorkload,
   };
 }

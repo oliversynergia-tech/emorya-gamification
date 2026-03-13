@@ -245,6 +245,12 @@ export type AdminOverviewData = {
   };
   reviewQueue: ReviewQueueItem[];
   reviewHistory: ReviewHistoryItem[];
+  reviewerWorkload: Array<{
+    reviewerDisplayName: string;
+    reviewCount: number;
+    approvals: number;
+    rejections: number;
+  }>;
 };
 
 export type AuthUser = {

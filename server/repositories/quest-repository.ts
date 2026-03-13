@@ -68,6 +68,13 @@ type ReviewHistoryRow = QueryResultRow & {
   reviewed_at: string;
 };
 
+type ReviewerWorkloadRow = QueryResultRow & {
+  reviewer_display_name: string;
+  review_count: string;
+  approvals: string;
+  rejections: string;
+};
+
 const tierRank: Record<SubscriptionTier, number> = {
   free: 0,
   monthly: 1,
@@ -270,6 +277,29 @@ export async function getRecentReviewHistory(limit = 12): Promise<ReviewHistoryI
     status: row.status,
     awardedXp: row.awarded_xp,
     reviewedAt: row.reviewed_at,
+  }));
+}
+
+export async function getReviewerWorkload(limit = 6) {
+  const result = await runQuery<ReviewerWorkloadRow>(
+    `SELECT reviewer.display_name AS reviewer_display_name,
+            COUNT(qc.id)::text AS review_count,
+            COUNT(*) FILTER (WHERE qc.status = 'approved')::text AS approvals,
+            COUNT(*) FILTER (WHERE qc.status = 'rejected')::text AS rejections
+     FROM quest_completions qc
+     INNER JOIN users reviewer ON reviewer.id = qc.reviewed_by
+     WHERE qc.status IN ('approved', 'rejected')
+     GROUP BY reviewer.id, reviewer.display_name
+     ORDER BY COUNT(qc.id) DESC, reviewer.display_name ASC
+     LIMIT $1`,
+    [limit],
+  );
+
+  return result.rows.map((row) => ({
+    reviewerDisplayName: row.reviewer_display_name,
+    reviewCount: Number(row.review_count),
+    approvals: Number(row.approvals),
+    rejections: Number(row.rejections),
   }));
 }
 

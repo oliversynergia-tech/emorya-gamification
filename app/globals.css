@@ -839,6 +839,13 @@ a {
   gap: 10px;
 }
 
+.review-bulk-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
 .review-outcome-list {
   display: grid;
   gap: 14px;

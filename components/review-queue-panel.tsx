@@ -34,6 +34,7 @@ export function ReviewQueuePanel({
   const [historyReviewerFilter, setHistoryReviewerFilter] = useState<"all" | "mine" | "unknown" | string>("all");
   const [historyQuery, setHistoryQuery] = useState("");
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [moderationNotes, setModerationNotes] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
@@ -136,6 +137,46 @@ export function ReviewQueuePanel({
           ? `Submission approved for ${item.userDisplayName}.`
           : `Submission rejected for ${item.userDisplayName}.`,
       );
+      router.refresh();
+    } catch {
+      setError("Unable to reach the review service.");
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function bulkReview(action: "approved" | "rejected") {
+    if (selectedIds.length === 0) {
+      setError("Select at least one submission first.");
+      return;
+    }
+
+    setPendingId("bulk");
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/reviews", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          completionIds: selectedIds,
+          action,
+        }),
+      });
+
+      const result = (await response.json()) as { ok: boolean; error?: string; reviewedCount?: number };
+
+      if (!response.ok || !result.ok) {
+        setError(result.error ?? "Unable to process bulk review.");
+        return;
+      }
+
+      setQueue((current) => current.filter((entry) => !selectedIds.includes(entry.id)));
+      setSelectedIds([]);
+      setMessage(`${result.reviewedCount ?? selectedIds.length} submissions ${action === "approved" ? "approved" : "rejected"}.`);
       router.refresh();
     } catch {
       setError("Unable to reach the review service.");
@@ -304,9 +345,44 @@ export function ReviewQueuePanel({
         </div>
       ) : null}
       {queue.length === 0 ? <p className="form-note">No pending submissions right now.</p> : null}
+      {queue.length > 0 ? (
+        <div className="review-bulk-actions">
+          <button
+            className="button button--secondary button--small"
+            type="button"
+            disabled={!isAuthenticated || pendingId === "bulk"}
+            onClick={() => bulkReview("approved")}
+          >
+            {pendingId === "bulk" ? "Working..." : `Approve selected (${selectedIds.length})`}
+          </button>
+          <button
+            className="button button--secondary button--small"
+            type="button"
+            disabled={!isAuthenticated || pendingId === "bulk"}
+            onClick={() => bulkReview("rejected")}
+          >
+            Reject selected
+          </button>
+        </div>
+      ) : null}
       <div className="review-queue">
         {queue.map((item) => (
           <article key={item.id} className="review-item">
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(item.id)}
+                onChange={(event) =>
+                  setSelectedIds((current) =>
+                    event.target.checked
+                      ? [...current, item.id]
+                      : current.filter((id) => id !== item.id),
+                  )
+                }
+                disabled={!isAuthenticated || pendingId === item.id || pendingId === "bulk"}
+              />
+              <span>Select for bulk review</span>
+            </label>
             <div className="quest-card__meta">
               <span>{item.verificationType}</span>
               <span>{new Date(item.createdAt).toLocaleString()}</span>

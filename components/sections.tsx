@@ -654,6 +654,31 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
           <div>
+            <p className="eyebrow">Reviewer workload</p>
+            <h3>Who is carrying moderation right now</h3>
+          </div>
+        </div>
+        <div className="achievement-list">
+          {data.reviewerWorkload.map((reviewer) => (
+            <article key={reviewer.reviewerDisplayName} className="achievement-card">
+              <div>
+                <strong>{reviewer.reviewerDisplayName}</strong>
+                <p>{reviewer.reviewCount} total reviews</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{reviewer.approvals} approved</span>
+                <span>{reviewer.rejections} rejected</span>
+              </div>
+            </article>
+          ))}
+          {data.reviewerWorkload.length === 0 ? (
+            <p className="form-note">No reviewer workload data yet.</p>
+          ) : null}
+        </div>
+      </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
             <p className="eyebrow">Referral analytics</p>
             <h3>Invite performance and premium conversion pull</h3>
           </div>
