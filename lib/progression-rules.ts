@@ -20,6 +20,7 @@ export const starterPathRequirements = {
 export const firstTokenEligibilityLevel = 5;
 export const ambassadorMinimumLevel = 10;
 export const ambassadorReferralRequirement = 10;
+export const weeklyProgressThresholds = [100, 250, 450, 700] as const;
 
 export const rulesEngineTierMultipliers: Record<SubscriptionTier, number> = {
   free: 1,
@@ -29,6 +30,38 @@ export const rulesEngineTierMultipliers: Record<SubscriptionTier, number> = {
 
 export function getRulesEngineTierMultiplier(tier: SubscriptionTier) {
   return rulesEngineTierMultipliers[tier];
+}
+
+export function getWeeklyProgressBand(weeklyXp: number) {
+  const labels = ["Participation", "Engaged", "Reward Eligible", "Max Weekly Band"] as const;
+  let currentThreshold = 0;
+  let nextThreshold: number | null = weeklyProgressThresholds[0];
+  let tierLabel: string = labels[0];
+
+  for (let index = 0; index < weeklyProgressThresholds.length; index += 1) {
+    const threshold = weeklyProgressThresholds[index];
+
+    if (weeklyXp >= threshold) {
+      currentThreshold = threshold;
+      tierLabel = labels[index] ?? labels[labels.length - 1];
+      nextThreshold = weeklyProgressThresholds[index + 1] ?? null;
+    }
+  }
+
+  const maxThreshold = weeklyProgressThresholds[weeklyProgressThresholds.length - 1];
+  const progressDenominator =
+    nextThreshold === null ? Math.max(maxThreshold - currentThreshold, 1) : Math.max(nextThreshold - currentThreshold, 1);
+  const progressNumerator =
+    nextThreshold === null ? Math.min(Math.max(weeklyXp - currentThreshold, 0), progressDenominator) : Math.max(weeklyXp - currentThreshold, 0);
+
+  return {
+    xp: weeklyXp,
+    tierLabel,
+    currentThreshold,
+    nextThreshold,
+    maxThreshold,
+    progress: Math.max(Math.min(progressNumerator / progressDenominator, 1), 0),
+  };
 }
 
 function asRecord(value: unknown): Record<string, unknown> {

@@ -2,12 +2,8 @@ import type { QueryResultRow } from "pg";
 
 import { hasDatabaseConfig } from "@/lib/config";
 import {
-  buildRewardConfig,
-  buildUnlockRules,
-  createDefaultQuestRuntimeContext,
-  inferQuestTrack,
-  inferTokenEffect,
-  mapQuestCadence,
+  getWeeklyProgressBand,
+  starterPathRequirements,
 } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { defaultConnectionRewards } from "@/lib/social-platforms";
@@ -18,10 +14,8 @@ import type {
   AdminOverviewData,
   AuthUser,
   DashboardData,
-  EvaluatedQuest,
   LeaderboardEntry,
   Quest,
-  QuestCadence,
   SubscriptionTier,
   UserSnapshot,
   VerificationType,
@@ -44,12 +38,12 @@ import {
   getReviewerWorkload,
 } from "@/server/repositories/quest-repository";
 import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/referral-repository";
-import { evaluateQuest } from "@/server/services/evaluate-quest";
+import { buildDashboardQuestBoard } from "@/server/services/build-dashboard-quest-board";
 import { syncAchievementProgressForUser } from "@/server/services/progression-service";
 import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
-import { selectQuestBoard } from "@/server/services/select-quest-board";
 import { getUserProgressState } from "@/server/services/user-progress-state";
 import { resolveUserJourneyState } from "@/server/services/user-journey-state";
+import type { UserProgressState, UserJourneyState } from "@/lib/types";
 
 type UserRow = QueryResultRow & {
   id: string;
@@ -67,8 +61,6 @@ type SocialConnectionRow = QueryResultRow & {
   verified: boolean;
 };
 
-type QuestMetadata = Record<string, unknown>;
-
 type QuestRow = QueryResultRow & {
   id: string;
   slug: string;
@@ -82,7 +74,7 @@ type QuestRow = QueryResultRow & {
   required_tier: SubscriptionTier;
   is_premium_preview: boolean;
   recurrence: "one-time" | "daily" | "weekly";
-  metadata: QuestMetadata;
+  metadata: Record<string, unknown>;
   completion_status: "pending" | "approved" | "rejected" | null;
 };
 
@@ -145,7 +137,73 @@ async function getDashboardUser(userId: string): Promise<UserRow> {
   return user;
 }
 
-async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
+function getNextRewardRequirement(progressState: UserProgressState, journeyState: UserJourneyState) {
+  if (!progressState.walletLinked) {
+    return "Connect xPortal";
+  }
+
+  if (!progressState.starterPathComplete) {
+    return "Complete Starter Path";
+  }
+
+  if (progressState.level < 5) {
+    return "Reach Level 5";
+  }
+
+  if (progressState.trustScoreBand === "low") {
+    return "Increase trust with more verified activity";
+  }
+
+  if (journeyState === "monthly_premium") {
+    return "Upgrade to Annual for direct reward spikes";
+  }
+
+  return null;
+}
+
+function buildStarterPathProgress(progressState: UserProgressState) {
+  const steps = [
+    {
+      label: "Earn 250 XP",
+      complete: progressState.totalXp >= starterPathRequirements.minXp,
+      detail: `${Math.min(progressState.totalXp, starterPathRequirements.minXp)} / ${starterPathRequirements.minXp} XP`,
+    },
+    {
+      label: "Reach Level 3",
+      complete: progressState.level >= starterPathRequirements.minLevel,
+      detail: `Level ${progressState.level}`,
+    },
+    {
+      label: "Connect xPortal",
+      complete: progressState.walletLinked,
+      detail: progressState.walletLinked ? "Wallet linked" : "Wallet still needed",
+    },
+    {
+      label: "Complete 3 starter quests",
+      complete: progressState.starterQuestCount >= starterPathRequirements.starterQuestCount,
+      detail: `${Math.min(progressState.starterQuestCount, starterPathRequirements.starterQuestCount)} / ${starterPathRequirements.starterQuestCount}`,
+    },
+    {
+      label: "Complete 1 wellness quest",
+      complete: progressState.wellnessQuestCount >= starterPathRequirements.wellnessQuestCount,
+      detail: `${Math.min(progressState.wellnessQuestCount, starterPathRequirements.wellnessQuestCount)} / ${starterPathRequirements.wellnessQuestCount}`,
+    },
+    {
+      label: "Complete 1 social quest",
+      complete: progressState.socialQuestCount >= starterPathRequirements.socialQuestCount,
+      detail: `${Math.min(progressState.socialQuestCount, starterPathRequirements.socialQuestCount)} / ${starterPathRequirements.socialQuestCount}`,
+    },
+  ];
+  const completedSteps = steps.filter((step) => step.complete).length;
+
+  return {
+    complete: progressState.starterPathComplete,
+    progress: steps.length > 0 ? completedSteps / steps.length : 0,
+    steps,
+  };
+}
+
+async function getUserSnapshot(user: UserRow, progressState: UserProgressState, journeyState: UserJourneyState): Promise<UserSnapshot> {
   const [connectionsResult, rankResult, referralRank, referral] = await Promise.all([
     runQuery<SocialConnectionRow>(
       `SELECT platform, verified
@@ -160,6 +218,7 @@ async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
   ]);
 
   const nextLevelXp = getLevelProgress(user.total_xp).nextThreshold;
+  const weeklyProgress = getWeeklyProgressBand(progressState.weeklyXp);
 
   return {
     displayName: user.display_name,
@@ -168,11 +227,34 @@ async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
     currentStreak: user.current_streak,
     nextLevelXp,
     tier: user.subscription_tier,
+    journeyState,
+    campaignSource: progressState.campaignSource,
     rank: rankResult,
     referralCode: user.referral_code,
+    starterPath: buildStarterPathProgress(progressState),
+    rewardEligibility: {
+      eligible: progressState.rewardEligible,
+      trustScoreBand: progressState.trustScoreBand,
+      nextRequirement: getNextRewardRequirement(progressState, journeyState),
+    },
+    weeklyProgress,
     referral: {
       rank: referralRank,
       ...referral,
+      rewardPreview: {
+        monthlyPremiumReferral: {
+          xp: 150,
+          tokenEffect: "eligibility_progress",
+        },
+        annualPremiumReferral: {
+          xp: 300,
+          tokenEffect: "direct_token_reward",
+          directTokenReward: {
+            asset: "EMR",
+            amount: 25,
+          },
+        },
+      },
     },
     connectedAccounts: connectionsResult.rows.map((connection) => ({
       platform: connection.platform,
@@ -180,22 +262,6 @@ async function getUserSnapshot(user: UserRow): Promise<UserSnapshot> {
       rewardXp: defaultConnectionRewards[connection.platform] ?? 15,
     })),
   };
-}
-
-function deriveQuestStatus(user: UserRow, quest: QuestRow): Quest["status"] {
-  if (quest.completion_status === "approved") {
-    return "completed";
-  }
-
-  if (quest.completion_status === "pending") {
-    return "in-progress";
-  }
-
-  if (quest.completion_status === "rejected") {
-    return "rejected";
-  }
-
-  return "available";
 }
 
 function buildQueueMetrics(reviewQueue: AdminOverviewData["reviewQueue"]): AdminOverviewData["queueMetrics"] {
@@ -267,47 +333,15 @@ function buildQueueMetrics(reviewQueue: AdminOverviewData["reviewQueue"]): Admin
   };
 }
 
-function mapEvaluatedQuestToQuest({
-  quest,
-  evaluatedQuest,
-  cadence,
+async function getQuestBoard({
+  user,
+  userProgressState,
+  journeyState,
 }: {
-  quest: QuestRow;
-  evaluatedQuest: EvaluatedQuest;
-  cadence: QuestCadence;
-}): Quest {
-  return {
-    id: quest.id,
-    title: quest.title,
-    description: quest.description,
-    category: quest.category,
-    track: evaluatedQuest.track,
-    cadence,
-    xpReward: quest.xp_reward,
-    projectedXp: evaluatedQuest.projectedReward.xp,
-    tokenEffect: evaluatedQuest.projectedReward.tokenEffect,
-    difficulty: quest.difficulty,
-    verificationType: quest.verification_type,
-    status:
-      evaluatedQuest.status === "active"
-        ? "available"
-        : evaluatedQuest.status === "in_progress"
-          ? "in-progress"
-          : evaluatedQuest.status === "cooldown"
-            ? "locked"
-          : evaluatedQuest.status,
-    lockedReason: evaluatedQuest.lockedReason,
-    unlockHint: evaluatedQuest.unlockHint,
-    recommended: evaluatedQuest.sortScore >= 1000,
-    requiredLevel: quest.required_level,
-    requiredTier: quest.required_tier,
-    premiumPreview: quest.is_premium_preview,
-    timebox: typeof quest.metadata?.timebox === "string" ? quest.metadata.timebox : undefined,
-    targetUrl: typeof quest.metadata?.targetUrl === "string" ? quest.metadata.targetUrl : undefined,
-  };
-}
-
-async function getQuestBoard(user: UserRow): Promise<Quest[]> {
+  user: UserRow;
+  userProgressState: UserProgressState;
+  journeyState: UserJourneyState;
+}): Promise<Quest[]> {
   const result = await runQuery<QuestRow>(
     `SELECT q.id, q.slug, q.title, q.description, q.category, q.xp_reward, q.difficulty, q.verification_type,
             q.required_level, q.required_tier, q.is_premium_preview, q.recurrence, q.metadata,
@@ -322,85 +356,11 @@ async function getQuestBoard(user: UserRow): Promise<Quest[]> {
     [user.id],
   );
 
-  const userProgressState = await getUserProgressState(user.id);
-  const journeyState = resolveUserJourneyState(userProgressState);
-  const runtimeContext = createDefaultQuestRuntimeContext();
-  const evaluatedByQuestId = new Map<
-    string,
-    {
-      evaluatedQuest: EvaluatedQuest;
-      cadence: QuestCadence;
-    }
-  >();
-
-  for (const quest of result.rows) {
-    const track = inferQuestTrack({
-      slug: quest.slug,
-      category: quest.category,
-      verificationType: quest.verification_type,
-      isPremiumPreview: quest.is_premium_preview,
-      metadata: quest.metadata,
-    });
-    const cadence = mapQuestCadence(quest.recurrence, quest.metadata);
-    const tokenEffect = inferTokenEffect(track, quest.metadata);
-    const rewardConfig = buildRewardConfig({
-      baseXp: quest.xp_reward,
-      tokenEffect,
-      metadata: quest.metadata,
-    });
-    const unlockRules = buildUnlockRules({
-      requiredLevel: quest.required_level,
-      requiredTier: quest.required_tier,
-      isPremiumPreview: quest.is_premium_preview,
-      track,
-      metadata: quest.metadata,
-    });
-    const completionStatus = deriveQuestStatus(user, quest);
-    const recommended =
-      (journeyState === "signed_up_free" && (track === "starter" || track === "wallet" || track === "social")) ||
-      (journeyState === "activated_free" && (track === "daily" || track === "wallet" || track === "referral")) ||
-      (journeyState === "reward_eligible_free" && (track === "wallet" || track === "referral" || track === "premium")) ||
-      ((journeyState === "monthly_premium" || journeyState === "annual_premium") &&
-        (track === "premium" || track === "referral" || track === "wallet"));
-
-    evaluatedByQuestId.set(quest.id, {
-      evaluatedQuest: evaluateQuest({
-        id: quest.id,
-        title: quest.title,
-        track,
-        completionStatus,
-        rewardConfig,
-        unlockRules,
-        userState: userProgressState,
-        runtimeContext,
-        recommended,
-        journeyState,
-      }),
-      cadence,
-    });
-  }
-
-  const selectedBoard = selectQuestBoard({
-    quests: Array.from(evaluatedByQuestId.values()).map((entry) => entry.evaluatedQuest),
+  return buildDashboardQuestBoard({
+    quests: result.rows,
+    userProgressState,
     journeyState,
   });
-
-  return selectedBoard.quests
-    .map((selectedQuest) => {
-      const quest = result.rows.find((row) => row.id === selectedQuest.id);
-      const evaluated = evaluatedByQuestId.get(selectedQuest.id);
-
-      if (!quest || !evaluated) {
-        return null;
-      }
-
-      return mapEvaluatedQuestToQuest({
-        quest,
-        evaluatedQuest: evaluated.evaluatedQuest,
-        cadence: evaluated.cadence,
-      });
-    })
-    .filter((quest): quest is Quest => quest !== null);
 }
 
 async function getAchievements(userId: string): Promise<Achievement[]> {
@@ -483,6 +443,8 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   await syncReferralRewardsForReferrer(userId);
   await syncLeaderboardSnapshotsForToday();
   const dashboardUser = await getDashboardUser(userId);
+  const userProgressState = await getUserProgressState(userId);
+  const journeyState = resolveUserJourneyState(userProgressState);
   await syncAchievementProgressForUser({
     userId: dashboardUser.id,
     displayName: dashboardUser.display_name,
@@ -494,8 +456,8 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   });
 
   const [user, quests, achievements, leaderboard, referralLeaderboard, activityFeed] = await Promise.all([
-    getUserSnapshot(dashboardUser),
-    getQuestBoard(dashboardUser),
+    getUserSnapshot(dashboardUser, userProgressState, journeyState),
+    getQuestBoard({ user: dashboardUser, userProgressState, journeyState }),
     getAchievements(userId),
     getLeaderboard(),
     getReferralLeaderboard(),

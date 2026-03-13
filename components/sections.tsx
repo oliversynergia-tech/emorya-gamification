@@ -56,6 +56,19 @@ function getTrackDescription(track: QuestTrack) {
   }
 }
 
+function getTokenEffectLabel(quest: Quest) {
+  switch (quest.tokenEffect) {
+    case "eligibility_progress":
+      return "Token path";
+    case "token_bonus":
+      return "Token bonus";
+    case "direct_token_reward":
+      return "Direct EMR";
+    default:
+      return null;
+  }
+}
+
 function renderQuestCard(quest: Quest) {
   return (
     <article
@@ -64,7 +77,7 @@ function renderQuestCard(quest: Quest) {
     >
       <div className="quest-card__meta">
         <span>{quest.category}</span>
-        <span>Lv {quest.requiredLevel}+</span>
+        <span>{getTokenEffectLabel(quest) ?? `Lv ${quest.requiredLevel}+`}</span>
       </div>
       <h4>{quest.title}</h4>
       <p>{quest.description}</p>
@@ -191,6 +204,60 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             <span>Referral rank</span>
             <strong>#{data.user.referral.rank}</strong>
           </div>
+          <div className="info-card">
+            <span>Journey state</span>
+            <strong>{data.user.journeyState.replaceAll("_", " ")}</strong>
+          </div>
+        </div>
+        <div className="panel panel--glass">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Starter path</p>
+              <h3>{data.user.starterPath.complete ? "Starter Path complete" : "Progress toward reward eligibility"}</h3>
+            </div>
+            <span className={`badge ${data.user.starterPath.complete ? "badge--pink" : ""}`}>
+              {Math.round(data.user.starterPath.progress * 100)}%
+            </span>
+          </div>
+          <div className="achievement-list">
+            {data.user.starterPath.steps.map((step) => (
+              <article key={step.label} className="achievement-card">
+                <div>
+                  <strong>{step.label}</strong>
+                  <p>{step.detail}</p>
+                </div>
+                <span className={step.complete ? "badge badge--pink" : "badge"}>{step.complete ? "Done" : "Open"}</span>
+              </article>
+            ))}
+          </div>
+        </div>
+        <div className="panel panel--glass">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Weekly reward band</p>
+              <h3>{data.user.weeklyProgress.tierLabel}</h3>
+            </div>
+            <span className="badge">{data.user.weeklyProgress.xp} XP</span>
+          </div>
+          <div className="xp-meter">
+            <div className="xp-meter__meta">
+              <span>{data.user.weeklyProgress.currentThreshold} XP band</span>
+              <span>{data.user.weeklyProgress.maxThreshold} XP weekly max</span>
+            </div>
+            <div className="xp-meter__track">
+              <div className="xp-meter__fill" style={{ width: `${data.user.weeklyProgress.progress * 100}%` }} />
+            </div>
+            <small>
+              {data.user.weeklyProgress.nextThreshold
+                ? `${Math.max(data.user.weeklyProgress.nextThreshold - data.user.weeklyProgress.xp, 0)} XP to the next weekly milestone`
+                : "You are at the top weekly reward band."}
+            </small>
+          </div>
+          <p className="form-note">
+            {data.user.rewardEligibility.eligible
+              ? `Reward eligible with ${data.user.rewardEligibility.trustScoreBand} trust status.`
+              : `Next requirement: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing"}.`}
+          </p>
         </div>
         <div className="referral-summary">
           <div className="quest-card__meta">
@@ -531,6 +598,63 @@ export function ProfileSection({ data }: { data: DashboardData }) {
             <span>Still available</span>
             <strong>{data.user.referral.pendingConversionXp}</strong>
           </div>
+        </div>
+        <div className="achievement-list">
+          <article className="achievement-card">
+            <div>
+              <strong>Monthly premium referral</strong>
+              <p>XP reward plus token eligibility progress</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} XP</span>
+              <span>{data.user.referral.rewardPreview.monthlyPremiumReferral.tokenEffect.replaceAll("_", " ")}</span>
+            </div>
+          </article>
+          <article className="achievement-card">
+            <div>
+              <strong>Annual premium referral</strong>
+              <p>High XP, direct token reward, strongest team-growth outcome</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>+{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP</span>
+              <span>
+                {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.amount}
+                {" "}
+                {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.asset}
+              </span>
+            </div>
+          </article>
+        </div>
+        <p className="form-note">
+          {data.user.campaignSource
+            ? `Campaign source detected: ${data.user.campaignSource}. Matching campaign-track quests will surface ahead of general quests.`
+            : "Direct Emorya onboarding. Campaign-track quests will appear when you join a partner activation."}
+        </p>
+      </div>
+      <div className="panel">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Progress gates</p>
+            <h3>Starter path and weekly reward status</h3>
+          </div>
+          <span className="badge">{data.user.weeklyProgress.tierLabel}</span>
+        </div>
+        <div className="achievement-list">
+          <article className="achievement-card">
+            <div>
+              <strong>{data.user.starterPath.complete ? "Starter Path complete" : "Starter Path in progress"}</strong>
+              <p>
+                {Math.round(data.user.starterPath.progress * 100)}% complete.{" "}
+                {data.user.rewardEligibility.eligible
+                  ? "Reward eligibility is live."
+                  : `Next requirement: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing"}.`}
+              </p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{data.user.rewardEligibility.trustScoreBand} trust</span>
+              <span>{data.user.weeklyProgress.xp} weekly XP</span>
+            </div>
+          </article>
         </div>
       </div>
       <div className="panel">

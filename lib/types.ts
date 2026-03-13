@@ -217,14 +217,52 @@ export type UserSnapshot = {
   currentStreak: number;
   nextLevelXp: number;
   tier: SubscriptionTier;
+  journeyState: UserJourneyState;
+  campaignSource: "direct" | "zealy" | "galxe" | "layer3" | null;
   rank: number;
   referralCode: string;
+  starterPath: {
+    complete: boolean;
+    progress: number;
+    steps: Array<{
+      label: string;
+      complete: boolean;
+      detail: string;
+    }>;
+  };
+  rewardEligibility: {
+    eligible: boolean;
+    trustScoreBand: TrustScoreBand;
+    nextRequirement: string | null;
+  };
+  weeklyProgress: {
+    xp: number;
+    tierLabel: string;
+    currentThreshold: number;
+    nextThreshold: number | null;
+    maxThreshold: number;
+    progress: number;
+  };
   referral: {
     rank: number;
     invitedCount: number;
     convertedCount: number;
     rewardXpEarned: number;
     pendingConversionXp: number;
+    rewardPreview: {
+      monthlyPremiumReferral: {
+        xp: number;
+        tokenEffect: TokenEffect;
+      };
+      annualPremiumReferral: {
+        xp: number;
+        tokenEffect: TokenEffect;
+        directTokenReward?: {
+          asset: "EMR" | "EGLD" | "PARTNER";
+          amount: number;
+        };
+      };
+    };
     recentReferrals: Array<{
       displayName: string;
       tier: SubscriptionTier;

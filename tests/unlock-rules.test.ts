@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { createDefaultQuestRuntimeContext } from "../lib/progression-rules.ts";
 import { evaluateUnlockRuleGroup, getUnmetUnlockRules } from "../server/services/evaluate-unlock-rules.ts";
+import { generateUnlockHint } from "../server/services/generate-unlock-hint.ts";
 
 const baseState = {
   userId: "user-1",
@@ -82,4 +83,10 @@ test("evaluateUnlockRuleGroup supports runtime flags through any-rules", () => {
   );
 
   assert.equal(result.unlocked, true);
+});
+
+test("generateUnlockHint explains campaign-source gates clearly", () => {
+  const hint = generateUnlockHint([{ type: "campaign_source", value: "galxe" }]);
+
+  assert.equal(hint, "Available to galxe campaign entrants");
 });

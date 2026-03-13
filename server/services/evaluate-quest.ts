@@ -6,10 +6,10 @@ import type {
   UnlockRuleGroup,
   UserJourneyState,
   UserProgressState,
-} from "@/lib/types";
-import { evaluateUnlockRuleGroup } from "@/server/services/evaluate-unlock-rules";
-import { generateUnlockHint } from "@/server/services/generate-unlock-hint";
-import { projectQuestReward } from "@/server/services/project-quest-reward";
+} from "../../lib/types.ts";
+import { evaluateUnlockRuleGroup } from "./evaluate-unlock-rules.ts";
+import { generateUnlockHint } from "./generate-unlock-hint.ts";
+import { projectQuestReward } from "./project-quest-reward.ts";
 
 export function evaluateQuest({
   id,
