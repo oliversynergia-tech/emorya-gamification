@@ -18,19 +18,78 @@ export function ReviewQueuePanel({
   initialQueue,
   initialHistory,
   isAuthenticated,
+  currentReviewerName,
 }: {
   initialQueue: ReviewQueueItem[];
   initialHistory: ReviewHistoryItem[];
   isAuthenticated: boolean;
+  currentReviewerName?: string | null;
 }) {
   const router = useRouter();
   const [queue, setQueue] = useState(initialQueue);
   const [history] = useState(initialHistory);
   const [recentOutcomes, setRecentOutcomes] = useState<ReviewOutcome[]>([]);
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<"all" | "approved" | "rejected">("all");
+  const [historyTypeFilter, setHistoryTypeFilter] = useState<string>("all");
+  const [historyReviewerFilter, setHistoryReviewerFilter] = useState<"all" | "mine" | "unknown" | string>("all");
+  const [historyQuery, setHistoryQuery] = useState("");
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [moderationNotes, setModerationNotes] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const historyReviewers = Array.from(
+    new Set(
+      history
+        .map((item) => item.reviewerDisplayName)
+        .filter((reviewer): reviewer is string => Boolean(reviewer)),
+    ),
+  );
+  const historyTypes = Array.from(new Set(history.map((item) => item.verificationType)));
+
+  const filteredHistory = history.filter((item) => {
+    if (historyStatusFilter !== "all" && item.status !== historyStatusFilter) {
+      return false;
+    }
+
+    if (historyTypeFilter !== "all" && item.verificationType !== historyTypeFilter) {
+      return false;
+    }
+
+    if (historyReviewerFilter === "mine" && item.reviewerDisplayName !== currentReviewerName) {
+      return false;
+    }
+
+    if (historyReviewerFilter === "unknown" && item.reviewerDisplayName !== null) {
+      return false;
+    }
+
+    if (
+      historyReviewerFilter !== "all" &&
+      historyReviewerFilter !== "mine" &&
+      historyReviewerFilter !== "unknown" &&
+      item.reviewerDisplayName !== historyReviewerFilter
+    ) {
+      return false;
+    }
+
+    const query = historyQuery.trim().toLowerCase();
+
+    if (!query) {
+      return true;
+    }
+
+    return [
+      item.questTitle,
+      item.userDisplayName,
+      item.userEmail ?? "",
+      item.reviewerDisplayName ?? "",
+      String(item.submissionData.contentUrl ?? ""),
+      String(item.submissionData.platform ?? ""),
+      String(item.submissionData.moderationNote ?? ""),
+    ].some((value) => value.toLowerCase().includes(query));
+  });
 
   async function reviewSubmission(item: ReviewQueueItem, action: "approved" | "rejected") {
     setPendingId(item.id);
@@ -142,9 +201,55 @@ export function ReviewQueuePanel({
               <p className="eyebrow">Recent audit trail</p>
               <h3>Reviewed submissions</h3>
             </div>
+            <span className="badge">{filteredHistory.length} shown</span>
+          </div>
+          <div className="review-history__filters">
+            <label className="field">
+              <span>Status</span>
+              <select
+                value={historyStatusFilter}
+                onChange={(event) => setHistoryStatusFilter(event.target.value as "all" | "approved" | "rejected")}
+              >
+                <option value="all">All</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </label>
+            <label className="field">
+              <span>Type</span>
+              <select value={historyTypeFilter} onChange={(event) => setHistoryTypeFilter(event.target.value)}>
+                <option value="all">All</option>
+                {historyTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Reviewer</span>
+              <select value={historyReviewerFilter} onChange={(event) => setHistoryReviewerFilter(event.target.value)}>
+                <option value="all">All</option>
+                {currentReviewerName ? <option value="mine">Reviewed by me</option> : null}
+                <option value="unknown">Unknown reviewer</option>
+                {historyReviewers.map((reviewer) => (
+                  <option key={reviewer} value={reviewer}>
+                    {reviewer}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Search</span>
+              <input
+                value={historyQuery}
+                onChange={(event) => setHistoryQuery(event.target.value)}
+                placeholder="Quest, user, reviewer, URL, note"
+              />
+            </label>
           </div>
           <div className="review-history__list">
-            {history.map((item) => (
+            {filteredHistory.map((item) => (
               <article key={item.id} className="review-history__item">
                 <div className="quest-card__meta">
                   <span>{item.status === "approved" ? "Approved" : "Rejected"}</span>
@@ -162,9 +267,40 @@ export function ReviewQueuePanel({
                 {item.submissionData.moderationNote ? (
                   <p className="form-note">Note: {String(item.submissionData.moderationNote)}</p>
                 ) : null}
+                <button
+                  className="button button--secondary button--small"
+                  type="button"
+                  onClick={() => setExpandedHistoryId((current) => (current === item.id ? null : item.id))}
+                >
+                  {expandedHistoryId === item.id ? "Hide details" : "View details"}
+                </button>
+                {expandedHistoryId === item.id ? (
+                  <div className="review-history__detail">
+                    <div className="info-grid">
+                      <div className="info-card">
+                        <span>User</span>
+                        <strong>{item.userDisplayName}</strong>
+                      </div>
+                      <div className="info-card">
+                        <span>Verification</span>
+                        <strong>{item.verificationType}</strong>
+                      </div>
+                      <div className="info-card">
+                        <span>Reviewed at</span>
+                        <strong>{new Date(item.reviewedAt).toLocaleDateString()}</strong>
+                      </div>
+                      <div className="info-card">
+                        <span>Reviewer</span>
+                        <strong>{item.reviewerDisplayName ?? "Unknown"}</strong>
+                      </div>
+                    </div>
+                    <pre className="review-payload">{JSON.stringify(item.submissionData, null, 2)}</pre>
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>
+          {filteredHistory.length === 0 ? <p className="form-note">No review history matches the current filters.</p> : null}
         </div>
       ) : null}
       {queue.length === 0 ? <p className="form-note">No pending submissions right now.</p> : null}

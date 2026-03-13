@@ -73,6 +73,7 @@ export default async function AdminPage() {
         initialQueue={data.reviewQueue}
         initialHistory={data.reviewHistory}
         isAuthenticated={hasAdminAccess}
+        currentReviewerName={session.user.displayName}
       />
     </SiteShell>
   );
