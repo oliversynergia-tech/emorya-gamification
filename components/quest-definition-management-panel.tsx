@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { QuestDefinitionAdminItem } from "@/lib/types";
@@ -27,6 +27,69 @@ type QuestDefinitionFormState = {
   metadataText: string;
 };
 
+const metadataPresets: Array<{
+  label: string;
+  description: string;
+  metadata: Record<string, unknown>;
+}> = [
+  {
+    label: "Starter preset",
+    description: "Basic onboarding quest with a low-friction track assignment.",
+    metadata: {
+      track: "starter",
+      rewardConfig: {
+        xp: { base: 25, premiumMultiplierEligible: true },
+        tokenEffect: "none",
+      },
+      previewConfig: {
+        label: "Starter unlock",
+      },
+    },
+  },
+  {
+    label: "Referral payout preset",
+    description: "High-value referral milestone with direct-token configuration.",
+    metadata: {
+      track: "referral",
+      rewardConfig: {
+        xp: { base: 300, premiumMultiplierEligible: true },
+        tokenEffect: "direct_token_reward",
+        directTokenReward: {
+          asset: "EMR",
+          amount: 25,
+          requiresWallet: true,
+        },
+      },
+      unlockRules: {
+        all: [{ type: "successful_referrals", value: 1 }],
+      },
+      previewConfig: {
+        label: "Annual referral reward",
+      },
+    },
+  },
+  {
+    label: "Wallet growth preset",
+    description: "xPortal-linked quest with eligibility-progress rewards.",
+    metadata: {
+      track: "wallet",
+      rewardConfig: {
+        xp: { base: 70, premiumMultiplierEligible: true },
+        tokenEffect: "eligibility_progress",
+        tokenEligibility: {
+          progressPoints: 15,
+        },
+      },
+      unlockRules: {
+        all: [{ type: "wallet_linked", value: true }],
+      },
+      previewConfig: {
+        label: "Wallet lane",
+      },
+    },
+  },
+];
+
 const emptyForm: QuestDefinitionFormState = {
   slug: "",
   title: "",
@@ -43,6 +106,21 @@ const emptyForm: QuestDefinitionFormState = {
   metadataText: '{\n  "track": "starter"\n}',
 };
 
+function parseMetadata(metadataText: string) {
+  try {
+    const parsed = JSON.parse(metadataText) as Record<string, unknown>;
+    return {
+      parsed,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      parsed: null,
+      error: error instanceof Error ? error.message : "Metadata must be valid JSON.",
+    };
+  }
+}
+
 export function QuestDefinitionManagementPanel() {
   const router = useRouter();
   const [quests, setQuests] = useState<QuestDefinitionAdminItem[]>([]);
@@ -52,6 +130,34 @@ export function QuestDefinitionManagementPanel() {
   const [pending, setPending] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const metadataState = useMemo(() => parseMetadata(form.metadataText), [form.metadataText]);
+  const duplicateSlug = useMemo(
+    () =>
+      quests.find(
+        (quest) => quest.slug.trim().toLowerCase() === form.slug.trim().toLowerCase() && quest.id !== editingId,
+      ) ?? null,
+    [editingId, form.slug, quests],
+  );
+  const preview = useMemo(() => {
+    const metadata = metadataState.parsed ?? {};
+    const rewardConfig = (metadata.rewardConfig as Record<string, unknown> | undefined) ?? {};
+    const unlockRules = (metadata.unlockRules as { all?: unknown[]; any?: unknown[] } | undefined) ?? {};
+    const previewConfig = (metadata.previewConfig as Record<string, unknown> | undefined) ?? {};
+    const directTokenReward =
+      (rewardConfig.directTokenReward as { asset?: string; amount?: number } | undefined) ?? undefined;
+
+    return {
+      track: typeof metadata.track === "string" ? metadata.track : "unassigned",
+      tokenEffect: typeof rewardConfig.tokenEffect === "string" ? rewardConfig.tokenEffect : "none",
+      previewLabel: typeof previewConfig.label === "string" ? previewConfig.label : null,
+      unlockRuleCount: (unlockRules.all?.length ?? 0) + (unlockRules.any?.length ?? 0),
+      directTokenReward:
+        directTokenReward?.asset && typeof directTokenReward.amount === "number"
+          ? `${directTokenReward.amount} ${directTokenReward.asset}`
+          : null,
+    };
+  }, [metadataState.parsed]);
 
   async function refreshQuestDirectory() {
     setLoading(true);
@@ -104,17 +210,26 @@ export function QuestDefinitionManagementPanel() {
     setForm({ ...emptyForm });
   }
 
+  function applyPreset(metadata: Record<string, unknown>) {
+    setForm((current) => ({
+      ...current,
+      metadataText: JSON.stringify(metadata, null, 2),
+    }));
+  }
+
   async function submit() {
     setPending(editingId ?? "create");
     setMessage(null);
     setError(null);
 
-    let metadata: Record<string, unknown> = {};
+    if (metadataState.error || !metadataState.parsed) {
+      setError(`Metadata JSON is invalid: ${metadataState.error ?? "Invalid JSON."}`);
+      setPending(null);
+      return;
+    }
 
-    try {
-      metadata = JSON.parse(form.metadataText);
-    } catch {
-      setError("Metadata must be valid JSON.");
+    if (duplicateSlug) {
+      setError(`Slug ${form.slug.trim()} is already used by ${duplicateSlug.title}.`);
       setPending(null);
       return;
     }
@@ -132,7 +247,7 @@ export function QuestDefinitionManagementPanel() {
       xpReward: Number(form.xpReward),
       isPremiumPreview: form.isPremiumPreview,
       isActive: form.isActive,
-      metadata,
+      metadata: metadataState.parsed,
     };
 
     try {
@@ -198,6 +313,7 @@ export function QuestDefinitionManagementPanel() {
           <p className="eyebrow">Quest definition CRUD</p>
           <h3>Create and edit live quest definitions</h3>
         </div>
+        <span className="badge">{editingId ? "Editing" : "New quest"}</span>
       </div>
       <div className="profile-grid">
         <label className="field">
@@ -271,16 +387,62 @@ export function QuestDefinitionManagementPanel() {
           </select>
         </label>
       </div>
+      {duplicateSlug ? (
+        <p className="status status--error">
+          Slug collision: this would conflict with {duplicateSlug.title}.
+        </p>
+      ) : null}
       <label className="field">
         <span>Description</span>
         <textarea rows={3} value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} />
       </label>
+      <div className="achievement-list">
+        {metadataPresets.map((preset) => (
+          <article key={preset.label} className="achievement-card">
+            <div>
+              <strong>{preset.label}</strong>
+              <p>{preset.description}</p>
+            </div>
+            <button className="button button--secondary button--small" type="button" onClick={() => applyPreset(preset.metadata)}>
+              Apply preset
+            </button>
+          </article>
+        ))}
+      </div>
       <label className="field">
         <span>Metadata JSON</span>
         <textarea rows={12} value={form.metadataText} onChange={(event) => setForm((current) => ({ ...current, metadataText: event.target.value }))} />
       </label>
+      <div className="achievement-list">
+        <article className="achievement-card">
+          <div>
+            <strong>Metadata validation</strong>
+            <p>
+              {metadataState.error
+                ? `Invalid JSON: ${metadataState.error}`
+                : "JSON parses correctly. Reward and unlock preview is ready below."}
+            </p>
+          </div>
+          <span className={metadataState.error ? "badge" : "badge badge--pink"}>
+            {metadataState.error ? "Needs fix" : "Valid"}
+          </span>
+        </article>
+        <article className="achievement-card">
+          <div>
+            <strong>Reward preview</strong>
+            <p>
+              Track: {preview.track}. Token effect: {preview.tokenEffect}. Unlock rules: {preview.unlockRuleCount}.
+              {preview.previewLabel ? ` Preview label: ${preview.previewLabel}.` : ""}
+            </p>
+          </div>
+          <div className="achievement-card__side">
+            <span>{form.xpReward} XP</span>
+            <span>{preview.directTokenReward ?? "No direct token reward"}</span>
+          </div>
+        </article>
+      </div>
       <div className="review-bulk-actions">
-        <button className="button button--primary button--small" type="button" disabled={pending !== null} onClick={submit}>
+        <button className="button button--primary button--small" type="button" disabled={pending !== null || Boolean(metadataState.error) || Boolean(duplicateSlug)} onClick={submit}>
           {pending === "create" || (editingId && pending === editingId) ? "Saving..." : editingId ? "Update quest" : "Create quest"}
         </button>
         <button className="button button--secondary button--small" type="button" disabled={pending !== null} onClick={resetForm}>

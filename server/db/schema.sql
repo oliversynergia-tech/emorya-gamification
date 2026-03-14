@@ -187,7 +187,10 @@ CREATE TABLE token_redemptions (
   source TEXT NOT NULL DEFAULT 'xp-conversion',
   metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  settled_at TIMESTAMPTZ
+  settled_at TIMESTAMPTZ,
+  settled_by UUID REFERENCES users(id),
+  receipt_reference TEXT,
+  settlement_note TEXT
 );
 
 CREATE TABLE moderation_notification_deliveries (

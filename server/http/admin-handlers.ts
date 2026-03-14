@@ -5,6 +5,10 @@ type AdminDirectoryResponse = {
 
 type QuestDefinitionInput = Record<string, unknown>;
 type EconomySettingsInput = Record<string, unknown>;
+type TokenSettlementInput = {
+  receiptReference?: string;
+  settlementNote?: string | null;
+};
 
 function getErrorStatus(message: string) {
   return message.includes("signed in")
@@ -208,6 +212,48 @@ export async function handleModerationNotificationAcknowledgeRequest(
 
     return {
       status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleTokenSettlementRequest(
+  {
+    redemptionId,
+    body,
+  }: {
+    redemptionId: string;
+    body: TokenSettlementInput;
+  },
+  settleRedemption: (input: {
+    redemptionId: string;
+    receiptReference: string;
+    settlementNote?: string | null;
+  }) => Promise<unknown>,
+) {
+  if (!redemptionId || !body.receiptReference) {
+    return {
+      status: 400,
+      body: { ok: false, error: "redemptionId and receiptReference are required." },
+    };
+  }
+
+  try {
+    const queue = await settleRedemption({
+      redemptionId,
+      receiptReference: body.receiptReference,
+      settlementNote: body.settlementNote,
+    });
+
+    return {
+      status: 200,
+      body: { ok: true, queue },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to settle token redemption.";
+
+    return {
+      status: message.includes("not found") ? 404 : message.includes("requires") ? 400 : getErrorStatus(message),
       body: { ok: false, error: message },
     };
   }

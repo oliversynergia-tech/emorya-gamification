@@ -14,6 +14,7 @@ import {
   handleQuestDefinitionUpdateRequest,
   handleReviewerRoleUpdateRequest,
   handleRoleDirectoryRequest,
+  handleTokenSettlementRequest,
 } from "../server/http/admin-handlers.ts";
 
 test("handleAdminGrantRequest rejects missing fields", async () => {
@@ -234,6 +235,48 @@ test("handleModerationNotificationAcknowledgeRequest returns refreshed history",
   assert.deepEqual(result.body, {
     ok: true,
     history: [{ id: "delivery-1", eventStatus: "acknowledged" }],
+  });
+});
+
+test("handleTokenSettlementRequest validates required fields", async () => {
+  const result = await handleTokenSettlementRequest(
+    {
+      redemptionId: "",
+      body: {},
+    },
+    async () => {
+      throw new Error("should not be called");
+    },
+  );
+
+  assert.equal(result.status, 400);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "redemptionId and receiptReference are required.",
+  });
+});
+
+test("handleTokenSettlementRequest returns refreshed queue on success", async () => {
+  const result = await handleTokenSettlementRequest(
+    {
+      redemptionId: "redemption-1",
+      body: {
+        receiptReference: "EMR-PAYOUT-123",
+        settlementNote: "Paid manually",
+      },
+    },
+    async ({ redemptionId, receiptReference, settlementNote }) => {
+      assert.equal(redemptionId, "redemption-1");
+      assert.equal(receiptReference, "EMR-PAYOUT-123");
+      assert.equal(settlementNote, "Paid manually");
+      return [];
+    },
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    queue: [],
   });
 });
 

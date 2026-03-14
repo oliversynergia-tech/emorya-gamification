@@ -265,12 +265,17 @@ export type UserSnapshot = {
       amount: number;
     }>;
     redemptionHistory: Array<{
+      id: string;
       asset: TokenAsset;
       tokenAmount: number;
       eligibilityPointsSpent: number;
       status: "claimed" | "settled";
       source: string;
       createdAt: string;
+      settledAt: string | null;
+      receiptReference: string | null;
+      settlementNote: string | null;
+      settledByDisplayName: string | null;
     }>;
     nextStep: string;
   };
@@ -422,6 +427,18 @@ export type AdminOverviewData = {
   }>;
   economySettings: EconomySettings;
   economySettingsAudit: EconomySettingsAuditEntry[];
+  tokenSettlementQueue: Array<{
+    id: string;
+    userDisplayName: string;
+    userEmail: string | null;
+    asset: TokenAsset;
+    tokenAmount: number;
+    eligibilityPointsSpent: number;
+    source: string;
+    createdAt: string;
+    receiptReference: string | null;
+    settlementNote: string | null;
+  }>;
   reviewInsights: {
     byVerificationType: Array<{
       verificationType: VerificationType;
@@ -687,6 +704,21 @@ export type QuestDefinitionAdminItem = {
   metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+};
+
+export type TokenSettlementItem = {
+  id: string;
+  userDisplayName: string;
+  userEmail: string | null;
+  asset: TokenAsset;
+  tokenAmount: number;
+  eligibilityPointsSpent: number;
+  source: string;
+  createdAt: string;
+  settledAt: string | null;
+  receiptReference: string | null;
+  settlementNote: string | null;
+  settledByDisplayName: string | null;
 };
 
 export type WalletQuestResult = {

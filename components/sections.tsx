@@ -369,11 +369,16 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                 <article key={`${entry.asset}-${entry.createdAt}-${entry.tokenAmount}`} className="achievement-card">
                   <div>
                     <strong>{entry.status === "settled" ? "Settled redemption" : "Claimed redemption"}</strong>
-                    <p>{entry.eligibilityPointsSpent} eligibility points spent via {entry.source}.</p>
+                    <p>
+                      {entry.eligibilityPointsSpent} eligibility points spent via {entry.source}.
+                      {entry.receiptReference ? ` Receipt: ${entry.receiptReference}.` : ""}
+                      {entry.settlementNote ? ` ${entry.settlementNote}` : ""}
+                    </p>
                   </div>
                   <div className="achievement-card__side">
                     <span>{entry.tokenAmount} {entry.asset}</span>
                     <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
+                    <span>{entry.status === "settled" && entry.settledAt ? `Settled ${new Date(entry.settledAt).toLocaleDateString()}` : "Awaiting payout"}</span>
                   </div>
                 </article>
               ))}
@@ -819,6 +824,21 @@ export function ProfileSection({ data }: { data: DashboardData }) {
               <span>{data.user.tokenProgram.settledBalance} settled</span>
             </div>
           </article>
+          {data.user.tokenProgram.redemptionHistory.slice(0, 2).map((entry) => (
+            <article key={entry.id} className="achievement-card">
+              <div>
+                <strong>{entry.status === "settled" ? "Latest settled payout" : "Latest claimed payout"}</strong>
+                <p>
+                  {entry.tokenAmount} {entry.asset} from {entry.source}.
+                  {entry.receiptReference ? ` Receipt ${entry.receiptReference}.` : ""}
+                </p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
+                <span>{entry.status === "settled" && entry.settledAt ? "Receipt logged" : "Awaiting payout"}</span>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
       <div className="panel">

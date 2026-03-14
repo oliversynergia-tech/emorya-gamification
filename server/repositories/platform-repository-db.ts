@@ -56,6 +56,7 @@ import {
   getReviewerWorkload,
 } from "@/server/repositories/quest-repository";
 import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/referral-repository";
+import { listPendingTokenSettlements } from "@/server/repositories/token-redemption-repository";
 import { buildDashboardQuestBoard } from "@/server/services/build-dashboard-quest-board";
 import { buildModerationNotifications } from "@/server/services/moderation-notifications";
 import { syncAchievementProgressForUser } from "@/server/services/progression-service";
@@ -128,12 +129,17 @@ type ApprovedRewardQuestRow = QueryResultRow & {
 };
 
 type TokenRedemptionRow = QueryResultRow & {
+  id: string;
   asset: "EMR" | "EGLD" | "PARTNER";
   eligibility_points_spent: number | string;
   token_amount: number | string;
   status: "claimed" | "settled";
   source: string;
   created_at: string;
+  settled_at: string | null;
+  receipt_reference: string | null;
+  settlement_note: string | null;
+  settled_by_display_name: string | null;
 };
 
 export function isDatabaseEnabled() {
@@ -270,10 +276,14 @@ async function getUserSnapshot(
       [user.id],
     ),
     runQuery<TokenRedemptionRow>(
-      `SELECT asset, eligibility_points_spent, token_amount, status, source, created_at
-       FROM token_redemptions
-       WHERE user_id = $1
-       ORDER BY created_at DESC
+      `SELECT redemptions.id, redemptions.asset, redemptions.eligibility_points_spent, redemptions.token_amount,
+              redemptions.status, redemptions.source, redemptions.created_at, redemptions.settled_at,
+              redemptions.receipt_reference, redemptions.settlement_note,
+              settled_by_users.display_name AS settled_by_display_name
+       FROM token_redemptions redemptions
+       LEFT JOIN users settled_by_users ON settled_by_users.id = redemptions.settled_by
+       WHERE redemptions.user_id = $1
+       ORDER BY redemptions.created_at DESC
        LIMIT 8`,
       [user.id],
     ),
@@ -322,12 +332,17 @@ async function getUserSnapshot(
     settings: economySettings,
   });
   const redemptionHistory = redemptionHistoryResult.rows.map((row) => ({
+    id: row.id,
     asset: row.asset,
     tokenAmount: Number(row.token_amount),
     eligibilityPointsSpent: Number(row.eligibility_points_spent),
     status: row.status,
     source: row.source,
     createdAt: row.created_at,
+    settledAt: row.settled_at,
+    receiptReference: row.receipt_reference,
+    settlementNote: row.settlement_note,
+    settledByDisplayName: row.settled_by_display_name,
   }));
   const claimedBalance = redemptionHistory.reduce(
     (sum, entry) => sum + (entry.status === "claimed" ? entry.tokenAmount : 0),
@@ -660,7 +675,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, tokenSettlementQueue] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -685,6 +700,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     getReviewerTypeMatrix(),
     getActiveEconomySettings(),
     listEconomySettingsAudit(),
+    listPendingTokenSettlements(),
   ]);
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -716,6 +732,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     moderationNotificationHistory,
     economySettings,
     economySettingsAudit,
+    tokenSettlementQueue,
     reviewInsights: {
       byVerificationType: reviewBreakdownByVerificationType,
       reviewerTypeMatrix,

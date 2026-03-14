@@ -6,6 +6,7 @@ import { AdminSection } from "@/components/sections";
 import { RoleManagementPanel } from "@/components/role-management-panel";
 import { ReviewQueuePanel } from "@/components/review-queue-panel";
 import { SiteShell } from "@/components/site-shell";
+import { TokenSettlementPanel } from "@/components/token-settlement-panel";
 import { isAdminUser, isSuperAdminUser } from "@/server/auth/admin";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadAdminOverview } from "@/server/services/platform-overview";
@@ -80,6 +81,7 @@ export default async function AdminPage() {
         initialAudit={data.economySettingsAudit}
         canManage={hasSuperAdminAccess}
       />
+      <TokenSettlementPanel initialQueue={data.tokenSettlementQueue} />
       <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
       <QuestDefinitionToolingPanel />
       <QuestDefinitionManagementPanel />

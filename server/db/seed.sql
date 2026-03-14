@@ -702,7 +702,10 @@ INSERT INTO token_redemptions (
   source,
   metadata,
   created_at,
-  settled_at
+  settled_at,
+  settled_by,
+  receipt_reference,
+  settlement_note
 ) VALUES
   (
     '62f3ce2a-5d0d-4c32-b1a0-1bdf40ba22b2',
@@ -714,7 +717,10 @@ INSERT INTO token_redemptions (
     'xp-conversion',
     '{"note":"Weekly reward conversion","campaign":"direct"}'::jsonb,
     NOW() - INTERVAL '10 days',
-    NOW() - INTERVAL '9 days'
+    NOW() - INTERVAL '9 days',
+    '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
+    'EMR-PAYOUT-240305',
+    'Paid manually during weekly reward reconciliation.'
   ),
   (
     '54f9ae95-60c6-44b8-81b2-a3917a65e145',
@@ -726,6 +732,9 @@ INSERT INTO token_redemptions (
     'xp-conversion',
     '{"note":"Awaiting payout","campaign":"galxe"}'::jsonb,
     NOW() - INTERVAL '2 days',
+    NULL,
+    NULL,
+    NULL,
     NULL
   )
 ON CONFLICT (id) DO NOTHING;

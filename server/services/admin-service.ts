@@ -24,6 +24,7 @@ import {
   listQuestDefinitionsForAdmin,
   updateQuestDefinitionForAdmin,
 } from "@/server/repositories/quest-definition-admin-repository";
+import { listPendingTokenSettlements, settleTokenRedemption } from "@/server/repositories/token-redemption-repository";
 import type { QuestDefinitionAdminItem } from "@/lib/types";
 import type { EconomySettings } from "@/lib/types";
 
@@ -255,6 +256,47 @@ export async function acknowledgeModerationNotification(deliveryId: string) {
     deliveryId,
     acknowledgedBy: currentUser.id,
   });
+}
+
+export async function getTokenSettlementQueue() {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  return listPendingTokenSettlements();
+}
+
+export async function settlePendingTokenRedemption({
+  redemptionId,
+  receiptReference,
+  settlementNote,
+}: {
+  redemptionId: string;
+  receiptReference: string;
+  settlementNote?: string | null;
+}) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  if (!currentUser) {
+    throw new Error("You must be signed in to access admin controls.");
+  }
+
+  if (!receiptReference.trim()) {
+    throw new Error("Settlement requires a receiptReference.");
+  }
+
+  const settled = await settleTokenRedemption({
+    redemptionId,
+    settledBy: currentUser.id,
+    receiptReference: receiptReference.trim(),
+    settlementNote: settlementNote?.trim() ? settlementNote.trim() : null,
+  });
+
+  if (!settled) {
+    throw new Error("Token redemption not found or already settled.");
+  }
+
+  return listPendingTokenSettlements();
 }
 
 function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id" | "updatedAt">>) {
