@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { defaultEconomySettings } from "../lib/economy-settings.ts";
 import { calculateQuestRewardTransition } from "../server/services/progression-rules.ts";
 
 test("calculateQuestRewardTransition applies premium multipliers, levels up, and advances streaks", () => {
@@ -46,5 +47,30 @@ test("calculateQuestRewardTransition remains idempotent when approval was alread
     level: 4,
     currentStreak: 5,
     longestStreak: 5,
+  });
+});
+
+test("calculateQuestRewardTransition applies campaign-source quest XP bonuses", () => {
+  const result = calculateQuestRewardTransition({
+    subscriptionTier: "free",
+    questXpReward: 100,
+    previousAwardedXp: 0,
+    totalXp: 0,
+    level: 1,
+    currentStreak: 0,
+    longestStreak: 0,
+    shouldBeApproved: true,
+    alreadyApprovedToday: false,
+    campaignSource: "zealy",
+    settings: defaultEconomySettings,
+  });
+
+  assert.deepEqual(result, {
+    xpAwarded: 105,
+    deltaXp: 105,
+    totalXp: 105,
+    level: 2,
+    currentStreak: 1,
+    longestStreak: 1,
   });
 });

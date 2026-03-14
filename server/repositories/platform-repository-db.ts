@@ -1,6 +1,12 @@
 import type { QueryResultRow } from "pg";
 
-import { defaultEconomySettings, getXpTierMultiplier } from "@/lib/economy-settings";
+import {
+  applyDirectTokenRewardBonus,
+  applyEligibilityPointsMultiplier,
+  defaultEconomySettings,
+  getCampaignEconomyOverride,
+  getXpTierMultiplier,
+} from "@/lib/economy-settings";
 import {
   getModerationAlertChannelConfig,
   getQueueAlertThresholds,
@@ -310,9 +316,14 @@ async function getUserSnapshot(
       metadata: quest.metadata,
     });
   });
-  const eligibilityPoints = rewardSummaries.reduce(
+  const baseEligibilityPoints = rewardSummaries.reduce(
     (sum, reward) => sum + (reward.tokenEligibility?.progressPoints ?? 0),
     0,
+  );
+  const eligibilityPoints = applyEligibilityPointsMultiplier(
+    baseEligibilityPoints,
+    economySettings,
+    progressState.campaignSource,
   );
   const scheduledDirectRewardMap = new Map<"EMR" | "EGLD" | "PARTNER", number>();
 
@@ -323,7 +334,12 @@ async function getUserSnapshot(
 
     scheduledDirectRewardMap.set(
       reward.directTokenReward.asset,
-      (scheduledDirectRewardMap.get(reward.directTokenReward.asset) ?? 0) + reward.directTokenReward.amount,
+      (scheduledDirectRewardMap.get(reward.directTokenReward.asset) ?? 0) +
+        applyDirectTokenRewardBonus(
+          reward.directTokenReward.amount,
+          economySettings,
+          progressState.campaignSource,
+        ),
     );
   }
 
@@ -332,6 +348,7 @@ async function getUserSnapshot(
     subscriptionTier: user.subscription_tier,
     rewardEligible: progressState.rewardEligible,
     walletLinked: progressState.walletLinked,
+    campaignSource: progressState.campaignSource,
     settings: economySettings,
   });
   const redemptionHistory = redemptionHistoryResult.rows.map((row) => ({
@@ -363,13 +380,56 @@ async function getUserSnapshot(
     subscriptionTier: "annual",
     campaignSource: progressState.campaignSource,
   });
+  const campaignEconomy = getCampaignEconomyOverride(economySettings, progressState.campaignSource);
+  const tokenNotifications: UserSnapshot["tokenProgram"]["notifications"] = [];
+  const latestClaimedRedemption = redemptionHistory.find((entry) => entry.status === "claimed");
+  const latestSettledRedemption = redemptionHistory.find((entry) => entry.status === "settled");
+
+  if (latestClaimedRedemption) {
+    tokenNotifications.push({
+      id: `claimed-${latestClaimedRedemption.id}`,
+      tone: "warning",
+      title: "Claimed payout awaiting settlement",
+      detail: `${latestClaimedRedemption.tokenAmount} ${latestClaimedRedemption.asset} from ${latestClaimedRedemption.source} is reserved and waiting for receipt-confirmed payout.`,
+    });
+  }
+
+  if (latestSettledRedemption) {
+    tokenNotifications.push({
+      id: `settled-${latestSettledRedemption.id}`,
+      tone: "success",
+      title: "Recent payout settled",
+      detail: `${latestSettledRedemption.tokenAmount} ${latestSettledRedemption.asset} settled${latestSettledRedemption.receiptReference ? ` with receipt ${latestSettledRedemption.receiptReference}` : ""}.`,
+    });
+  }
+
+  if (scheduledDirectRewardMap.size > 0) {
+    const scheduledSummary = Array.from(scheduledDirectRewardMap.entries())
+      .map(([asset, amount]) => `${amount} ${asset}`)
+      .join(", ");
+    tokenNotifications.push({
+      id: "scheduled-direct-reward",
+      tone: "info",
+      title: "Direct reward scheduled",
+      detail: `${scheduledSummary} is lined up through the active direct-reward path once the matching campaign or settlement step completes.`,
+    });
+  }
+
+  if (progressState.campaignSource) {
+    tokenNotifications.push({
+      id: `campaign-override-${progressState.campaignSource}`,
+      tone: "info",
+      title: `${progressState.campaignSource} reward preset active`,
+      detail: `This lane adds +${campaignEconomy.questXpMultiplierBonus.toFixed(2)}x quest XP, ${(campaignEconomy.eligibilityPointsMultiplierBonus * 100).toFixed(0)}% extra eligibility-point growth, ${(campaignEconomy.tokenYieldMultiplierBonus * 100).toFixed(0)}% token-yield lift, and ${campaignEconomy.minimumEligibilityPointsOffset} points on the redemption threshold.`,
+    });
+  }
 
   return {
     displayName: user.display_name,
     level: user.level,
     totalXp: user.total_xp,
     currentStreak: user.current_streak,
-    xpMultiplier: getXpTierMultiplier(economySettings, user.subscription_tier),
+    xpMultiplier: getXpTierMultiplier(economySettings, user.subscription_tier, progressState.campaignSource),
     nextLevelXp,
     tier: user.subscription_tier,
     journeyState,
@@ -407,6 +467,7 @@ async function getUserSnapshot(
             : progressState.walletLinked
             ? `Reach ${redemptionProjection.minimumPoints} eligibility points to unlock your first redemption.`
             : "Connect xPortal to unlock token redemption.",
+      notifications: tokenNotifications.slice(0, 4),
     },
     referral: {
       rank: referralRank,

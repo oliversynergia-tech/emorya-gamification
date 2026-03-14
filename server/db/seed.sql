@@ -821,10 +821,10 @@ INSERT INTO economy_settings (
   300,
   25.0000,
   '{
-    "direct": {"signupBonusXp": 0, "monthlyConversionBonusXp": 0, "annualConversionBonusXp": 0, "annualDirectTokenBonus": 0},
-    "zealy": {"signupBonusXp": 10, "monthlyConversionBonusXp": 20, "annualConversionBonusXp": 40, "annualDirectTokenBonus": 5},
-    "galxe": {"signupBonusXp": 5, "monthlyConversionBonusXp": 30, "annualConversionBonusXp": 55, "annualDirectTokenBonus": 7},
-    "layer3": {"signupBonusXp": 15, "monthlyConversionBonusXp": 25, "annualConversionBonusXp": 70, "annualDirectTokenBonus": 10}
+    "direct": {"signupBonusXp": 0, "monthlyConversionBonusXp": 0, "annualConversionBonusXp": 0, "annualDirectTokenBonus": 0, "questXpMultiplierBonus": 0, "eligibilityPointsMultiplierBonus": 0, "tokenYieldMultiplierBonus": 0, "minimumEligibilityPointsOffset": 0, "directTokenRewardBonus": 0},
+    "zealy": {"signupBonusXp": 10, "monthlyConversionBonusXp": 20, "annualConversionBonusXp": 40, "annualDirectTokenBonus": 5, "questXpMultiplierBonus": 0.05, "eligibilityPointsMultiplierBonus": 0.10, "tokenYieldMultiplierBonus": 0.05, "minimumEligibilityPointsOffset": -10, "directTokenRewardBonus": 1},
+    "galxe": {"signupBonusXp": 5, "monthlyConversionBonusXp": 30, "annualConversionBonusXp": 55, "annualDirectTokenBonus": 7, "questXpMultiplierBonus": 0.03, "eligibilityPointsMultiplierBonus": 0.12, "tokenYieldMultiplierBonus": 0.08, "minimumEligibilityPointsOffset": -5, "directTokenRewardBonus": 2},
+    "layer3": {"signupBonusXp": 15, "monthlyConversionBonusXp": 25, "annualConversionBonusXp": 70, "annualDirectTokenBonus": 10, "questXpMultiplierBonus": 0.08, "eligibilityPointsMultiplierBonus": 0.15, "tokenYieldMultiplierBonus": 0.10, "minimumEligibilityPointsOffset": -15, "directTokenRewardBonus": 2}
   }'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET

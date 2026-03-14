@@ -815,6 +815,18 @@ a {
   border-color: rgba(223, 182, 255, 0.18);
 }
 
+.achievement-card--notification-info {
+  border-color: rgba(223, 182, 255, 0.28);
+}
+
+.achievement-card--notification-success {
+  border-color: rgba(240, 214, 160, 0.34);
+}
+
+.achievement-card--notification-warning {
+  border-color: rgba(240, 80, 158, 0.34);
+}
+
 .achievement-card__side {
   min-width: 110px;
   text-align: right;

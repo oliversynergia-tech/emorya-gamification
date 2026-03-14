@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createDefaultQuestRuntimeContext, projectTokenRedemption } from "../lib/progression-rules.ts";
+import { defaultEconomySettings } from "../lib/economy-settings.ts";
 import { projectQuestReward } from "../server/services/project-quest-reward.ts";
 
 test("projectQuestReward applies the rules-engine premium multiplier", () => {
@@ -66,6 +67,38 @@ test("projectQuestReward only projects direct token payouts when wallet requirem
   });
 });
 
+test("projectQuestReward applies campaign-source XP and direct-token bonuses", () => {
+  const result = projectQuestReward({
+    track: "campaign",
+    rewardConfig: {
+      xp: {
+        base: 100,
+        premiumMultiplierEligible: true,
+      },
+      tokenEffect: "direct_token_reward",
+      directTokenReward: {
+        asset: "EMR",
+        amount: 10,
+        requiresWallet: true,
+      },
+    },
+    subscriptionTier: "free",
+    runtimeContext: createDefaultQuestRuntimeContext(),
+    walletLinked: true,
+    campaignSource: "layer3",
+    settings: defaultEconomySettings,
+  });
+
+  assert.deepEqual(result, {
+    xp: 108,
+    tokenEffect: "direct_token_reward",
+    directTokenReward: {
+      asset: "EMR",
+      amount: 12,
+    },
+  });
+});
+
 test("projectTokenRedemption remains locked until reward eligibility and wallet conditions are met", () => {
   const result = projectTokenRedemption({
     eligibilityPoints: 140,
@@ -124,6 +157,7 @@ test("projectTokenRedemption can unlock through active economy settings", () => 
       referralMonthlyConversionBaseXp: 150,
       referralAnnualConversionBaseXp: 300,
       annualReferralDirectTokenAmount: 25,
+      campaignOverrides: defaultEconomySettings.campaignOverrides,
       updatedAt: "2026-03-14T00:00:00.000Z",
     },
   });
@@ -134,6 +168,29 @@ test("projectTokenRedemption can unlock through active economy settings", () => 
     projectedRedemptionAmount: 13,
     nextRedemptionPoints: null,
     tierMultiplier: 1.3,
+    status: "redeemable",
+  });
+});
+
+test("projectTokenRedemption applies campaign-source yield and threshold overrides", () => {
+  const result = projectTokenRedemption({
+    eligibilityPoints: 200,
+    subscriptionTier: "monthly",
+    rewardEligible: true,
+    walletLinked: true,
+    campaignSource: "zealy",
+    settings: {
+      ...defaultEconomySettings,
+      redemptionEnabled: true,
+    },
+  });
+
+  assert.deepEqual(result, {
+    asset: "EMR",
+    minimumPoints: 90,
+    projectedRedemptionAmount: 12,
+    nextRedemptionPoints: null,
+    tierMultiplier: 1.2,
     status: "redeemable",
   });
 });

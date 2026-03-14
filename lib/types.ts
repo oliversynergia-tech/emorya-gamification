@@ -1,6 +1,7 @@
 export type SubscriptionTier = "free" | "monthly" | "annual";
 export type AppRole = "super_admin" | "admin" | "reviewer";
 export type TokenAsset = "EMR" | "EGLD" | "PARTNER";
+export type CampaignSource = "direct" | "zealy" | "galxe" | "layer3";
 export type QuestTrack =
   | "starter"
   | "daily"
@@ -224,7 +225,7 @@ export type UserSnapshot = {
   nextLevelXp: number;
   tier: SubscriptionTier;
   journeyState: UserJourneyState;
-  campaignSource: "direct" | "zealy" | "galxe" | "layer3" | null;
+  campaignSource: CampaignSource | null;
   rank: number;
   referralCode: string;
   starterPath: {
@@ -278,6 +279,12 @@ export type UserSnapshot = {
       settledByDisplayName: string | null;
     }>;
     nextStep: string;
+    notifications: Array<{
+      id: string;
+      tone: "info" | "success" | "warning";
+      title: string;
+      detail: string;
+    }>;
   };
   referral: {
     rank: number;
@@ -299,7 +306,7 @@ export type UserSnapshot = {
         };
       };
       sourceBonuses: Array<{
-        source: "direct" | "zealy" | "galxe" | "layer3";
+        source: CampaignSource;
         label: string;
         signupXp: number;
         monthlyPremiumXp: number;
@@ -315,7 +322,7 @@ export type UserSnapshot = {
       tier: SubscriptionTier;
       status: "joined" | "converted";
       joinedAt: string;
-      source?: "direct" | "zealy" | "galxe" | "layer3" | null;
+      source?: CampaignSource | null;
     }>;
   };
   connectedAccounts: Array<{
@@ -554,11 +561,16 @@ export type EconomySettings = {
   referralMonthlyConversionBaseXp: number;
   referralAnnualConversionBaseXp: number;
   annualReferralDirectTokenAmount: number;
-  campaignOverrides: Record<"direct" | "zealy" | "galxe" | "layer3", {
+  campaignOverrides: Record<CampaignSource, {
     signupBonusXp: number;
     monthlyConversionBonusXp: number;
     annualConversionBonusXp: number;
     annualDirectTokenBonus: number;
+    questXpMultiplierBonus: number;
+    eligibilityPointsMultiplierBonus: number;
+    tokenYieldMultiplierBonus: number;
+    minimumEligibilityPointsOffset: number;
+    directTokenRewardBonus: number;
   }>;
   updatedAt: string;
 };
@@ -609,7 +621,7 @@ export type UserProgressState = {
   completedQuestSlugs: string[];
   ambassadorCandidate: boolean;
   ambassadorActive: boolean;
-  campaignSource: "direct" | "zealy" | "galxe" | "layer3" | null;
+  campaignSource: CampaignSource | null;
 };
 
 export type QuestRuntimeContext = {

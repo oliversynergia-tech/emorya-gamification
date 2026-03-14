@@ -458,6 +458,33 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             </div>
           ) : null}
         </div>
+        {data.user.tokenProgram.notifications.length > 0 ? (
+          <div className="panel panel--glass">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Payout notifications</p>
+                <h3>Claimed, settled, and scheduled reward events</h3>
+              </div>
+              <span className="badge">{data.user.tokenProgram.notifications.length} live</span>
+            </div>
+            <div className="achievement-list">
+              {data.user.tokenProgram.notifications.map((notification) => (
+                <article
+                  key={notification.id}
+                  className={`achievement-card achievement-card--notification achievement-card--notification-${notification.tone}`}
+                >
+                  <div>
+                    <strong>{notification.title}</strong>
+                    <p>{notification.detail}</p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{notification.tone}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>
@@ -1077,6 +1104,20 @@ export function ProfileSection({ data }: { data: DashboardData }) {
               <div className="achievement-card__side">
                 <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
                 <span>{entry.status === "settled" && entry.settledAt ? "Receipt logged" : "Awaiting payout"}</span>
+              </div>
+            </article>
+          ))}
+          {data.user.tokenProgram.notifications.map((notification) => (
+            <article
+              key={notification.id}
+              className={`achievement-card achievement-card--notification achievement-card--notification-${notification.tone}`}
+            >
+              <div>
+                <strong>{notification.title}</strong>
+                <p>{notification.detail}</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{notification.tone}</span>
               </div>
             </article>
           ))}

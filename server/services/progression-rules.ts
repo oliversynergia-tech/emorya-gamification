@@ -1,6 +1,6 @@
 import { defaultEconomySettings, getXpTierMultiplier } from "../../lib/economy-settings.ts";
 import { getLevelProgress } from "../../lib/progression.ts";
-import type { EconomySettings, SubscriptionTier } from "../../lib/types.ts";
+import type { CampaignSource, EconomySettings, SubscriptionTier } from "../../lib/types.ts";
 
 export function calculateQuestRewardTransition({
   subscriptionTier,
@@ -12,6 +12,7 @@ export function calculateQuestRewardTransition({
   longestStreak,
   shouldBeApproved,
   alreadyApprovedToday,
+  campaignSource,
   settings = defaultEconomySettings,
 }: {
   subscriptionTier: SubscriptionTier;
@@ -23,10 +24,11 @@ export function calculateQuestRewardTransition({
   longestStreak: number;
   shouldBeApproved: boolean;
   alreadyApprovedToday: boolean;
+  campaignSource?: CampaignSource | null;
   settings?: EconomySettings;
 }) {
   const xpAwarded = shouldBeApproved
-    ? Math.round(questXpReward * getXpTierMultiplier(settings, subscriptionTier))
+    ? Math.round(questXpReward * getXpTierMultiplier(settings, subscriptionTier, campaignSource))
     : 0;
   const deltaXp = xpAwarded - previousAwardedXp;
   const nextTotalXp = Math.max(totalXp + deltaXp, 0);

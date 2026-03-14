@@ -31,6 +31,11 @@ type EconomySettingsRow = QueryResultRow & {
     monthlyConversionBonusXp?: number;
     annualConversionBonusXp?: number;
     annualDirectTokenBonus?: number;
+    questXpMultiplierBonus?: number;
+    eligibilityPointsMultiplierBonus?: number;
+    tokenYieldMultiplierBonus?: number;
+    minimumEligibilityPointsOffset?: number;
+    directTokenRewardBonus?: number;
   }>;
   updated_at: string;
 };

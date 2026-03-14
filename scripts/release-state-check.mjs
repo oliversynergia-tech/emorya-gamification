@@ -29,6 +29,11 @@ function validateOverrideObject(source, value, errors) {
     "monthlyConversionBonusXp",
     "annualConversionBonusXp",
     "annualDirectTokenBonus",
+    "questXpMultiplierBonus",
+    "eligibilityPointsMultiplierBonus",
+    "tokenYieldMultiplierBonus",
+    "minimumEligibilityPointsOffset",
+    "directTokenRewardBonus",
   ]) {
     if (!isNumber(value[key])) {
       errors.push(`campaignOverrides.${source}.${key} must be a number.`);

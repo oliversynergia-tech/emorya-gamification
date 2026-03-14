@@ -52,7 +52,16 @@ export function EconomySettingsPanel({
 
   function updateCampaignOverride(
     source: CampaignOverrideKey,
-    key: "signupBonusXp" | "monthlyConversionBonusXp" | "annualConversionBonusXp" | "annualDirectTokenBonus",
+    key:
+      | "signupBonusXp"
+      | "monthlyConversionBonusXp"
+      | "annualConversionBonusXp"
+      | "annualDirectTokenBonus"
+      | "questXpMultiplierBonus"
+      | "eligibilityPointsMultiplierBonus"
+      | "tokenYieldMultiplierBonus"
+      | "minimumEligibilityPointsOffset"
+      | "directTokenRewardBonus",
     value: string,
   ) {
     setSettings((current) => ({
@@ -332,6 +341,55 @@ export function EconomySettingsPanel({
                     step="0.01"
                     value={settings.campaignOverrides[source].annualDirectTokenBonus}
                     onChange={(event) => updateCampaignOverride(source, "annualDirectTokenBonus", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Quest XP multiplier bonus</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignOverrides[source].questXpMultiplierBonus}
+                    onChange={(event) => updateCampaignOverride(source, "questXpMultiplierBonus", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Eligibility points bonus</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignOverrides[source].eligibilityPointsMultiplierBonus}
+                    onChange={(event) => updateCampaignOverride(source, "eligibilityPointsMultiplierBonus", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Token yield bonus</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignOverrides[source].tokenYieldMultiplierBonus}
+                    onChange={(event) => updateCampaignOverride(source, "tokenYieldMultiplierBonus", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Minimum-eligibility offset</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    value={settings.campaignOverrides[source].minimumEligibilityPointsOffset}
+                    onChange={(event) => updateCampaignOverride(source, "minimumEligibilityPointsOffset", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Direct reward bonus</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignOverrides[source].directTokenRewardBonus}
+                    onChange={(event) => updateCampaignOverride(source, "directTokenRewardBonus", event.target.value)}
                   />
                 </label>
               </div>

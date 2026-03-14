@@ -1,6 +1,6 @@
 import { defaultEconomySettings, isDirectRewardAllowedForTrack } from "../../lib/economy-settings.ts";
-import { getRulesEngineTierMultiplier } from "../../lib/progression-rules.ts";
-import type { EconomySettings, QuestRuntimeContext, QuestTrack, RewardConfig, SubscriptionTier, TokenEffect } from "../../lib/types.ts";
+import { applyCampaignDirectRewardBonus, getRulesEngineTierMultiplier } from "../../lib/progression-rules.ts";
+import type { CampaignSource, EconomySettings, QuestRuntimeContext, QuestTrack, RewardConfig, SubscriptionTier, TokenEffect } from "../../lib/types.ts";
 
 export function projectQuestReward({
   rewardConfig,
@@ -8,6 +8,7 @@ export function projectQuestReward({
   subscriptionTier,
   runtimeContext,
   walletLinked,
+  campaignSource,
   settings = defaultEconomySettings,
 }: {
   rewardConfig: RewardConfig;
@@ -15,10 +16,11 @@ export function projectQuestReward({
   subscriptionTier: SubscriptionTier;
   runtimeContext: QuestRuntimeContext;
   walletLinked: boolean;
+  campaignSource?: CampaignSource | null;
   settings?: EconomySettings;
 }) {
   let multiplier = rewardConfig.xp.premiumMultiplierEligible
-    ? getRulesEngineTierMultiplier(subscriptionTier, settings)
+    ? getRulesEngineTierMultiplier(subscriptionTier, settings, campaignSource)
     : 1;
 
   if (runtimeContext.flashRewardDay) {
@@ -37,7 +39,11 @@ export function projectQuestReward({
     (!rewardConfig.directTokenReward.requiresWallet || walletLinked)
       ? {
           asset: settings.payoutAsset,
-          amount: rewardConfig.directTokenReward.amount,
+          amount: applyCampaignDirectRewardBonus({
+            amount: rewardConfig.directTokenReward.amount,
+            settings,
+            campaignSource,
+          }),
         }
       : undefined;
 

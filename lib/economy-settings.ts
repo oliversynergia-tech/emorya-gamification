@@ -1,4 +1,4 @@
-import type { EconomySettings, QuestTrack, SubscriptionTier, TokenAsset } from "./types.ts";
+import type { CampaignSource, EconomySettings, QuestTrack, SubscriptionTier, TokenAsset } from "./types.ts";
 
 export const defaultEconomySettings: EconomySettings = {
   id: "default",
@@ -30,35 +30,99 @@ export const defaultEconomySettings: EconomySettings = {
       monthlyConversionBonusXp: 0,
       annualConversionBonusXp: 0,
       annualDirectTokenBonus: 0,
+      questXpMultiplierBonus: 0,
+      eligibilityPointsMultiplierBonus: 0,
+      tokenYieldMultiplierBonus: 0,
+      minimumEligibilityPointsOffset: 0,
+      directTokenRewardBonus: 0,
     },
     zealy: {
       signupBonusXp: 10,
       monthlyConversionBonusXp: 20,
       annualConversionBonusXp: 40,
       annualDirectTokenBonus: 5,
+      questXpMultiplierBonus: 0.05,
+      eligibilityPointsMultiplierBonus: 0.1,
+      tokenYieldMultiplierBonus: 0.05,
+      minimumEligibilityPointsOffset: -10,
+      directTokenRewardBonus: 1,
     },
     galxe: {
       signupBonusXp: 5,
       monthlyConversionBonusXp: 30,
       annualConversionBonusXp: 55,
       annualDirectTokenBonus: 7,
+      questXpMultiplierBonus: 0.03,
+      eligibilityPointsMultiplierBonus: 0.12,
+      tokenYieldMultiplierBonus: 0.08,
+      minimumEligibilityPointsOffset: -5,
+      directTokenRewardBonus: 2,
     },
     layer3: {
       signupBonusXp: 15,
       monthlyConversionBonusXp: 25,
       annualConversionBonusXp: 70,
       annualDirectTokenBonus: 10,
+      questXpMultiplierBonus: 0.08,
+      eligibilityPointsMultiplierBonus: 0.15,
+      tokenYieldMultiplierBonus: 0.1,
+      minimumEligibilityPointsOffset: -15,
+      directTokenRewardBonus: 2,
     },
   },
   updatedAt: new Date(0).toISOString(),
 };
 
-export function getXpTierMultiplier(settings: EconomySettings, tier: SubscriptionTier) {
-  return settings.xpTierMultipliers[tier];
+export function getCampaignEconomyOverride(
+  settings: EconomySettings,
+  source: CampaignSource | null | undefined,
+) {
+  return settings.campaignOverrides[source ?? "direct"] ?? settings.campaignOverrides.direct;
 }
 
-export function getTokenTierMultiplier(settings: EconomySettings, tier: SubscriptionTier) {
-  return settings.tokenTierMultipliers[tier];
+export function getXpTierMultiplier(
+  settings: EconomySettings,
+  tier: SubscriptionTier,
+  source?: CampaignSource | null,
+) {
+  const override = getCampaignEconomyOverride(settings, source);
+  return settings.xpTierMultipliers[tier] + override.questXpMultiplierBonus;
+}
+
+export function getTokenTierMultiplier(
+  settings: EconomySettings,
+  tier: SubscriptionTier,
+  source?: CampaignSource | null,
+) {
+  const override = getCampaignEconomyOverride(settings, source);
+  return settings.tokenTierMultipliers[tier] + override.tokenYieldMultiplierBonus;
+}
+
+export function getMinimumEligibilityPoints(
+  settings: EconomySettings,
+  source?: CampaignSource | null,
+) {
+  const override = getCampaignEconomyOverride(settings, source);
+  return Math.max(settings.minimumEligibilityPoints + override.minimumEligibilityPointsOffset, 1);
+}
+
+export function applyEligibilityPointsMultiplier(
+  basePoints: number,
+  settings: EconomySettings,
+  source?: CampaignSource | null,
+) {
+  const override = getCampaignEconomyOverride(settings, source);
+  const multiplier = 1 + override.eligibilityPointsMultiplierBonus;
+  return Math.max(Math.round(basePoints * multiplier), 0);
+}
+
+export function applyDirectTokenRewardBonus(
+  amount: number,
+  settings: EconomySettings,
+  source?: CampaignSource | null,
+) {
+  const override = getCampaignEconomyOverride(settings, source);
+  return Math.max(amount + override.directTokenRewardBonus, 0);
 }
 
 export function isDirectRewardAllowedForTrack({

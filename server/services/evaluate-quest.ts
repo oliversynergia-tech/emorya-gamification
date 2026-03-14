@@ -45,6 +45,7 @@ export function evaluateQuest({
     subscriptionTier: userState.subscriptionTier,
     runtimeContext,
     walletLinked: userState.walletLinked,
+    campaignSource: userState.campaignSource,
     settings,
   });
 

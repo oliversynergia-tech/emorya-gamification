@@ -1,5 +1,12 @@
-import { defaultEconomySettings, getTokenTierMultiplier, getXpTierMultiplier } from "./economy-settings.ts";
+import {
+  applyDirectTokenRewardBonus,
+  defaultEconomySettings,
+  getMinimumEligibilityPoints,
+  getTokenTierMultiplier,
+  getXpTierMultiplier,
+} from "./economy-settings.ts";
 import type {
+  CampaignSource,
   CompletionRuleGroup,
   EconomySettings,
   Quest,
@@ -35,8 +42,9 @@ export const tokenRedemptionProgram: TokenRedemptionProgram = {
 export function getRulesEngineTierMultiplier(
   tier: SubscriptionTier,
   settings: EconomySettings = defaultEconomySettings,
+  source?: CampaignSource | null,
 ) {
-  return getXpTierMultiplier(settings, tier);
+  return getXpTierMultiplier(settings, tier, source);
 }
 
 export function projectTokenRedemption({
@@ -44,17 +52,19 @@ export function projectTokenRedemption({
   subscriptionTier,
   rewardEligible,
   walletLinked,
+  campaignSource,
   settings = defaultEconomySettings,
 }: {
   eligibilityPoints: number;
   subscriptionTier: SubscriptionTier;
   rewardEligible: boolean;
   walletLinked: boolean;
+  campaignSource?: CampaignSource | null;
   settings?: EconomySettings;
 }) {
   const normalizedPoints = Math.max(Math.floor(eligibilityPoints), 0);
-  const minimumPoints = settings.minimumEligibilityPoints;
-  const tierMultiplier = getTokenTierMultiplier(settings, subscriptionTier);
+  const minimumPoints = getMinimumEligibilityPoints(settings, campaignSource);
+  const tierMultiplier = getTokenTierMultiplier(settings, subscriptionTier, campaignSource);
   const unlocked = settings.redemptionEnabled && rewardEligible && walletLinked;
   const redeemablePoints = unlocked && normalizedPoints >= minimumPoints ? normalizedPoints : 0;
   const projectedRedemptionAmount =
@@ -95,6 +105,18 @@ export function getTokenEffectLabel(quest: Pick<Quest, "tokenEffect">) {
     default:
       return "XP only";
   }
+}
+
+export function applyCampaignDirectRewardBonus({
+  amount,
+  settings = defaultEconomySettings,
+  campaignSource,
+}: {
+  amount: number;
+  settings?: EconomySettings;
+  campaignSource?: CampaignSource | null;
+}) {
+  return applyDirectTokenRewardBonus(amount, settings, campaignSource);
 }
 
 export function getWeeklyProgressBand(weeklyXp: number) {

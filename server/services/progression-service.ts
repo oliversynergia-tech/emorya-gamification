@@ -211,6 +211,7 @@ export async function applyQuestRewardTransition({
     alreadyApprovedToday: shouldBeApproved
       ? await hasQuestApprovalActivityToday(userId)
       : false,
+    campaignSource: user.attribution_source as "direct" | "zealy" | "galxe" | "layer3" | null,
     settings: economySettings,
   });
 
