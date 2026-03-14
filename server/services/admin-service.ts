@@ -8,6 +8,13 @@ import {
   listUsersWithRoles,
   revokeUserRole,
 } from "@/server/repositories/admin-repository";
+import {
+  createQuestDefinitionForAdmin,
+  deleteQuestDefinitionForAdmin,
+  listQuestDefinitionsForAdmin,
+  updateQuestDefinitionForAdmin,
+} from "@/server/repositories/quest-definition-admin-repository";
+import type { QuestDefinitionAdminItem } from "@/lib/types";
 
 export async function getRoleDirectory() {
   const currentUser = await getAuthenticatedUser();
@@ -134,4 +141,86 @@ export async function revokeAdminRole({
     roleDirectory: await listUsersWithRoles(),
     adminDirectory: await listAdminUsers(),
   };
+}
+
+function normalizeQuestDefinitionInput(input: Partial<Omit<QuestDefinitionAdminItem, "id" | "createdAt" | "updatedAt">>) {
+  if (
+    !input.slug ||
+    !input.title ||
+    !input.description ||
+    !input.category ||
+    !input.difficulty ||
+    !input.verificationType ||
+    !input.recurrence ||
+    !input.requiredTier ||
+    typeof input.requiredLevel !== "number" ||
+    typeof input.xpReward !== "number"
+  ) {
+    throw new Error("Quest definition requires slug, title, description, category, difficulty, verificationType, recurrence, requiredTier, requiredLevel, and xpReward.");
+  }
+
+  return {
+    slug: input.slug.trim(),
+    title: input.title.trim(),
+    description: input.description.trim(),
+    category: input.category,
+    difficulty: input.difficulty,
+    verificationType: input.verificationType,
+    recurrence: input.recurrence,
+    requiredTier: input.requiredTier,
+    requiredLevel: input.requiredLevel,
+    xpReward: input.xpReward,
+    isPremiumPreview: input.isPremiumPreview ?? false,
+    isActive: input.isActive ?? true,
+    metadata: input.metadata ?? {},
+  };
+}
+
+export async function getQuestDefinitionDirectory() {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  return listQuestDefinitionsForAdmin();
+}
+
+export async function createQuestDefinition(
+  input: Partial<Omit<QuestDefinitionAdminItem, "id" | "createdAt" | "updatedAt">>,
+) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  const normalized = normalizeQuestDefinitionInput(input);
+  await createQuestDefinitionForAdmin(normalized);
+
+  return listQuestDefinitionsForAdmin();
+}
+
+export async function updateQuestDefinition(
+  questId: string,
+  input: Partial<Omit<QuestDefinitionAdminItem, "id" | "createdAt" | "updatedAt">>,
+) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  const normalized = normalizeQuestDefinitionInput(input);
+  const updated = await updateQuestDefinitionForAdmin(questId, normalized);
+
+  if (!updated) {
+    throw new Error("Quest definition not found.");
+  }
+
+  return listQuestDefinitionsForAdmin();
+}
+
+export async function deleteQuestDefinition(questId: string) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  const deleted = await deleteQuestDefinitionForAdmin(questId);
+
+  if (!deleted) {
+    throw new Error("Quest definition not found.");
+  }
+
+  return listQuestDefinitionsForAdmin();
 }

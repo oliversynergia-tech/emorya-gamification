@@ -3,6 +3,8 @@ type AdminDirectoryResponse = {
   adminDirectory: unknown;
 };
 
+type QuestDefinitionInput = Record<string, unknown>;
+
 function getErrorStatus(message: string) {
   return message.includes("signed in")
     ? 401
@@ -82,6 +84,101 @@ export async function handleReviewerRoleUpdateRequest(
 
     return {
       status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleQuestDefinitionDirectoryRequest(
+  getQuestDefinitionDirectory: () => Promise<unknown>,
+) {
+  try {
+    const quests = await getQuestDefinitionDirectory();
+
+    return {
+      status: 200,
+      body: { ok: true, quests },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load quest definitions.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleQuestDefinitionCreateRequest(
+  body: QuestDefinitionInput,
+  createQuestDefinition: (input: QuestDefinitionInput) => Promise<unknown>,
+) {
+  try {
+    const quests = await createQuestDefinition(body);
+
+    return {
+      status: 200,
+      body: { ok: true, quests },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to create quest definition.";
+
+    return {
+      status: message.includes("requires")
+        ? 400
+        : getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleQuestDefinitionUpdateRequest(
+  {
+    questId,
+    body,
+  }: {
+    questId: string;
+    body: QuestDefinitionInput;
+  },
+  updateQuestDefinition: (questId: string, input: QuestDefinitionInput) => Promise<unknown>,
+) {
+  try {
+    const quests = await updateQuestDefinition(questId, body);
+
+    return {
+      status: 200,
+      body: { ok: true, quests },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to update quest definition.";
+
+    return {
+      status: message.includes("not found")
+        ? 404
+        : message.includes("requires")
+          ? 400
+          : getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleQuestDefinitionDeleteRequest(
+  questId: string,
+  deleteQuestDefinition: (questId: string) => Promise<unknown>,
+) {
+  try {
+    const quests = await deleteQuestDefinition(questId);
+
+    return {
+      status: 200,
+      body: { ok: true, quests },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to delete quest definition.";
+
+    return {
+      status: message.includes("not found") ? 404 : getErrorStatus(message),
       body: { ok: false, error: message },
     };
   }

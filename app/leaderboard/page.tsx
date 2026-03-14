@@ -1,5 +1,6 @@
 import { LeaderboardSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
+import { getCampaignSourceProfile } from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function LeaderboardPage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
+  const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
   const topEntry = data.leaderboard[0];
   const topReferralEntry = data.referralLeaderboard[0];
 
@@ -15,11 +17,10 @@ export default async function LeaderboardPage() {
     <SiteShell eyebrow="Competitive pressure" currentUser={session?.user ?? null}>
       <section className="page-hero page-hero--leaderboard">
         <div className="panel panel--hero panel--hero-compact">
-          <p className="eyebrow">Live ranking</p>
-          <h2>The board now reflects real user XP, not seeded placeholders.</h2>
+          <p className="eyebrow">{campaignProfile.label}</p>
+          <h2>{campaignProfile.title}</h2>
           <p className="lede">
-            All-time positions are derived from live totals, while snapshot history is used for movement and pressure.
-            This page should feel more like a campaign arena than a static table.
+            {campaignProfile.description}
           </p>
         </div>
         <div className="panel panel--stack page-aside">
@@ -45,6 +46,15 @@ export default async function LeaderboardPage() {
               {data.user.tokenProgram.status === "redeemable"
                 ? "Projected redemption unlocked from current eligibility points."
                 : `${Math.max((data.user.tokenProgram.nextRedemptionPoints ?? data.user.tokenProgram.minimumPoints) - data.user.tokenProgram.eligibilityPoints, 0)} more points to your next redemption step.`}
+            </small>
+          </div>
+          <div className="metric-card">
+            <span>Campaign lane</span>
+            <strong>{campaignProfile.accent}</strong>
+            <small>
+              {data.user.campaignSource
+                ? `${data.user.campaignSource} entrants should see campaign bridge quests near the top of the board.`
+                : "Direct entrants see the default Starter and Daily Momentum pressure first."}
             </small>
           </div>
         </div>

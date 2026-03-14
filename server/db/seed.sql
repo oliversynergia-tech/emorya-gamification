@@ -691,3 +691,41 @@ INSERT INTO activity_log (id, user_id, action_type, xp_earned, metadata, created
     NOW() - INTERVAL '17 minutes'
   )
 ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO token_redemptions (
+  id,
+  user_id,
+  asset,
+  eligibility_points_spent,
+  token_amount,
+  status,
+  source,
+  metadata,
+  created_at,
+  settled_at
+) VALUES
+  (
+    '62f3ce2a-5d0d-4c32-b1a0-1bdf40ba22b2',
+    '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
+    'EMR',
+    120,
+    6.0000,
+    'settled',
+    'xp-conversion',
+    '{"note":"Weekly reward conversion","campaign":"direct"}'::jsonb,
+    NOW() - INTERVAL '10 days',
+    NOW() - INTERVAL '9 days'
+  ),
+  (
+    '54f9ae95-60c6-44b8-81b2-a3917a65e145',
+    '2196480b-b0fc-4e15-8837-e1d02177c7ed',
+    'EMR',
+    100,
+    5.0000,
+    'claimed',
+    'xp-conversion',
+    '{"note":"Awaiting payout","campaign":"galxe"}'::jsonb,
+    NOW() - INTERVAL '2 days',
+    NULL
+  )
+ON CONFLICT (id) DO NOTHING;

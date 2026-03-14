@@ -113,6 +113,15 @@ type ApprovedRewardQuestRow = QueryResultRow & {
   metadata: Record<string, unknown>;
 };
 
+type TokenRedemptionRow = QueryResultRow & {
+  asset: "EMR" | "EGLD" | "PARTNER";
+  eligibility_points_spent: number | string;
+  token_amount: number | string;
+  status: "claimed" | "settled";
+  source: string;
+  created_at: string;
+};
+
 export function isDatabaseEnabled() {
   return hasDatabaseConfig();
 }
@@ -222,7 +231,7 @@ function buildStarterPathProgress(progressState: UserProgressState) {
 }
 
 async function getUserSnapshot(user: UserRow, progressState: UserProgressState, journeyState: UserJourneyState): Promise<UserSnapshot> {
-  const [connectionsResult, rankResult, referralRank, referral, approvedRewardQuestResult] = await Promise.all([
+  const [connectionsResult, rankResult, referralRank, referral, approvedRewardQuestResult, redemptionHistoryResult] = await Promise.all([
     runQuery<SocialConnectionRow>(
       `SELECT platform, verified
        FROM social_connections
@@ -239,6 +248,14 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
        INNER JOIN quest_definitions q ON q.id = qc.quest_id
        WHERE qc.user_id = $1
          AND qc.status = 'approved'`,
+      [user.id],
+    ),
+    runQuery<TokenRedemptionRow>(
+      `SELECT asset, eligibility_points_spent, token_amount, status, source, created_at
+       FROM token_redemptions
+       WHERE user_id = $1
+       ORDER BY created_at DESC
+       LIMIT 8`,
       [user.id],
     ),
   ]);
@@ -284,6 +301,22 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
     rewardEligible: progressState.rewardEligible,
     walletLinked: progressState.walletLinked,
   });
+  const redemptionHistory = redemptionHistoryResult.rows.map((row) => ({
+    asset: row.asset,
+    tokenAmount: Number(row.token_amount),
+    eligibilityPointsSpent: Number(row.eligibility_points_spent),
+    status: row.status,
+    source: row.source,
+    createdAt: row.created_at,
+  }));
+  const claimedBalance = redemptionHistory.reduce(
+    (sum, entry) => sum + (entry.status === "claimed" ? entry.tokenAmount : 0),
+    0,
+  );
+  const settledBalance = redemptionHistory.reduce(
+    (sum, entry) => sum + (entry.status === "settled" ? entry.tokenAmount : 0),
+    0,
+  );
 
   return {
     displayName: user.display_name,
@@ -309,12 +342,15 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
       eligibilityPoints,
       minimumPoints: redemptionProjection.minimumPoints,
       projectedRedemptionAmount: redemptionProjection.projectedRedemptionAmount,
+      claimedBalance,
+      settledBalance,
       nextRedemptionPoints: redemptionProjection.nextRedemptionPoints,
       tierMultiplier: redemptionProjection.tierMultiplier,
       scheduledDirectRewards: Array.from(scheduledDirectRewardMap.entries()).map(([asset, amount]) => ({
         asset,
         amount,
       })),
+      redemptionHistory,
       nextStep:
         redemptionProjection.status === "redeemable"
           ? `Redeem ${redemptionProjection.asset} once payout rails are enabled.`

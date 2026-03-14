@@ -1,6 +1,7 @@
 import { AuthClientPanel } from "@/components/auth-client-panel";
 import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
+import { getCampaignSourceProfile } from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -9,16 +10,16 @@ export const dynamic = "force-dynamic";
 export default async function AuthPage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
+  const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
 
   return (
     <SiteShell eyebrow="Account access" currentUser={session?.user ?? null}>
       <section className="page-hero page-hero--auth">
         <div className="panel panel--hero panel--hero-compact">
-          <p className="eyebrow">Identity stack</p>
-          <h2>Bring email, wallet, and referral identity into one Emorya account.</h2>
+          <p className="eyebrow">{campaignProfile.label}</p>
+          <h2>{campaignProfile.title}</h2>
           <p className="lede">
-            This is the entry point for account creation, return access, and MultiversX linking. The experience now
-            mirrors the same premium shell used across the dashboard.
+            {campaignProfile.description}
           </p>
           <div className="hero__actions">
             <a className="button button--primary" href="#auth-panel">
@@ -45,6 +46,15 @@ export default async function AuthPage() {
             <strong>{data.user.tokenProgram.minimumPoints} eligibility points</strong>
             <small>
               Level 5 plus Starter Path opens projected {data.user.tokenProgram.asset} redemption and partner campaign payout lanes.
+            </small>
+          </div>
+          <div className="metric-card">
+            <span>Campaign lane</span>
+            <strong>{campaignProfile.accent}</strong>
+            <small>
+              {data.user.campaignSource
+                ? `This account is currently being steered through the ${data.user.campaignSource} bridge path.`
+                : "Direct onboarding uses the default Emorya starter ladder."}
             </small>
           </div>
         </div>

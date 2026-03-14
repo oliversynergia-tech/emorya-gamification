@@ -5,6 +5,10 @@ import {
   handleAdminDirectoryRequest,
   handleAdminGrantRequest,
   handleAdminRevokeRequest,
+  handleQuestDefinitionCreateRequest,
+  handleQuestDefinitionDeleteRequest,
+  handleQuestDefinitionDirectoryRequest,
+  handleQuestDefinitionUpdateRequest,
   handleReviewerRoleUpdateRequest,
   handleRoleDirectoryRequest,
 } from "../server/http/admin-handlers.ts";
@@ -152,5 +156,55 @@ test("handleReviewerRoleUpdateRequest returns the refreshed role directory on su
   assert.deepEqual(result.body, {
     ok: true,
     users: [{ userId: "user-2", roles: ["admin"] }],
+  });
+});
+
+test("handleQuestDefinitionDirectoryRequest returns quest definitions on success", async () => {
+  const result = await handleQuestDefinitionDirectoryRequest(async () => [{ id: "quest-1" }]);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    quests: [{ id: "quest-1" }],
+  });
+});
+
+test("handleQuestDefinitionCreateRequest maps validation failures to 400", async () => {
+  const result = await handleQuestDefinitionCreateRequest({}, async () => {
+    throw new Error("Quest definition requires slug, title, description, category, difficulty, verificationType, recurrence, requiredTier, requiredLevel, and xpReward.");
+  });
+
+  assert.equal(result.status, 400);
+  assert.match(String(result.body.error), /Quest definition requires slug/);
+});
+
+test("handleQuestDefinitionUpdateRequest maps missing quest definitions to 404", async () => {
+  const result = await handleQuestDefinitionUpdateRequest(
+    {
+      questId: "quest-1",
+      body: { slug: "quest-1" },
+    },
+    async () => {
+      throw new Error("Quest definition not found.");
+    },
+  );
+
+  assert.equal(result.status, 404);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Quest definition not found.",
+  });
+});
+
+test("handleQuestDefinitionDeleteRequest returns refreshed quest definitions on success", async () => {
+  const result = await handleQuestDefinitionDeleteRequest("quest-1", async (questId) => {
+    assert.equal(questId, "quest-1");
+    return [{ id: "quest-2" }];
+  });
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    quests: [{ id: "quest-2" }],
   });
 });

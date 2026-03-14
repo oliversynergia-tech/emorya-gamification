@@ -253,11 +253,21 @@ export type UserSnapshot = {
     eligibilityPoints: number;
     minimumPoints: number;
     projectedRedemptionAmount: number;
+    claimedBalance: number;
+    settledBalance: number;
     nextRedemptionPoints: number | null;
     tierMultiplier: number;
     scheduledDirectRewards: Array<{
       asset: "EMR" | "EGLD" | "PARTNER";
       amount: number;
+    }>;
+    redemptionHistory: Array<{
+      asset: "EMR" | "EGLD" | "PARTNER";
+      tokenAmount: number;
+      eligibilityPointsSpent: number;
+      status: "claimed" | "settled";
+      source: string;
+      createdAt: string;
     }>;
     nextStep: string;
   };
@@ -392,6 +402,7 @@ export type AdminOverviewData = {
       reviewCount: number;
     }>;
   };
+  questDefinitionDirectory?: Array<QuestDefinitionAdminItem>;
 };
 
 export type AuthUser = {
@@ -598,6 +609,25 @@ export type QuestProgressUpdate = {
   level: number;
   currentStreak: number;
   unlockedAchievements?: string[];
+};
+
+export type QuestDefinitionAdminItem = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  category: QuestCategory;
+  difficulty: "easy" | "medium" | "hard";
+  verificationType: VerificationType;
+  recurrence: "one-time" | "daily" | "weekly";
+  requiredTier: SubscriptionTier;
+  requiredLevel: number;
+  xpReward: number;
+  isPremiumPreview: boolean;
+  isActive: boolean;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type WalletQuestResult = {

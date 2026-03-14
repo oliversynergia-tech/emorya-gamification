@@ -1,3 +1,4 @@
+import { QuestDefinitionManagementPanel } from "@/components/quest-definition-management-panel";
 import { QuestDefinitionToolingPanel } from "@/components/quest-definition-tooling-panel";
 import { AdminSection } from "@/components/sections";
 import { RoleManagementPanel } from "@/components/role-management-panel";
@@ -73,6 +74,7 @@ export default async function AdminPage() {
       </section>
       <AdminSection data={data} />
       <QuestDefinitionToolingPanel />
+      <QuestDefinitionManagementPanel />
       <RoleManagementPanel
         initialUsers={data.roleDirectory}
         initialAdmins={data.adminDirectory}

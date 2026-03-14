@@ -1,3 +1,4 @@
+import { getCampaignSourceProfile } from "@/lib/campaign-source";
 import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel, getTierMultiplier } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
@@ -94,15 +95,15 @@ function renderQuestCard(quest: Quest) {
 
 export function HeroSection({ data }: { data: DashboardData }) {
   const progress = getLevelProgress(data.user.totalXp);
+  const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
 
   return (
     <section className="hero grid">
       <div className="panel panel--hero">
-        <p className="eyebrow">Premium game loop for annual conversion</p>
-        <h2>Guide users from first social quest to Annual Premium with a product-first quest system.</h2>
+        <p className="eyebrow">{campaignProfile.label}</p>
+        <h2>{campaignProfile.title}</h2>
         <p className="lede">
-          This fresh scaffold translates the brief into a dark luxury web app with onboarding,
-          daily loops, visible premium ceilings, and admin control surfaces.
+          {campaignProfile.description}
         </p>
         <div className="hero__actions">
           <a className="button button--primary" href="/dashboard">
@@ -150,6 +151,7 @@ export function HeroSection({ data }: { data: DashboardData }) {
 
 export function DashboardSnapshot({ data }: { data: DashboardData }) {
   const progress = getLevelProgress(data.user.totalXp);
+  const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
   const unlockedAchievements = data.achievements.filter((achievement) => achievement.unlocked);
   const upcomingAchievements = data.achievements
     .filter((achievement) => !achievement.unlocked)
@@ -200,6 +202,10 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
           <div className="info-card">
             <span>Journey state</span>
             <strong>{data.user.journeyState.replaceAll("_", " ")}</strong>
+          </div>
+          <div className="info-card">
+            <span>Campaign lane</span>
+            <strong>{campaignProfile.accent}</strong>
           </div>
         </div>
         <div className="panel panel--glass">
@@ -326,6 +332,14 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
               <span>Status</span>
               <strong>{data.user.tokenProgram.status.replaceAll("_", " ")}</strong>
             </div>
+            <div className="info-card">
+              <span>Claimed</span>
+              <strong>{data.user.tokenProgram.claimedBalance} {data.user.tokenProgram.asset}</strong>
+            </div>
+            <div className="info-card">
+              <span>Settled</span>
+              <strong>{data.user.tokenProgram.settledBalance} {data.user.tokenProgram.asset}</strong>
+            </div>
           </div>
           <p className="form-note">{data.user.tokenProgram.nextStep}</p>
           {data.user.tokenProgram.nextRedemptionPoints ? (
@@ -344,6 +358,22 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                   </div>
                   <div className="achievement-card__side">
                     <span>{reward.amount} {reward.asset}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : null}
+          {data.user.tokenProgram.redemptionHistory.length > 0 ? (
+            <div className="achievement-list">
+              {data.user.tokenProgram.redemptionHistory.map((entry) => (
+                <article key={`${entry.asset}-${entry.createdAt}-${entry.tokenAmount}`} className="achievement-card">
+                  <div>
+                    <strong>{entry.status === "settled" ? "Settled redemption" : "Claimed redemption"}</strong>
+                    <p>{entry.eligibilityPointsSpent} eligibility points spent via {entry.source}.</p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{entry.tokenAmount} {entry.asset}</span>
+                    <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
                   </div>
                 </article>
               ))}
@@ -759,6 +789,18 @@ export function ProfileSection({ data }: { data: DashboardData }) {
             <div className="achievement-card__side">
               <span>{data.user.tokenProgram.status}</span>
               <span>{data.user.tokenProgram.tierMultiplier.toFixed(2)}x tier bonus</span>
+            </div>
+          </article>
+          <article className="achievement-card">
+            <div>
+              <strong>Claimed vs settled</strong>
+              <p>
+                Claimed redemptions are reserved and awaiting payout. Settled balances already reached the user’s reward history.
+              </p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{data.user.tokenProgram.claimedBalance} claimed</span>
+              <span>{data.user.tokenProgram.settledBalance} settled</span>
             </div>
           </article>
         </div>

@@ -177,6 +177,19 @@ CREATE TABLE activity_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE token_redemptions (
+  id UUID PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  asset TEXT NOT NULL CHECK (asset IN ('EMR', 'EGLD', 'PARTNER')),
+  eligibility_points_spent INTEGER NOT NULL DEFAULT 0,
+  token_amount NUMERIC(18, 4) NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('claimed', 'settled')),
+  source TEXT NOT NULL DEFAULT 'xp-conversion',
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  settled_at TIMESTAMPTZ
+);
+
 CREATE INDEX idx_users_subscription_tier ON users(subscription_tier);
 CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id, expires_at DESC);
 CREATE INDEX idx_user_roles_role ON user_roles(role, created_at DESC);
@@ -185,3 +198,4 @@ CREATE INDEX idx_quest_definitions_category ON quest_definitions(category);
 CREATE INDEX idx_quest_completions_status ON quest_completions(status);
 CREATE INDEX idx_activity_log_user_id ON activity_log(user_id, created_at DESC);
 CREATE INDEX idx_leaderboard_snapshots_period_rank ON leaderboard_snapshots(period, rank);
+CREATE INDEX idx_token_redemptions_user_id ON token_redemptions(user_id, created_at DESC);
