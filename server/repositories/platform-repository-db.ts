@@ -426,14 +426,14 @@ async function getUserSnapshot(
         sourceBonuses: referralCampaignIncentives.map((incentive) => ({
           source: incentive.source,
           label: incentive.label,
-          signupXp: economySettings.referralSignupBaseXp + incentive.signupBonusXp,
-          monthlyPremiumXp: economySettings.referralMonthlyConversionBaseXp + incentive.monthlyConversionBonusXp,
-          annualPremiumXp: economySettings.referralAnnualConversionBaseXp + incentive.annualConversionBonusXp,
+          signupXp: economySettings.referralSignupBaseXp + economySettings.campaignOverrides[incentive.source].signupBonusXp,
+          monthlyPremiumXp: economySettings.referralMonthlyConversionBaseXp + economySettings.campaignOverrides[incentive.source].monthlyConversionBonusXp,
+          annualPremiumXp: economySettings.referralAnnualConversionBaseXp + economySettings.campaignOverrides[incentive.source].annualConversionBonusXp,
           annualDirectTokenReward: {
             asset: economySettings.payoutAsset,
             amount:
               economySettings.directRewardsEnabled && economySettings.directAnnualReferralEnabled
-                ? economySettings.annualReferralDirectTokenAmount + incentive.annualDirectTokenBonus
+                ? economySettings.annualReferralDirectTokenAmount + economySettings.campaignOverrides[incentive.source].annualDirectTokenBonus
                 : 0,
           },
         })),

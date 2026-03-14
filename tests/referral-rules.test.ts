@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { defaultEconomySettings } from "../lib/economy-settings.ts";
 import {
   calculateReferralRewardState,
   getReferralRewardTargets,
@@ -20,6 +21,29 @@ test("getReferralRewardTargets applies campaign-source bonuses", () => {
   assert.equal(zealyMonthly.conversionXp, 170);
   assert.equal(layer3Annual.conversionXp, 370);
   assert.equal(layer3Annual.annualDirectTokenReward, 35);
+});
+
+test("getReferralRewardTargets respects configured campaign overrides", () => {
+  const overridden = getReferralRewardTargets({
+    subscriptionTier: "annual",
+    campaignSource: "galxe",
+    settings: {
+      ...defaultEconomySettings,
+      campaignOverrides: {
+        ...defaultEconomySettings.campaignOverrides,
+        galxe: {
+          signupBonusXp: 12,
+          monthlyConversionBonusXp: 44,
+          annualConversionBonusXp: 88,
+          annualDirectTokenBonus: 9,
+        },
+      },
+    },
+  });
+
+  assert.equal(overridden.signupXp, 52);
+  assert.equal(overridden.conversionXp, 388);
+  assert.equal(overridden.annualDirectTokenReward, 34);
 });
 
 test("calculateReferralRewardState uses subscription tier and campaign source", () => {

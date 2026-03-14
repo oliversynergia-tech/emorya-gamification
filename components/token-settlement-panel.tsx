@@ -23,6 +23,8 @@ export function TokenSettlementPanel({
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const annualReferralQueue = queue.filter((entry) => entry.source === "annual-referral-direct");
+  const standardQueue = queue.filter((entry) => entry.source !== "annual-referral-direct");
 
   async function settle(redemptionId: string) {
     const receiptReference = receiptDrafts[redemptionId]?.trim() ?? "";
@@ -83,11 +85,11 @@ export function TokenSettlementPanel({
         {queue.length === 0 ? (
           <p className="form-note">No claimed redemptions are waiting for settlement.</p>
         ) : (
-          queue.map((entry) => (
+          [...annualReferralQueue, ...standardQueue].map((entry) => (
             <article key={entry.id} className="review-history__item">
               <div className="quest-card__meta">
                 <span>{entry.userDisplayName}</span>
-                <span>{entry.asset}</span>
+                <span>{entry.source === "annual-referral-direct" ? "Annual referral payout" : entry.asset}</span>
               </div>
               <h4>
                 {entry.tokenAmount} {entry.asset} pending
@@ -98,7 +100,10 @@ export function TokenSettlementPanel({
                 <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
               </div>
               <p className="form-note">
-                {entry.userEmail ?? "No email"}{entry.settlementNote ? ` · ${entry.settlementNote}` : ""}
+                {entry.userEmail ?? "No email"}
+                {typeof entry.metadata.referee === "string" ? ` · referee ${entry.metadata.referee}` : ""}
+                {typeof entry.metadata.campaignSource === "string" ? ` · ${entry.metadata.campaignSource}` : ""}
+                {entry.settlementNote ? ` · ${entry.settlementNote}` : ""}
               </p>
               <div className="profile-grid">
                 <label className="field">

@@ -26,6 +26,12 @@ type EconomySettingsRow = QueryResultRow & {
   referral_monthly_conversion_base_xp: number | string;
   referral_annual_conversion_base_xp: number | string;
   annual_referral_direct_token_amount: number | string;
+  campaign_overrides: Record<string, {
+    signupBonusXp?: number;
+    monthlyConversionBonusXp?: number;
+    annualConversionBonusXp?: number;
+    annualDirectTokenBonus?: number;
+  }>;
   updated_at: string;
 };
 
@@ -62,6 +68,24 @@ function mapEconomySettings(row: EconomySettingsRow): EconomySettings {
     referralMonthlyConversionBaseXp: Number(row.referral_monthly_conversion_base_xp),
     referralAnnualConversionBaseXp: Number(row.referral_annual_conversion_base_xp),
     annualReferralDirectTokenAmount: Number(row.annual_referral_direct_token_amount),
+    campaignOverrides: {
+      direct: {
+        ...defaultEconomySettings.campaignOverrides.direct,
+        ...(row.campaign_overrides?.direct ?? {}),
+      },
+      zealy: {
+        ...defaultEconomySettings.campaignOverrides.zealy,
+        ...(row.campaign_overrides?.zealy ?? {}),
+      },
+      galxe: {
+        ...defaultEconomySettings.campaignOverrides.galxe,
+        ...(row.campaign_overrides?.galxe ?? {}),
+      },
+      layer3: {
+        ...defaultEconomySettings.campaignOverrides.layer3,
+        ...(row.campaign_overrides?.layer3 ?? {}),
+      },
+    },
     updatedAt: row.updated_at,
   };
 }
@@ -74,7 +98,8 @@ export async function getActiveEconomySettings() {
             xp_multiplier_free, xp_multiplier_monthly, xp_multiplier_annual,
             token_multiplier_free, token_multiplier_monthly, token_multiplier_annual,
             referral_signup_base_xp, referral_monthly_conversion_base_xp,
-            referral_annual_conversion_base_xp, annual_referral_direct_token_amount, updated_at
+            referral_annual_conversion_base_xp, annual_referral_direct_token_amount,
+            campaign_overrides, updated_at
      FROM economy_settings
      WHERE is_active = TRUE
      ORDER BY updated_at DESC
@@ -124,10 +149,11 @@ export async function updateActiveEconomySettings({
        xp_multiplier_free, xp_multiplier_monthly, xp_multiplier_annual,
        token_multiplier_free, token_multiplier_monthly, token_multiplier_annual,
        referral_signup_base_xp, referral_monthly_conversion_base_xp,
-       referral_annual_conversion_base_xp, annual_referral_direct_token_amount, updated_at
+       referral_annual_conversion_base_xp, annual_referral_direct_token_amount,
+       campaign_overrides, updated_at
      ) VALUES (
        $1, TRUE, $2, $3, $4, $5, $6, $7, $8, $9,
-       $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW()
+       $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20::jsonb, NOW()
      )
      ON CONFLICT (id) DO UPDATE SET
        payout_asset = EXCLUDED.payout_asset,
@@ -148,6 +174,7 @@ export async function updateActiveEconomySettings({
        referral_monthly_conversion_base_xp = EXCLUDED.referral_monthly_conversion_base_xp,
        referral_annual_conversion_base_xp = EXCLUDED.referral_annual_conversion_base_xp,
        annual_referral_direct_token_amount = EXCLUDED.annual_referral_direct_token_amount,
+       campaign_overrides = EXCLUDED.campaign_overrides,
        updated_at = NOW()`,
     [
       id,
@@ -169,6 +196,7 @@ export async function updateActiveEconomySettings({
       next.referralMonthlyConversionBaseXp,
       next.referralAnnualConversionBaseXp,
       next.annualReferralDirectTokenAmount,
+      JSON.stringify(next.campaignOverrides),
     ],
   );
 

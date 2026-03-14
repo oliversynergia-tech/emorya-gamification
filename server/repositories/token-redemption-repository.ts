@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 import type { QueryResultRow } from "pg";
 
 import type { TokenSettlementItem } from "@/lib/types";
@@ -14,6 +16,7 @@ type TokenSettlementRow = QueryResultRow & {
   settled_at: string | null;
   receipt_reference: string | null;
   settlement_note: string | null;
+  metadata: Record<string, string | number | boolean | null>;
   user_display_name: string;
   user_email: string | null;
   settled_by_display_name: string | null;
@@ -33,6 +36,7 @@ function mapTokenSettlement(row: TokenSettlementRow): TokenSettlementItem {
     receiptReference: row.receipt_reference,
     settlementNote: row.settlement_note,
     settledByDisplayName: row.settled_by_display_name,
+    metadata: row.metadata ?? {},
   };
 }
 
@@ -40,7 +44,7 @@ export async function listPendingTokenSettlements(limit = 20): Promise<TokenSett
   const result = await runQuery<TokenSettlementRow>(
     `SELECT redemptions.id, redemptions.asset, redemptions.token_amount, redemptions.eligibility_points_spent,
             redemptions.status, redemptions.source, redemptions.created_at, redemptions.settled_at,
-            redemptions.receipt_reference, redemptions.settlement_note,
+            redemptions.receipt_reference, redemptions.settlement_note, redemptions.metadata,
             users.display_name AS user_display_name, users.email AS user_email,
             settled_by_users.display_name AS settled_by_display_name
      FROM token_redemptions redemptions
@@ -76,10 +80,33 @@ export async function settleTokenRedemption({
      WHERE id = $1
        AND status = 'claimed'
      RETURNING id, asset, token_amount, eligibility_points_spent, status, source, created_at, settled_at,
-               receipt_reference, settlement_note,
+               receipt_reference, settlement_note, metadata,
                ''::text AS user_display_name, NULL::text AS user_email, NULL::text AS settled_by_display_name`,
     [redemptionId, settledBy, receiptReference, settlementNote],
   );
 
   return Boolean(result.rows[0]);
+}
+
+export async function createClaimedTokenRedemption({
+  userId,
+  asset,
+  tokenAmount,
+  source,
+  metadata,
+}: {
+  userId: string;
+  asset: TokenSettlementItem["asset"];
+  tokenAmount: number;
+  source: string;
+  metadata: Record<string, string | number | boolean | null>;
+}) {
+  await runQuery(
+    `INSERT INTO token_redemptions (
+       id, user_id, asset, eligibility_points_spent, token_amount, status, source, metadata
+     ) VALUES (
+       $1, $2, $3, 0, $4, 'claimed', $5, $6::jsonb
+     )`,
+    [randomUUID(), userId, asset, tokenAmount, source, JSON.stringify(metadata)],
+  );
 }

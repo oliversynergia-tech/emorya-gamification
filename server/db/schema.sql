@@ -141,8 +141,10 @@ CREATE TABLE referrals (
   referee_subscribed BOOLEAN NOT NULL DEFAULT FALSE,
   signup_reward_xp INTEGER NOT NULL DEFAULT 0,
   conversion_reward_xp INTEGER NOT NULL DEFAULT 0,
+  annual_direct_token_amount NUMERIC(18, 4) NOT NULL DEFAULT 0,
   signup_rewarded_at TIMESTAMPTZ,
   conversion_rewarded_at TIMESTAMPTZ,
+  annual_direct_token_rewarded_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (referrer_user_id, referee_user_id)
 );
@@ -227,6 +229,7 @@ CREATE TABLE economy_settings (
   referral_monthly_conversion_base_xp INTEGER NOT NULL DEFAULT 150,
   referral_annual_conversion_base_xp INTEGER NOT NULL DEFAULT 300,
   annual_referral_direct_token_amount NUMERIC(18, 4) NOT NULL DEFAULT 25.0000,
+  campaign_overrides JSONB NOT NULL DEFAULT '{}'::JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

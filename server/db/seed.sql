@@ -797,7 +797,8 @@ INSERT INTO economy_settings (
   referral_signup_base_xp,
   referral_monthly_conversion_base_xp,
   referral_annual_conversion_base_xp,
-  annual_referral_direct_token_amount
+  annual_referral_direct_token_amount,
+  campaign_overrides
 ) VALUES (
   'ce246eca-e256-487d-849c-769dbd5f366c',
   TRUE,
@@ -818,7 +819,13 @@ INSERT INTO economy_settings (
   40,
   150,
   300,
-  25.0000
+  25.0000,
+  '{
+    "direct": {"signupBonusXp": 0, "monthlyConversionBonusXp": 0, "annualConversionBonusXp": 0, "annualDirectTokenBonus": 0},
+    "zealy": {"signupBonusXp": 10, "monthlyConversionBonusXp": 20, "annualConversionBonusXp": 40, "annualDirectTokenBonus": 5},
+    "galxe": {"signupBonusXp": 5, "monthlyConversionBonusXp": 30, "annualConversionBonusXp": 55, "annualDirectTokenBonus": 7},
+    "layer3": {"signupBonusXp": 15, "monthlyConversionBonusXp": 25, "annualConversionBonusXp": 70, "annualDirectTokenBonus": 10}
+  }'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
   payout_asset = EXCLUDED.payout_asset,
@@ -839,4 +846,5 @@ ON CONFLICT (id) DO UPDATE SET
   referral_monthly_conversion_base_xp = EXCLUDED.referral_monthly_conversion_base_xp,
   referral_annual_conversion_base_xp = EXCLUDED.referral_annual_conversion_base_xp,
   annual_referral_direct_token_amount = EXCLUDED.annual_referral_direct_token_amount,
+  campaign_overrides = EXCLUDED.campaign_overrides,
   updated_at = NOW();

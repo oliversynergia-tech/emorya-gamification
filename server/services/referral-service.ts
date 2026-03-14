@@ -6,6 +6,7 @@ import {
   updateReferralRewardState,
 } from "@/server/repositories/referral-repository";
 import { getActiveEconomySettings as getEconomySettings } from "@/server/repositories/economy-settings-repository";
+import { createClaimedTokenRedemption } from "@/server/repositories/token-redemption-repository";
 import { calculateReferralRewardState, normalizeReferralCampaignSource } from "@/server/services/referral-rules";
 
 export async function resolveReferrerUserId(referralCode?: string | null) {
@@ -58,6 +59,10 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
       update.conversionRewardXp > referral.conversion_reward_xp
         ? new Date().toISOString()
         : referral.conversion_rewarded_at;
+    const annualDirectTokenRewardedAt =
+      (update.directTokenReward ?? 0) > Number(referral.annual_direct_token_amount ?? 0)
+        ? new Date().toISOString()
+        : referral.annual_direct_token_rewarded_at;
 
     if (update.signupRewardXp > referral.signup_reward_xp) {
       await createActivityLogEntry({
@@ -91,12 +96,42 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
       });
     }
 
+    if ((update.directTokenReward ?? 0) > Number(referral.annual_direct_token_amount ?? 0)) {
+      await createClaimedTokenRedemption({
+        userId: referrerUserId,
+        asset: economySettings.payoutAsset,
+        tokenAmount: update.directTokenReward ?? 0,
+        source: "annual-referral-direct",
+        metadata: {
+          referralId: referral.id,
+          referee: referral.referee_display_name,
+          campaignSource: referral.referee_attribution_source ?? "direct",
+        },
+      });
+
+      await createActivityLogEntry({
+        userId: referrerUserId,
+        actionType: "referral-direct-token-claimed",
+        xpEarned: 0,
+        metadata: {
+          actor: referrer.display_name,
+          action: "claimed an annual referral token reward",
+          detail: `${referral.referee_display_name} triggered a direct ${economySettings.payoutAsset} payout`,
+          rewardType: "annual-direct-token",
+          referee: referral.referee_display_name,
+          campaignSource: referral.referee_attribution_source ?? "direct",
+        },
+      });
+    }
+
     await updateReferralRewardState({
       referralId: referral.id,
       signupRewardXp: update.signupRewardXp,
       conversionRewardXp: update.conversionRewardXp,
+      annualDirectTokenAmount: update.directTokenReward ?? Number(referral.annual_direct_token_amount ?? 0),
       signupRewardedAt,
       conversionRewardedAt,
+      annualDirectTokenRewardedAt,
       refereeSubscribed: referral.referee_subscribed,
     });
   }

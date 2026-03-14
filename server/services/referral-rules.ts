@@ -57,6 +57,28 @@ export const referralCampaignIncentives: ReferralCampaignIncentive[] = [
   },
 ];
 
+function applyCampaignOverride(
+  source: Exclude<ReferralCampaignSource, null>,
+  settings?: EconomySettings,
+): ReferralCampaignIncentive {
+  const base =
+    referralCampaignIncentives.find((entry) => entry.source === source) ??
+    referralCampaignIncentives[0];
+  const override = settings?.campaignOverrides?.[source];
+
+  if (!override) {
+    return base;
+  }
+
+  return {
+    ...base,
+    signupBonusXp: override.signupBonusXp,
+    monthlyConversionBonusXp: override.monthlyConversionBonusXp,
+    annualConversionBonusXp: override.annualConversionBonusXp,
+    annualDirectTokenBonus: override.annualDirectTokenBonus,
+  };
+}
+
 export function normalizeReferralCampaignSource(source: string | null | undefined): ReferralCampaignSource {
   const normalized = source?.trim().toLowerCase() ?? "";
 
@@ -85,7 +107,7 @@ export function getReferralRewardTargets({
   campaignSource: string | null | undefined;
   settings?: EconomySettings;
 }) {
-  const incentive = getReferralCampaignIncentive(campaignSource);
+  const incentive = applyCampaignOverride(normalizeReferralCampaignSource(campaignSource) ?? "direct", settings);
   const signupXp = settings.referralSignupBaseXp + incentive.signupBonusXp;
 
   if (subscriptionTier === "annual") {

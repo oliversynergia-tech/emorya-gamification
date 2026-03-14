@@ -106,6 +106,18 @@ const emptyForm: QuestDefinitionFormState = {
   metadataText: '{\n  "track": "starter"\n}',
 };
 
+type MetadataBuilderState = {
+  track: string;
+  tokenEffect: string;
+  previewLabel: string;
+  minLevel: number;
+  successfulReferrals: number;
+  walletLinked: boolean;
+  eligibilityProgressPoints: number;
+  directTokenAsset: string;
+  directTokenAmount: number;
+};
+
 function parseMetadata(metadataText: string) {
   try {
     const parsed = JSON.parse(metadataText) as Record<string, unknown>;
@@ -156,6 +168,29 @@ export function QuestDefinitionManagementPanel() {
         directTokenReward?.asset && typeof directTokenReward.amount === "number"
           ? `${directTokenReward.amount} ${directTokenReward.asset}`
           : null,
+    };
+  }, [metadataState.parsed]);
+  const metadataBuilder = useMemo<MetadataBuilderState>(() => {
+    const metadata = metadataState.parsed ?? {};
+    const rewardConfig = (metadata.rewardConfig as Record<string, unknown> | undefined) ?? {};
+    const unlockRules = (metadata.unlockRules as { all?: Array<{ type?: string; value?: unknown }> } | undefined) ?? {};
+    const allRules = unlockRules.all ?? [];
+    const directTokenReward = (rewardConfig.directTokenReward as Record<string, unknown> | undefined) ?? {};
+    const tokenEligibility = (rewardConfig.tokenEligibility as Record<string, unknown> | undefined) ?? {};
+
+    return {
+      track: typeof metadata.track === "string" ? metadata.track : "starter",
+      tokenEffect: typeof rewardConfig.tokenEffect === "string" ? rewardConfig.tokenEffect : "none",
+      previewLabel:
+        typeof (metadata.previewConfig as Record<string, unknown> | undefined)?.label === "string"
+          ? String((metadata.previewConfig as Record<string, unknown>).label)
+          : "",
+      minLevel: Number(allRules.find((rule) => rule.type === "min_level")?.value ?? 0),
+      successfulReferrals: Number(allRules.find((rule) => rule.type === "successful_referrals")?.value ?? 0),
+      walletLinked: Boolean(allRules.find((rule) => rule.type === "wallet_linked")?.value),
+      eligibilityProgressPoints: Number(tokenEligibility.progressPoints ?? 0),
+      directTokenAsset: typeof directTokenReward.asset === "string" ? directTokenReward.asset : "EMR",
+      directTokenAmount: Number(directTokenReward.amount ?? 0),
     };
   }, [metadataState.parsed]);
 
@@ -214,6 +249,59 @@ export function QuestDefinitionManagementPanel() {
     setForm((current) => ({
       ...current,
       metadataText: JSON.stringify(metadata, null, 2),
+    }));
+  }
+
+  function updateMetadataBuilder(updater: (current: MetadataBuilderState) => MetadataBuilderState) {
+    const next = updater(metadataBuilder);
+    const nextMetadata = { ...(metadataState.parsed ?? {}) } as Record<string, unknown>;
+    const rewardConfig = { ...((nextMetadata.rewardConfig as Record<string, unknown> | undefined) ?? {}) };
+    const previewConfig = { ...((nextMetadata.previewConfig as Record<string, unknown> | undefined) ?? {}) };
+    const allRules: Array<{ type: string; value: unknown }> = [];
+
+    if (next.minLevel > 0) {
+      allRules.push({ type: "min_level", value: next.minLevel });
+    }
+    if (next.successfulReferrals > 0) {
+      allRules.push({ type: "successful_referrals", value: next.successfulReferrals });
+    }
+    if (next.walletLinked) {
+      allRules.push({ type: "wallet_linked", value: true });
+    }
+
+    rewardConfig.tokenEffect = next.tokenEffect;
+    if (next.eligibilityProgressPoints > 0) {
+      rewardConfig.tokenEligibility = { progressPoints: next.eligibilityProgressPoints };
+    } else {
+      delete rewardConfig.tokenEligibility;
+    }
+    if (next.directTokenAmount > 0) {
+      rewardConfig.directTokenReward = {
+        asset: next.directTokenAsset,
+        amount: next.directTokenAmount,
+        requiresWallet: true,
+      };
+    } else {
+      delete rewardConfig.directTokenReward;
+    }
+
+    nextMetadata.track = next.track;
+    nextMetadata.rewardConfig = rewardConfig;
+    if (next.previewLabel.trim()) {
+      previewConfig.label = next.previewLabel.trim();
+      nextMetadata.previewConfig = previewConfig;
+    } else {
+      delete nextMetadata.previewConfig;
+    }
+    if (allRules.length > 0) {
+      nextMetadata.unlockRules = { all: allRules };
+    } else {
+      delete nextMetadata.unlockRules;
+    }
+
+    setForm((current) => ({
+      ...current,
+      metadataText: JSON.stringify(nextMetadata, null, 2),
     }));
   }
 
@@ -413,6 +501,64 @@ export function QuestDefinitionManagementPanel() {
         <span>Metadata JSON</span>
         <textarea rows={12} value={form.metadataText} onChange={(event) => setForm((current) => ({ ...current, metadataText: event.target.value }))} />
       </label>
+      <section className="panel panel--glass">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Metadata builder</p>
+            <h3>Structured unlock and reward fields</h3>
+          </div>
+        </div>
+        <div className="profile-grid">
+          <label className="field">
+            <span>Track</span>
+            <select value={metadataBuilder.track} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, track: event.target.value }))}>
+              {["starter", "daily", "social", "wallet", "referral", "premium", "ambassador", "creative", "campaign", "quiz"].map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Token effect</span>
+            <select value={metadataBuilder.tokenEffect} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, tokenEffect: event.target.value }))}>
+              {["none", "eligibility_progress", "token_bonus", "direct_token_reward"].map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Preview label</span>
+            <input value={metadataBuilder.previewLabel} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, previewLabel: event.target.value }))} />
+          </label>
+          <label className="field">
+            <span>Minimum level unlock</span>
+            <input type="number" value={metadataBuilder.minLevel} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, minLevel: Number(event.target.value) }))} />
+          </label>
+          <label className="field">
+            <span>Referral requirement</span>
+            <input type="number" value={metadataBuilder.successfulReferrals} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, successfulReferrals: Number(event.target.value) }))} />
+          </label>
+          <label className="field">
+            <span>Eligibility progress points</span>
+            <input type="number" value={metadataBuilder.eligibilityProgressPoints} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, eligibilityProgressPoints: Number(event.target.value) }))} />
+          </label>
+          <label className="field">
+            <span>Direct reward asset</span>
+            <select value={metadataBuilder.directTokenAsset} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, directTokenAsset: event.target.value }))}>
+              {["EMR", "EGLD", "PARTNER"].map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Direct reward amount</span>
+            <input type="number" step="0.01" value={metadataBuilder.directTokenAmount} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, directTokenAmount: Number(event.target.value) }))} />
+          </label>
+          <label className="field field--checkbox">
+            <span>Wallet required</span>
+            <input type="checkbox" checked={metadataBuilder.walletLinked} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, walletLinked: event.target.checked }))} />
+          </label>
+        </div>
+      </section>
       <div className="achievement-list">
         <article className="achievement-card">
           <div>

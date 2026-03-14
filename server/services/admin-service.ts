@@ -337,6 +337,32 @@ function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id"
     referralMonthlyConversionBaseXp: Math.max(input.referralMonthlyConversionBaseXp, 0),
     referralAnnualConversionBaseXp: Math.max(input.referralAnnualConversionBaseXp, 0),
     annualReferralDirectTokenAmount: Math.max(input.annualReferralDirectTokenAmount, 0),
+    campaignOverrides: {
+      direct: {
+        signupBonusXp: Math.max(input.campaignOverrides?.direct?.signupBonusXp ?? 0, 0),
+        monthlyConversionBonusXp: Math.max(input.campaignOverrides?.direct?.monthlyConversionBonusXp ?? 0, 0),
+        annualConversionBonusXp: Math.max(input.campaignOverrides?.direct?.annualConversionBonusXp ?? 0, 0),
+        annualDirectTokenBonus: Math.max(input.campaignOverrides?.direct?.annualDirectTokenBonus ?? 0, 0),
+      },
+      zealy: {
+        signupBonusXp: Math.max(input.campaignOverrides?.zealy?.signupBonusXp ?? 0, 0),
+        monthlyConversionBonusXp: Math.max(input.campaignOverrides?.zealy?.monthlyConversionBonusXp ?? 0, 0),
+        annualConversionBonusXp: Math.max(input.campaignOverrides?.zealy?.annualConversionBonusXp ?? 0, 0),
+        annualDirectTokenBonus: Math.max(input.campaignOverrides?.zealy?.annualDirectTokenBonus ?? 0, 0),
+      },
+      galxe: {
+        signupBonusXp: Math.max(input.campaignOverrides?.galxe?.signupBonusXp ?? 0, 0),
+        monthlyConversionBonusXp: Math.max(input.campaignOverrides?.galxe?.monthlyConversionBonusXp ?? 0, 0),
+        annualConversionBonusXp: Math.max(input.campaignOverrides?.galxe?.annualConversionBonusXp ?? 0, 0),
+        annualDirectTokenBonus: Math.max(input.campaignOverrides?.galxe?.annualDirectTokenBonus ?? 0, 0),
+      },
+      layer3: {
+        signupBonusXp: Math.max(input.campaignOverrides?.layer3?.signupBonusXp ?? 0, 0),
+        monthlyConversionBonusXp: Math.max(input.campaignOverrides?.layer3?.monthlyConversionBonusXp ?? 0, 0),
+        annualConversionBonusXp: Math.max(input.campaignOverrides?.layer3?.annualConversionBonusXp ?? 0, 0),
+        annualDirectTokenBonus: Math.max(input.campaignOverrides?.layer3?.annualDirectTokenBonus ?? 0, 0),
+      },
+    },
   };
 }
 

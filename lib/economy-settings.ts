@@ -24,6 +24,32 @@ export const defaultEconomySettings: EconomySettings = {
   referralMonthlyConversionBaseXp: 150,
   referralAnnualConversionBaseXp: 300,
   annualReferralDirectTokenAmount: 25,
+  campaignOverrides: {
+    direct: {
+      signupBonusXp: 0,
+      monthlyConversionBonusXp: 0,
+      annualConversionBonusXp: 0,
+      annualDirectTokenBonus: 0,
+    },
+    zealy: {
+      signupBonusXp: 10,
+      monthlyConversionBonusXp: 20,
+      annualConversionBonusXp: 40,
+      annualDirectTokenBonus: 5,
+    },
+    galxe: {
+      signupBonusXp: 5,
+      monthlyConversionBonusXp: 30,
+      annualConversionBonusXp: 55,
+      annualDirectTokenBonus: 7,
+    },
+    layer3: {
+      signupBonusXp: 15,
+      monthlyConversionBonusXp: 25,
+      annualConversionBonusXp: 70,
+      annualDirectTokenBonus: 10,
+    },
+  },
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -83,6 +109,9 @@ export function buildEconomySettingsSummary(previous: EconomySettings, next: Eco
   }
   if (previous.annualReferralDirectTokenAmount !== next.annualReferralDirectTokenAmount) {
     changes.push(`annual referral direct reward ${previous.annualReferralDirectTokenAmount} -> ${next.annualReferralDirectTokenAmount}`);
+  }
+  if (JSON.stringify(previous.campaignOverrides) !== JSON.stringify(next.campaignOverrides)) {
+    changes.push("campaign overrides updated");
   }
 
   return changes.length > 0 ? changes.join(", ") : "Economy settings saved with no effective change.";

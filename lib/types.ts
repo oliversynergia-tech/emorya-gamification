@@ -427,18 +427,7 @@ export type AdminOverviewData = {
   }>;
   economySettings: EconomySettings;
   economySettingsAudit: EconomySettingsAuditEntry[];
-  tokenSettlementQueue: Array<{
-    id: string;
-    userDisplayName: string;
-    userEmail: string | null;
-    asset: TokenAsset;
-    tokenAmount: number;
-    eligibilityPointsSpent: number;
-    source: string;
-    createdAt: string;
-    receiptReference: string | null;
-    settlementNote: string | null;
-  }>;
+  tokenSettlementQueue: Array<TokenSettlementItem>;
   reviewInsights: {
     byVerificationType: Array<{
       verificationType: VerificationType;
@@ -553,6 +542,12 @@ export type EconomySettings = {
   referralMonthlyConversionBaseXp: number;
   referralAnnualConversionBaseXp: number;
   annualReferralDirectTokenAmount: number;
+  campaignOverrides: Record<"direct" | "zealy" | "galxe" | "layer3", {
+    signupBonusXp: number;
+    monthlyConversionBonusXp: number;
+    annualConversionBonusXp: number;
+    annualDirectTokenBonus: number;
+  }>;
   updatedAt: string;
 };
 
@@ -719,6 +714,7 @@ export type TokenSettlementItem = {
   receiptReference: string | null;
   settlementNote: string | null;
   settledByDisplayName: string | null;
+  metadata: Record<string, string | number | boolean | null>;
 };
 
 export type WalletQuestResult = {

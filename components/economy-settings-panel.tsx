@@ -13,6 +13,7 @@ type EconomySettingsResponse = {
 };
 
 type TierForm = Record<SubscriptionTier, number>;
+type CampaignOverrideKey = "direct" | "zealy" | "galxe" | "layer3";
 
 function parseNumber(value: string) {
   const parsed = Number(value);
@@ -49,6 +50,23 @@ export function EconomySettingsPanel({
     }));
   }
 
+  function updateCampaignOverride(
+    source: CampaignOverrideKey,
+    key: "signupBonusXp" | "monthlyConversionBonusXp" | "annualConversionBonusXp" | "annualDirectTokenBonus",
+    value: string,
+  ) {
+    setSettings((current) => ({
+      ...current,
+      campaignOverrides: {
+        ...current.campaignOverrides,
+        [source]: {
+          ...current.campaignOverrides[source],
+          [key]: parseNumber(value),
+        },
+      },
+    }));
+  }
+
   async function save() {
     setPending(true);
     setMessage(null);
@@ -75,6 +93,7 @@ export function EconomySettingsPanel({
           referralMonthlyConversionBaseXp: settings.referralMonthlyConversionBaseXp,
           referralAnnualConversionBaseXp: settings.referralAnnualConversionBaseXp,
           annualReferralDirectTokenAmount: settings.annualReferralDirectTokenAmount,
+          campaignOverrides: settings.campaignOverrides,
         }),
       });
       const result = (await response.json()) as EconomySettingsResponse;
@@ -263,6 +282,63 @@ export function EconomySettingsPanel({
           </article>
         ))}
       </div>
+      <section className="panel panel--glass">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Campaign overrides</p>
+            <h3>Per-source referral and token economics</h3>
+          </div>
+        </div>
+        <div className="tooling-grid">
+          {(["direct", "zealy", "galxe", "layer3"] as CampaignOverrideKey[]).map((source) => (
+            <article key={source} className="achievement-card">
+              <div>
+                <strong>{source}</strong>
+                <p>Adjust how this acquisition lane modifies signup, conversion, and direct-token referral rewards.</p>
+              </div>
+              <div className="profile-grid">
+                <label className="field">
+                  <span>Signup bonus XP</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    value={settings.campaignOverrides[source].signupBonusXp}
+                    onChange={(event) => updateCampaignOverride(source, "signupBonusXp", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Monthly bonus XP</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    value={settings.campaignOverrides[source].monthlyConversionBonusXp}
+                    onChange={(event) => updateCampaignOverride(source, "monthlyConversionBonusXp", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Annual bonus XP</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    value={settings.campaignOverrides[source].annualConversionBonusXp}
+                    onChange={(event) => updateCampaignOverride(source, "annualConversionBonusXp", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Annual direct-token bonus</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignOverrides[source].annualDirectTokenBonus}
+                    onChange={(event) => updateCampaignOverride(source, "annualDirectTokenBonus", event.target.value)}
+                  />
+                </label>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
       <div className="review-bulk-actions">
         <button className="button button--primary button--small" type="button" disabled={!canManage || pending} onClick={save}>
           {pending ? "Saving..." : "Save economy settings"}

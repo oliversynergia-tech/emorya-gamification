@@ -21,8 +21,10 @@ type ReferralRewardRow = QueryResultRow & {
   referee_subscribed: boolean;
   signup_reward_xp: number;
   conversion_reward_xp: number;
+  annual_direct_token_amount: number | string;
   signup_rewarded_at: string | null;
   conversion_rewarded_at: string | null;
+  annual_direct_token_rewarded_at: string | null;
   created_at: string;
 };
 
@@ -99,8 +101,8 @@ export async function listReferralRewardStates(referrerUserId: string) {
             u.subscription_tier AS referee_subscription_tier,
             u.attribution_source AS referee_attribution_source,
             (u.subscription_tier <> 'free') AS referee_subscribed,
-            r.signup_reward_xp, r.conversion_reward_xp,
-            r.signup_rewarded_at, r.conversion_rewarded_at, r.created_at
+            r.signup_reward_xp, r.conversion_reward_xp, r.annual_direct_token_amount,
+            r.signup_rewarded_at, r.conversion_rewarded_at, r.annual_direct_token_rewarded_at, r.created_at
      FROM referrals r
      INNER JOIN users u ON u.id = r.referee_user_id
      WHERE r.referrer_user_id = $1
@@ -115,31 +117,39 @@ export async function updateReferralRewardState({
   referralId,
   signupRewardXp,
   conversionRewardXp,
+  annualDirectTokenAmount,
   signupRewardedAt,
   conversionRewardedAt,
+  annualDirectTokenRewardedAt,
   refereeSubscribed,
 }: {
   referralId: string;
   signupRewardXp: number;
   conversionRewardXp: number;
+  annualDirectTokenAmount: number;
   signupRewardedAt: string | null;
   conversionRewardedAt: string | null;
+  annualDirectTokenRewardedAt: string | null;
   refereeSubscribed: boolean;
 }) {
   await runQuery(
     `UPDATE referrals
      SET signup_reward_xp = $2,
          conversion_reward_xp = $3,
-         signup_rewarded_at = $4,
-         conversion_rewarded_at = $5,
-         referee_subscribed = $6
+         annual_direct_token_amount = $4,
+         signup_rewarded_at = $5,
+         conversion_rewarded_at = $6,
+         annual_direct_token_rewarded_at = $7,
+         referee_subscribed = $8
      WHERE id = $1`,
     [
       referralId,
       signupRewardXp,
       conversionRewardXp,
+      annualDirectTokenAmount,
       signupRewardedAt,
       conversionRewardedAt,
+      annualDirectTokenRewardedAt,
       refereeSubscribed,
     ],
   );
