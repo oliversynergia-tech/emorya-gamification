@@ -28,6 +28,12 @@ Validate deploy-time environment assumptions:
 npm run ops:env:check
 ```
 
+Validate deploy-blocking product state:
+
+```bash
+npm run ops:release:state-check
+```
+
 Run the full release gate:
 
 ```bash
@@ -75,6 +81,7 @@ Unlike the local workflow, these commands are intended for CI, cron runners, and
 - release gate: `npm run ops:release:gate`
 - quest catalog validation: `npm run ops:db:validate:quests`
 - pre-release env validation: `npm run ops:env:check`
+- product-state validation: `npm run ops:release:state-check`
 - post-deploy verification: `npm run ops:db:migrate:status`
 - scheduled leaderboard maintenance: `npm run ops:db:snapshot:scheduled`
 

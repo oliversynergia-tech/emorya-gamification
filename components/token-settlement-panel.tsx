@@ -79,6 +79,11 @@ export function TokenSettlementPanel({
       <p className="form-note">
         XP remains the main progression currency. This queue only handles the token layer once a redemption has been claimed.
       </p>
+      {queue.length > 0 ? (
+        <p className="form-note">
+          {annualReferralQueue.length} direct annual-referral payouts and {standardQueue.length} standard redemptions are waiting for receipts.
+        </p>
+      ) : null}
       {message ? <p className="status status--success">{message}</p> : null}
       {error ? <p className="status status--error">{error}</p> : null}
       <div className="review-history__list">

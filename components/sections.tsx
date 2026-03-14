@@ -58,6 +58,18 @@ function getTrackDescription(track: QuestTrack) {
   }
 }
 
+function formatCompactHours(hours: number) {
+  if (hours >= 24) {
+    return `${(hours / 24).toFixed(1)}d`;
+  }
+
+  if (hours >= 1) {
+    return `${hours.toFixed(1)}h`;
+  }
+
+  return `${Math.round(hours * 60)}m`;
+}
+
 function renderQuestCard(quest: Quest) {
   return (
     <article
@@ -446,6 +458,60 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             </div>
           ) : null}
         </div>
+        <div className="panel panel--glass">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Reward economy</p>
+              <h3>How XP compounds into token-ready value</h3>
+            </div>
+            <span className="badge badge--pink">{data.economy.payoutAsset}</span>
+          </div>
+          <div className="reward-ladder">
+            <article className="reward-ladder__card">
+              <span>Weekly output</span>
+              <strong>{data.user.weeklyProgress.xp} XP</strong>
+              <small>{data.user.weeklyProgress.tierLabel} band this week.</small>
+              <div className="reward-ladder__meter">
+                <div
+                  className="reward-ladder__fill"
+                  style={{ width: `${Math.min(data.user.weeklyProgress.progress * 100, 100)}%` }}
+                />
+              </div>
+            </article>
+            <article className="reward-ladder__card">
+              <span>Eligibility banked</span>
+              <strong>{data.user.tokenProgram.eligibilityPoints} pts</strong>
+              <small>{data.user.tokenProgram.nextStep}</small>
+              <div className="reward-ladder__meter">
+                <div
+                  className="reward-ladder__fill reward-ladder__fill--gold"
+                  style={{
+                    width: `${Math.min(
+                      (data.user.tokenProgram.eligibilityPoints / Math.max(data.user.tokenProgram.nextRedemptionPoints ?? data.user.tokenProgram.minimumPoints, 1)) * 100,
+                      100,
+                    )}%`,
+                  }}
+                />
+              </div>
+            </article>
+            <article className="reward-ladder__card">
+              <span>Referral spike</span>
+              <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} / +{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP</strong>
+              <small>
+                Annual referral also projects{" "}
+                {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward
+                  ? `${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.amount} ${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.asset}`
+                  : "direct token upside"}
+                .
+              </small>
+            </article>
+            <article className="reward-ladder__card">
+              <span>Premium lift</span>
+              <strong>{data.economy.xpMultipliers.monthly.toFixed(2)}x / {data.economy.xpMultipliers.annual.toFixed(2)}x XP</strong>
+              <small>{data.economy.tokenMultipliers.monthly.toFixed(2)}x / {data.economy.tokenMultipliers.annual.toFixed(2)}x token yield.</small>
+            </article>
+          </div>
+        </div>
         <div className="referral-summary">
           <div className="quest-card__meta">
             <span>{data.user.referral.convertedCount} converted</span>
@@ -702,6 +768,63 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             <span>Claimed / settled</span>
             <strong>{data.user.tokenProgram.claimedBalance} / {data.user.tokenProgram.settledBalance}</strong>
           </div>
+        </div>
+        <div className="reward-visual-grid">
+          <article className="reward-visual-card">
+            <div className="quest-card__meta">
+              <span>XP to reward flow</span>
+              <span>{data.user.tokenProgram.status}</span>
+            </div>
+            <strong>
+              {data.user.totalXp.toLocaleString()} XP to {data.user.tokenProgram.eligibilityPoints} pts to{" "}
+              {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
+            </strong>
+            <div className="reward-ladder__meter">
+              <div
+                className="reward-ladder__fill"
+                style={{ width: `${Math.min(data.user.weeklyProgress.progress * 100, 100)}%` }}
+              />
+            </div>
+            <small>Leaderboard pressure feeds weekly output, which feeds eligibility and redemption readiness.</small>
+          </article>
+          <article className="reward-visual-card">
+            <div className="quest-card__meta">
+              <span>Payout state</span>
+              <span>{data.user.tokenProgram.asset}</span>
+            </div>
+            <strong>{data.user.tokenProgram.claimedBalance} claimed / {data.user.tokenProgram.settledBalance} settled</strong>
+            <div className="reward-state-bars">
+              <div>
+                <span>Claimed</span>
+                <div className="reward-state-bars__track">
+                  <div
+                    className="reward-state-bars__fill"
+                    style={{
+                      width: `${Math.min(
+                        (data.user.tokenProgram.claimedBalance / Math.max(data.user.tokenProgram.claimedBalance + data.user.tokenProgram.settledBalance, 1)) * 100,
+                        100,
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+              <div>
+                <span>Settled</span>
+                <div className="reward-state-bars__track">
+                  <div
+                    className="reward-state-bars__fill reward-state-bars__fill--gold"
+                    style={{
+                      width: `${Math.min(
+                        (data.user.tokenProgram.settledBalance / Math.max(data.user.tokenProgram.claimedBalance + data.user.tokenProgram.settledBalance, 1)) * 100,
+                        100,
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <small>Claimed rewards are reserved. Settled rewards have completed the manual payout path.</small>
+          </article>
         </div>
         <p className="form-note">
           Rankings do not just signal vanity. Higher weekly output compounds into redemption readiness, while premium tiers
@@ -1248,6 +1371,64 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
               </div>
             </article>
           ))}
+        </div>
+      </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Settlement analytics</p>
+            <h3>Throughput, pending age, and direct-reward flow</h3>
+          </div>
+          <span className="badge badge--pink">{data.settlementAnalytics.pendingCount} pending</span>
+        </div>
+        <div className="info-grid">
+          <div className="info-card">
+            <span>Pending payouts</span>
+            <strong>{data.settlementAnalytics.pendingCount}</strong>
+          </div>
+          <div className="info-card">
+            <span>Pending volume</span>
+            <strong>{data.settlementAnalytics.pendingTokenAmount.toFixed(2)}</strong>
+          </div>
+          <div className="info-card">
+            <span>Oldest pending age</span>
+            <strong>{formatCompactHours(data.settlementAnalytics.oldestPendingHours)}</strong>
+          </div>
+          <div className="info-card">
+            <span>Avg settlement time</span>
+            <strong>{formatCompactHours(data.settlementAnalytics.averageSettlementHours)}</strong>
+          </div>
+          <div className="info-card">
+            <span>7-day throughput</span>
+            <strong>{data.settlementAnalytics.settledLast7DaysCount}</strong>
+          </div>
+          <div className="info-card">
+            <span>Velocity / day</span>
+            <strong>{data.settlementAnalytics.redemptionVelocityPerDay.toFixed(2)}</strong>
+          </div>
+        </div>
+        <div className="achievement-list">
+          <article className="achievement-card">
+            <div>
+              <strong>Settled last 7 days</strong>
+              <p>Total settled volume across standard redemptions and direct payouts.</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{data.settlementAnalytics.settledLast7DaysCount} payouts</span>
+              <span>{data.settlementAnalytics.settledLast7DaysTokenAmount.toFixed(2)} tokens</span>
+            </div>
+          </article>
+          <article className="achievement-card">
+            <div>
+              <strong>Annual referral direct rewards</strong>
+              <p>Tracks the direct-token lane separately from general XP conversion redemptions.</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{data.settlementAnalytics.directRewardPendingCount} pending</span>
+              <span>{data.settlementAnalytics.directRewardSettledCount} settled</span>
+              <span>{data.settlementAnalytics.directRewardSettledTokenAmount.toFixed(2)} tokens</span>
+            </div>
+          </article>
         </div>
       </div>
       <div className="panel panel--glass admin-analytics">

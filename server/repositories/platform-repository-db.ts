@@ -56,7 +56,10 @@ import {
   getReviewerWorkload,
 } from "@/server/repositories/quest-repository";
 import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/referral-repository";
-import { listPendingTokenSettlements } from "@/server/repositories/token-redemption-repository";
+import {
+  getTokenSettlementAnalytics,
+  listPendingTokenSettlements,
+} from "@/server/repositories/token-redemption-repository";
 import { buildDashboardQuestBoard } from "@/server/services/build-dashboard-quest-board";
 import { buildModerationNotifications } from "@/server/services/moderation-notifications";
 import { syncAchievementProgressForUser } from "@/server/services/progression-service";
@@ -675,7 +678,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, tokenSettlementQueue] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, tokenSettlementQueue, settlementAnalytics] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -701,6 +704,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     getActiveEconomySettings(),
     listEconomySettingsAudit(),
     listPendingTokenSettlements(),
+    getTokenSettlementAnalytics(),
   ]);
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -733,6 +737,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     economySettings,
     economySettingsAudit,
     tokenSettlementQueue,
+    settlementAnalytics,
     reviewInsights: {
       byVerificationType: reviewBreakdownByVerificationType,
       reviewerTypeMatrix,

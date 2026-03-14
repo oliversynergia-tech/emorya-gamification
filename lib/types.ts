@@ -428,6 +428,18 @@ export type AdminOverviewData = {
   economySettings: EconomySettings;
   economySettingsAudit: EconomySettingsAuditEntry[];
   tokenSettlementQueue: Array<TokenSettlementItem>;
+  settlementAnalytics: {
+    pendingCount: number;
+    pendingTokenAmount: number;
+    oldestPendingHours: number;
+    averageSettlementHours: number;
+    settledLast7DaysCount: number;
+    settledLast7DaysTokenAmount: number;
+    directRewardPendingCount: number;
+    directRewardSettledCount: number;
+    directRewardSettledTokenAmount: number;
+    redemptionVelocityPerDay: number;
+  };
   reviewInsights: {
     byVerificationType: Array<{
       verificationType: VerificationType;

@@ -122,7 +122,7 @@ Recommended order:
 
 1. deploy or open the release artifact
 2. run `npm run ops:release:gate` against the target environment
-3. confirm env checks, migrations, migration status, and quest validation all pass
+3. confirm env checks, migrations, migration status, quest validation, and release-state validation all pass
 4. only then switch traffic to the new app version
 
 If step 3 fails:
@@ -132,6 +132,13 @@ If step 3 fails:
 - rerun the release gate before retrying deployment
 
 This keeps schema changes inside the release procedure instead of relying on a manual post-deploy memory step.
+
+The release-state check also blocks deploy if:
+
+- the active economy settings row is malformed
+- campaign override keys are incomplete
+- premium multiplier ordering is invalid
+- settlement-specific columns or required migrations are missing
 
 ## If you only want a quick stakeholder walkthrough
 

@@ -26,6 +26,7 @@ npm run ops:release:gate
 - migrations apply successfully
 - migration status shows only `applied` rows
 - quest validation passes
+- release-state validation passes for the active economy config and settlement schema
 
 5. Deploy or promote the application version.
 

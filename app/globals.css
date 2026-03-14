@@ -633,6 +633,73 @@ a {
   margin-top: 18px;
 }
 
+.reward-ladder,
+.reward-visual-grid,
+.reward-state-bars {
+  display: grid;
+  gap: 14px;
+}
+
+.reward-ladder,
+.reward-visual-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 18px;
+}
+
+.reward-ladder__card,
+.reward-visual-card {
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(223, 182, 255, 0.16);
+  background:
+    radial-gradient(circle at top right, rgba(240, 80, 158, 0.08), transparent 0 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    rgba(19, 10, 32, 0.92);
+}
+
+.reward-ladder__card strong,
+.reward-visual-card strong {
+  display: block;
+  margin: 8px 0 10px;
+}
+
+.reward-ladder__card small,
+.reward-visual-card small {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.reward-ladder__meter,
+.reward-state-bars__track {
+  overflow: hidden;
+  height: 10px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.reward-ladder__fill,
+.reward-state-bars__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--purple), var(--pink));
+  box-shadow: 0 0 20px rgba(240, 80, 158, 0.28);
+}
+
+.reward-ladder__fill--gold,
+.reward-state-bars__fill--gold {
+  background: linear-gradient(90deg, rgba(240, 214, 160, 0.9), rgba(240, 80, 158, 0.85));
+}
+
+.reward-state-bars {
+  margin-top: 12px;
+}
+
+.reward-state-bars > div {
+  display: grid;
+  gap: 6px;
+}
+
 .quest-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));

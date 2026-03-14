@@ -356,6 +356,7 @@ DO UPDATE SET xp = EXCLUDED.xp, rank = EXCLUDED.rank;
   }
 
   return {
+    withClient,
     runCommand,
   };
 }
