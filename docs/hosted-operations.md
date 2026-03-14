@@ -28,6 +28,12 @@ Validate deploy-time environment assumptions:
 npm run ops:env:check
 ```
 
+Run the full release gate:
+
+```bash
+npm run ops:release:gate
+```
+
 Write all leaderboard snapshots for the current date:
 
 ```bash
@@ -66,6 +72,7 @@ Unlike the local workflow, these commands are intended for CI, cron runners, and
 ## Recommended hosted usage
 
 - release step: `npm run ops:db:migrate`
+- release gate: `npm run ops:release:gate`
 - quest catalog validation: `npm run ops:db:validate:quests`
 - pre-release env validation: `npm run ops:env:check`
 - post-deploy verification: `npm run ops:db:migrate:status`

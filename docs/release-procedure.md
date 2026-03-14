@@ -14,14 +14,18 @@ npm run build
 
 2. Push the release commit.
 
-3. In the target environment, run:
+3. In the target environment, run the release gate:
 
 ```bash
-npm run ops:db:migrate
-npm run ops:db:migrate:status
+npm run ops:release:gate
 ```
 
-4. Confirm migration status shows only `applied` rows.
+4. Confirm the gate passes cleanly:
+
+- env checks pass
+- migrations apply successfully
+- migration status shows only `applied` rows
+- quest validation passes
 
 5. Deploy or promote the application version.
 
@@ -37,9 +41,9 @@ Do not deploy first and plan to run migrations afterwards. This repo now treats 
 
 ## Rollback note
 
-If a migration or status check fails:
+If the release gate fails:
 
 - stop the rollout
 - keep traffic on the previous app version
-- fix the migration issue in a new commit or release candidate
-- rerun the migration commands before promoting the new build
+- fix the env, migration, or quest-definition issue in a new commit or release candidate
+- rerun `npm run ops:release:gate` before promoting the new build

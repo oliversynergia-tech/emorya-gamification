@@ -19,6 +19,7 @@ test("hosted operations docs reference the supported ops scripts", () => {
     "ops:db:validate:quests",
     "ops:db:snapshot:scheduled",
     "ops:env:check",
+    "ops:release:gate",
   ];
 
   for (const script of requiredScripts) {

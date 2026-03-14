@@ -110,10 +110,9 @@ For the current repo, the cleanest repeatable flow is:
 
 1. Build locally with `npm run test && npm run lint && npm run build`
 2. Push to GitHub
-3. Apply DB migrations in the target environment with `npm run ops:db:migrate`
-4. Verify migration state with `npm run ops:db:migrate:status`
-5. Deploy the app
-6. Run snapshot jobs if the environment is meant to power leaderboard history immediately with `npm run ops:db:snapshot:scheduled`
+3. Run the release gate in the target environment with `npm run ops:release:gate`
+4. Deploy the app
+5. Run snapshot jobs if the environment is meant to power leaderboard history immediately with `npm run ops:db:snapshot:scheduled`
 
 ## Release procedure
 
@@ -122,15 +121,15 @@ Treat migrations as a release gate, not a follow-up task.
 Recommended order:
 
 1. deploy or open the release artifact
-2. run `npm run ops:db:migrate` against the target database
-3. run `npm run ops:db:migrate:status` and confirm there are no `pending` or `drift` entries
+2. run `npm run ops:release:gate` against the target environment
+3. confirm env checks, migrations, migration status, and quest validation all pass
 4. only then switch traffic to the new app version
 
 If step 3 fails:
 
 - do not continue the rollout
 - fix the migration issue or revert the release candidate
-- rerun the migration status check before retrying deployment
+- rerun the release gate before retrying deployment
 
 This keeps schema changes inside the release procedure instead of relying on a manual post-deploy memory step.
 

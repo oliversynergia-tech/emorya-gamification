@@ -576,6 +576,7 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
 
 export function LeaderboardSection({ data }: { data: DashboardData }) {
   const topReferralEntry = data.referralLeaderboard[0];
+  const annualDirectReward = data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward;
 
   return (
     <section className="grid grid--leaderboard">
@@ -598,6 +599,28 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             </div>
           ))}
         </div>
+        <div className="info-grid">
+          <div className="info-card">
+            <span>Projected payout</span>
+            <strong>{data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}</strong>
+          </div>
+          <div className="info-card">
+            <span>Monthly premium uplift</span>
+            <strong>{data.economy.xpMultipliers.monthly.toFixed(2)}x XP</strong>
+          </div>
+          <div className="info-card">
+            <span>Annual premium uplift</span>
+            <strong>{data.economy.xpMultipliers.annual.toFixed(2)}x XP</strong>
+          </div>
+          <div className="info-card">
+            <span>Claimed / settled</span>
+            <strong>{data.user.tokenProgram.claimedBalance} / {data.user.tokenProgram.settledBalance}</strong>
+          </div>
+        </div>
+        <p className="form-note">
+          Rankings do not just signal vanity. Higher weekly output compounds into redemption readiness, while premium tiers
+          widen both XP speed and token value.
+        </p>
       </div>
       <div className="panel">
         <div className="panel__header">
@@ -632,6 +655,10 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             <div className="info-card">
               <span>Still available</span>
               <strong>{data.user.referral.pendingConversionXp}</strong>
+            </div>
+            <div className="info-card">
+              <span>Annual referral direct reward</span>
+              <strong>{annualDirectReward ? `${annualDirectReward.amount} ${annualDirectReward.asset}` : "Projected only"}</strong>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { handleTokenSettlementRequest } from "@/server/http/admin-handlers";
-import { settlePendingTokenRedemption } from "@/server/services/admin-service";
+import { runTokenSettlementRoute } from "@/server/http/admin-route-actions";
+import * as adminService from "@/server/services/admin-service";
 
 type RouteContext = {
   params: Promise<{
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function PATCH(request: Request, context: RouteContext) {
   const { redemptionId } = await context.params;
   const body = (await request.json()) as Record<string, unknown>;
-  const result = await handleTokenSettlementRequest(
+  const result = await runTokenSettlementRoute(
     {
       redemptionId,
       body: {
@@ -22,7 +22,9 @@ export async function PATCH(request: Request, context: RouteContext) {
         settlementNote: typeof body.settlementNote === "string" ? body.settlementNote : null,
       },
     },
-    settlePendingTokenRedemption,
+    {
+      settlePendingTokenRedemption: adminService.settlePendingTokenRedemption,
+    },
   );
 
   return NextResponse.json(result.body, { status: result.status });

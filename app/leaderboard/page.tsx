@@ -49,6 +49,15 @@ export default async function LeaderboardPage() {
             </small>
           </div>
           <div className="metric-card">
+            <span>Premium delta</span>
+            <strong>
+              {data.economy.xpMultipliers.monthly.toFixed(2)}x / {data.economy.xpMultipliers.annual.toFixed(2)}x
+            </strong>
+            <small>
+              Monthly and annual tiers accelerate both XP accumulation and token yield on the active economy program.
+            </small>
+          </div>
+          <div className="metric-card">
             <span>Campaign lane</span>
             <strong>{campaignProfile.accent}</strong>
             <small>
@@ -83,6 +92,10 @@ export default async function LeaderboardPage() {
             <div className="info-card">
               <span>Annual referral upside</span>
               <strong>{data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.amount} {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.asset}</strong>
+            </div>
+            <div className="info-card">
+              <span>Claimed vs settled</span>
+              <strong>{data.user.tokenProgram.claimedBalance} / {data.user.tokenProgram.settledBalance}</strong>
             </div>
           </div>
           <p className="form-note">
