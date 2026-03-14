@@ -5,6 +5,7 @@ import {
   listReferralRewardStates,
   updateReferralRewardState,
 } from "@/server/repositories/referral-repository";
+import { getActiveEconomySettings as getEconomySettings } from "@/server/repositories/economy-settings-repository";
 import { calculateReferralRewardState, normalizeReferralCampaignSource } from "@/server/services/referral-rules";
 
 export async function resolveReferrerUserId(referralCode?: string | null) {
@@ -27,6 +28,7 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
     return;
   }
 
+  const economySettings = await getEconomySettings();
   const rewardState = calculateReferralRewardState({
     totalXp: referrer.total_xp,
     level: referrer.level,
@@ -38,6 +40,7 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
       signupRewardXp: referral.signup_reward_xp,
       conversionRewardXp: referral.conversion_reward_xp,
     })),
+    settings: economySettings,
   });
 
   for (const referral of referrals) {

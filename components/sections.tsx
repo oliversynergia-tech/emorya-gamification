@@ -1,6 +1,6 @@
 import { getCampaignSourceProfile } from "@/lib/campaign-source";
 import { getTokenEffectLabel } from "@/lib/progression-rules";
-import { getLevelProgress, getTierLabel, getTierMultiplier } from "@/lib/progression";
+import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionTier } from "@/lib/types";
 
@@ -136,8 +136,8 @@ export function HeroSection({ data }: { data: DashboardData }) {
         </div>
         <div className="metric-card">
           <span>XP multiplier</span>
-          <strong>{getTierMultiplier(data.user.tier)}x</strong>
-          <small>Annual doubles every verified action.</small>
+          <strong>{data.user.xpMultiplier.toFixed(2)}x</strong>
+          <small>Driven by the active XP economy settings.</small>
         </div>
         <div className="metric-card">
           <span>Prize draw</span>
@@ -505,12 +505,12 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
           </article>
           <article className="tier-card">
             <span className={tierClass("monthly")}>Monthly</span>
-            <strong>1.5x XP</strong>
+            <strong>{data.economy.xpMultipliers.monthly.toFixed(2)}x XP</strong>
             <p>Premium quests, subscriber leaderboard, raffle access, draw entry.</p>
           </article>
           <article className="tier-card">
             <span className={tierClass("annual")}>Annual</span>
-            <strong>2x XP</strong>
+            <strong>{data.economy.xpMultipliers.annual.toFixed(2)}x XP</strong>
             <p>Best badge, fastest leveling, exclusive quests, 3 streak freezes.</p>
           </article>
         </div>

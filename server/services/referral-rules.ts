@@ -1,10 +1,6 @@
+import { defaultEconomySettings } from "../../lib/economy-settings.ts";
 import { getLevelProgress } from "../../lib/progression.ts";
-import type { SubscriptionTier, UserSnapshot } from "../../lib/types.ts";
-
-export const REFERRAL_SIGNUP_REWARD_XP = 40;
-export const REFERRAL_MONTHLY_CONVERSION_REWARD_XP = 150;
-export const REFERRAL_ANNUAL_CONVERSION_REWARD_XP = 300;
-export const REFERRAL_ANNUAL_DIRECT_TOKEN_REWARD = 25;
+import type { EconomySettings, SubscriptionTier, UserSnapshot } from "../../lib/types.ts";
 
 export type ReferralCampaignSource = UserSnapshot["campaignSource"];
 
@@ -83,18 +79,22 @@ export function getReferralCampaignIncentive(source: string | null | undefined):
 export function getReferralRewardTargets({
   subscriptionTier,
   campaignSource,
+  settings = defaultEconomySettings,
 }: {
   subscriptionTier: SubscriptionTier;
   campaignSource: string | null | undefined;
+  settings?: EconomySettings;
 }) {
   const incentive = getReferralCampaignIncentive(campaignSource);
-  const signupXp = REFERRAL_SIGNUP_REWARD_XP + incentive.signupBonusXp;
+  const signupXp = settings.referralSignupBaseXp + incentive.signupBonusXp;
 
   if (subscriptionTier === "annual") {
     return {
       signupXp,
-      conversionXp: REFERRAL_ANNUAL_CONVERSION_REWARD_XP + incentive.annualConversionBonusXp,
-      annualDirectTokenReward: REFERRAL_ANNUAL_DIRECT_TOKEN_REWARD + incentive.annualDirectTokenBonus,
+      conversionXp: settings.referralAnnualConversionBaseXp + incentive.annualConversionBonusXp,
+      annualDirectTokenReward: settings.directRewardsEnabled && settings.directAnnualReferralEnabled
+        ? settings.annualReferralDirectTokenAmount + incentive.annualDirectTokenBonus
+        : null,
       incentive,
     };
   }
@@ -102,7 +102,7 @@ export function getReferralRewardTargets({
   if (subscriptionTier === "monthly") {
     return {
       signupXp,
-      conversionXp: REFERRAL_MONTHLY_CONVERSION_REWARD_XP + incentive.monthlyConversionBonusXp,
+      conversionXp: settings.referralMonthlyConversionBaseXp + incentive.monthlyConversionBonusXp,
       annualDirectTokenReward: null,
       incentive,
     };
@@ -120,10 +120,12 @@ export function calculateReferralRewardState({
   totalXp,
   level,
   referrals,
+  settings = defaultEconomySettings,
 }: {
   totalXp: number;
   level: number;
   referrals: ReferralRewardState[];
+  settings?: EconomySettings;
 }) {
   let nextTotalXp = totalXp;
   let nextLevel = level;
@@ -132,6 +134,7 @@ export function calculateReferralRewardState({
     const targets = getReferralRewardTargets({
       subscriptionTier: referral.refereeSubscriptionTier,
       campaignSource: referral.refereeCampaignSource,
+      settings,
     });
     let signupRewardXp = referral.signupRewardXp;
     let conversionRewardXp = referral.conversionRewardXp;

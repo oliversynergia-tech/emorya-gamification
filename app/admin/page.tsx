@@ -1,3 +1,4 @@
+import { EconomySettingsPanel } from "@/components/economy-settings-panel";
 import { ModerationNotificationHistoryPanel } from "@/components/moderation-notification-history-panel";
 import { QuestDefinitionManagementPanel } from "@/components/quest-definition-management-panel";
 import { QuestDefinitionToolingPanel } from "@/components/quest-definition-tooling-panel";
@@ -74,6 +75,11 @@ export default async function AdminPage() {
         </div>
       </section>
       <AdminSection data={data} />
+      <EconomySettingsPanel
+        initialSettings={data.economySettings}
+        initialAudit={data.economySettingsAudit}
+        canManage={hasSuperAdminAccess}
+      />
       <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
       <QuestDefinitionToolingPanel />
       <QuestDefinitionManagementPanel />

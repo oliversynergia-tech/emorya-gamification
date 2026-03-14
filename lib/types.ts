@@ -1,5 +1,6 @@
 export type SubscriptionTier = "free" | "monthly" | "annual";
 export type AppRole = "super_admin" | "admin" | "reviewer";
+export type TokenAsset = "EMR" | "EGLD" | "PARTNER";
 export type QuestTrack =
   | "starter"
   | "daily"
@@ -56,7 +57,7 @@ export type Quest = {
   projectedXp?: number;
   tokenEffect?: TokenEffect;
   projectedDirectTokenReward?: {
-    asset: "EMR" | "EGLD" | "PARTNER";
+    asset: TokenAsset;
     amount: number;
   };
   difficulty: "easy" | "medium" | "hard";
@@ -219,6 +220,7 @@ export type UserSnapshot = {
   level: number;
   totalXp: number;
   currentStreak: number;
+  xpMultiplier: number;
   nextLevelXp: number;
   tier: SubscriptionTier;
   journeyState: UserJourneyState;
@@ -249,7 +251,8 @@ export type UserSnapshot = {
   };
   tokenProgram: {
     status: "locked" | "earning" | "redeemable";
-    asset: "EMR" | "EGLD" | "PARTNER";
+    asset: TokenAsset;
+    redemptionEnabled: boolean;
     eligibilityPoints: number;
     minimumPoints: number;
     projectedRedemptionAmount: number;
@@ -258,11 +261,11 @@ export type UserSnapshot = {
     nextRedemptionPoints: number | null;
     tierMultiplier: number;
     scheduledDirectRewards: Array<{
-      asset: "EMR" | "EGLD" | "PARTNER";
+      asset: TokenAsset;
       amount: number;
     }>;
     redemptionHistory: Array<{
-      asset: "EMR" | "EGLD" | "PARTNER";
+      asset: TokenAsset;
       tokenAmount: number;
       eligibilityPointsSpent: number;
       status: "claimed" | "settled";
@@ -286,7 +289,7 @@ export type UserSnapshot = {
         xp: number;
         tokenEffect: TokenEffect;
         directTokenReward?: {
-          asset: "EMR" | "EGLD" | "PARTNER";
+          asset: TokenAsset;
           amount: number;
         };
       };
@@ -297,7 +300,7 @@ export type UserSnapshot = {
         monthlyPremiumXp: number;
         annualPremiumXp: number;
         annualDirectTokenReward: {
-          asset: "EMR" | "EGLD" | "PARTNER";
+          asset: TokenAsset;
           amount: number;
         };
       }>;
@@ -319,6 +322,11 @@ export type UserSnapshot = {
 
 export type DashboardData = {
   user: UserSnapshot;
+  economy: {
+    payoutAsset: TokenAsset;
+    xpMultipliers: Record<SubscriptionTier, number>;
+    tokenMultipliers: Record<SubscriptionTier, number>;
+  };
   quests: Quest[];
   achievements: Achievement[];
   leaderboard: LeaderboardEntry[];
@@ -412,6 +420,8 @@ export type AdminOverviewData = {
     acknowledgedAt: string | null;
     acknowledgedByDisplayName: string | null;
   }>;
+  economySettings: EconomySettings;
+  economySettingsAudit: EconomySettingsAuditEntry[];
   reviewInsights: {
     byVerificationType: Array<{
       verificationType: VerificationType;
@@ -477,7 +487,7 @@ export type RewardConfig = {
     multiplier: number;
   };
   directTokenReward?: {
-    asset: "EMR" | "EGLD" | "PARTNER";
+    asset: TokenAsset;
     amount: number;
     requiresWallet: boolean;
   };
@@ -504,10 +514,36 @@ export type ModerationAlertChannelConfig = {
 };
 
 export type TokenRedemptionProgram = {
-  asset: "EMR" | "EGLD" | "PARTNER";
+  asset: TokenAsset;
   minimumEligibilityPoints: number;
   pointsPerToken: number;
   tierMultipliers: Record<SubscriptionTier, number>;
+};
+
+export type EconomySettings = {
+  id: string;
+  payoutAsset: TokenAsset;
+  redemptionEnabled: boolean;
+  directRewardsEnabled: boolean;
+  directAnnualReferralEnabled: boolean;
+  directPremiumFlashEnabled: boolean;
+  directAmbassadorEnabled: boolean;
+  minimumEligibilityPoints: number;
+  pointsPerToken: number;
+  xpTierMultipliers: Record<SubscriptionTier, number>;
+  tokenTierMultipliers: Record<SubscriptionTier, number>;
+  referralSignupBaseXp: number;
+  referralMonthlyConversionBaseXp: number;
+  referralAnnualConversionBaseXp: number;
+  annualReferralDirectTokenAmount: number;
+  updatedAt: string;
+};
+
+export type EconomySettingsAuditEntry = {
+  id: string;
+  changedByDisplayName: string | null;
+  createdAt: string;
+  summary: string;
 };
 
 export type CompletionRuleGroup = {

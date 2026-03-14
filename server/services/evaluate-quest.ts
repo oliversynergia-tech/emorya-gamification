@@ -1,4 +1,6 @@
+import { defaultEconomySettings } from "../../lib/economy-settings.ts";
 import type {
+  EconomySettings,
   EvaluatedQuest,
   QuestRuntimeContext,
   QuestStatus,
@@ -22,6 +24,7 @@ export function evaluateQuest({
   runtimeContext,
   recommended,
   journeyState,
+  settings = defaultEconomySettings,
 }: {
   id: string;
   title: string;
@@ -33,13 +36,16 @@ export function evaluateQuest({
   runtimeContext: QuestRuntimeContext;
   recommended?: boolean;
   journeyState: UserJourneyState;
+  settings?: EconomySettings;
 }): EvaluatedQuest {
   const unlockEvaluation = evaluateUnlockRuleGroup(unlockRules, userState, runtimeContext);
   const projectedReward = projectQuestReward({
     rewardConfig,
+    track,
     subscriptionTier: userState.subscriptionTier,
     runtimeContext,
     walletLinked: userState.walletLinked,
+    settings,
   });
 
   let status: EvaluatedQuest["status"];

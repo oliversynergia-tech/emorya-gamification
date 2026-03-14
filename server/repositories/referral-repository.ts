@@ -4,6 +4,7 @@ import type { QueryResultRow } from "pg";
 
 import type { SubscriptionTier } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
+import { getActiveEconomySettings } from "@/server/repositories/economy-settings-repository";
 import { getReferralRewardTargets, normalizeReferralCampaignSource } from "@/server/services/referral-rules";
 
 type ReferrerRow = QueryResultRow & {
@@ -57,6 +58,12 @@ type ReferralSourceBreakdownRow = QueryResultRow & {
 type ReferralConversionWindowRow = QueryResultRow & {
   label: string;
   count: string;
+};
+
+type ReferralAnalyticsRewardRow = QueryResultRow & {
+  referee_subscription_tier: SubscriptionTier;
+  referee_attribution_source: string | null;
+  conversion_reward_xp: number;
 };
 
 export async function findReferrerByCode(referralCode: string) {
@@ -139,6 +146,7 @@ export async function updateReferralRewardState({
 }
 
 export async function getReferralSummary(userId: string) {
+  const economySettings = await getActiveEconomySettings();
   const [rewardStates, recentResult] = await Promise.all([
     listReferralRewardStates(userId),
     runQuery<RecentReferralRow>(
@@ -160,6 +168,7 @@ export async function getReferralSummary(userId: string) {
       const targets = getReferralRewardTargets({
         subscriptionTier: row.referee_subscription_tier,
         campaignSource: row.referee_attribution_source,
+        settings: economySettings,
       });
 
       return sum + Math.max(targets.conversionXp - row.conversion_reward_xp, 0);
@@ -175,38 +184,14 @@ export async function getReferralSummary(userId: string) {
 }
 
 export async function getReferralAnalytics() {
-  const [summaryResult, topReferrersResult, sourceBreakdownResult, conversionWindowResult] = await Promise.all([
+  const economySettings = await getActiveEconomySettings();
+  const [summaryResult, topReferrersResult, sourceBreakdownResult, conversionWindowResult, rewardRowsResult] = await Promise.all([
     runQuery<ReferralAnalyticsSummaryRow>(
       `SELECT COUNT(*)::text AS invited_count,
               COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE)::text AS converted_count,
               COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0)::text AS reward_xp_earned,
-              COALESCE(SUM(
-                CASE
-                  WHEN referee_user.subscription_tier = 'annual' THEN GREATEST(
-                    300 +
-                    CASE COALESCE(NULLIF(TRIM(LOWER(referee_user.attribution_source)), ''), 'direct')
-                      WHEN 'zealy' THEN 40
-                      WHEN 'galxe' THEN 55
-                      WHEN 'layer3' THEN 70
-                      ELSE 0
-                    END - r.conversion_reward_xp,
-                    0
-                  )
-                  WHEN referee_user.subscription_tier = 'monthly' THEN GREATEST(
-                    150 +
-                    CASE COALESCE(NULLIF(TRIM(LOWER(referee_user.attribution_source)), ''), 'direct')
-                      WHEN 'zealy' THEN 20
-                      WHEN 'galxe' THEN 30
-                      WHEN 'layer3' THEN 25
-                      ELSE 0
-                    END - r.conversion_reward_xp,
-                    0
-                  )
-                  ELSE 0
-                END
-              ), 0)::text AS pending_conversion_xp
-       FROM referrals r
-       INNER JOIN users referee_user ON referee_user.id = r.referee_user_id`,
+              '0'::text AS pending_conversion_xp
+       FROM referrals r`,
     ),
     runQuery<ReferralTopReferrerRow>(
       `SELECT u.display_name,
@@ -250,7 +235,14 @@ export async function getReferralAnalytics() {
          WHEN 'Converted in 30d' THEN 2
          WHEN 'Converted after 30d' THEN 3
          ELSE 4
-       END`,
+      END`,
+    ),
+    runQuery<ReferralAnalyticsRewardRow>(
+      `SELECT referee_user.subscription_tier AS referee_subscription_tier,
+              referee_user.attribution_source AS referee_attribution_source,
+              r.conversion_reward_xp
+       FROM referrals r
+       INNER JOIN users referee_user ON referee_user.id = r.referee_user_id`,
     ),
   ]);
 
@@ -258,12 +250,22 @@ export async function getReferralAnalytics() {
   const invitedCount = Number(summary?.invited_count ?? 0);
   const convertedCount = Number(summary?.converted_count ?? 0);
 
+  const pendingConversionXp = rewardRowsResult.rows.reduce((sum, row) => {
+    const targets = getReferralRewardTargets({
+      subscriptionTier: row.referee_subscription_tier,
+      campaignSource: row.referee_attribution_source,
+      settings: economySettings,
+    });
+
+    return sum + Math.max(targets.conversionXp - Number(row.conversion_reward_xp), 0);
+  }, 0);
+
   return {
     invitedCount,
     convertedCount,
     conversionRate: invitedCount > 0 ? convertedCount / invitedCount : 0,
     rewardXpEarned: Number(summary?.reward_xp_earned ?? 0),
-    pendingConversionXp: Number(summary?.pending_conversion_xp ?? 0),
+    pendingConversionXp,
     sourceBreakdown: sourceBreakdownResult.rows.map((row) => ({
       source: row.source ?? "unknown",
       invitedCount: Number(row.invited_count),

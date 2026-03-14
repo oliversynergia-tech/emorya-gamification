@@ -17,9 +17,9 @@ test("calculateQuestRewardTransition applies premium multipliers, levels up, and
   });
 
   assert.deepEqual(result, {
-    xpAwarded: 150,
-    deltaXp: 150,
-    totalXp: 240,
+    xpAwarded: 125,
+    deltaXp: 125,
+    totalXp: 215,
     level: 2,
     currentStreak: 3,
     longestStreak: 3,
@@ -30,7 +30,7 @@ test("calculateQuestRewardTransition remains idempotent when approval was alread
   const result = calculateQuestRewardTransition({
     subscriptionTier: "annual",
     questXpReward: 80,
-    previousAwardedXp: 160,
+    previousAwardedXp: 120,
     totalXp: 520,
     level: 4,
     currentStreak: 5,
@@ -40,7 +40,7 @@ test("calculateQuestRewardTransition remains idempotent when approval was alread
   });
 
   assert.deepEqual(result, {
-    xpAwarded: 160,
+    xpAwarded: 120,
     deltaXp: 0,
     totalXp: 520,
     level: 4,

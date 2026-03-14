@@ -4,6 +4,7 @@ type AdminDirectoryResponse = {
 };
 
 type QuestDefinitionInput = Record<string, unknown>;
+type EconomySettingsInput = Record<string, unknown>;
 
 function getErrorStatus(message: string) {
   return message.includes("signed in")
@@ -207,6 +208,49 @@ export async function handleModerationNotificationAcknowledgeRequest(
 
     return {
       status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleEconomySettingsRequest(
+  getEconomySettings: () => Promise<unknown>,
+) {
+  try {
+    const result = await getEconomySettings();
+
+    return {
+      status: 200,
+      body: { ok: true, ...((result as Record<string, unknown>) ?? {}) },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load economy settings.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleEconomySettingsUpdateRequest(
+  body: EconomySettingsInput,
+  saveEconomySettings: (input: EconomySettingsInput) => Promise<unknown>,
+) {
+  try {
+    const result = await saveEconomySettings(body);
+
+    return {
+      status: 200,
+      body: { ok: true, ...((result as Record<string, unknown>) ?? {}) },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to save economy settings.";
+
+    return {
+      status: message.includes("Economy settings require")
+        ? 400
+        : getErrorStatus(message),
       body: { ok: false, error: message },
     };
   }

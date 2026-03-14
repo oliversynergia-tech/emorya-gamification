@@ -6,6 +6,7 @@ import {
   getUserAchievementsByUserId,
   upsertUserAchievement,
 } from "@/server/repositories/achievement-repository";
+import { getActiveEconomySettings } from "@/server/repositories/economy-settings-repository";
 import {
   createActivityLogEntry,
   getUserProgressById,
@@ -197,6 +198,7 @@ export async function applyQuestRewardTransition({
     throw new Error("User not found for progression update.");
   }
 
+  const economySettings = await getActiveEconomySettings();
   const rewardState = calculateQuestRewardTransition({
     subscriptionTier: user.subscription_tier,
     questXpReward,
@@ -209,6 +211,7 @@ export async function applyQuestRewardTransition({
     alreadyApprovedToday: shouldBeApproved
       ? await hasQuestApprovalActivityToday(userId)
       : false,
+    settings: economySettings,
   });
 
   const completion = await setQuestCompletionAwardedXp({

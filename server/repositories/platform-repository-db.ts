@@ -1,5 +1,6 @@
 import type { QueryResultRow } from "pg";
 
+import { defaultEconomySettings, getXpTierMultiplier } from "@/lib/economy-settings";
 import {
   getModerationAlertChannelConfig,
   getQueueAlertThresholds,
@@ -22,6 +23,7 @@ import type {
   AdminOverviewData,
   AuthUser,
   DashboardData,
+  EconomySettings,
   LeaderboardEntry,
   Quest,
   SubscriptionTier,
@@ -31,6 +33,10 @@ import type {
 import { runQuery } from "@/server/db/client";
 import { listUsersWithRoles } from "@/server/repositories/admin-repository";
 import { listAdminUsers } from "@/server/repositories/admin-repository";
+import {
+  getActiveEconomySettings,
+  listEconomySettingsAudit,
+} from "@/server/repositories/economy-settings-repository";
 import {
   getCurrentAllTimeRankForUser,
   getCurrentReferralRankForUser,
@@ -238,7 +244,12 @@ function buildStarterPathProgress(progressState: UserProgressState) {
   };
 }
 
-async function getUserSnapshot(user: UserRow, progressState: UserProgressState, journeyState: UserJourneyState): Promise<UserSnapshot> {
+async function getUserSnapshot(
+  user: UserRow,
+  progressState: UserProgressState,
+  journeyState: UserJourneyState,
+  economySettings = defaultEconomySettings,
+): Promise<UserSnapshot> {
   const [connectionsResult, rankResult, referralRank, referral, approvedRewardQuestResult, redemptionHistoryResult] = await Promise.all([
     runQuery<SocialConnectionRow>(
       `SELECT platform, verified
@@ -308,6 +319,7 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
     subscriptionTier: user.subscription_tier,
     rewardEligible: progressState.rewardEligible,
     walletLinked: progressState.walletLinked,
+    settings: economySettings,
   });
   const redemptionHistory = redemptionHistoryResult.rows.map((row) => ({
     asset: row.asset,
@@ -339,6 +351,7 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
     level: user.level,
     totalXp: user.total_xp,
     currentStreak: user.current_streak,
+    xpMultiplier: getXpTierMultiplier(economySettings, user.subscription_tier),
     nextLevelXp,
     tier: user.subscription_tier,
     journeyState,
@@ -355,6 +368,7 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
     tokenProgram: {
       status: redemptionProjection.status,
       asset: redemptionProjection.asset,
+      redemptionEnabled: economySettings.redemptionEnabled,
       eligibilityPoints,
       minimumPoints: redemptionProjection.minimumPoints,
       projectedRedemptionAmount: redemptionProjection.projectedRedemptionAmount,
@@ -370,7 +384,9 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
       nextStep:
         redemptionProjection.status === "redeemable"
           ? `Redeem ${redemptionProjection.asset} once payout rails are enabled.`
-          : progressState.walletLinked
+          : !economySettings.redemptionEnabled
+            ? `Redemption is currently paused by the active token program.`
+            : progressState.walletLinked
             ? `Reach ${redemptionProjection.minimumPoints} eligibility points to unlock your first redemption.`
             : "Connect xPortal to unlock token redemption.",
     },
@@ -385,20 +401,25 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
         annualPremiumReferral: {
           xp: annualReferralPreview.conversionXp,
           tokenEffect: "direct_token_reward",
-          directTokenReward: {
-            asset: "EMR",
-            amount: annualReferralPreview.annualDirectTokenReward ?? 25,
-          },
+          directTokenReward: annualReferralPreview.annualDirectTokenReward
+            ? {
+                asset: economySettings.payoutAsset,
+                amount: annualReferralPreview.annualDirectTokenReward,
+              }
+            : undefined,
         },
         sourceBonuses: referralCampaignIncentives.map((incentive) => ({
           source: incentive.source,
           label: incentive.label,
-          signupXp: 40 + incentive.signupBonusXp,
-          monthlyPremiumXp: 150 + incentive.monthlyConversionBonusXp,
-          annualPremiumXp: 300 + incentive.annualConversionBonusXp,
+          signupXp: economySettings.referralSignupBaseXp + incentive.signupBonusXp,
+          monthlyPremiumXp: economySettings.referralMonthlyConversionBaseXp + incentive.monthlyConversionBonusXp,
+          annualPremiumXp: economySettings.referralAnnualConversionBaseXp + incentive.annualConversionBonusXp,
           annualDirectTokenReward: {
-            asset: "EMR",
-            amount: 25 + incentive.annualDirectTokenBonus,
+            asset: economySettings.payoutAsset,
+            amount:
+              economySettings.directRewardsEnabled && economySettings.directAnnualReferralEnabled
+                ? economySettings.annualReferralDirectTokenAmount + incentive.annualDirectTokenBonus
+                : 0,
           },
         })),
       },
@@ -486,10 +507,12 @@ async function getQuestBoard({
   user,
   userProgressState,
   journeyState,
+  economySettings = defaultEconomySettings,
 }: {
   user: UserRow;
   userProgressState: UserProgressState;
   journeyState: UserJourneyState;
+  economySettings?: EconomySettings;
 }): Promise<Quest[]> {
   const result = await runQuery<QuestRow>(
     `SELECT q.id, q.slug, q.title, q.description, q.category, q.xp_reward, q.difficulty, q.verification_type,
@@ -509,6 +532,7 @@ async function getQuestBoard({
     quests: result.rows,
     userProgressState,
     journeyState,
+    settings: economySettings,
   });
 }
 
@@ -594,6 +618,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   const dashboardUser = await getDashboardUser(userId);
   const userProgressState = await getUserProgressState(userId);
   const journeyState = resolveUserJourneyState(userProgressState);
+  const economySettings = await getActiveEconomySettings();
   await syncAchievementProgressForUser({
     userId: dashboardUser.id,
     displayName: dashboardUser.display_name,
@@ -605,8 +630,8 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   });
 
   const [user, quests, achievements, leaderboard, referralLeaderboard, activityFeed] = await Promise.all([
-    getUserSnapshot(dashboardUser, userProgressState, journeyState),
-    getQuestBoard({ user: dashboardUser, userProgressState, journeyState }),
+    getUserSnapshot(dashboardUser, userProgressState, journeyState, economySettings),
+    getQuestBoard({ user: dashboardUser, userProgressState, journeyState, economySettings }),
     getAchievements(userId),
     getLeaderboard(),
     getReferralLeaderboard(),
@@ -615,6 +640,11 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 
   return {
     user,
+    economy: {
+      payoutAsset: economySettings.payoutAsset,
+      xpMultipliers: economySettings.xpTierMultipliers,
+      tokenMultipliers: economySettings.tokenTierMultipliers,
+    },
     quests,
     achievements,
     leaderboard,
@@ -622,15 +652,15 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     activityFeed,
     premiumMoments: [
       `Level ${user.level} reached. ${getTierLabel(user.tier)} is your current tier.`,
-      "Annual saves 44 euros a year and doubles every XP event.",
+      `Monthly earns ${economySettings.xpTierMultipliers.monthly.toFixed(2)}x XP. Annual earns ${economySettings.xpTierMultipliers.annual.toFixed(2)}x XP.`,
       `Your ${user.currentStreak}-day streak becomes safer with Annual streak freezes.`,
-      "Premium quests are now driven from quest definitions in PostgreSQL.",
+      `Redemptions are ${economySettings.redemptionEnabled ? "enabled" : "paused"} for ${economySettings.payoutAsset}.`,
     ],
   };
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -653,6 +683,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     getReviewerWorkload(),
     getReviewBreakdownByVerificationType(),
     getReviewerTypeMatrix(),
+    getActiveEconomySettings(),
+    listEconomySettingsAudit(),
   ]);
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -682,6 +714,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     queueMetrics,
     moderationNotifications,
     moderationNotificationHistory,
+    economySettings,
+    economySettingsAudit,
     reviewInsights: {
       byVerificationType: reviewBreakdownByVerificationType,
       reviewerTypeMatrix,

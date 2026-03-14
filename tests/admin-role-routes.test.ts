@@ -3,6 +3,8 @@ import test from "node:test";
 
 import {
   handleAdminDirectoryRequest,
+  handleEconomySettingsRequest,
+  handleEconomySettingsUpdateRequest,
   handleAdminGrantRequest,
   handleModerationNotificationAcknowledgeRequest,
   handleAdminRevokeRequest,
@@ -232,5 +234,36 @@ test("handleModerationNotificationAcknowledgeRequest returns refreshed history",
   assert.deepEqual(result.body, {
     ok: true,
     history: [{ id: "delivery-1", eventStatus: "acknowledged" }],
+  });
+});
+
+test("handleEconomySettingsRequest returns settings payload on success", async () => {
+  const result = await handleEconomySettingsRequest(async () => ({
+    settings: { payoutAsset: "EMR" },
+    audit: [],
+  }));
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    settings: { payoutAsset: "EMR" },
+    audit: [],
+  });
+});
+
+test("handleEconomySettingsUpdateRequest maps super admin access failures to 403", async () => {
+  const result = await handleEconomySettingsUpdateRequest(
+    {
+      payoutAsset: "EMR",
+    },
+    async () => {
+      throw new Error("Super admin access is required for this action.");
+    },
+  );
+
+  assert.equal(result.status, 403);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Super admin access is required for this action.",
   });
 });

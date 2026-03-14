@@ -1,5 +1,7 @@
+import { defaultEconomySettings, getTokenTierMultiplier, getXpTierMultiplier } from "./economy-settings.ts";
 import type {
   CompletionRuleGroup,
+  EconomySettings,
   Quest,
   QuestCadence,
   QuestTrack,
@@ -24,24 +26,17 @@ export const ambassadorMinimumLevel = 10;
 export const ambassadorReferralRequirement = 10;
 export const weeklyProgressThresholds = [100, 250, 450, 700] as const;
 export const tokenRedemptionProgram: TokenRedemptionProgram = {
-  asset: "EMR",
-  minimumEligibilityPoints: 100,
-  pointsPerToken: 20,
-  tierMultipliers: {
-    free: 1,
-    monthly: 1.15,
-    annual: 1.3,
-  },
+  asset: defaultEconomySettings.payoutAsset,
+  minimumEligibilityPoints: defaultEconomySettings.minimumEligibilityPoints,
+  pointsPerToken: defaultEconomySettings.pointsPerToken,
+  tierMultipliers: defaultEconomySettings.tokenTierMultipliers,
 };
 
-export const rulesEngineTierMultipliers: Record<SubscriptionTier, number> = {
-  free: 1,
-  monthly: 1.25,
-  annual: 1.5,
-};
-
-export function getRulesEngineTierMultiplier(tier: SubscriptionTier) {
-  return rulesEngineTierMultipliers[tier];
+export function getRulesEngineTierMultiplier(
+  tier: SubscriptionTier,
+  settings: EconomySettings = defaultEconomySettings,
+) {
+  return getXpTierMultiplier(settings, tier);
 }
 
 export function projectTokenRedemption({
@@ -49,20 +44,22 @@ export function projectTokenRedemption({
   subscriptionTier,
   rewardEligible,
   walletLinked,
+  settings = defaultEconomySettings,
 }: {
   eligibilityPoints: number;
   subscriptionTier: SubscriptionTier;
   rewardEligible: boolean;
   walletLinked: boolean;
+  settings?: EconomySettings;
 }) {
   const normalizedPoints = Math.max(Math.floor(eligibilityPoints), 0);
-  const minimumPoints = tokenRedemptionProgram.minimumEligibilityPoints;
-  const tierMultiplier = tokenRedemptionProgram.tierMultipliers[subscriptionTier];
-  const unlocked = rewardEligible && walletLinked;
+  const minimumPoints = settings.minimumEligibilityPoints;
+  const tierMultiplier = getTokenTierMultiplier(settings, subscriptionTier);
+  const unlocked = settings.redemptionEnabled && rewardEligible && walletLinked;
   const redeemablePoints = unlocked && normalizedPoints >= minimumPoints ? normalizedPoints : 0;
   const projectedRedemptionAmount =
     redeemablePoints > 0
-      ? Math.floor((redeemablePoints / tokenRedemptionProgram.pointsPerToken) * tierMultiplier)
+      ? Math.floor((redeemablePoints / settings.pointsPerToken) * tierMultiplier)
       : 0;
 
   let nextRedemptionPoints: number | null = null;
@@ -73,12 +70,12 @@ export function projectTokenRedemption({
     nextRedemptionPoints = minimumPoints;
   } else {
     const nextWholeTokenStep =
-      Math.ceil(normalizedPoints / tokenRedemptionProgram.pointsPerToken) * tokenRedemptionProgram.pointsPerToken;
+      Math.ceil(normalizedPoints / settings.pointsPerToken) * settings.pointsPerToken;
     nextRedemptionPoints = nextWholeTokenStep > normalizedPoints ? nextWholeTokenStep : null;
   }
 
   return {
-    asset: tokenRedemptionProgram.asset,
+    asset: settings.payoutAsset,
     minimumPoints,
     projectedRedemptionAmount,
     nextRedemptionPoints,

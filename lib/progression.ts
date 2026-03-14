@@ -1,3 +1,4 @@
+import { defaultEconomySettings, getXpTierMultiplier } from "./economy-settings.ts";
 import type { SubscriptionTier } from "./types.ts";
 
 export const levelThresholds = [
@@ -29,14 +30,7 @@ export function getLevelProgress(totalXp: number) {
 }
 
 export function getTierMultiplier(tier: SubscriptionTier) {
-  switch (tier) {
-    case "annual":
-      return 2;
-    case "monthly":
-      return 1.5;
-    default:
-      return 1;
-  }
+  return getXpTierMultiplier(defaultEconomySettings, tier);
 }
 
 export function getTierLabel(tier: SubscriptionTier) {

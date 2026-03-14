@@ -1,3 +1,4 @@
+import { defaultEconomySettings } from "../../lib/economy-settings.ts";
 import {
   buildRewardConfig,
   buildUnlockRules,
@@ -7,6 +8,7 @@ import {
   mapQuestCadence,
 } from "../../lib/progression-rules.ts";
 import type {
+  EconomySettings,
   EvaluatedQuest,
   Quest,
   QuestCadence,
@@ -102,10 +104,12 @@ export function buildDashboardQuestBoard({
   quests,
   userProgressState,
   journeyState,
+  settings = defaultEconomySettings,
 }: {
   quests: DashboardQuestRow[];
   userProgressState: UserProgressState;
   journeyState: UserJourneyState;
+  settings?: EconomySettings;
 }) {
   const runtimeContext = createDefaultQuestRuntimeContext();
   const evaluatedByQuestId = new Map<string, { evaluatedQuest: EvaluatedQuest; cadence: QuestCadence }>();
@@ -160,6 +164,7 @@ export function buildDashboardQuestBoard({
         runtimeContext,
         recommended,
         journeyState,
+        settings,
       }),
       cadence,
     });
