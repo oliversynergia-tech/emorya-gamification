@@ -3,6 +3,7 @@ import { resolve } from "path";
 import { createHash } from "crypto";
 
 import { Client } from "pg";
+import { validateQuestDefinitionRows } from "./quest-definition-validator.mjs";
 
 export const supportedDbCommands = [
   "migrate",
@@ -10,12 +11,13 @@ export const supportedDbCommands = [
   "seed",
   "reset",
   "doctor",
+  "validate-quests",
   "snapshot",
   "snapshot-scheduled",
 ];
 
 export const dbToolUsage =
-  "Usage: <migrate|migrate-status|seed|reset|doctor|snapshot [period] [YYYY-MM-DD]|snapshot-scheduled [YYYY-MM-DD]>";
+  "Usage: <migrate|migrate-status|seed|reset|doctor|validate-quests|snapshot [period] [YYYY-MM-DD]|snapshot-scheduled [YYYY-MM-DD]>";
 
 export function createDbToolContext(rootDir) {
   const dbDir = resolve(rootDir, "server/db");
@@ -238,6 +240,30 @@ export function createDbToolContext(rootDir) {
     });
   }
 
+  async function validateQuests() {
+    await withClient(async (client) => {
+      const result = await client.query(
+        `SELECT slug, xp_reward, metadata
+         FROM quest_definitions
+         WHERE is_active = TRUE
+         ORDER BY slug ASC`,
+      );
+      const errors = validateQuestDefinitionRows(result.rows);
+
+      if (errors.length > 0) {
+        console.error("Quest definition validation failed:");
+
+        for (const error of errors) {
+          console.error(`- ${error}`);
+        }
+
+        process.exit(1);
+      }
+
+      console.log(`Validated ${result.rows.length} active quest definitions.`);
+    });
+  }
+
   async function snapshot(period = "all-time", snapshotDate) {
     const supportedPeriods = new Set(["all-time", "referral", "weekly", "monthly"]);
 
@@ -313,6 +339,9 @@ DO UPDATE SET xp = EXCLUDED.xp, rank = EXCLUDED.rank;
         break;
       case "doctor":
         await doctor();
+        break;
+      case "validate-quests":
+        await validateQuests();
         break;
       case "snapshot":
         await snapshot(args[0], args[1]);

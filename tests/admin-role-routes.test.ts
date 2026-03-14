@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   handleAdminDirectoryRequest,
   handleAdminGrantRequest,
+  handleModerationNotificationAcknowledgeRequest,
   handleAdminRevokeRequest,
   handleQuestDefinitionCreateRequest,
   handleQuestDefinitionDeleteRequest,
@@ -206,5 +207,30 @@ test("handleQuestDefinitionDeleteRequest returns refreshed quest definitions on 
   assert.deepEqual(result.body, {
     ok: true,
     quests: [{ id: "quest-2" }],
+  });
+});
+
+test("handleModerationNotificationAcknowledgeRequest validates delivery id", async () => {
+  const result = await handleModerationNotificationAcknowledgeRequest("", async () => {
+    throw new Error("should not be called");
+  });
+
+  assert.equal(result.status, 400);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "deliveryId is required.",
+  });
+});
+
+test("handleModerationNotificationAcknowledgeRequest returns refreshed history", async () => {
+  const result = await handleModerationNotificationAcknowledgeRequest("delivery-1", async (deliveryId) => {
+    assert.equal(deliveryId, "delivery-1");
+    return [{ id: "delivery-1", eventStatus: "acknowledged" }];
+  });
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    history: [{ id: "delivery-1", eventStatus: "acknowledged" }],
   });
 });

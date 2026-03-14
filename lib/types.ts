@@ -290,12 +290,24 @@ export type UserSnapshot = {
           amount: number;
         };
       };
+      sourceBonuses: Array<{
+        source: "direct" | "zealy" | "galxe" | "layer3";
+        label: string;
+        signupXp: number;
+        monthlyPremiumXp: number;
+        annualPremiumXp: number;
+        annualDirectTokenReward: {
+          asset: "EMR" | "EGLD" | "PARTNER";
+          amount: number;
+        };
+      }>;
     };
     recentReferrals: Array<{
       displayName: string;
       tier: SubscriptionTier;
       status: "joined" | "converted";
       joinedAt: string;
+      source?: "direct" | "zealy" | "galxe" | "layer3" | null;
     }>;
   };
   connectedAccounts: Array<{
@@ -388,6 +400,17 @@ export type AdminOverviewData = {
     destination: string;
     title: string;
     detail: string;
+  }>;
+  moderationNotificationHistory: Array<{
+    id: string;
+    channel: "inbox" | "webhook" | "email" | "slack" | "discord";
+    eventStatus: "armed" | "sent" | "acknowledged";
+    destination: string;
+    title: string;
+    detail: string;
+    createdAt: string;
+    acknowledgedAt: string | null;
+    acknowledgedByDisplayName: string | null;
   }>;
   reviewInsights: {
     byVerificationType: Array<{

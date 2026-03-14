@@ -745,10 +745,26 @@ export function ProfileSection({ data }: { data: DashboardData }) {
               </span>
             </div>
           </article>
+          {data.user.referral.rewardPreview.sourceBonuses.map((bonus) => (
+            <article key={bonus.source} className="achievement-card">
+              <div>
+                <strong>{bonus.label}</strong>
+                <p>
+                  Signup {bonus.signupXp} XP, monthly {bonus.monthlyPremiumXp} XP, annual {bonus.annualPremiumXp} XP.
+                </p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{bonus.source}</span>
+                <span>
+                  +{bonus.annualDirectTokenReward.amount} {bonus.annualDirectTokenReward.asset}
+                </span>
+              </div>
+            </article>
+          ))}
         </div>
         <p className="form-note">
           {data.user.campaignSource
-            ? `Campaign source detected: ${data.user.campaignSource}. Matching campaign-track quests will surface ahead of general quests.`
+            ? `Campaign source detected: ${data.user.campaignSource}. Matching campaign-track quests and referral bonuses will surface ahead of general quests.`
             : "Direct Emorya onboarding. Campaign-track quests will appear when you join a partner activation."}
         </p>
       </div>

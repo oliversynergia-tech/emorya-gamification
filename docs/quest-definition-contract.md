@@ -15,6 +15,28 @@ Quest definitions now drive:
 
 New seeded quests and future admin-authored quests should follow this contract so the rules engine can evaluate them consistently.
 
+## Validation command
+
+Validate the active quest catalog against this contract:
+
+```bash
+npm run dev:db:validate:quests
+```
+
+Hosted or CI-style environments can use:
+
+```bash
+npm run ops:db:validate:quests
+```
+
+The validator checks:
+
+- `metadata.track`
+- `metadata.rewardConfig`
+- `metadata.unlockRules`
+- `metadata.previewConfig`
+- reward/base XP alignment
+
 ## Required top-level quest fields
 
 These remain first-class SQL columns:

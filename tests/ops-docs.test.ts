@@ -16,6 +16,7 @@ test("hosted operations docs reference the supported ops scripts", () => {
   const requiredScripts = [
     "ops:db:migrate",
     "ops:db:migrate:status",
+    "ops:db:validate:quests",
     "ops:db:snapshot:scheduled",
     "ops:env:check",
   ];

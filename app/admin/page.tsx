@@ -1,3 +1,4 @@
+import { ModerationNotificationHistoryPanel } from "@/components/moderation-notification-history-panel";
 import { QuestDefinitionManagementPanel } from "@/components/quest-definition-management-panel";
 import { QuestDefinitionToolingPanel } from "@/components/quest-definition-tooling-panel";
 import { AdminSection } from "@/components/sections";
@@ -73,6 +74,7 @@ export default async function AdminPage() {
         </div>
       </section>
       <AdminSection data={data} />
+      <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
       <QuestDefinitionToolingPanel />
       <QuestDefinitionManagementPanel />
       <RoleManagementPanel

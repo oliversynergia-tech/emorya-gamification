@@ -175,7 +175,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"social","rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"social","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '4cbda570-89a7-4c9d-bcdc-3e482ed02ae3',
@@ -191,7 +191,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"track":"quiz","passScore":4,"totalQuestions":5,"rewardConfig":{"xp":{"base":45,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":16}}}'::jsonb
+    '{"track":"quiz","passScore":4,"totalQuestions":5,"unlockRules":{"all":[{"type":"min_level","value":2}]},"rewardConfig":{"xp":{"base":45,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":16}}}'::jsonb
   ),
   (
     'd19f442f-3b81-454c-aa94-6f33b7524d59',
@@ -207,7 +207,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/premium-explainer","rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://example.com/premium-explainer","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'ca8d9fdd-aa13-4e69-8ae7-615f7a2a0f83',
@@ -223,7 +223,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/welcome-setup","rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://example.com/welcome-setup","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '5a425a67-b7ab-4bca-9629-a90a507663e5',
@@ -239,7 +239,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"wallet","targetUrl":"https://example.com/xportal-setup","rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}}}'::jsonb
+    '{"track":"wallet","targetUrl":"https://example.com/xportal-setup","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}}}'::jsonb
   ),
   (
     'c90f8fab-a89d-41cc-ad69-73527891e7e2',
@@ -255,7 +255,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/community-connect","rewardConfig":{"xp":{"base":40,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://example.com/community-connect","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":40,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '7cc727ca-e6eb-4bb1-917d-ef9b6d9bf9bd',
@@ -271,7 +271,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"daily","targetUrl":"https://example.com/daily-recovery","rewardConfig":{"xp":{"base":28,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"daily","targetUrl":"https://example.com/daily-recovery","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":28,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'ef257868-6d9d-4fcf-9ce9-3ee1920548e4',
@@ -287,7 +287,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"track":"daily","rewardConfig":{"xp":{"base":55,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":15}},"cooldownHours":24}'::jsonb
+    '{"track":"daily","unlockRules":{"all":[{"type":"min_level","value":2}]},"rewardConfig":{"xp":{"base":55,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":15}},"cooldownHours":24}'::jsonb
   ),
   (
     'e62bc5b8-3280-4d18-b2fd-a1524c21b453',
@@ -303,7 +303,7 @@ INSERT INTO quest_definitions (
     6,
     FALSE,
     TRUE,
-    '{"track":"daily","rewardConfig":{"xp":{"base":60,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":20}},"cooldownHours":20}'::jsonb
+    '{"track":"daily","unlockRules":{"all":[{"type":"min_level","value":6}]},"rewardConfig":{"xp":{"base":60,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":20}},"cooldownHours":20}'::jsonb
   ),
   (
     'df10d884-7c1a-403d-9bd5-aeb4ee7f95a4',
@@ -335,7 +335,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"track":"referral","targetUrl":"https://example.com/referral-wave","rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"referral","targetUrl":"https://example.com/referral-wave","unlockRules":{"all":[{"type":"min_level","value":2}]},"rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '0baa67a0-0d57-42fd-87e5-d77052986842',
@@ -431,7 +431,7 @@ INSERT INTO quest_definitions (
     7,
     FALSE,
     TRUE,
-    '{"track":"creative","rewardConfig":{"xp":{"base":80,"premiumMultiplierEligible":true},"tokenEffect":"none"},"cooldownHours":48}'::jsonb
+    '{"track":"creative","unlockRules":{"all":[{"type":"min_level","value":7}]},"rewardConfig":{"xp":{"base":80,"premiumMultiplierEligible":true},"tokenEffect":"none"},"cooldownHours":48}'::jsonb
   ),
   (
     '76d48c0e-38b3-4087-8863-68d308ee60b8',
@@ -727,5 +727,43 @@ INSERT INTO token_redemptions (
     '{"note":"Awaiting payout","campaign":"galxe"}'::jsonb,
     NOW() - INTERVAL '2 days',
     NULL
+  )
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO moderation_notification_deliveries (
+  id,
+  channel,
+  event_status,
+  destination,
+  title,
+  detail,
+  fingerprint,
+  acknowledged_at,
+  acknowledged_by,
+  created_at
+) VALUES
+  (
+    '1b73584d-f293-4389-ae23-4ce34b0c2f77',
+    'inbox',
+    'acknowledged',
+    'Admin inbox',
+    'Inbox escalation ready',
+    '2 moderation alerts active. Oldest warning 360 min, stale threshold 1440 min.',
+    md5('inbox|Admin inbox|Inbox escalation ready|queue breach acknowledged'),
+    NOW() - INTERVAL '4 hours',
+    '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
+    NOW() - INTERVAL '5 hours'
+  ),
+  (
+    '0ce72af6-32da-4f66-aebd-49587b5f3a49',
+    'slack',
+    'sent',
+    'https://hooks.slack.com/services/example/example/example',
+    'Slack alert armed',
+    'Slack delivery is configured for moderation SLA and backlog digests.',
+    md5('slack|slack-alert-armed|queue breach'),
+    NULL,
+    NULL,
+    NOW() - INTERVAL '90 minutes'
   )
 ON CONFLICT (id) DO NOTHING;

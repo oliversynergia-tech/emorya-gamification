@@ -5,7 +5,7 @@ import {
   listReferralRewardStates,
   updateReferralRewardState,
 } from "@/server/repositories/referral-repository";
-import { calculateReferralRewardState } from "@/server/services/referral-rules";
+import { calculateReferralRewardState, normalizeReferralCampaignSource } from "@/server/services/referral-rules";
 
 export async function resolveReferrerUserId(referralCode?: string | null) {
   const normalized = referralCode?.trim();
@@ -33,7 +33,8 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
     referrals: referrals.map((referral) => ({
       id: referral.id,
       refereeDisplayName: referral.referee_display_name,
-      refereeSubscribed: referral.referee_subscribed,
+      refereeSubscriptionTier: referral.referee_subscription_tier,
+      refereeCampaignSource: normalizeReferralCampaignSource(referral.referee_attribution_source),
       signupRewardXp: referral.signup_reward_xp,
       conversionRewardXp: referral.conversion_reward_xp,
     })),
@@ -66,6 +67,7 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
           detail: `${referral.referee_display_name} joined with your code`,
           rewardType: "signup",
           referee: referral.referee_display_name,
+          campaignSource: referral.referee_attribution_source ?? "direct",
         },
       });
     }
@@ -81,6 +83,7 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
           detail: `${referral.referee_display_name} upgraded and triggered the premium referral bonus`,
           rewardType: "conversion",
           referee: referral.referee_display_name,
+          campaignSource: referral.referee_attribution_source ?? "direct",
         },
       });
     }

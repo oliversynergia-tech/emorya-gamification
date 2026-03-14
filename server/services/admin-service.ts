@@ -9,6 +9,10 @@ import {
   revokeUserRole,
 } from "@/server/repositories/admin-repository";
 import {
+  acknowledgeModerationNotificationDelivery,
+  listRecentModerationNotificationDeliveries,
+} from "@/server/repositories/moderation-notification-repository";
+import {
   createQuestDefinitionForAdmin,
   deleteQuestDefinitionForAdmin,
   listQuestDefinitionsForAdmin,
@@ -223,4 +227,25 @@ export async function deleteQuestDefinition(questId: string) {
   }
 
   return listQuestDefinitionsForAdmin();
+}
+
+export async function getModerationNotificationHistory() {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  return listRecentModerationNotificationDeliveries();
+}
+
+export async function acknowledgeModerationNotification(deliveryId: string) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  if (!currentUser) {
+    throw new Error("You must be signed in to access admin controls.");
+  }
+
+  return acknowledgeModerationNotificationDelivery({
+    deliveryId,
+    acknowledgedBy: currentUser.id,
+  });
 }

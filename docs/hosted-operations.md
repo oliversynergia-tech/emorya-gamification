@@ -16,6 +16,12 @@ Show migration status:
 npm run ops:db:migrate:status
 ```
 
+Validate structured quest metadata:
+
+```bash
+npm run ops:db:validate:quests
+```
+
 Validate deploy-time environment assumptions:
 
 ```bash
@@ -60,6 +66,7 @@ Unlike the local workflow, these commands are intended for CI, cron runners, and
 ## Recommended hosted usage
 
 - release step: `npm run ops:db:migrate`
+- quest catalog validation: `npm run ops:db:validate:quests`
 - pre-release env validation: `npm run ops:env:check`
 - post-deploy verification: `npm run ops:db:migrate:status`
 - scheduled leaderboard maintenance: `npm run ops:db:snapshot:scheduled`

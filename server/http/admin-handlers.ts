@@ -184,6 +184,34 @@ export async function handleQuestDefinitionDeleteRequest(
   }
 }
 
+export async function handleModerationNotificationAcknowledgeRequest(
+  deliveryId: string,
+  acknowledgeNotification: (deliveryId: string) => Promise<unknown>,
+) {
+  if (!deliveryId) {
+    return {
+      status: 400,
+      body: { ok: false, error: "deliveryId is required." },
+    };
+  }
+
+  try {
+    const history = await acknowledgeNotification(deliveryId);
+
+    return {
+      status: 200,
+      body: { ok: true, history },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to acknowledge moderation notification.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
 export async function handleAdminGrantRequest(
   body: {
     email?: string;

@@ -190,6 +190,19 @@ CREATE TABLE token_redemptions (
   settled_at TIMESTAMPTZ
 );
 
+CREATE TABLE moderation_notification_deliveries (
+  id UUID PRIMARY KEY,
+  channel TEXT NOT NULL CHECK (channel IN ('inbox', 'webhook', 'email', 'slack', 'discord')),
+  event_status TEXT NOT NULL CHECK (event_status IN ('armed', 'sent', 'acknowledged')),
+  destination TEXT NOT NULL,
+  title TEXT NOT NULL,
+  detail TEXT NOT NULL,
+  fingerprint TEXT NOT NULL,
+  acknowledged_at TIMESTAMPTZ,
+  acknowledged_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX idx_users_subscription_tier ON users(subscription_tier);
 CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id, expires_at DESC);
 CREATE INDEX idx_user_roles_role ON user_roles(role, created_at DESC);
@@ -199,3 +212,4 @@ CREATE INDEX idx_quest_completions_status ON quest_completions(status);
 CREATE INDEX idx_activity_log_user_id ON activity_log(user_id, created_at DESC);
 CREATE INDEX idx_leaderboard_snapshots_period_rank ON leaderboard_snapshots(period, rank);
 CREATE INDEX idx_token_redemptions_user_id ON token_redemptions(user_id, created_at DESC);
+CREATE INDEX idx_moderation_notification_deliveries_created_at ON moderation_notification_deliveries(created_at DESC);

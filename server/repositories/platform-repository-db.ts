@@ -39,6 +39,10 @@ import {
   syncLeaderboardSnapshotsForToday,
 } from "@/server/repositories/leaderboard-repository";
 import {
+  listRecentModerationNotificationDeliveries,
+  syncModerationNotificationHistory,
+} from "@/server/repositories/moderation-notification-repository";
+import {
   getPendingReviewQueue,
   getRecentReviewHistory,
   getReviewBreakdownByVerificationType,
@@ -49,6 +53,10 @@ import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/
 import { buildDashboardQuestBoard } from "@/server/services/build-dashboard-quest-board";
 import { buildModerationNotifications } from "@/server/services/moderation-notifications";
 import { syncAchievementProgressForUser } from "@/server/services/progression-service";
+import {
+  getReferralRewardTargets,
+  referralCampaignIncentives,
+} from "@/server/services/referral-rules";
 import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
 import { getUserProgressState } from "@/server/services/user-progress-state";
 import { resolveUserJourneyState } from "@/server/services/user-journey-state";
@@ -317,6 +325,14 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
     (sum, entry) => sum + (entry.status === "settled" ? entry.tokenAmount : 0),
     0,
   );
+  const monthlyReferralPreview = getReferralRewardTargets({
+    subscriptionTier: "monthly",
+    campaignSource: progressState.campaignSource,
+  });
+  const annualReferralPreview = getReferralRewardTargets({
+    subscriptionTier: "annual",
+    campaignSource: progressState.campaignSource,
+  });
 
   return {
     displayName: user.display_name,
@@ -363,17 +379,28 @@ async function getUserSnapshot(user: UserRow, progressState: UserProgressState, 
       ...referral,
       rewardPreview: {
         monthlyPremiumReferral: {
-          xp: 150,
+          xp: monthlyReferralPreview.conversionXp,
           tokenEffect: "eligibility_progress",
         },
         annualPremiumReferral: {
-          xp: 300,
+          xp: annualReferralPreview.conversionXp,
           tokenEffect: "direct_token_reward",
           directTokenReward: {
             asset: "EMR",
-            amount: 25,
+            amount: annualReferralPreview.annualDirectTokenReward ?? 25,
           },
         },
+        sourceBonuses: referralCampaignIncentives.map((incentive) => ({
+          source: incentive.source,
+          label: incentive.label,
+          signupXp: 40 + incentive.signupBonusXp,
+          monthlyPremiumXp: 150 + incentive.monthlyConversionBonusXp,
+          annualPremiumXp: 300 + incentive.annualConversionBonusXp,
+          annualDirectTokenReward: {
+            asset: "EMR",
+            amount: 25 + incentive.annualDirectTokenBonus,
+          },
+        })),
       },
     },
     connectedAccounts: connectionsResult.rows.map((connection) => ({
@@ -636,6 +663,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     thresholds: getQueueAlertThresholds(),
     channels: getModerationAlertChannelConfig(),
   });
+  await syncModerationNotificationHistory(moderationNotifications);
+  const moderationNotificationHistory = await listRecentModerationNotificationDeliveries();
 
   return {
     stats: [
@@ -652,6 +681,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     reviewerWorkload,
     queueMetrics,
     moderationNotifications,
+    moderationNotificationHistory,
     reviewInsights: {
       byVerificationType: reviewBreakdownByVerificationType,
       reviewerTypeMatrix,

@@ -1067,6 +1067,10 @@ a {
   line-height: 1.55;
 }
 
+.form-note--error {
+  color: #ffb8d6;
+}
+
 .wallet-list {
   display: flex;
   flex-wrap: wrap;
