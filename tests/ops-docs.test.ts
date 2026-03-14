@@ -38,3 +38,13 @@ test("hosted operations docs include the dated snapshot example", () => {
     /node scripts\/ops\.mjs snapshot-scheduled 2026-03-14/,
   );
 });
+
+test("hosted operations docs include moderation alert envs", () => {
+  for (const key of [
+    "MODERATION_ALERT_STALE_MINUTES",
+    "MODERATION_ALERT_EMAIL_TO",
+    "MODERATION_ALERT_SLACK_WEBHOOK_URL",
+  ]) {
+    assert.match(hostedOperationsDoc, new RegExp(key));
+  }
+});

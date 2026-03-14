@@ -372,7 +372,7 @@ export type AdminOverviewData = {
     }>;
   };
   moderationNotifications: Array<{
-    channel: "inbox" | "webhook";
+    channel: "inbox" | "webhook" | "email" | "slack" | "discord";
     enabled: boolean;
     status: "idle" | "armed";
     destination: string;
@@ -464,6 +464,9 @@ export type QueueAlertThresholds = {
 export type ModerationAlertChannelConfig = {
   inboxEnabled: boolean;
   webhookUrl: string | null;
+  emailRecipient: string | null;
+  slackWebhookUrl: string | null;
+  discordWebhookUrl: string | null;
 };
 
 export type TokenRedemptionProgram = {

@@ -62,6 +62,20 @@ For wallet linking through xPortal:
 - `NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID`
 - `MULTIVERSX_API_URL`
 
+For moderation alert routing in production:
+
+- `MODERATION_ALERT_STALE_MINUTES`
+- `MODERATION_ALERT_OLDEST_WARNING_MINUTES`
+- `MODERATION_ALERT_BACKLOG_WARNING_COUNT`
+- `MODERATION_ALERT_BACKLOG_CRITICAL_COUNT`
+- `MODERATION_ALERT_AVERAGE_WARNING_MINUTES`
+- `MODERATION_ALERT_INBOX_ENABLED`
+- one or more of:
+  - `MODERATION_ALERT_EMAIL_TO`
+  - `MODERATION_ALERT_SLACK_WEBHOOK_URL`
+  - `MODERATION_ALERT_DISCORD_WEBHOOK_URL`
+  - `MODERATION_ALERT_WEBHOOK_URL`
+
 Use [`.env.example`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/.env.example) as the source template.
 
 ## Shareable preview workflow
@@ -88,6 +102,7 @@ Before a real hosted deployment, make sure:
 - `SESSION_SECRET` is long and unique
 - snapshot commands are either run manually or scheduled somewhere
 - at least one admin user has a row in `user_roles`
+- moderation alert thresholds and at least one delivery route are configured if the admin queue is expected to be monitored in production
 
 ## Recommended release flow
 

@@ -33,6 +33,60 @@ export async function handleAdminDirectoryRequest(
   }
 }
 
+export async function handleRoleDirectoryRequest(
+  getRoleDirectory: () => Promise<unknown>,
+) {
+  try {
+    const users = await getRoleDirectory();
+
+    return {
+      status: 200,
+      body: { ok: true, users },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load role directory.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleReviewerRoleUpdateRequest(
+  body: {
+    userId?: string;
+    reviewerEnabled?: boolean;
+  },
+  updateReviewerRole: (input: { userId: string; enabled: boolean }) => Promise<unknown>,
+) {
+  if (!body.userId || typeof body.reviewerEnabled !== "boolean") {
+    return {
+      status: 400,
+      body: { ok: false, error: "userId and reviewerEnabled are required." },
+    };
+  }
+
+  try {
+    const users = await updateReviewerRole({
+      userId: body.userId,
+      enabled: body.reviewerEnabled,
+    });
+
+    return {
+      status: 200,
+      body: { ok: true, users },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to update reviewer roles.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
 export async function handleAdminGrantRequest(
   body: {
     email?: string;

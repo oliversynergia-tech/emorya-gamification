@@ -102,5 +102,8 @@ export function getModerationAlertChannelConfig() {
   return {
     inboxEnabled: process.env.MODERATION_ALERT_INBOX_ENABLED !== "false",
     webhookUrl: process.env.MODERATION_ALERT_WEBHOOK_URL?.trim() || null,
+    emailRecipient: process.env.MODERATION_ALERT_EMAIL_TO?.trim() || null,
+    slackWebhookUrl: process.env.MODERATION_ALERT_SLACK_WEBHOOK_URL?.trim() || null,
+    discordWebhookUrl: process.env.MODERATION_ALERT_DISCORD_WEBHOOK_URL?.trim() || null,
   };
 }

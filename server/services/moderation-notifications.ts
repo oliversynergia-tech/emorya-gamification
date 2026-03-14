@@ -49,5 +49,44 @@ export function buildModerationNotifications({
     });
   }
 
+  if (channels.emailRecipient) {
+    notifications.push({
+      channel: "email",
+      enabled: true,
+      status: hasAlerts ? "armed" : "idle",
+      destination: channels.emailRecipient,
+      title: hasAlerts ? "Email digest armed" : "Email digest idle",
+      detail: hasAlerts
+        ? `A moderation summary can be delivered to ${channels.emailRecipient} for the current ${highestSeverity} queue state.`
+        : "Email routing is configured and waiting for a queue alert.",
+    });
+  }
+
+  if (channels.slackWebhookUrl) {
+    notifications.push({
+      channel: "slack",
+      enabled: true,
+      status: hasAlerts ? "armed" : "idle",
+      destination: channels.slackWebhookUrl,
+      title: hasAlerts ? "Slack alert armed" : "Slack alert idle",
+      detail: hasAlerts
+        ? "Slack delivery is configured for moderation SLA and backlog digests."
+        : "Slack delivery is configured and waiting for a queue alert.",
+    });
+  }
+
+  if (channels.discordWebhookUrl) {
+    notifications.push({
+      channel: "discord",
+      enabled: true,
+      status: hasAlerts ? "armed" : "idle",
+      destination: channels.discordWebhookUrl,
+      title: hasAlerts ? "Discord alert armed" : "Discord alert idle",
+      detail: hasAlerts
+        ? "Discord delivery is configured for moderation SLA and backlog digests."
+        : "Discord delivery is configured and waiting for a queue alert.",
+    });
+  }
+
   return notifications;
 }
