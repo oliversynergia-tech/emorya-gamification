@@ -36,3 +36,48 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
       };
   }
 }
+
+export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) {
+  switch (source) {
+    case "zealy":
+      return {
+        title: "Turn quest momentum into premium yield",
+        summary: "Zealy users should feel the jump from campaign points into wallet-linked premium tracks immediately.",
+        hooks: [
+          "Monthly premium multiplies your campaign bridge XP and opens stronger referral conversion rewards.",
+          "Annual premium is the fastest route from quest completions into direct-token reward moments.",
+        ],
+        cta: "Upgrade once the quest ladder starts converting into weekly reward pressure.",
+      };
+    case "galxe":
+      return {
+        title: "Convert discovery into recurring reward behavior",
+        summary: "Galxe entrants need a clearer reason to stay after the first campaign touchpoint.",
+        hooks: [
+          "Monthly premium turns one-off discovery into recurring weekly reward accumulation.",
+          "Annual premium makes referral conversions and claimed-to-settled payouts materially stronger.",
+        ],
+        cta: "Use premium to turn campaign discovery into retention and redemption velocity.",
+      };
+    case "layer3":
+      return {
+        title: "Push learning into high-trust premium progression",
+        summary: "Layer3 users respond best when premium feels like access to deeper missions and stronger economics.",
+        hooks: [
+          "Monthly premium adds higher-yield mission tracks on top of the learning lane.",
+          "Annual premium compounds XP, referral leverage, and direct-token upside for the most committed users.",
+        ],
+        cta: "Upgrade once you want deeper campaign ladders and higher reward density.",
+      };
+    default:
+      return {
+        title: "Use premium to accelerate the core Emorya ladder",
+        summary: "Direct entrants should see premium as faster progression, better rewards, and stronger referral economics.",
+        hooks: [
+          "Monthly premium unlocks higher-yield quests and lifts XP and token conversion value.",
+          "Annual premium creates the strongest referral upside and direct-token reward moments.",
+        ],
+        cta: "Upgrade when you want the fastest route from Starter Path to high-value reward lanes.",
+      };
+  }
+}

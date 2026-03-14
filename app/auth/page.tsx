@@ -1,7 +1,7 @@
 import { AuthClientPanel } from "@/components/auth-client-panel";
 import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
-import { getCampaignSourceProfile } from "@/lib/campaign-source";
+import { getCampaignPremiumOffer, getCampaignSourceProfile } from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -11,6 +11,7 @@ export default async function AuthPage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
   const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
+  const premiumOffer = getCampaignPremiumOffer(data.user.campaignSource);
 
   return (
     <SiteShell eyebrow="Account access" currentUser={session?.user ?? null}>
@@ -57,6 +58,11 @@ export default async function AuthPage() {
                 : "Direct onboarding uses the default Emorya starter ladder."}
             </small>
           </div>
+          <div className="metric-card">
+            <span>Premium hook</span>
+            <strong>{premiumOffer.title}</strong>
+            <small>{premiumOffer.cta}</small>
+          </div>
         </div>
       </section>
       <section className="grid grid--auth">
@@ -90,6 +96,16 @@ export default async function AuthPage() {
           <p className="form-note">
             The funnel starts with XP, then opens token eligibility, then direct-token partner moments for the highest-value referral and premium outcomes.
           </p>
+          <div className="achievement-list">
+            {premiumOffer.hooks.map((hook) => (
+              <article key={hook} className="achievement-card">
+                <div>
+                  <strong>Why premium fits this lane</strong>
+                  <p>{hook}</p>
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
         <section className="panel panel--glass">
           <div className="panel__header">
@@ -114,7 +130,7 @@ export default async function AuthPage() {
       </section>
       <section className="grid grid--auth">
         <div id="auth-panel">
-          <AuthClientPanel />
+          <AuthClientPanel campaignSource={data.user.campaignSource} premiumOffer={premiumOffer} />
         </div>
         {session ? (
           <WalletLinkPanel walletAddresses={session.walletAddresses} />

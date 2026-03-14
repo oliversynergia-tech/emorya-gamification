@@ -1,4 +1,4 @@
-import { getCampaignSourceProfile } from "@/lib/campaign-source";
+import { getCampaignPremiumOffer, getCampaignSourceProfile } from "@/lib/campaign-source";
 import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
@@ -90,6 +90,67 @@ function renderQuestCard(quest: Quest) {
       ) : null}
       {quest.timebox ? <small>{quest.timebox}</small> : null}
     </article>
+  );
+}
+
+function renderRedemptionReceiptPanel(
+  history: DashboardData["user"]["tokenProgram"]["redemptionHistory"],
+  title: string,
+  eyebrow: string,
+) {
+  const latestEntry = history[0] ?? null;
+
+  return (
+    <div className="panel panel--glass">
+      <div className="panel__header">
+        <div>
+          <p className="eyebrow">{eyebrow}</p>
+          <h3>{title}</h3>
+        </div>
+        <span className="badge">{history.length} receipts</span>
+      </div>
+      {latestEntry ? (
+        <div className="receipt-detail">
+          <article className="achievement-card achievement-card--unlocked">
+            <div>
+              <strong>{latestEntry.status === "settled" ? "Latest settled payout" : "Latest claimed payout"}</strong>
+              <p>
+                {latestEntry.tokenAmount} {latestEntry.asset} from {latestEntry.source}.
+                {latestEntry.receiptReference ? ` Receipt ${latestEntry.receiptReference}.` : ""}
+              </p>
+              {latestEntry.settlementNote ? <p>{latestEntry.settlementNote}</p> : null}
+            </div>
+            <div className="achievement-card__side">
+              <span>{new Date(latestEntry.createdAt).toLocaleDateString()}</span>
+              <span>{latestEntry.status}</span>
+            </div>
+          </article>
+          <div className="achievement-list">
+            {history.map((entry) => (
+              <article key={entry.id} className="achievement-card">
+                <div>
+                  <strong>
+                    {entry.tokenAmount} {entry.asset}
+                  </strong>
+                  <p>
+                    {entry.status === "settled" && entry.settledAt
+                      ? `Settled ${new Date(entry.settledAt).toLocaleDateString()}`
+                      : "Claimed and awaiting settlement"}
+                    {entry.settledByDisplayName ? ` by ${entry.settledByDisplayName}` : ""}
+                  </p>
+                </div>
+                <div className="achievement-card__side">
+                  <span>{entry.receiptReference ?? "No receipt yet"}</span>
+                  <span>{entry.eligibilityPointsSpent} pts</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="form-note">No payout receipts yet. Claimed and settled token history will appear here as the token layer activates.</p>
+      )}
+    </div>
   );
 }
 
@@ -440,6 +501,11 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             ))}
           </div>
         </div>
+        {renderRedemptionReceiptPanel(
+          data.user.tokenProgram.redemptionHistory,
+          "Receipt and payout detail",
+          "Payout receipts",
+        )}
       </div>
       <div className="panel">
         <div className="panel__header">
@@ -477,6 +543,8 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
 }
 
 export function PremiumFunnelSection({ data }: { data: DashboardData }) {
+  const premiumOffer = getCampaignPremiumOffer(data.user.campaignSource);
+
   return (
     <section className="grid grid--funnel">
       <div className="panel">
@@ -494,6 +562,24 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
             </div>
           ))}
         </div>
+        <div className="achievement-list">
+          <article className="achievement-card achievement-card--unlocked">
+            <div>
+              <strong>{premiumOffer.title}</strong>
+              <p>{premiumOffer.summary}</p>
+            </div>
+            <span className="badge badge--pink">{data.user.campaignSource ?? "direct"}</span>
+          </article>
+          {premiumOffer.hooks.map((hook) => (
+            <article key={hook} className="achievement-card">
+              <div>
+                <strong>Campaign-specific premium hook</strong>
+                <p>{hook}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <p className="form-note">{premiumOffer.cta}</p>
       </div>
       <div className="panel">
         <div className="panel__header">
@@ -674,6 +760,11 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           ))}
         </div>
       </div>
+      {renderRedemptionReceiptPanel(
+        data.user.tokenProgram.redemptionHistory,
+        "Reward receipts and settlement history",
+        "Token receipts",
+      )}
       <div className="panel">
         <div className="panel__header">
           <div>

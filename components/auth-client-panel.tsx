@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import type { UserSnapshot } from "@/lib/types";
+
 type AuthMode = "signin" | "signup";
 
 type AuthResponse = {
@@ -10,7 +12,18 @@ type AuthResponse = {
   error?: string;
 };
 
-export function AuthClientPanel() {
+export function AuthClientPanel({
+  campaignSource,
+  premiumOffer,
+}: {
+  campaignSource?: UserSnapshot["campaignSource"];
+  premiumOffer?: {
+    title: string;
+    summary: string;
+    hooks: string[];
+    cta: string;
+  };
+}) {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
@@ -125,9 +138,29 @@ export function AuthClientPanel() {
       </form>
       {message ? <p className="status status--success">{message}</p> : null}
       {error ? <p className="status status--error">{error}</p> : null}
+      {premiumOffer ? (
+        <div className="achievement-list">
+          <article className="achievement-card">
+            <div>
+              <strong>{premiumOffer.title}</strong>
+              <p>{premiumOffer.summary}</p>
+            </div>
+            <span className="badge badge--pink">{campaignSource ?? "direct"}</span>
+          </article>
+          {premiumOffer.hooks.map((hook) => (
+            <article key={hook} className="achievement-card">
+              <div>
+                <strong>Premium hook</strong>
+                <p>{hook}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
       <p className="form-note">
-        Sign-up requires a password of at least 10 characters. Referral codes are optional, issue rewards to the inviter automatically, and feed into the monthly/annual premium reward ladder.
+        Sign-up requires a password of at least 10 characters. Referral codes are optional, issue rewards to the inviter automatically, and feed into the monthly and annual premium reward ladder.
       </p>
+      {premiumOffer ? <p className="form-note">{premiumOffer.cta}</p> : null}
     </section>
   );
 }

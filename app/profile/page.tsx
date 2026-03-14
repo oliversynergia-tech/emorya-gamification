@@ -4,6 +4,7 @@ import { ProfileEditor } from "@/components/profile-editor";
 import { ProfileSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
+import { getCampaignPremiumOffer } from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { getCurrentProfile } from "@/server/services/profile-service";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
@@ -15,6 +16,7 @@ export default async function ProfilePage() {
   const data = await loadDashboardOverview(session?.user ?? null);
   const profile = await getCurrentProfile();
   const walletCount = session?.walletAddresses.length ?? 0;
+  const premiumOffer = getCampaignPremiumOffer(data.user.campaignSource);
 
   return (
     <SiteShell eyebrow="Profile and social connections" currentUser={session?.user ?? null}>
@@ -37,6 +39,11 @@ export default async function ProfilePage() {
             <span>Current referral code</span>
             <strong>{data.user.referralCode}</strong>
             <small>Share this code to grow invite XP and premium conversions.</small>
+          </div>
+          <div className="metric-card">
+            <span>Premium path</span>
+            <strong>{premiumOffer.title}</strong>
+            <small>{premiumOffer.cta}</small>
           </div>
         </div>
       </section>

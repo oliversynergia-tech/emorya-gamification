@@ -597,6 +597,7 @@ a {
 .activity-list,
 .achievement-list,
 .achievement-stack,
+.receipt-detail,
 .connections,
 .leaderboard {
   display: flex;
@@ -690,6 +691,10 @@ a {
   background: rgba(255, 255, 255, 0.03);
   border-radius: 18px;
   color: var(--muted);
+}
+
+.receipt-detail {
+  margin-top: 18px;
 }
 
 .referral-campaign-card {
