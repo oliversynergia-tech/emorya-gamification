@@ -572,6 +572,11 @@ a {
   text-transform: capitalize;
 }
 
+.quest-card__meta--wrap {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
 .xp-meter__track {
   overflow: hidden;
   height: 12px;
@@ -597,6 +602,30 @@ a {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.tooling-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin-top: 18px;
+}
+
+.code-block {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  background: rgba(8, 4, 20, 0.72);
+}
+
+.code-block pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text);
 }
 
 .leaderboard--referral {

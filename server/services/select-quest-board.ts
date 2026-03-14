@@ -1,62 +1,98 @@
-import type { EvaluatedQuest, UserJourneyState } from "@/lib/types";
+import type { EvaluatedQuest, UserJourneyState, UserProgressState } from "@/lib/types";
 
-function getRecommendedTrackOrder(journeyState: UserJourneyState) {
+function injectCampaignPriority(order: string[], campaignSource: UserProgressState["campaignSource"]) {
+  if (!campaignSource || campaignSource === "direct") {
+    return order;
+  }
+
+  const withoutCampaign = order.filter((track) => track !== "campaign");
+  withoutCampaign.splice(1, 0, "campaign");
+
+  return withoutCampaign;
+}
+
+function getRecommendedTrackOrder(journeyState: UserJourneyState, campaignSource: UserProgressState["campaignSource"]) {
   switch (journeyState) {
     case "signed_up_free":
-      return ["starter", "daily", "social", "wallet", "referral", "premium", "campaign", "creative", "ambassador", "quiz"];
+      return injectCampaignPriority(
+        ["starter", "daily", "social", "wallet", "referral", "premium", "campaign", "creative", "ambassador", "quiz"],
+        campaignSource,
+      );
     case "activated_free":
-      return ["daily", "wallet", "referral", "social", "premium", "campaign", "quiz", "creative", "ambassador", "starter"];
+      return injectCampaignPriority(
+        ["daily", "wallet", "referral", "social", "premium", "campaign", "quiz", "creative", "ambassador", "starter"],
+        campaignSource,
+      );
     case "reward_eligible_free":
-      return ["wallet", "referral", "daily", "premium", "social", "campaign", "creative", "ambassador", "quiz", "starter"];
+      return injectCampaignPriority(
+        ["wallet", "referral", "daily", "premium", "social", "campaign", "creative", "ambassador", "quiz", "starter"],
+        campaignSource,
+      );
     case "monthly_premium":
-      return ["premium", "referral", "daily", "wallet", "campaign", "social", "creative", "ambassador", "quiz", "starter"];
+      return injectCampaignPriority(
+        ["premium", "referral", "daily", "wallet", "campaign", "social", "creative", "ambassador", "quiz", "starter"],
+        campaignSource,
+      );
     case "annual_premium":
-      return ["premium", "referral", "wallet", "campaign", "daily", "ambassador", "social", "creative", "quiz", "starter"];
+      return injectCampaignPriority(
+        ["premium", "referral", "wallet", "campaign", "daily", "ambassador", "social", "creative", "quiz", "starter"],
+        campaignSource,
+      );
     case "ambassador_candidate":
     case "ambassador":
-      return ["ambassador", "referral", "wallet", "premium", "campaign", "daily", "creative", "social", "quiz", "starter"];
+      return injectCampaignPriority(
+        ["ambassador", "referral", "wallet", "premium", "campaign", "daily", "creative", "social", "quiz", "starter"],
+        campaignSource,
+      );
     default:
-      return ["starter", "daily", "social", "wallet", "referral", "premium", "campaign", "creative", "ambassador", "quiz"];
+      return injectCampaignPriority(
+        ["starter", "daily", "social", "wallet", "referral", "premium", "campaign", "creative", "ambassador", "quiz"],
+        campaignSource,
+      );
   }
 }
 
-function computeTrackPriority(track: string, journeyState: UserJourneyState) {
-  const order = getRecommendedTrackOrder(journeyState);
+function computeTrackPriority(track: string, journeyState: UserJourneyState, campaignSource: UserProgressState["campaignSource"]) {
+  const order = getRecommendedTrackOrder(journeyState, campaignSource);
   const index = order.indexOf(track);
   return index === -1 ? order.length : index;
 }
 
-function getTargetTracks(journeyState: UserJourneyState) {
+function getTargetTracks(journeyState: UserJourneyState, campaignSource: UserProgressState["campaignSource"]) {
   switch (journeyState) {
     case "signed_up_free":
-      return ["starter", "daily", "social", "wallet", "referral"];
+      return injectCampaignPriority(["starter", "daily", "social", "wallet", "referral"], campaignSource);
     case "activated_free":
-      return ["daily", "social", "wallet", "referral", "premium"];
+      return injectCampaignPriority(["daily", "social", "wallet", "referral", "premium"], campaignSource);
     case "reward_eligible_free":
-      return ["daily", "wallet", "referral", "premium", "campaign"];
+      return injectCampaignPriority(["daily", "wallet", "referral", "premium", "campaign"], campaignSource);
     case "monthly_premium":
-      return ["premium", "daily", "wallet", "referral", "campaign"];
+      return injectCampaignPriority(["premium", "daily", "wallet", "referral", "campaign"], campaignSource);
     case "annual_premium":
-      return ["premium", "wallet", "referral", "campaign", "daily"];
+      return injectCampaignPriority(["premium", "wallet", "referral", "campaign", "daily"], campaignSource);
     case "ambassador_candidate":
     case "ambassador":
-      return ["ambassador", "referral", "wallet", "premium", "campaign"];
+      return injectCampaignPriority(["ambassador", "referral", "wallet", "premium", "campaign"], campaignSource);
     default:
-      return ["starter", "daily", "social", "wallet", "referral"];
+      return injectCampaignPriority(["starter", "daily", "social", "wallet", "referral"], campaignSource);
   }
 }
 
 export function selectQuestBoard({
   quests,
   journeyState,
+  campaignSource,
 }: {
   quests: EvaluatedQuest[];
   journeyState: UserJourneyState;
+  campaignSource: UserProgressState["campaignSource"];
 }) {
   const activePool = quests
     .filter((quest) => quest.visible && (quest.status === "active" || quest.status === "in_progress" || quest.status === "rejected"))
     .sort((left, right) => {
-      const priorityDelta = computeTrackPriority(left.track, journeyState) - computeTrackPriority(right.track, journeyState);
+      const priorityDelta =
+        computeTrackPriority(left.track, journeyState, campaignSource) -
+        computeTrackPriority(right.track, journeyState, campaignSource);
       if (priorityDelta !== 0) {
         return priorityDelta;
       }
@@ -64,7 +100,7 @@ export function selectQuestBoard({
       return right.sortScore - left.sortScore;
     });
   const selectedActive = new Map<string, EvaluatedQuest>();
-  const targetTracks = getTargetTracks(journeyState);
+  const targetTracks = getTargetTracks(journeyState, campaignSource);
 
   for (const track of targetTracks) {
     if (selectedActive.size >= 15) {
@@ -93,7 +129,9 @@ export function selectQuestBoard({
   }
 
   const active = Array.from(selectedActive.values()).sort((left, right) => {
-    const priorityDelta = computeTrackPriority(left.track, journeyState) - computeTrackPriority(right.track, journeyState);
+    const priorityDelta =
+      computeTrackPriority(left.track, journeyState, campaignSource) -
+      computeTrackPriority(right.track, journeyState, campaignSource);
     if (priorityDelta !== 0) {
       return priorityDelta;
     }

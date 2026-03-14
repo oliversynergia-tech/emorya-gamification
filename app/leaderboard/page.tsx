@@ -38,7 +38,47 @@ export default async function LeaderboardPage() {
             <strong>{topReferralEntry ? topReferralEntry.displayName : "No referral leader yet"}</strong>
             <small>{topReferralEntry ? `${topReferralEntry.xp.toLocaleString()} referral XP on the invite board.` : "Referral standings appear once invite rewards start moving."}</small>
           </div>
+          <div className="metric-card">
+            <span>Reward preview</span>
+            <strong>{data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}</strong>
+            <small>
+              {data.user.tokenProgram.status === "redeemable"
+                ? "Projected redemption unlocked from current eligibility points."
+                : `${Math.max((data.user.tokenProgram.nextRedemptionPoints ?? data.user.tokenProgram.minimumPoints) - data.user.tokenProgram.eligibilityPoints, 0)} more points to your next redemption step.`}
+            </small>
+          </div>
         </div>
+      </section>
+      <section className="grid">
+        <section className="panel panel--glass">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Reward ladder</p>
+              <h3>Why climbing the board matters</h3>
+            </div>
+          </div>
+          <div className="info-grid">
+            <div className="info-card">
+              <span>Weekly tier</span>
+              <strong>{data.user.weeklyProgress.tierLabel}</strong>
+            </div>
+            <div className="info-card">
+              <span>Eligibility points</span>
+              <strong>{data.user.tokenProgram.eligibilityPoints}</strong>
+            </div>
+            <div className="info-card">
+              <span>Monthly referral upside</span>
+              <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} XP</strong>
+            </div>
+            <div className="info-card">
+              <span>Annual referral upside</span>
+              <strong>{data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.amount} {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.asset}</strong>
+            </div>
+          </div>
+          <p className="form-note">
+            Leaderboard pressure is only one layer. The stronger loop is weekly XP, referral quality, and token-redemption readiness through the xPortal-linked reward path.
+          </p>
+        </section>
       </section>
       <LeaderboardSection data={data} />
     </SiteShell>

@@ -126,7 +126,7 @@ export function AuthClientPanel() {
       {message ? <p className="status status--success">{message}</p> : null}
       {error ? <p className="status status--error">{error}</p> : null}
       <p className="form-note">
-        Sign-up requires a password of at least 10 characters. Referral codes are optional and issue rewards to the inviter automatically.
+        Sign-up requires a password of at least 10 characters. Referral codes are optional, issue rewards to the inviter automatically, and feed into the monthly/annual premium reward ladder.
       </p>
     </section>
   );

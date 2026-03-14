@@ -224,6 +224,53 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             ))}
           </div>
         </div>
+        {data.user.campaignSource ? (
+          <div className="panel panel--glass">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Campaign bridge ladder</p>
+                <h3>{data.user.campaignSource} onboarding path</h3>
+              </div>
+              <span className="badge badge--pink">Source aware</span>
+            </div>
+            <div className="achievement-list">
+              <article className="achievement-card">
+                <div>
+                  <strong>Arrival captured</strong>
+                  <p>Emorya now recognizes this account as a {data.user.campaignSource} entrant.</p>
+                </div>
+                <span className="badge badge--pink">Done</span>
+              </article>
+              <article className="achievement-card">
+                <div>
+                  <strong>Bridge into xPortal</strong>
+                  <p>Wallet linking moves this sourced user into the full token and campaign path.</p>
+                </div>
+                <span className={data.user.starterPath.steps.some((step) => step.label === "Connect xPortal" && step.complete) ? "badge badge--pink" : "badge"}>
+                  {data.user.starterPath.steps.some((step) => step.label === "Connect xPortal" && step.complete) ? "Done" : "Next"}
+                </span>
+              </article>
+              <article className="achievement-card">
+                <div>
+                  <strong>Complete Starter Path</strong>
+                  <p>Turns campaign curiosity into an Emorya-native habit and referral-ready account.</p>
+                </div>
+                <span className={data.user.starterPath.complete ? "badge badge--pink" : "badge"}>
+                  {data.user.starterPath.complete ? "Done" : "Open"}
+                </span>
+              </article>
+              <article className="achievement-card">
+                <div>
+                  <strong>Reach reward eligibility</strong>
+                  <p>Level 5 plus trust and wallet linkage opens the deeper campaign reward lanes.</p>
+                </div>
+                <span className={data.user.rewardEligibility.eligible ? "badge badge--pink" : "badge"}>
+                  {data.user.rewardEligibility.eligible ? "Live" : "Pending"}
+                </span>
+              </article>
+            </div>
+          </div>
+        ) : null}
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>

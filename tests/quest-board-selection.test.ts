@@ -52,9 +52,66 @@ test("selectQuestBoard caps locked previews and prioritizes recommended active q
   const result = selectQuestBoard({
     quests,
     journeyState: "signed_up_free",
+    campaignSource: null,
   });
 
   assert.equal(result.active[0]?.id, "starter-1");
   assert.equal(result.lockedPreviews.length, 5);
   assert.equal(result.quests.length, 7);
+});
+
+test("selectQuestBoard promotes campaign quests for sourced onboarding ladders", () => {
+  const result = selectQuestBoard({
+    quests: [
+      {
+        id: "campaign-1",
+        title: "Zealy bridge",
+        track: "campaign" as const,
+        status: "active" as const,
+        visible: true,
+        lockedReason: null,
+        unlockHint: null,
+        projectedReward: {
+          xp: 90,
+          tokenEffect: "eligibility_progress" as const,
+        },
+        sortScore: 900,
+      },
+      {
+        id: "social-1",
+        title: "Social",
+        track: "social" as const,
+        status: "active" as const,
+        visible: true,
+        lockedReason: null,
+        unlockHint: null,
+        projectedReward: {
+          xp: 35,
+          tokenEffect: "none" as const,
+        },
+        sortScore: 850,
+      },
+      {
+        id: "starter-1",
+        title: "Starter",
+        track: "starter" as const,
+        status: "active" as const,
+        visible: true,
+        lockedReason: null,
+        unlockHint: null,
+        projectedReward: {
+          xp: 25,
+          tokenEffect: "none" as const,
+        },
+        sortScore: 1000,
+      },
+    ],
+    journeyState: "signed_up_free",
+    campaignSource: "zealy",
+  });
+
+  assert.deepEqual(
+    result.active.slice(0, 2).map((quest) => quest.id),
+    ["starter-1", "campaign-1"],
+  );
 });

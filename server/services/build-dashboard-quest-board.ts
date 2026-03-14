@@ -134,8 +134,16 @@ export function buildDashboardQuestBoard({
     });
     const completionStatus = deriveCompletionStatus(quest);
     const recommended =
-      (journeyState === "signed_up_free" && (track === "starter" || track === "wallet" || track === "social")) ||
-      (journeyState === "activated_free" && (track === "daily" || track === "wallet" || track === "referral")) ||
+      (journeyState === "signed_up_free" &&
+        (track === "starter" ||
+          track === "wallet" ||
+          track === "social" ||
+          (track === "campaign" && userProgressState.campaignSource !== null && userProgressState.campaignSource !== "direct"))) ||
+      (journeyState === "activated_free" &&
+        (track === "daily" ||
+          track === "wallet" ||
+          track === "referral" ||
+          (track === "campaign" && userProgressState.campaignSource !== null && userProgressState.campaignSource !== "direct"))) ||
       (journeyState === "reward_eligible_free" && (track === "wallet" || track === "referral" || track === "premium")) ||
       ((journeyState === "monthly_premium" || journeyState === "annual_premium") &&
         (track === "premium" || track === "referral" || track === "wallet"));
@@ -160,6 +168,7 @@ export function buildDashboardQuestBoard({
   const selectedBoard = selectQuestBoard({
     quests: Array.from(evaluatedByQuestId.values()).map((entry) => entry.evaluatedQuest),
     journeyState,
+    campaignSource: userProgressState.campaignSource,
   });
 
   return selectedBoard.quests
