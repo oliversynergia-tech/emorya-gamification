@@ -10,6 +10,7 @@ import {
   runRewardAssetSaveRoute,
   runRewardProgramDirectoryRoute,
   runRewardProgramSaveRoute,
+  runSettlementAnalyticsRoute,
   runTokenSettlementRoute,
 } from "../server/http/admin-route-actions.ts";
 
@@ -214,5 +215,36 @@ test("runRewardProgramSaveRoute surfaces missing program errors", async () => {
   assert.deepEqual(result.body, {
     ok: false,
     error: "Reward program not found.",
+  });
+});
+
+test("runSettlementAnalyticsRoute forwards selected day window", async () => {
+  const services = {
+    getSettlementAnalytics: mock.fn(async (days?: number) => {
+      assert.equal(days, 30);
+      return { periodDays: 30, pendingCount: 2 };
+    }),
+  };
+
+  const result = await runSettlementAnalyticsRoute({ days: 30 }, services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    analytics: { periodDays: 30, pendingCount: 2 },
+  });
+});
+
+test("runSettlementAnalyticsRoute rejects invalid day windows", async () => {
+  const services = {
+    getSettlementAnalytics: mock.fn(async () => ({ periodDays: 7 })),
+  };
+
+  const result = await runSettlementAnalyticsRoute({ days: 0 }, services);
+
+  assert.equal(result.status, 400);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "days must be a positive number.",
   });
 });

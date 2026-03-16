@@ -11,16 +11,27 @@ type TokenSettlementResponse = {
   queue?: AdminOverviewData["tokenSettlementQueue"];
 };
 
+type SettlementAnalyticsResponse = {
+  ok: boolean;
+  error?: string;
+  analytics?: AdminOverviewData["settlementAnalytics"];
+};
+
 export function TokenSettlementPanel({
   initialQueue,
   analytics,
+  payoutControls,
 }: {
   initialQueue: AdminOverviewData["tokenSettlementQueue"];
   analytics: AdminOverviewData["settlementAnalytics"];
+  payoutControls: AdminOverviewData["economySettings"];
 }) {
   const router = useRouter();
   const [queue, setQueue] = useState(initialQueue);
+  const [analyticsState, setAnalyticsState] = useState(analytics);
+  const [selectedWindow, setSelectedWindow] = useState(String(analytics.periodDays));
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [analyticsPending, setAnalyticsPending] = useState(false);
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, string>>({});
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
@@ -64,6 +75,11 @@ export function TokenSettlementPanel({
       return;
     }
 
+    if (!payoutControls.settlementProcessingEnabled) {
+      setError("Settlement processing is currently disabled in payout controls.");
+      return;
+    }
+
     setPendingId(redemptionId);
     setMessage(null);
     setError(null);
@@ -96,6 +112,28 @@ export function TokenSettlementPanel({
     }
   }
 
+  async function updateWindow(nextWindow: string) {
+    setSelectedWindow(nextWindow);
+    setAnalyticsPending(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/settlement-analytics?days=${nextWindow}`, { cache: "no-store" });
+      const result = (await response.json()) as SettlementAnalyticsResponse;
+
+      if (!response.ok || !result.ok || !result.analytics) {
+        setError(result.error ?? "Unable to refresh settlement analytics.");
+        return;
+      }
+
+      setAnalyticsState(result.analytics);
+    } catch {
+      setError("Unable to refresh settlement analytics.");
+    } finally {
+      setAnalyticsPending(false);
+    }
+  }
+
   return (
     <section className="panel panel--glass">
       <div className="panel__header">
@@ -113,18 +151,33 @@ export function TokenSettlementPanel({
           {annualReferralQueue.length} direct annual-referral payouts and {standardQueue.length} standard redemptions are waiting for receipts.
         </p>
       ) : null}
+      <p className="form-note">
+        Payout mode <strong>{payoutControls.payoutMode}</strong> · settlement processing{" "}
+        <strong>{payoutControls.settlementProcessingEnabled ? "enabled" : "disabled"}</strong> · direct reward queue{" "}
+        <strong>{payoutControls.directRewardQueueEnabled ? "enabled" : "disabled"}</strong>
+      </p>
+      <div className="review-bulk-actions">
+        <label className="field">
+          <span>Analytics window</span>
+          <select value={selectedWindow} onChange={(event) => void updateWindow(event.target.value)}>
+            <option value="7">7 days</option>
+            <option value="30">30 days</option>
+            <option value="90">90 days</option>
+          </select>
+        </label>
+      </div>
       <div className="achievement-list">
         <article className="achievement-card">
           <div>
-            <strong>7-day throughput</strong>
-            <p>Settlement flow across the last seven days.</p>
+            <strong>{analyticsState.periodDays}-day throughput</strong>
+            <p>Settlement flow across the selected analytics window.</p>
           </div>
           <div className="achievement-card__side">
-            <span>{analytics.settledLast7DaysCount} payouts</span>
-            <span>{analytics.settledLast7DaysTokenAmount.toFixed(2)} tokens</span>
+            <span>{analyticsState.settledLast7DaysCount} payouts</span>
+            <span>{analyticsState.settledLast7DaysTokenAmount.toFixed(2)} tokens</span>
           </div>
         </article>
-        {analytics.byAsset.slice(0, 3).map((asset) => (
+        {analyticsState.byAsset.slice(0, 3).map((asset) => (
           <article key={asset.asset} className="achievement-card">
             <div>
               <strong>{asset.asset}</strong>
@@ -137,6 +190,7 @@ export function TokenSettlementPanel({
           </article>
         ))}
       </div>
+      {analyticsPending ? <p className="form-note">Refreshing analytics…</p> : null}
       {message ? <p className="status status--success">{message}</p> : null}
       {error ? <p className="status status--error">{error}</p> : null}
       <div className="review-history__list">
@@ -190,7 +244,7 @@ export function TokenSettlementPanel({
                 <button
                   className="button button--primary button--small"
                   type="button"
-                  disabled={pendingId !== null}
+                  disabled={pendingId !== null || !payoutControls.settlementProcessingEnabled}
                   onClick={() => settle(entry.id)}
                 >
                   {pendingId === entry.id ? "Settling..." : "Mark settled"}

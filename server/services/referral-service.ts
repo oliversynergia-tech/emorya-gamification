@@ -98,7 +98,10 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
       });
     }
 
-    if ((update.directTokenReward ?? 0) > Number(referral.annual_direct_token_amount ?? 0)) {
+    if (
+      economySettings.directRewardQueueEnabled &&
+      (update.directTokenReward ?? 0) > Number(referral.annual_direct_token_amount ?? 0)
+    ) {
       await createClaimedTokenRedemption({
         userId: referrerUserId,
         asset: economySettings.payoutAsset,

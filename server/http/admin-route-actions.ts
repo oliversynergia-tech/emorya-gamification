@@ -7,6 +7,7 @@ import {
   handleRewardAssetSaveRequest,
   handleRewardProgramDirectoryRequest,
   handleRewardProgramSaveRequest,
+  handleSettlementAnalyticsRequest,
   handleTokenSettlementRequest,
 } from "./admin-handlers.ts";
 
@@ -19,6 +20,7 @@ export type AdminRouteActionServices = {
   saveRewardAsset: (input: Record<string, unknown>, assetId?: string) => Promise<unknown>;
   getRewardProgramDirectory: () => Promise<unknown>;
   saveRewardProgram: (input: Record<string, unknown>, programId?: string) => Promise<unknown>;
+  getSettlementAnalytics: (days?: number) => Promise<unknown>;
   settlePendingTokenRedemption: (input: {
     redemptionId: string;
     receiptReference: string;
@@ -95,6 +97,13 @@ export async function runRewardProgramSaveRoute(
   services: Pick<AdminRouteActionServices, "saveRewardProgram">,
 ) {
   return handleRewardProgramSaveRequest({ programId, body }, services.saveRewardProgram);
+}
+
+export async function runSettlementAnalyticsRoute(
+  input: { days?: number },
+  services: Pick<AdminRouteActionServices, "getSettlementAnalytics">,
+) {
+  return handleSettlementAnalyticsRequest(input, services.getSettlementAnalytics);
 }
 
 export async function runTokenSettlementRoute(

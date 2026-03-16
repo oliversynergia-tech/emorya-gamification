@@ -7,6 +7,9 @@ type QuestDefinitionInput = Record<string, unknown>;
 type EconomySettingsInput = Record<string, unknown>;
 type RewardAssetInput = Record<string, unknown>;
 type RewardProgramInput = Record<string, unknown>;
+type SettlementAnalyticsInput = {
+  days?: number;
+};
 type TokenSettlementInput = {
   receiptReference?: string;
   settlementNote?: string | null;
@@ -288,6 +291,34 @@ export async function handleRewardProgramSaveRequest(
         : message.includes("not found")
           ? 404
           : getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleSettlementAnalyticsRequest(
+  input: SettlementAnalyticsInput,
+  getSettlementAnalytics: (days?: number) => Promise<unknown>,
+) {
+  if (input.days !== undefined && (!Number.isFinite(input.days) || input.days <= 0)) {
+    return {
+      status: 400,
+      body: { ok: false, error: "days must be a positive number." },
+    };
+  }
+
+  try {
+    const analytics = await getSettlementAnalytics(input.days);
+
+    return {
+      status: 200,
+      body: { ok: true, analytics },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load settlement analytics.";
+
+    return {
+      status: getErrorStatus(message),
       body: { ok: false, error: message },
     };
   }

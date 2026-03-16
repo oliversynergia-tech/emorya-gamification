@@ -9,7 +9,11 @@ import { runQuery } from "@/server/db/client";
 type EconomySettingsRow = QueryResultRow & {
   id: string;
   payout_asset: string;
+  payout_mode: string;
   redemption_enabled: boolean;
+  settlement_processing_enabled: boolean;
+  direct_reward_queue_enabled: boolean;
+  settlement_notes_required: boolean;
   direct_rewards_enabled: boolean;
   direct_annual_referral_enabled: boolean;
   direct_premium_flash_enabled: boolean;
@@ -52,7 +56,12 @@ function mapEconomySettings(row: EconomySettingsRow): EconomySettings {
   return {
     id: row.id,
     payoutAsset: normalizeTokenAsset(row.payout_asset),
+    payoutMode:
+      row.payout_mode === "review_required" || row.payout_mode === "automation_ready" ? row.payout_mode : "manual",
     redemptionEnabled: row.redemption_enabled,
+    settlementProcessingEnabled: row.settlement_processing_enabled,
+    directRewardQueueEnabled: row.direct_reward_queue_enabled,
+    settlementNotesRequired: row.settlement_notes_required,
     directRewardsEnabled: row.direct_rewards_enabled,
     directAnnualReferralEnabled: row.direct_annual_referral_enabled,
     directPremiumFlashEnabled: row.direct_premium_flash_enabled,
@@ -97,7 +106,8 @@ function mapEconomySettings(row: EconomySettingsRow): EconomySettings {
 
 export async function getActiveEconomySettings() {
   const result = await runQuery<EconomySettingsRow>(
-    `SELECT id, payout_asset, redemption_enabled, direct_rewards_enabled,
+    `SELECT id, payout_asset, payout_mode, redemption_enabled, settlement_processing_enabled,
+            direct_reward_queue_enabled, settlement_notes_required, direct_rewards_enabled,
             direct_annual_referral_enabled, direct_premium_flash_enabled, direct_ambassador_enabled,
             minimum_eligibility_points, points_per_token,
             xp_multiplier_free, xp_multiplier_monthly, xp_multiplier_annual,
@@ -148,7 +158,8 @@ export async function updateActiveEconomySettings({
 
   await runQuery(
     `INSERT INTO economy_settings (
-       id, is_active, payout_asset, redemption_enabled, direct_rewards_enabled,
+       id, is_active, payout_asset, payout_mode, redemption_enabled, settlement_processing_enabled,
+       direct_reward_queue_enabled, settlement_notes_required, direct_rewards_enabled,
        direct_annual_referral_enabled, direct_premium_flash_enabled, direct_ambassador_enabled,
        minimum_eligibility_points, points_per_token,
        xp_multiplier_free, xp_multiplier_monthly, xp_multiplier_annual,
@@ -157,12 +168,16 @@ export async function updateActiveEconomySettings({
        referral_annual_conversion_base_xp, annual_referral_direct_token_amount,
        campaign_overrides, updated_at
      ) VALUES (
-       $1, TRUE, $2, $3, $4, $5, $6, $7, $8, $9,
-       $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20::jsonb, NOW()
+       $1, TRUE, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+       $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24::jsonb, NOW()
      )
      ON CONFLICT (id) DO UPDATE SET
        payout_asset = EXCLUDED.payout_asset,
+       payout_mode = EXCLUDED.payout_mode,
        redemption_enabled = EXCLUDED.redemption_enabled,
+       settlement_processing_enabled = EXCLUDED.settlement_processing_enabled,
+       direct_reward_queue_enabled = EXCLUDED.direct_reward_queue_enabled,
+       settlement_notes_required = EXCLUDED.settlement_notes_required,
        direct_rewards_enabled = EXCLUDED.direct_rewards_enabled,
        direct_annual_referral_enabled = EXCLUDED.direct_annual_referral_enabled,
        direct_premium_flash_enabled = EXCLUDED.direct_premium_flash_enabled,
@@ -184,7 +199,11 @@ export async function updateActiveEconomySettings({
     [
       id,
       next.payoutAsset,
+      next.payoutMode,
       next.redemptionEnabled,
+      next.settlementProcessingEnabled,
+      next.directRewardQueueEnabled,
+      next.settlementNotesRequired,
       next.directRewardsEnabled,
       next.directAnnualReferralEnabled,
       next.directPremiumFlashEnabled,

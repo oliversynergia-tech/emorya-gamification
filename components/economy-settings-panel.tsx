@@ -89,7 +89,11 @@ export function EconomySettingsPanel({
         },
         body: JSON.stringify({
           payoutAsset: settings.payoutAsset,
+          payoutMode: settings.payoutMode,
           redemptionEnabled: settings.redemptionEnabled,
+          settlementProcessingEnabled: settings.settlementProcessingEnabled,
+          directRewardQueueEnabled: settings.directRewardQueueEnabled,
+          settlementNotesRequired: settings.settlementNotesRequired,
           directRewardsEnabled: settings.directRewardsEnabled,
           directAnnualReferralEnabled: settings.directAnnualReferralEnabled,
           directPremiumFlashEnabled: settings.directPremiumFlashEnabled,
@@ -148,6 +152,23 @@ export function EconomySettingsPanel({
           </select>
         </label>
         <label className="field">
+          <span>Payout mode</span>
+          <select
+            disabled={!canManage || pending}
+            value={settings.payoutMode}
+            onChange={(event) =>
+              setSettings((current) => ({
+                ...current,
+                payoutMode: event.target.value as EconomySettings["payoutMode"],
+              }))
+            }
+          >
+            <option value="manual">manual</option>
+            <option value="review_required">review_required</option>
+            <option value="automation_ready">automation_ready</option>
+          </select>
+        </label>
+        <label className="field">
           <span>Minimum eligibility points</span>
           <input
             disabled={!canManage || pending}
@@ -172,6 +193,39 @@ export function EconomySettingsPanel({
             type="checkbox"
             checked={settings.redemptionEnabled}
             onChange={(event) => setSettings((current) => ({ ...current, redemptionEnabled: event.target.checked }))}
+          />
+        </label>
+        <label className="field field--checkbox">
+          <span>Settlement processing</span>
+          <input
+            disabled={!canManage || pending}
+            type="checkbox"
+            checked={settings.settlementProcessingEnabled}
+            onChange={(event) =>
+              setSettings((current) => ({ ...current, settlementProcessingEnabled: event.target.checked }))
+            }
+          />
+        </label>
+        <label className="field field--checkbox">
+          <span>Direct reward queue</span>
+          <input
+            disabled={!canManage || pending}
+            type="checkbox"
+            checked={settings.directRewardQueueEnabled}
+            onChange={(event) =>
+              setSettings((current) => ({ ...current, directRewardQueueEnabled: event.target.checked }))
+            }
+          />
+        </label>
+        <label className="field field--checkbox">
+          <span>Settlement notes required</span>
+          <input
+            disabled={!canManage || pending}
+            type="checkbox"
+            checked={settings.settlementNotesRequired}
+            onChange={(event) =>
+              setSettings((current) => ({ ...current, settlementNotesRequired: event.target.checked }))
+            }
           />
         </label>
       </div>

@@ -455,6 +455,7 @@ export type AdminOverviewData = {
   rewardPrograms: RewardProgram[];
   tokenSettlementQueue: Array<TokenSettlementItem>;
   settlementAnalytics: {
+    periodDays: number;
     pendingCount: number;
     pendingTokenAmount: number;
     oldestPendingHours: number;
@@ -582,10 +583,16 @@ export type TokenRedemptionProgram = {
   tierMultipliers: Record<SubscriptionTier, number>;
 };
 
+export type PayoutOperationsMode = "manual" | "review_required" | "automation_ready";
+
 export type EconomySettings = {
   id: string;
   payoutAsset: TokenAsset;
+  payoutMode: PayoutOperationsMode;
   redemptionEnabled: boolean;
+  settlementProcessingEnabled: boolean;
+  directRewardQueueEnabled: boolean;
+  settlementNotesRequired: boolean;
   directRewardsEnabled: boolean;
   directAnnualReferralEnabled: boolean;
   directPremiumFlashEnabled: boolean;

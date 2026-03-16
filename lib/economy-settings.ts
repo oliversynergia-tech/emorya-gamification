@@ -3,7 +3,11 @@ import type { CampaignSource, EconomySettings, QuestTrack, SubscriptionTier, Tok
 export const defaultEconomySettings: EconomySettings = {
   id: "default",
   payoutAsset: "EMR",
+  payoutMode: "manual",
   redemptionEnabled: false,
+  settlementProcessingEnabled: true,
+  directRewardQueueEnabled: true,
+  settlementNotesRequired: false,
   directRewardsEnabled: true,
   directAnnualReferralEnabled: true,
   directPremiumFlashEnabled: true,
@@ -153,8 +157,17 @@ export function buildEconomySettingsSummary(previous: EconomySettings, next: Eco
   if (previous.payoutAsset !== next.payoutAsset) {
     changes.push(`asset ${previous.payoutAsset} -> ${next.payoutAsset}`);
   }
+  if (previous.payoutMode !== next.payoutMode) {
+    changes.push(`payout mode ${previous.payoutMode} -> ${next.payoutMode}`);
+  }
   if (previous.redemptionEnabled !== next.redemptionEnabled) {
     changes.push(`redemption ${next.redemptionEnabled ? "enabled" : "disabled"}`);
+  }
+  if (previous.settlementProcessingEnabled !== next.settlementProcessingEnabled) {
+    changes.push(`settlement processing ${next.settlementProcessingEnabled ? "enabled" : "disabled"}`);
+  }
+  if (previous.directRewardQueueEnabled !== next.directRewardQueueEnabled) {
+    changes.push(`direct reward queue ${next.directRewardQueueEnabled ? "enabled" : "disabled"}`);
   }
   if (previous.pointsPerToken !== next.pointsPerToken) {
     changes.push(`points/token ${previous.pointsPerToken} -> ${next.pointsPerToken}`);

@@ -162,7 +162,8 @@ type SettlementByProgramRow = QueryResultRow & {
   total_token_amount: number | string;
 };
 
-export async function getTokenSettlementAnalytics(): Promise<AdminOverviewData["settlementAnalytics"]> {
+export async function getTokenSettlementAnalytics(days = 7): Promise<AdminOverviewData["settlementAnalytics"]> {
+  const safeDays = Math.min(Math.max(Math.round(days), 1), 90);
   const [summaryResult, throughputResult, byAssetResult, byProgramResult] = await Promise.all([
     runQuery<SettlementAnalyticsRow>(
       `WITH pending AS (
@@ -175,9 +176,9 @@ export async function getTokenSettlementAnalytics(): Promise<AdminOverviewData["
      ),
      settled AS (
        SELECT
-         COALESCE(AVG(EXTRACT(EPOCH FROM (settled_at - created_at)) / 3600), 0)::numeric AS average_settlement_hours,
-         COUNT(*) FILTER (WHERE settled_at >= NOW() - INTERVAL '7 days')::int AS settled_last_7_days_count,
-         COALESCE(SUM(token_amount) FILTER (WHERE settled_at >= NOW() - INTERVAL '7 days'), 0)::numeric AS settled_last_7_days_token_amount
+        COALESCE(AVG(EXTRACT(EPOCH FROM (settled_at - created_at)) / 3600), 0)::numeric AS average_settlement_hours,
+        COUNT(*) FILTER (WHERE settled_at >= NOW() - ($1::int * INTERVAL '1 day'))::int AS settled_last_7_days_count,
+        COALESCE(SUM(token_amount) FILTER (WHERE settled_at >= NOW() - ($1::int * INTERVAL '1 day')), 0)::numeric AS settled_last_7_days_token_amount
        FROM token_redemptions
        WHERE status = 'settled'
          AND settled_at IS NOT NULL
@@ -200,6 +201,7 @@ export async function getTokenSettlementAnalytics(): Promise<AdminOverviewData["
        direct_rewards.direct_reward_settled_count,
        direct_rewards.direct_reward_settled_token_amount
      FROM pending, settled, direct_rewards`,
+      [safeDays],
     ),
     runQuery<SettlementThroughputRow>(
       `SELECT TO_CHAR(day_bucket.day, 'Mon DD') AS day_label,
@@ -207,7 +209,7 @@ export async function getTokenSettlementAnalytics(): Promise<AdminOverviewData["
               COALESCE(SUM(redemptions.token_amount), 0)::numeric AS settled_token_amount
        FROM (
          SELECT generate_series(
-           date_trunc('day', NOW() - INTERVAL '6 days'),
+           date_trunc('day', NOW() - (($1::int - 1) * INTERVAL '1 day')),
            date_trunc('day', NOW()),
            INTERVAL '1 day'
          ) AS day
@@ -217,6 +219,7 @@ export async function getTokenSettlementAnalytics(): Promise<AdminOverviewData["
         AND redemptions.status = 'settled'
        GROUP BY day_bucket.day
        ORDER BY day_bucket.day ASC`,
+      [safeDays],
     ),
     runQuery<SettlementByAssetRow>(
       `SELECT redemptions.asset,
@@ -244,6 +247,7 @@ export async function getTokenSettlementAnalytics(): Promise<AdminOverviewData["
   const settledLast7DaysCount = Number(row?.settled_last_7_days_count ?? 0);
 
   return {
+    periodDays: safeDays,
     pendingCount: Number(row?.pending_count ?? 0),
     pendingTokenAmount: Number(row?.pending_token_amount ?? 0),
     oldestPendingHours: Number(row?.oldest_pending_hours ?? 0),
@@ -253,7 +257,7 @@ export async function getTokenSettlementAnalytics(): Promise<AdminOverviewData["
     directRewardPendingCount: Number(row?.direct_reward_pending_count ?? 0),
     directRewardSettledCount: Number(row?.direct_reward_settled_count ?? 0),
     directRewardSettledTokenAmount: Number(row?.direct_reward_settled_token_amount ?? 0),
-    redemptionVelocityPerDay: Number((settledLast7DaysCount / 7).toFixed(2)),
+    redemptionVelocityPerDay: Number((settledLast7DaysCount / safeDays).toFixed(2)),
     dailyThroughput: throughputResult.rows.map((entry) => ({
       label: entry.day_label,
       settledCount: Number(entry.settled_count),

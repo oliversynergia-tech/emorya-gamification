@@ -32,7 +32,11 @@ import {
   listQuestDefinitionsForAdmin,
   updateQuestDefinitionForAdmin,
 } from "@/server/repositories/quest-definition-admin-repository";
-import { listPendingTokenSettlements, settleTokenRedemption } from "@/server/repositories/token-redemption-repository";
+import {
+  getTokenSettlementAnalytics,
+  listPendingTokenSettlements,
+  settleTokenRedemption,
+} from "@/server/repositories/token-redemption-repository";
 import type { EconomySettings, QuestDefinitionAdminItem, RewardAsset, RewardProgram } from "@/lib/types";
 
 export async function getRoleDirectory() {
@@ -272,6 +276,13 @@ export async function getTokenSettlementQueue() {
   return listPendingTokenSettlements();
 }
 
+export async function getSettlementAnalytics(days?: number) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  return getTokenSettlementAnalytics(days);
+}
+
 export async function settlePendingTokenRedemption({
   redemptionId,
   receiptReference,
@@ -288,8 +299,22 @@ export async function settlePendingTokenRedemption({
     throw new Error("You must be signed in to access admin controls.");
   }
 
+  const economySettings = await getActiveEconomySettings();
+
+  if (!economySettings.settlementProcessingEnabled) {
+    throw new Error("Settlement processing is currently disabled in payout controls.");
+  }
+
+  if (economySettings.payoutMode === "review_required") {
+    await assertSuperAdminUser(currentUser);
+  }
+
   if (!receiptReference.trim()) {
     throw new Error("Settlement requires a receiptReference.");
+  }
+
+  if (economySettings.settlementNotesRequired && !settlementNote?.trim()) {
+    throw new Error("Settlement note is required while payout controls require notes.");
   }
 
   const settled = await settleTokenRedemption({
@@ -321,9 +346,18 @@ function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id"
     throw new Error("Economy settings require payoutAsset, thresholds, multipliers, and referral reward values.");
   }
 
+  const payoutMode: EconomySettings["payoutMode"] =
+    input.payoutMode === "review_required" || input.payoutMode === "automation_ready"
+      ? input.payoutMode
+      : "manual";
+
   return {
     payoutAsset: normalizeTokenAsset(input.payoutAsset),
+    payoutMode,
     redemptionEnabled: input.redemptionEnabled ?? false,
+    settlementProcessingEnabled: input.settlementProcessingEnabled ?? true,
+    directRewardQueueEnabled: input.directRewardQueueEnabled ?? true,
+    settlementNotesRequired: input.settlementNotesRequired ?? false,
     directRewardsEnabled: input.directRewardsEnabled ?? true,
     directAnnualReferralEnabled: input.directAnnualReferralEnabled ?? true,
     directPremiumFlashEnabled: input.directPremiumFlashEnabled ?? true,

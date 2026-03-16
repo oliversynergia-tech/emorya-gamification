@@ -89,7 +89,11 @@ export default async function AdminPage() {
         availableAssets={data.rewardAssets}
         canManage={hasSuperAdminAccess}
       />
-      <TokenSettlementPanel initialQueue={data.tokenSettlementQueue} analytics={data.settlementAnalytics} />
+      <TokenSettlementPanel
+        initialQueue={data.tokenSettlementQueue}
+        analytics={data.settlementAnalytics}
+        payoutControls={data.economySettings}
+      />
       <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
       <QuestDefinitionToolingPanel />
       <QuestDefinitionManagementPanel availableAssets={data.rewardAssets} availablePrograms={data.rewardPrograms} />
