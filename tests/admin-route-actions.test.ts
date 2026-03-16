@@ -181,3 +181,38 @@ test("runRewardProgramSaveRoute forwards update payload", async () => {
     programs: [{ id: "program-2" }],
   });
 });
+
+test("runRewardAssetSaveRoute surfaces validation failures", async () => {
+  const services = {
+    saveRewardAsset: mock.fn(async () => {
+      throw new Error("Reward asset requires assetId, symbol, name, and decimals.");
+    }),
+  };
+
+  const result = await runRewardAssetSaveRoute({ body: { symbol: "" } }, services);
+
+  assert.equal(result.status, 400);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Reward asset requires assetId, symbol, name, and decimals.",
+  });
+});
+
+test("runRewardProgramSaveRoute surfaces missing program errors", async () => {
+  const services = {
+    saveRewardProgram: mock.fn(async () => {
+      throw new Error("Reward program not found.");
+    }),
+  };
+
+  const result = await runRewardProgramSaveRoute(
+    { programId: "missing-program", body: { slug: "missing" } },
+    services,
+  );
+
+  assert.equal(result.status, 404);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Reward program not found.",
+  });
+});

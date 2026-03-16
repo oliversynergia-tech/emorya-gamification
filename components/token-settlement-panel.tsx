@@ -13,8 +13,10 @@ type TokenSettlementResponse = {
 
 export function TokenSettlementPanel({
   initialQueue,
+  analytics,
 }: {
   initialQueue: AdminOverviewData["tokenSettlementQueue"];
+  analytics: AdminOverviewData["settlementAnalytics"];
 }) {
   const router = useRouter();
   const [queue, setQueue] = useState(initialQueue);
@@ -25,6 +27,33 @@ export function TokenSettlementPanel({
   const [error, setError] = useState<string | null>(null);
   const annualReferralQueue = queue.filter((entry) => entry.source === "annual-referral-direct");
   const standardQueue = queue.filter((entry) => entry.source !== "annual-referral-direct");
+
+  function exportSettlement(entry: AdminOverviewData["tokenSettlementQueue"][number]) {
+    const lines = [
+      "Emorya Settlement Receipt",
+      `Payout ID: ${entry.id}`,
+      `Recipient: ${entry.userDisplayName}`,
+      `Email: ${entry.userEmail ?? "Not provided"}`,
+      `Asset: ${entry.asset}`,
+      `Asset name: ${entry.assetName ?? "Unknown asset"}`,
+      `Program: ${entry.rewardProgramName ?? "Unassigned program"}`,
+      `Token amount: ${entry.tokenAmount}`,
+      `Eligibility points spent: ${entry.eligibilityPointsSpent}`,
+      `Source: ${entry.source}`,
+      `Created at: ${entry.createdAt}`,
+      `Receipt reference: ${entry.receiptReference ?? "Not issued yet"}`,
+      `Settlement note: ${entry.settlementNote ?? "None"}`,
+    ].join("\n");
+    const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `emorya-settlement-${entry.id}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
 
   async function settle(redemptionId: string) {
     const receiptReference = receiptDrafts[redemptionId]?.trim() ?? "";
@@ -84,6 +113,30 @@ export function TokenSettlementPanel({
           {annualReferralQueue.length} direct annual-referral payouts and {standardQueue.length} standard redemptions are waiting for receipts.
         </p>
       ) : null}
+      <div className="achievement-list">
+        <article className="achievement-card">
+          <div>
+            <strong>7-day throughput</strong>
+            <p>Settlement flow across the last seven days.</p>
+          </div>
+          <div className="achievement-card__side">
+            <span>{analytics.settledLast7DaysCount} payouts</span>
+            <span>{analytics.settledLast7DaysTokenAmount.toFixed(2)} tokens</span>
+          </div>
+        </article>
+        {analytics.byAsset.slice(0, 3).map((asset) => (
+          <article key={asset.asset} className="achievement-card">
+            <div>
+              <strong>{asset.asset}</strong>
+              <p>Current payout mix for this token.</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{asset.pendingCount} pending</span>
+              <span>{asset.settledCount} settled</span>
+            </div>
+          </article>
+        ))}
+      </div>
       {message ? <p className="status status--success">{message}</p> : null}
       {error ? <p className="status status--error">{error}</p> : null}
       <div className="review-history__list">
@@ -110,6 +163,7 @@ export function TokenSettlementPanel({
                 {typeof entry.metadata.referee === "string" ? ` · referee ${entry.metadata.referee}` : ""}
                 {typeof entry.metadata.campaignSource === "string" ? ` · ${entry.metadata.campaignSource}` : ""}
                 {entry.rewardAssetId ? ` · asset registry linked` : ""}
+                {entry.assetName ? ` · ${entry.assetName}` : ""}
                 {entry.settlementNote ? ` · ${entry.settlementNote}` : ""}
               </p>
               <div className="profile-grid">
@@ -140,6 +194,14 @@ export function TokenSettlementPanel({
                   onClick={() => settle(entry.id)}
                 >
                   {pendingId === entry.id ? "Settling..." : "Mark settled"}
+                </button>
+                <button
+                  className="button button--secondary button--small"
+                  type="button"
+                  disabled={pendingId !== null}
+                  onClick={() => exportSettlement(entry)}
+                >
+                  Export
                 </button>
               </div>
             </article>

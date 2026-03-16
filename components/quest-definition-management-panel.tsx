@@ -119,6 +119,13 @@ type MetadataBuilderState = {
   rewardProgramId: string;
 };
 
+type QuestTemplate = {
+  label: string;
+  description: string;
+  form: Partial<QuestDefinitionFormState>;
+  metadata: Record<string, unknown>;
+};
+
 function parseMetadata(metadataText: string) {
   try {
     const parsed = JSON.parse(metadataText) as Record<string, unknown>;
@@ -204,6 +211,128 @@ export function QuestDefinitionManagementPanel({
       rewardProgramId: typeof metadata.rewardProgramId === "string" ? metadata.rewardProgramId : "",
     };
   }, [availableAssets, metadataState.parsed]);
+  const questTemplates = useMemo<QuestTemplate[]>(() => {
+    const defaultAsset = availableAssets[0]?.symbol ?? "EMR";
+    const coreProgram = availablePrograms[0]?.id ?? "";
+    const partnerProgram =
+      availablePrograms.find((program) => program.assetSymbol !== defaultAsset)?.id ?? coreProgram;
+
+    return [
+      {
+        label: "Starter ladder quest",
+        description: "Low-friction onboarding step with XP-only progression.",
+        form: {
+          category: "app",
+          difficulty: "easy",
+          verificationType: "link-visit",
+          recurrence: "one-time",
+          requiredTier: "free",
+          xpReward: 25,
+        },
+        metadata: {
+          track: "starter",
+          rewardConfig: {
+            xp: { base: 25, premiumMultiplierEligible: true },
+            tokenEffect: "none",
+          },
+          previewConfig: {
+            label: "Starter unlock",
+          },
+        },
+      },
+      {
+        label: "Partner token flash quest",
+        description: "Annual or premium spike quest with direct token payout and program mapping.",
+        form: {
+          category: "limited",
+          difficulty: "hard",
+          verificationType: "manual-review",
+          recurrence: "weekly",
+          requiredTier: "annual",
+          xpReward: 180,
+        },
+        metadata: {
+          track: "premium",
+          rewardProgramId: partnerProgram,
+          rewardConfig: {
+            xp: { base: 180, premiumMultiplierEligible: true },
+            tokenEffect: "direct_token_reward",
+            directTokenReward: {
+              asset: availablePrograms.find((program) => program.id === partnerProgram)?.assetSymbol ?? defaultAsset,
+              amount: 20,
+              requiresWallet: true,
+            },
+          },
+          unlockRules: {
+            all: [{ type: "subscription_tier", value: "annual" }],
+          },
+          previewConfig: {
+            label: "Partner flash payout",
+          },
+        },
+      },
+      {
+        label: "Referral annual win",
+        description: "High-value referral milestone with direct payout and referral gating.",
+        form: {
+          category: "referral",
+          difficulty: "hard",
+          verificationType: "text-submission",
+          recurrence: "one-time",
+          requiredTier: "free",
+          xpReward: 300,
+        },
+        metadata: {
+          track: "referral",
+          rewardProgramId: coreProgram,
+          rewardConfig: {
+            xp: { base: 300, premiumMultiplierEligible: true },
+            tokenEffect: "direct_token_reward",
+            directTokenReward: {
+              asset: defaultAsset,
+              amount: 25,
+              requiresWallet: true,
+            },
+          },
+          unlockRules: {
+            all: [{ type: "successful_referrals", value: 1 }],
+          },
+          previewConfig: {
+            label: "Annual referral reward",
+          },
+        },
+      },
+      {
+        label: "Wallet growth milestone",
+        description: "Eligibility-point quest mapped to wallet-linked progression.",
+        form: {
+          category: "staking",
+          difficulty: "medium",
+          verificationType: "wallet-check",
+          recurrence: "weekly",
+          requiredTier: "free",
+          xpReward: 70,
+        },
+        metadata: {
+          track: "wallet",
+          rewardProgramId: coreProgram,
+          rewardConfig: {
+            xp: { base: 70, premiumMultiplierEligible: true },
+            tokenEffect: "eligibility_progress",
+            tokenEligibility: {
+              progressPoints: 15,
+            },
+          },
+          unlockRules: {
+            all: [{ type: "wallet_linked", value: true }],
+          },
+          previewConfig: {
+            label: "Wallet lane",
+          },
+        },
+      },
+    ];
+  }, [availableAssets, availablePrograms]);
 
   async function refreshQuestDirectory() {
     setLoading(true);
@@ -260,6 +389,14 @@ export function QuestDefinitionManagementPanel({
     setForm((current) => ({
       ...current,
       metadataText: JSON.stringify(metadata, null, 2),
+    }));
+  }
+
+  function applyTemplate(template: QuestTemplate) {
+    setForm((current) => ({
+      ...current,
+      ...template.form,
+      metadataText: JSON.stringify(template.metadata, null, 2),
     }));
   }
 
@@ -509,6 +646,19 @@ export function QuestDefinitionManagementPanel({
             </div>
             <button className="button button--secondary button--small" type="button" onClick={() => applyPreset(preset.metadata)}>
               Apply preset
+            </button>
+          </article>
+        ))}
+      </div>
+      <div className="achievement-list">
+        {questTemplates.map((template) => (
+          <article key={template.label} className="achievement-card">
+            <div>
+              <strong>{template.label}</strong>
+              <p>{template.description}</p>
+            </div>
+            <button className="button button--secondary button--small" type="button" onClick={() => applyTemplate(template)}>
+              Apply template
             </button>
           </article>
         ))}

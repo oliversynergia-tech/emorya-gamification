@@ -264,10 +264,27 @@ export type UserSnapshot = {
     scheduledDirectRewards: Array<{
       asset: TokenAsset;
       amount: number;
+      rewardProgramName?: string | null;
+    }>;
+    assetBreakdown: Array<{
+      asset: TokenAsset;
+      claimedAmount: number;
+      settledAmount: number;
+      totalAmount: number;
+      receiptCount: number;
+    }>;
+    programBreakdown: Array<{
+      rewardProgramName: string;
+      asset: TokenAsset;
+      claimedAmount: number;
+      settledAmount: number;
+      totalAmount: number;
+      receiptCount: number;
     }>;
     redemptionHistory: Array<{
       id: string;
       asset: TokenAsset;
+      rewardProgramName: string | null;
       tokenAmount: number;
       eligibilityPointsSpent: number;
       status: "claimed" | "settled";
@@ -448,6 +465,24 @@ export type AdminOverviewData = {
     directRewardSettledCount: number;
     directRewardSettledTokenAmount: number;
     redemptionVelocityPerDay: number;
+    dailyThroughput: Array<{
+      label: string;
+      settledCount: number;
+      settledTokenAmount: number;
+    }>;
+    byAsset: Array<{
+      asset: TokenAsset;
+      pendingCount: number;
+      settledCount: number;
+      totalTokenAmount: number;
+    }>;
+    byProgram: Array<{
+      rewardProgramName: string;
+      asset: TokenAsset;
+      pendingCount: number;
+      settledCount: number;
+      totalTokenAmount: number;
+    }>;
   };
   reviewInsights: {
     byVerificationType: Array<{
@@ -768,6 +803,7 @@ export type TokenSettlementItem = {
   userDisplayName: string;
   userEmail: string | null;
   asset: TokenAsset;
+  assetName?: string | null;
   rewardAssetId: string | null;
   rewardProgramId: string | null;
   rewardProgramName: string | null;

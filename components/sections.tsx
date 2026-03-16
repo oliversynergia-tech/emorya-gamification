@@ -3,6 +3,7 @@ import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionTier } from "@/lib/types";
+import { TokenReceiptHistoryPanel } from "@/components/token-receipt-history-panel";
 
 function tierClass(tier: SubscriptionTier) {
   return `tier-pill tier-pill--${tier}`;
@@ -102,67 +103,6 @@ function renderQuestCard(quest: Quest) {
       ) : null}
       {quest.timebox ? <small>{quest.timebox}</small> : null}
     </article>
-  );
-}
-
-function renderRedemptionReceiptPanel(
-  history: DashboardData["user"]["tokenProgram"]["redemptionHistory"],
-  title: string,
-  eyebrow: string,
-) {
-  const latestEntry = history[0] ?? null;
-
-  return (
-    <div className="panel panel--glass">
-      <div className="panel__header">
-        <div>
-          <p className="eyebrow">{eyebrow}</p>
-          <h3>{title}</h3>
-        </div>
-        <span className="badge">{history.length} receipts</span>
-      </div>
-      {latestEntry ? (
-        <div className="receipt-detail">
-          <article className="achievement-card achievement-card--unlocked">
-            <div>
-              <strong>{latestEntry.status === "settled" ? "Latest settled payout" : "Latest claimed payout"}</strong>
-              <p>
-                {latestEntry.tokenAmount} {latestEntry.asset} from {latestEntry.source}.
-                {latestEntry.receiptReference ? ` Receipt ${latestEntry.receiptReference}.` : ""}
-              </p>
-              {latestEntry.settlementNote ? <p>{latestEntry.settlementNote}</p> : null}
-            </div>
-            <div className="achievement-card__side">
-              <span>{new Date(latestEntry.createdAt).toLocaleDateString()}</span>
-              <span>{latestEntry.status}</span>
-            </div>
-          </article>
-          <div className="achievement-list">
-            {history.map((entry) => (
-              <article key={entry.id} className="achievement-card">
-                <div>
-                  <strong>
-                    {entry.tokenAmount} {entry.asset}
-                  </strong>
-                  <p>
-                    {entry.status === "settled" && entry.settledAt
-                      ? `Settled ${new Date(entry.settledAt).toLocaleDateString()}`
-                      : "Claimed and awaiting settlement"}
-                    {entry.settledByDisplayName ? ` by ${entry.settledByDisplayName}` : ""}
-                  </p>
-                </div>
-                <div className="achievement-card__side">
-                  <span>{entry.receiptReference ?? "No receipt yet"}</span>
-                  <span>{entry.eligibilityPointsSpent} pts</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <p className="form-note">No payout receipts yet. Claimed and settled token history will appear here as the token layer activates.</p>
-      )}
-    </div>
   );
 }
 
@@ -427,10 +367,49 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                 <article key={`${reward.asset}-${reward.amount}`} className="achievement-card">
                   <div>
                     <strong>Scheduled direct reward</strong>
-                    <p>Partner and campaign quests can bypass XP conversion when direct payout rules apply.</p>
+                    <p>
+                      Partner and campaign quests can bypass XP conversion when direct payout rules apply.
+                      {reward.rewardProgramName ? ` ${reward.rewardProgramName} is attached to this lane.` : ""}
+                    </p>
                   </div>
                   <div className="achievement-card__side">
                     <span>{reward.amount} {reward.asset}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : null}
+          {data.user.tokenProgram.assetBreakdown.length > 0 ? (
+            <div className="achievement-list">
+              {data.user.tokenProgram.assetBreakdown.map((asset) => (
+                <article key={asset.asset} className="achievement-card">
+                  <div>
+                    <strong>{asset.asset} payout mix</strong>
+                    <p>{asset.receiptCount} receipts across claimed and settled reward flow.</p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{asset.claimedAmount.toFixed(2)} claimed</span>
+                    <span>{asset.settledAmount.toFixed(2)} settled</span>
+                    <span>{asset.totalAmount.toFixed(2)} total</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : null}
+          {data.user.tokenProgram.programBreakdown.length > 0 ? (
+            <div className="achievement-list">
+              {data.user.tokenProgram.programBreakdown.map((program) => (
+                <article key={`${program.rewardProgramName}-${program.asset}`} className="achievement-card">
+                  <div>
+                    <strong>{program.rewardProgramName}</strong>
+                    <p>
+                      {program.asset} payouts from this reward rail.
+                    </p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{program.claimedAmount.toFixed(2)} claimed</span>
+                    <span>{program.settledAmount.toFixed(2)} settled</span>
+                    <span>{program.receiptCount} receipts</span>
                   </div>
                 </article>
               ))}
@@ -444,6 +423,7 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                     <strong>{entry.status === "settled" ? "Settled redemption" : "Claimed redemption"}</strong>
                     <p>
                       {entry.eligibilityPointsSpent} eligibility points spent via {entry.source}.
+                      {entry.rewardProgramName ? ` ${entry.rewardProgramName}.` : ""}
                       {entry.receiptReference ? ` Receipt: ${entry.receiptReference}.` : ""}
                       {entry.settlementNote ? ` ${entry.settlementNote}` : ""}
                     </p>
@@ -594,11 +574,11 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             ))}
           </div>
         </div>
-        {renderRedemptionReceiptPanel(
-          data.user.tokenProgram.redemptionHistory,
-          "Receipt and payout detail",
-          "Payout receipts",
-        )}
+        <TokenReceiptHistoryPanel
+          history={data.user.tokenProgram.redemptionHistory}
+          title="Receipt and payout detail"
+          eyebrow="Payout receipts"
+        />
       </div>
       <div className="panel">
         <div className="panel__header">
@@ -910,11 +890,11 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           ))}
         </div>
       </div>
-      {renderRedemptionReceiptPanel(
-        data.user.tokenProgram.redemptionHistory,
-        "Reward receipts and settlement history",
-        "Token receipts",
-      )}
+      <TokenReceiptHistoryPanel
+        history={data.user.tokenProgram.redemptionHistory}
+        title="Reward receipts and settlement history"
+        eyebrow="Token receipts"
+      />
       <div className="panel">
         <div className="panel__header">
           <div>
@@ -1470,6 +1450,46 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
               <span>{data.settlementAnalytics.directRewardSettledTokenAmount.toFixed(2)} tokens</span>
             </div>
           </article>
+          {data.settlementAnalytics.byAsset.map((asset) => (
+            <article key={asset.asset} className="achievement-card">
+              <div>
+                <strong>{asset.asset} settlement mix</strong>
+                <p>Shows pending versus settled flow for this token across all current programs.</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{asset.pendingCount} pending</span>
+                <span>{asset.settledCount} settled</span>
+                <span>{asset.totalTokenAmount.toFixed(2)} tokens</span>
+              </div>
+            </article>
+          ))}
+          {data.settlementAnalytics.byProgram.slice(0, 4).map((program) => (
+            <article key={`${program.rewardProgramName}-${program.asset}`} className="achievement-card">
+              <div>
+                <strong>{program.rewardProgramName}</strong>
+                <p>{program.asset} payout rail across pending and settled receipts.</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{program.pendingCount} pending</span>
+                <span>{program.settledCount} settled</span>
+                <span>{program.totalTokenAmount.toFixed(2)} tokens</span>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.settlementAnalytics.dailyThroughput.map((day) => (
+            <article key={day.label} className="achievement-card">
+              <div>
+                <strong>{day.label}</strong>
+                <p>Daily settlement throughput over the last seven days.</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{day.settledCount} settled</span>
+                <span>{day.settledTokenAmount.toFixed(2)} tokens</span>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
       <div className="panel panel--glass admin-analytics">

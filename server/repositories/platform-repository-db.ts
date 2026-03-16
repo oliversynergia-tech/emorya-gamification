@@ -145,6 +145,7 @@ type ApprovedRewardQuestRow = QueryResultRow & {
 type TokenRedemptionRow = QueryResultRow & {
   id: string;
   asset: TokenAsset;
+  reward_program_name: string | null;
   eligibility_points_spent: number | string;
   token_amount: number | string;
   status: "claimed" | "settled";
@@ -290,11 +291,13 @@ async function getUserSnapshot(
       [user.id],
     ),
     runQuery<TokenRedemptionRow>(
-      `SELECT redemptions.id, redemptions.asset, redemptions.eligibility_points_spent, redemptions.token_amount,
+      `SELECT redemptions.id, redemptions.asset, programs.name AS reward_program_name,
+              redemptions.eligibility_points_spent, redemptions.token_amount,
               redemptions.status, redemptions.source, redemptions.created_at, redemptions.settled_at,
               redemptions.receipt_reference, redemptions.settlement_note,
               settled_by_users.display_name AS settled_by_display_name
        FROM token_redemptions redemptions
+       LEFT JOIN reward_programs programs ON programs.id = redemptions.reward_program_id
        LEFT JOIN users settled_by_users ON settled_by_users.id = redemptions.settled_by
        WHERE redemptions.user_id = $1
        ORDER BY redemptions.created_at DESC
@@ -359,6 +362,7 @@ async function getUserSnapshot(
   const redemptionHistory = redemptionHistoryResult.rows.map((row) => ({
     id: row.id,
     asset: row.asset,
+    rewardProgramName: row.reward_program_name,
     tokenAmount: Number(row.token_amount),
     eligibilityPointsSpent: Number(row.eligibility_points_spent),
     status: row.status,
@@ -459,11 +463,54 @@ async function getUserSnapshot(
       settledBalance,
       nextRedemptionPoints: redemptionProjection.nextRedemptionPoints,
       tierMultiplier: redemptionProjection.tierMultiplier,
-      scheduledDirectRewards: Array.from(scheduledDirectRewardMap.entries()).map(([asset, amount]) => ({
-        asset,
-        amount,
-      })),
-      redemptionHistory,
+    scheduledDirectRewards: Array.from(scheduledDirectRewardMap.entries()).map(([asset, amount]) => ({
+      asset,
+      amount,
+      rewardProgramName: null,
+    })),
+    assetBreakdown: Array.from(
+      redemptionHistory.reduce((map, entry) => {
+        const current = map.get(entry.asset) ?? {
+          asset: entry.asset,
+          claimedAmount: 0,
+          settledAmount: 0,
+          totalAmount: 0,
+          receiptCount: 0,
+        };
+        current.totalAmount += entry.tokenAmount;
+        current.receiptCount += 1;
+        if (entry.status === "settled") {
+          current.settledAmount += entry.tokenAmount;
+        } else {
+          current.claimedAmount += entry.tokenAmount;
+        }
+        map.set(entry.asset, current);
+        return map;
+      }, new Map<TokenAsset, UserSnapshot["tokenProgram"]["assetBreakdown"][number]>()),
+    ).map(([, value]) => value),
+    programBreakdown: Array.from(
+      redemptionHistory.reduce((map, entry) => {
+        const key = entry.rewardProgramName ?? "Unassigned program";
+        const current = map.get(key) ?? {
+          rewardProgramName: key,
+          asset: entry.asset,
+          claimedAmount: 0,
+          settledAmount: 0,
+          totalAmount: 0,
+          receiptCount: 0,
+        };
+        current.totalAmount += entry.tokenAmount;
+        current.receiptCount += 1;
+        if (entry.status === "settled") {
+          current.settledAmount += entry.tokenAmount;
+        } else {
+          current.claimedAmount += entry.tokenAmount;
+        }
+        map.set(key, current);
+        return map;
+      }, new Map<string, UserSnapshot["tokenProgram"]["programBreakdown"][number]>()),
+    ).map(([, value]) => value),
+    redemptionHistory,
       nextStep:
         redemptionProjection.status === "redeemable"
           ? `Redeem ${redemptionProjection.asset} once payout rails are enabled.`

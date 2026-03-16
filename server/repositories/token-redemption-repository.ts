@@ -8,6 +8,7 @@ import { runQuery } from "@/server/db/client";
 type TokenSettlementRow = QueryResultRow & {
   id: string;
   asset: TokenSettlementItem["asset"];
+  asset_name: string | null;
   reward_asset_id: string | null;
   reward_program_id: string | null;
   reward_program_name: string | null;
@@ -31,6 +32,7 @@ function mapTokenSettlement(row: TokenSettlementRow): TokenSettlementItem {
     userDisplayName: row.user_display_name,
     userEmail: row.user_email,
     asset: row.asset,
+    assetName: row.asset_name,
     rewardAssetId: row.reward_asset_id,
     rewardProgramId: row.reward_program_id,
     rewardProgramName: row.reward_program_name,
@@ -48,7 +50,8 @@ function mapTokenSettlement(row: TokenSettlementRow): TokenSettlementItem {
 
 export async function listPendingTokenSettlements(limit = 20): Promise<TokenSettlementItem[]> {
   const result = await runQuery<TokenSettlementRow>(
-    `SELECT redemptions.id, redemptions.asset, redemptions.reward_asset_id, redemptions.reward_program_id,
+    `SELECT redemptions.id, redemptions.asset, assets.name AS asset_name,
+            redemptions.reward_asset_id, redemptions.reward_program_id,
             programs.name AS reward_program_name,
             redemptions.token_amount, redemptions.eligibility_points_spent,
             redemptions.status, redemptions.source, redemptions.created_at, redemptions.settled_at,
@@ -57,6 +60,7 @@ export async function listPendingTokenSettlements(limit = 20): Promise<TokenSett
             settled_by_users.display_name AS settled_by_display_name
      FROM token_redemptions redemptions
      INNER JOIN users ON users.id = redemptions.user_id
+     LEFT JOIN reward_assets assets ON assets.id = redemptions.reward_asset_id
      LEFT JOIN reward_programs programs ON programs.id = redemptions.reward_program_id
      LEFT JOIN users settled_by_users ON settled_by_users.id = redemptions.settled_by
      WHERE redemptions.status = 'claimed'
@@ -88,7 +92,7 @@ export async function settleTokenRedemption({
          settlement_note = $4
      WHERE id = $1
        AND status = 'claimed'
-     RETURNING id, asset, token_amount, eligibility_points_spent, status, source, created_at, settled_at,
+     RETURNING id, asset, NULL::text AS asset_name, token_amount, eligibility_points_spent, status, source, created_at, settled_at,
                receipt_reference, settlement_note, metadata, reward_asset_id, reward_program_id,
                NULL::text AS reward_program_name,
                ''::text AS user_display_name, NULL::text AS user_email, NULL::text AS settled_by_display_name`,
@@ -137,9 +141,31 @@ type SettlementAnalyticsRow = QueryResultRow & {
   direct_reward_settled_token_amount: number | string;
 };
 
+type SettlementThroughputRow = QueryResultRow & {
+  day_label: string;
+  settled_count: number | string;
+  settled_token_amount: number | string;
+};
+
+type SettlementByAssetRow = QueryResultRow & {
+  asset: string;
+  pending_count: number | string;
+  settled_count: number | string;
+  total_token_amount: number | string;
+};
+
+type SettlementByProgramRow = QueryResultRow & {
+  reward_program_name: string;
+  asset: string;
+  pending_count: number | string;
+  settled_count: number | string;
+  total_token_amount: number | string;
+};
+
 export async function getTokenSettlementAnalytics(): Promise<AdminOverviewData["settlementAnalytics"]> {
-  const result = await runQuery<SettlementAnalyticsRow>(
-    `WITH pending AS (
+  const [summaryResult, throughputResult, byAssetResult, byProgramResult] = await Promise.all([
+    runQuery<SettlementAnalyticsRow>(
+      `WITH pending AS (
        SELECT
          COUNT(*)::int AS pending_count,
          COALESCE(SUM(token_amount), 0)::numeric AS pending_token_amount,
@@ -174,9 +200,47 @@ export async function getTokenSettlementAnalytics(): Promise<AdminOverviewData["
        direct_rewards.direct_reward_settled_count,
        direct_rewards.direct_reward_settled_token_amount
      FROM pending, settled, direct_rewards`,
-  );
+    ),
+    runQuery<SettlementThroughputRow>(
+      `SELECT TO_CHAR(day_bucket.day, 'Mon DD') AS day_label,
+              COALESCE(COUNT(redemptions.id), 0)::int AS settled_count,
+              COALESCE(SUM(redemptions.token_amount), 0)::numeric AS settled_token_amount
+       FROM (
+         SELECT generate_series(
+           date_trunc('day', NOW() - INTERVAL '6 days'),
+           date_trunc('day', NOW()),
+           INTERVAL '1 day'
+         ) AS day
+       ) AS day_bucket
+       LEFT JOIN token_redemptions redemptions
+         ON date_trunc('day', redemptions.settled_at) = day_bucket.day
+        AND redemptions.status = 'settled'
+       GROUP BY day_bucket.day
+       ORDER BY day_bucket.day ASC`,
+    ),
+    runQuery<SettlementByAssetRow>(
+      `SELECT redemptions.asset,
+              COUNT(*) FILTER (WHERE redemptions.status = 'claimed')::int AS pending_count,
+              COUNT(*) FILTER (WHERE redemptions.status = 'settled')::int AS settled_count,
+              COALESCE(SUM(redemptions.token_amount), 0)::numeric AS total_token_amount
+       FROM token_redemptions redemptions
+       GROUP BY redemptions.asset
+       ORDER BY total_token_amount DESC, redemptions.asset ASC`,
+    ),
+    runQuery<SettlementByProgramRow>(
+      `SELECT COALESCE(programs.name, 'Unassigned program') AS reward_program_name,
+              redemptions.asset,
+              COUNT(*) FILTER (WHERE redemptions.status = 'claimed')::int AS pending_count,
+              COUNT(*) FILTER (WHERE redemptions.status = 'settled')::int AS settled_count,
+              COALESCE(SUM(redemptions.token_amount), 0)::numeric AS total_token_amount
+       FROM token_redemptions redemptions
+       LEFT JOIN reward_programs programs ON programs.id = redemptions.reward_program_id
+       GROUP BY COALESCE(programs.name, 'Unassigned program'), redemptions.asset
+       ORDER BY total_token_amount DESC, reward_program_name ASC`,
+    ),
+  ]);
 
-  const row = result.rows[0];
+  const row = summaryResult.rows[0];
   const settledLast7DaysCount = Number(row?.settled_last_7_days_count ?? 0);
 
   return {
@@ -190,5 +254,23 @@ export async function getTokenSettlementAnalytics(): Promise<AdminOverviewData["
     directRewardSettledCount: Number(row?.direct_reward_settled_count ?? 0),
     directRewardSettledTokenAmount: Number(row?.direct_reward_settled_token_amount ?? 0),
     redemptionVelocityPerDay: Number((settledLast7DaysCount / 7).toFixed(2)),
+    dailyThroughput: throughputResult.rows.map((entry) => ({
+      label: entry.day_label,
+      settledCount: Number(entry.settled_count),
+      settledTokenAmount: Number(entry.settled_token_amount),
+    })),
+    byAsset: byAssetResult.rows.map((entry) => ({
+      asset: entry.asset,
+      pendingCount: Number(entry.pending_count),
+      settledCount: Number(entry.settled_count),
+      totalTokenAmount: Number(entry.total_token_amount),
+    })),
+    byProgram: byProgramResult.rows.map((entry) => ({
+      rewardProgramName: entry.reward_program_name,
+      asset: entry.asset,
+      pendingCount: Number(entry.pending_count),
+      settledCount: Number(entry.settled_count),
+      totalTokenAmount: Number(entry.total_token_amount),
+    })),
   };
 }
