@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { QuestDefinitionAdminItem } from "@/lib/types";
+import type { QuestDefinitionAdminItem, RewardAsset, RewardProgram } from "@/lib/types";
 
 type QuestDefinitionResponse = {
   ok: boolean;
@@ -116,6 +116,7 @@ type MetadataBuilderState = {
   eligibilityProgressPoints: number;
   directTokenAsset: string;
   directTokenAmount: number;
+  rewardProgramId: string;
 };
 
 function parseMetadata(metadataText: string) {
@@ -133,7 +134,13 @@ function parseMetadata(metadataText: string) {
   }
 }
 
-export function QuestDefinitionManagementPanel() {
+export function QuestDefinitionManagementPanel({
+  availableAssets,
+  availablePrograms,
+}: {
+  availableAssets: RewardAsset[];
+  availablePrograms: RewardProgram[];
+}) {
   const router = useRouter();
   const [quests, setQuests] = useState<QuestDefinitionAdminItem[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -189,10 +196,14 @@ export function QuestDefinitionManagementPanel() {
       successfulReferrals: Number(allRules.find((rule) => rule.type === "successful_referrals")?.value ?? 0),
       walletLinked: Boolean(allRules.find((rule) => rule.type === "wallet_linked")?.value),
       eligibilityProgressPoints: Number(tokenEligibility.progressPoints ?? 0),
-      directTokenAsset: typeof directTokenReward.asset === "string" ? directTokenReward.asset : "EMR",
+      directTokenAsset:
+        typeof directTokenReward.asset === "string"
+          ? directTokenReward.asset
+          : availableAssets[0]?.symbol ?? "EMR",
       directTokenAmount: Number(directTokenReward.amount ?? 0),
+      rewardProgramId: typeof metadata.rewardProgramId === "string" ? metadata.rewardProgramId : "",
     };
-  }, [metadataState.parsed]);
+  }, [availableAssets, metadataState.parsed]);
 
   async function refreshQuestDirectory() {
     setLoading(true);
@@ -286,6 +297,11 @@ export function QuestDefinitionManagementPanel() {
     }
 
     nextMetadata.track = next.track;
+    if (next.rewardProgramId) {
+      nextMetadata.rewardProgramId = next.rewardProgramId;
+    } else {
+      delete nextMetadata.rewardProgramId;
+    }
     nextMetadata.rewardConfig = rewardConfig;
     if (next.previewLabel.trim()) {
       previewConfig.label = next.previewLabel.trim();
@@ -544,14 +560,25 @@ export function QuestDefinitionManagementPanel() {
           <label className="field">
             <span>Direct reward asset</span>
             <select value={metadataBuilder.directTokenAsset} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, directTokenAsset: event.target.value }))}>
-              {["EMR", "EGLD", "PARTNER"].map((value) => (
-                <option key={value} value={value}>{value}</option>
+              {availableAssets.map((asset) => (
+                <option key={asset.id} value={asset.symbol}>{asset.symbol}</option>
               ))}
             </select>
           </label>
           <label className="field">
             <span>Direct reward amount</span>
             <input type="number" step="0.01" value={metadataBuilder.directTokenAmount} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, directTokenAmount: Number(event.target.value) }))} />
+          </label>
+          <label className="field">
+            <span>Reward program</span>
+            <select value={metadataBuilder.rewardProgramId} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, rewardProgramId: event.target.value }))}>
+              <option value="">Default economy</option>
+              {availablePrograms.map((program) => (
+                <option key={program.id} value={program.id}>
+                  {program.name} · {program.assetSymbol}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="field field--checkbox">
             <span>Wallet required</span>

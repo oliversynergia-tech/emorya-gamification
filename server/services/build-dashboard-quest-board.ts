@@ -75,7 +75,7 @@ function mapEvaluatedQuestToQuest({
     tokenEffect: evaluatedQuest.projectedReward.tokenEffect,
     projectedDirectTokenReward: evaluatedQuest.projectedReward.directTokenReward
       ? {
-          asset: evaluatedQuest.projectedReward.directTokenReward.asset as "EMR" | "EGLD" | "PARTNER",
+          asset: evaluatedQuest.projectedReward.directTokenReward.asset,
           amount: evaluatedQuest.projectedReward.directTokenReward.amount,
         }
       : undefined,

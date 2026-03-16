@@ -102,12 +102,14 @@ export function TokenSettlementPanel({
               <div className="review-history__meta">
                 <span>{entry.eligibilityPointsSpent} points</span>
                 <span>{entry.source}</span>
+                {entry.rewardProgramName ? <span>{entry.rewardProgramName}</span> : null}
                 <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
               </div>
               <p className="form-note">
                 {entry.userEmail ?? "No email"}
                 {typeof entry.metadata.referee === "string" ? ` · referee ${entry.metadata.referee}` : ""}
                 {typeof entry.metadata.campaignSource === "string" ? ` · ${entry.metadata.campaignSource}` : ""}
+                {entry.rewardAssetId ? ` · asset registry linked` : ""}
                 {entry.settlementNote ? ` · ${entry.settlementNote}` : ""}
               </p>
               <div className="profile-grid">

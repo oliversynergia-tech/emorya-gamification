@@ -6,6 +6,10 @@ import {
   runQuestDefinitionDeleteRoute,
   runQuestDefinitionDirectoryRoute,
   runQuestDefinitionUpdateRoute,
+  runRewardAssetDirectoryRoute,
+  runRewardAssetSaveRoute,
+  runRewardProgramDirectoryRoute,
+  runRewardProgramSaveRoute,
   runTokenSettlementRoute,
 } from "../server/http/admin-route-actions.ts";
 
@@ -109,5 +113,71 @@ test("runTokenSettlementRoute forwards settlement payload", async () => {
   assert.deepEqual(result.body, {
     ok: true,
     queue: [],
+  });
+});
+
+test("runRewardAssetDirectoryRoute returns asset payload", async () => {
+  const services = {
+    getRewardAssetDirectory: mock.fn(async () => [{ id: "asset-1", symbol: "EMR" }]),
+  };
+
+  const result = await runRewardAssetDirectoryRoute(services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    assets: [{ id: "asset-1", symbol: "EMR" }],
+  });
+});
+
+test("runRewardAssetSaveRoute forwards create payload", async () => {
+  const services = {
+    saveRewardAsset: mock.fn(async (input: Record<string, unknown>) => {
+      assert.equal(input.symbol, "EMR");
+      return [{ id: "asset-1" }];
+    }),
+  };
+
+  const result = await runRewardAssetSaveRoute({ body: { symbol: "EMR" } }, services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    assets: [{ id: "asset-1" }],
+  });
+});
+
+test("runRewardProgramDirectoryRoute returns program payload", async () => {
+  const services = {
+    getRewardProgramDirectory: mock.fn(async () => [{ id: "program-1", slug: "core-emr" }]),
+  };
+
+  const result = await runRewardProgramDirectoryRoute(services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    programs: [{ id: "program-1", slug: "core-emr" }],
+  });
+});
+
+test("runRewardProgramSaveRoute forwards update payload", async () => {
+  const services = {
+    saveRewardProgram: mock.fn(async (input: Record<string, unknown>, programId?: string) => {
+      assert.equal(programId, "program-2");
+      assert.equal(input.slug, "partner-egld");
+      return [{ id: "program-2" }];
+    }),
+  };
+
+  const result = await runRewardProgramSaveRoute(
+    { programId: "program-2", body: { slug: "partner-egld" } },
+    services,
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    programs: [{ id: "program-2" }],
   });
 });

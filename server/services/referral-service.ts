@@ -6,6 +6,7 @@ import {
   updateReferralRewardState,
 } from "@/server/repositories/referral-repository";
 import { getActiveEconomySettings as getEconomySettings } from "@/server/repositories/economy-settings-repository";
+import { findPreferredRewardProgramByAssetSymbol } from "@/server/repositories/reward-program-repository";
 import { createClaimedTokenRedemption } from "@/server/repositories/token-redemption-repository";
 import { calculateReferralRewardState, normalizeReferralCampaignSource } from "@/server/services/referral-rules";
 
@@ -30,6 +31,7 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
   }
 
   const economySettings = await getEconomySettings();
+  const activeRewardProgram = await findPreferredRewardProgramByAssetSymbol(economySettings.payoutAsset);
   const rewardState = calculateReferralRewardState({
     totalXp: referrer.total_xp,
     level: referrer.level,
@@ -100,6 +102,8 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
       await createClaimedTokenRedemption({
         userId: referrerUserId,
         asset: economySettings.payoutAsset,
+        rewardAssetId: activeRewardProgram?.rewardAssetId ?? null,
+        rewardProgramId: activeRewardProgram?.id ?? null,
         tokenAmount: update.directTokenReward ?? 0,
         source: "annual-referral-direct",
         metadata: {

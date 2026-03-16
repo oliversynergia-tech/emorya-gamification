@@ -202,10 +202,9 @@ function asRewardConfig(value: unknown): RewardConfig | null {
     directTokenReward:
       typeof directTokenReward.amount === "number"
         ? {
-            asset:
-              directTokenReward.asset === "EGLD" || directTokenReward.asset === "PARTNER"
-                ? directTokenReward.asset
-                : "EMR",
+            asset: typeof directTokenReward.asset === "string" && directTokenReward.asset.trim()
+              ? directTokenReward.asset.trim().toUpperCase()
+              : "EMR",
             amount: directTokenReward.amount,
             requiresWallet: directTokenReward.requiresWallet !== false,
           }

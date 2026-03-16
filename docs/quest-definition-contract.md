@@ -110,6 +110,8 @@ Rules:
   - `direct_token_reward`
 - `tokenEligibility.progressPoints` should be set for quests that move users toward redemption.
 - `directTokenReward` should only be used for exceptional quests such as annual referral wins, flash reward days, and ambassador activations.
+- `directTokenReward.asset` can now be any registry-backed MultiversX asset symbol, not just the original built-in set.
+- `rewardProgramId` is optional, but recommended when the quest should map to a specific payout rail from the reward-program registry.
 
 ### `unlockRules`
 
@@ -212,6 +214,7 @@ Examples:
 ```json
 {
   "track": "premium",
+  "rewardProgramId": "fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6",
   "timebox": "Flash reward day window",
   "unlockRules": {
     "all": [
@@ -238,6 +241,7 @@ Current repo contract:
 
 - token eligibility is accumulated via `rewardConfig.tokenEligibility.progressPoints`
 - direct token campaign rewards are declared via `rewardConfig.directTokenReward`
+- token programs can be attached at metadata level via `rewardProgramId`
 - dashboard/profile now project conversion readiness using the current reward program:
   - minimum unlock: `100` eligibility points
   - base conversion: `20` points per `1 EMR`

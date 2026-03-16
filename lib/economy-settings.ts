@@ -182,5 +182,5 @@ export function buildEconomySettingsSummary(previous: EconomySettings, next: Eco
 }
 
 export function normalizeTokenAsset(value: unknown): TokenAsset {
-  return value === "EGLD" || value === "PARTNER" ? value : "EMR";
+  return typeof value === "string" && value.trim() ? value.trim().toUpperCase() : "EMR";
 }

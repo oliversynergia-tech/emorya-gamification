@@ -19,14 +19,21 @@ import {
   updateActiveEconomySettings,
 } from "@/server/repositories/economy-settings-repository";
 import {
+  createRewardAsset,
+  createRewardProgram,
+  listRewardAssets,
+  listRewardPrograms,
+  updateRewardAsset,
+  updateRewardProgram,
+} from "@/server/repositories/reward-program-repository";
+import {
   createQuestDefinitionForAdmin,
   deleteQuestDefinitionForAdmin,
   listQuestDefinitionsForAdmin,
   updateQuestDefinitionForAdmin,
 } from "@/server/repositories/quest-definition-admin-repository";
 import { listPendingTokenSettlements, settleTokenRedemption } from "@/server/repositories/token-redemption-repository";
-import type { QuestDefinitionAdminItem } from "@/lib/types";
-import type { EconomySettings } from "@/lib/types";
+import type { EconomySettings, QuestDefinitionAdminItem, RewardAsset, RewardProgram } from "@/lib/types";
 
 export async function getRoleDirectory() {
   const currentUser = await getAuthenticatedUser();
@@ -394,6 +401,94 @@ export async function getEconomySettings() {
     settings: await getActiveEconomySettings(),
     audit: await listEconomySettingsAudit(),
   };
+}
+
+function normalizeRewardAssetInput(input: Partial<Omit<RewardAsset, "id" | "createdAt" | "updatedAt">>) {
+  if (!input.assetId || !input.symbol || !input.name || typeof input.decimals !== "number") {
+    throw new Error("Reward asset requires assetId, symbol, name, and decimals.");
+  }
+
+  return {
+    assetId: input.assetId.trim(),
+    symbol: input.symbol.trim().toUpperCase(),
+    name: input.name.trim(),
+    decimals: Math.max(input.decimals, 0),
+    iconUrl: input.iconUrl?.trim() || null,
+    issuerName: input.issuerName?.trim() || null,
+    isActive: input.isActive ?? true,
+    isPartnerAsset: input.isPartnerAsset ?? false,
+  };
+}
+
+function normalizeRewardProgramInput(input: Partial<Omit<RewardProgram, "id" | "assetSymbol" | "assetName" | "createdAt" | "updatedAt">>) {
+  if (
+    !input.slug ||
+    !input.name ||
+    !input.rewardAssetId ||
+    typeof input.minimumEligibilityPoints !== "number" ||
+    typeof input.pointsPerToken !== "number"
+  ) {
+    throw new Error("Reward program requires slug, name, rewardAssetId, minimumEligibilityPoints, and pointsPerToken.");
+  }
+
+  return {
+    slug: input.slug.trim(),
+    name: input.name.trim(),
+    rewardAssetId: input.rewardAssetId,
+    isActive: input.isActive ?? true,
+    redemptionEnabled: input.redemptionEnabled ?? false,
+    directRewardsEnabled: input.directRewardsEnabled ?? true,
+    referralRewardsEnabled: input.referralRewardsEnabled ?? true,
+    premiumRewardsEnabled: input.premiumRewardsEnabled ?? true,
+    ambassadorRewardsEnabled: input.ambassadorRewardsEnabled ?? true,
+    minimumEligibilityPoints: Math.max(input.minimumEligibilityPoints, 0),
+    pointsPerToken: Math.max(input.pointsPerToken, 1),
+    notes: input.notes?.trim() || null,
+    startsAt: input.startsAt ?? null,
+    endsAt: input.endsAt ?? null,
+  };
+}
+
+export async function getRewardAssetDirectory() {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+  return listRewardAssets();
+}
+
+export async function saveRewardAsset(input: Partial<Omit<RewardAsset, "id" | "createdAt" | "updatedAt">>, assetId?: string) {
+  const currentUser = await getAuthenticatedUser();
+  await assertSuperAdminUser(currentUser);
+  const normalized = normalizeRewardAssetInput(input);
+  if (assetId) {
+    const updated = await updateRewardAsset(assetId, normalized);
+    if (!updated) {
+      throw new Error("Reward asset not found.");
+    }
+  } else {
+    await createRewardAsset(normalized);
+  }
+  return listRewardAssets();
+}
+
+export async function getRewardProgramDirectory() {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+  return listRewardPrograms();
+}
+
+export async function saveRewardProgram(input: Partial<Omit<RewardProgram, "id" | "assetSymbol" | "assetName" | "createdAt" | "updatedAt">>, programId?: string) {
+  const currentUser = await getAuthenticatedUser();
+  await assertSuperAdminUser(currentUser);
+  const normalized = normalizeRewardProgramInput(input);
+  if (programId) {
+    const updated = await updateRewardProgram(programId, normalized);
+    if (!updated) {
+      throw new Error("Reward program not found.");
+    }
+  } else {
+    await createRewardProgram(normalized);
+  }
+  return listRewardPrograms();
 }
 
 export async function saveEconomySettings(

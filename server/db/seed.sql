@@ -848,3 +848,73 @@ ON CONFLICT (id) DO UPDATE SET
   annual_referral_direct_token_amount = EXCLUDED.annual_referral_direct_token_amount,
   campaign_overrides = EXCLUDED.campaign_overrides,
   updated_at = NOW();
+
+INSERT INTO reward_assets (
+  id,
+  asset_id,
+  symbol,
+  name,
+  decimals,
+  icon_url,
+  issuer_name,
+  is_active,
+  is_partner_asset
+) VALUES
+  ('c79db59c-3210-4b7c-95d1-4a481923f701', 'EMR', 'EMR', 'Emorya Reward Token', 18, NULL, 'Emorya', TRUE, FALSE),
+  ('7e1c4abd-40ac-4a9c-b829-a80ab6a6cf02', 'EGLD', 'EGLD', 'MultiversX eGold', 18, NULL, 'MultiversX', TRUE, FALSE),
+  ('d2031fc4-df61-446f-90d9-9fd726d63e87', 'PARTNER', 'PARTNER', 'Partner Campaign Token', 18, NULL, 'Partner', TRUE, TRUE)
+ON CONFLICT (id) DO UPDATE SET
+  asset_id = EXCLUDED.asset_id,
+  symbol = EXCLUDED.symbol,
+  name = EXCLUDED.name,
+  decimals = EXCLUDED.decimals,
+  icon_url = EXCLUDED.icon_url,
+  issuer_name = EXCLUDED.issuer_name,
+  is_active = EXCLUDED.is_active,
+  is_partner_asset = EXCLUDED.is_partner_asset,
+  updated_at = NOW();
+
+INSERT INTO reward_programs (
+  id,
+  slug,
+  name,
+  reward_asset_id,
+  is_active,
+  redemption_enabled,
+  direct_rewards_enabled,
+  referral_rewards_enabled,
+  premium_rewards_enabled,
+  ambassador_rewards_enabled,
+  minimum_eligibility_points,
+  points_per_token,
+  notes
+) VALUES
+  ('fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6', 'core-emr', 'Core Emorya XP Redemption', 'c79db59c-3210-4b7c-95d1-4a481923f701', TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, 100, 20, 'Primary XP-to-token redemption program.'),
+  ('4bec0c54-1f7d-4f74-b9cf-1e5b842d7fa4', 'egld-flash', 'EGLD Flash Rewards', '7e1c4abd-40ac-4a9c-b829-a80ab6a6cf02', TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, 120, 25, 'Use for premium flash days and limited reward spikes.'),
+  ('1178ad8e-6d00-4ca4-96f0-838b9d4b35dd', 'partner-campaign', 'Partner Campaign Rewards', 'd2031fc4-df61-446f-90d9-9fd726d63e87', TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, 100, 20, 'Template program for collaborative partner campaigns.')
+ON CONFLICT (id) DO UPDATE SET
+  slug = EXCLUDED.slug,
+  name = EXCLUDED.name,
+  reward_asset_id = EXCLUDED.reward_asset_id,
+  is_active = EXCLUDED.is_active,
+  redemption_enabled = EXCLUDED.redemption_enabled,
+  direct_rewards_enabled = EXCLUDED.direct_rewards_enabled,
+  referral_rewards_enabled = EXCLUDED.referral_rewards_enabled,
+  premium_rewards_enabled = EXCLUDED.premium_rewards_enabled,
+  ambassador_rewards_enabled = EXCLUDED.ambassador_rewards_enabled,
+  minimum_eligibility_points = EXCLUDED.minimum_eligibility_points,
+  points_per_token = EXCLUDED.points_per_token,
+  notes = EXCLUDED.notes,
+  updated_at = NOW();
+
+UPDATE token_redemptions
+SET reward_asset_id = CASE asset
+      WHEN 'EMR' THEN 'c79db59c-3210-4b7c-95d1-4a481923f701'::uuid
+      WHEN 'EGLD' THEN '7e1c4abd-40ac-4a9c-b829-a80ab6a6cf02'::uuid
+      ELSE 'd2031fc4-df61-446f-90d9-9fd726d63e87'::uuid
+    END,
+    reward_program_id = CASE asset
+      WHEN 'EGLD' THEN '4bec0c54-1f7d-4f74-b9cf-1e5b842d7fa4'::uuid
+      WHEN 'PARTNER' THEN '1178ad8e-6d00-4ca4-96f0-838b9d4b35dd'::uuid
+      ELSE 'fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6'::uuid
+    END;

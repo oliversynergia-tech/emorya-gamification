@@ -5,6 +5,8 @@ type AdminDirectoryResponse = {
 
 type QuestDefinitionInput = Record<string, unknown>;
 type EconomySettingsInput = Record<string, unknown>;
+type RewardAssetInput = Record<string, unknown>;
+type RewardProgramInput = Record<string, unknown>;
 type TokenSettlementInput = {
   receiptReference?: string;
   settlementNote?: string | null;
@@ -184,6 +186,108 @@ export async function handleQuestDefinitionDeleteRequest(
 
     return {
       status: message.includes("not found") ? 404 : getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleRewardAssetDirectoryRequest(
+  getRewardAssetDirectory: () => Promise<unknown>,
+) {
+  try {
+    const assets = await getRewardAssetDirectory();
+
+    return {
+      status: 200,
+      body: { ok: true, assets },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load reward assets.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleRewardAssetSaveRequest(
+  {
+    assetId,
+    body,
+  }: {
+    assetId?: string;
+    body: RewardAssetInput;
+  },
+  saveRewardAsset: (input: RewardAssetInput, assetId?: string) => Promise<unknown>,
+) {
+  try {
+    const assets = await saveRewardAsset(body, assetId);
+
+    return {
+      status: 200,
+      body: { ok: true, assets },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to save reward asset.";
+
+    return {
+      status: message.includes("requires")
+        ? 400
+        : message.includes("not found")
+          ? 404
+          : getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleRewardProgramDirectoryRequest(
+  getRewardProgramDirectory: () => Promise<unknown>,
+) {
+  try {
+    const programs = await getRewardProgramDirectory();
+
+    return {
+      status: 200,
+      body: { ok: true, programs },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load reward programs.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleRewardProgramSaveRequest(
+  {
+    programId,
+    body,
+  }: {
+    programId?: string;
+    body: RewardProgramInput;
+  },
+  saveRewardProgram: (input: RewardProgramInput, programId?: string) => Promise<unknown>,
+) {
+  try {
+    const programs = await saveRewardProgram(body, programId);
+
+    return {
+      status: 200,
+      body: { ok: true, programs },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to save reward program.";
+
+    return {
+      status: message.includes("requires")
+        ? 400
+        : message.includes("not found")
+          ? 404
+          : getErrorStatus(message),
       body: { ok: false, error: message },
     };
   }

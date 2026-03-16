@@ -3,6 +3,10 @@ import {
   handleQuestDefinitionDeleteRequest,
   handleQuestDefinitionDirectoryRequest,
   handleQuestDefinitionUpdateRequest,
+  handleRewardAssetDirectoryRequest,
+  handleRewardAssetSaveRequest,
+  handleRewardProgramDirectoryRequest,
+  handleRewardProgramSaveRequest,
   handleTokenSettlementRequest,
 } from "./admin-handlers.ts";
 
@@ -11,6 +15,10 @@ export type AdminRouteActionServices = {
   createQuestDefinition: (input: Record<string, unknown>) => Promise<unknown>;
   updateQuestDefinition: (questId: string, input: Record<string, unknown>) => Promise<unknown>;
   deleteQuestDefinition: (questId: string) => Promise<unknown>;
+  getRewardAssetDirectory: () => Promise<unknown>;
+  saveRewardAsset: (input: Record<string, unknown>, assetId?: string) => Promise<unknown>;
+  getRewardProgramDirectory: () => Promise<unknown>;
+  saveRewardProgram: (input: Record<string, unknown>, programId?: string) => Promise<unknown>;
   settlePendingTokenRedemption: (input: {
     redemptionId: string;
     receiptReference: string;
@@ -49,6 +57,44 @@ export async function runQuestDefinitionDeleteRoute(
   services: Pick<AdminRouteActionServices, "deleteQuestDefinition">,
 ) {
   return handleQuestDefinitionDeleteRequest(questId, services.deleteQuestDefinition);
+}
+
+export async function runRewardAssetDirectoryRoute(
+  services: Pick<AdminRouteActionServices, "getRewardAssetDirectory">,
+) {
+  return handleRewardAssetDirectoryRequest(services.getRewardAssetDirectory);
+}
+
+export async function runRewardAssetSaveRoute(
+  {
+    assetId,
+    body,
+  }: {
+    assetId?: string;
+    body: Record<string, unknown>;
+  },
+  services: Pick<AdminRouteActionServices, "saveRewardAsset">,
+) {
+  return handleRewardAssetSaveRequest({ assetId, body }, services.saveRewardAsset);
+}
+
+export async function runRewardProgramDirectoryRoute(
+  services: Pick<AdminRouteActionServices, "getRewardProgramDirectory">,
+) {
+  return handleRewardProgramDirectoryRequest(services.getRewardProgramDirectory);
+}
+
+export async function runRewardProgramSaveRoute(
+  {
+    programId,
+    body,
+  }: {
+    programId?: string;
+    body: Record<string, unknown>;
+  },
+  services: Pick<AdminRouteActionServices, "saveRewardProgram">,
+) {
+  return handleRewardProgramSaveRequest({ programId, body }, services.saveRewardProgram);
 }
 
 export async function runTokenSettlementRoute(

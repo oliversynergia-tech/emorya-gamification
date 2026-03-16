@@ -2,6 +2,8 @@ import { EconomySettingsPanel } from "@/components/economy-settings-panel";
 import { ModerationNotificationHistoryPanel } from "@/components/moderation-notification-history-panel";
 import { QuestDefinitionManagementPanel } from "@/components/quest-definition-management-panel";
 import { QuestDefinitionToolingPanel } from "@/components/quest-definition-tooling-panel";
+import { RewardAssetsPanel } from "@/components/reward-assets-panel";
+import { RewardProgramsPanel } from "@/components/reward-programs-panel";
 import { AdminSection } from "@/components/sections";
 import { RoleManagementPanel } from "@/components/role-management-panel";
 import { ReviewQueuePanel } from "@/components/review-queue-panel";
@@ -81,10 +83,16 @@ export default async function AdminPage() {
         initialAudit={data.economySettingsAudit}
         canManage={hasSuperAdminAccess}
       />
+      <RewardAssetsPanel initialAssets={data.rewardAssets} canManage={hasSuperAdminAccess} />
+      <RewardProgramsPanel
+        initialPrograms={data.rewardPrograms}
+        availableAssets={data.rewardAssets}
+        canManage={hasSuperAdminAccess}
+      />
       <TokenSettlementPanel initialQueue={data.tokenSettlementQueue} />
       <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
       <QuestDefinitionToolingPanel />
-      <QuestDefinitionManagementPanel />
+      <QuestDefinitionManagementPanel availableAssets={data.rewardAssets} availablePrograms={data.rewardPrograms} />
       <RoleManagementPanel
         initialUsers={data.roleDirectory}
         initialAdmins={data.adminDirectory}

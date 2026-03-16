@@ -8,6 +8,9 @@ import { runQuery } from "@/server/db/client";
 type TokenSettlementRow = QueryResultRow & {
   id: string;
   asset: TokenSettlementItem["asset"];
+  reward_asset_id: string | null;
+  reward_program_id: string | null;
+  reward_program_name: string | null;
   token_amount: number | string;
   eligibility_points_spent: number | string;
   status: "claimed" | "settled";
@@ -28,6 +31,9 @@ function mapTokenSettlement(row: TokenSettlementRow): TokenSettlementItem {
     userDisplayName: row.user_display_name,
     userEmail: row.user_email,
     asset: row.asset,
+    rewardAssetId: row.reward_asset_id,
+    rewardProgramId: row.reward_program_id,
+    rewardProgramName: row.reward_program_name,
     tokenAmount: Number(row.token_amount),
     eligibilityPointsSpent: Number(row.eligibility_points_spent),
     source: row.source,
@@ -42,13 +48,16 @@ function mapTokenSettlement(row: TokenSettlementRow): TokenSettlementItem {
 
 export async function listPendingTokenSettlements(limit = 20): Promise<TokenSettlementItem[]> {
   const result = await runQuery<TokenSettlementRow>(
-    `SELECT redemptions.id, redemptions.asset, redemptions.token_amount, redemptions.eligibility_points_spent,
+    `SELECT redemptions.id, redemptions.asset, redemptions.reward_asset_id, redemptions.reward_program_id,
+            programs.name AS reward_program_name,
+            redemptions.token_amount, redemptions.eligibility_points_spent,
             redemptions.status, redemptions.source, redemptions.created_at, redemptions.settled_at,
             redemptions.receipt_reference, redemptions.settlement_note, redemptions.metadata,
             users.display_name AS user_display_name, users.email AS user_email,
             settled_by_users.display_name AS settled_by_display_name
      FROM token_redemptions redemptions
      INNER JOIN users ON users.id = redemptions.user_id
+     LEFT JOIN reward_programs programs ON programs.id = redemptions.reward_program_id
      LEFT JOIN users settled_by_users ON settled_by_users.id = redemptions.settled_by
      WHERE redemptions.status = 'claimed'
      ORDER BY redemptions.created_at ASC
@@ -80,7 +89,8 @@ export async function settleTokenRedemption({
      WHERE id = $1
        AND status = 'claimed'
      RETURNING id, asset, token_amount, eligibility_points_spent, status, source, created_at, settled_at,
-               receipt_reference, settlement_note, metadata,
+               receipt_reference, settlement_note, metadata, reward_asset_id, reward_program_id,
+               NULL::text AS reward_program_name,
                ''::text AS user_display_name, NULL::text AS user_email, NULL::text AS settled_by_display_name`,
     [redemptionId, settledBy, receiptReference, settlementNote],
   );
@@ -91,23 +101,27 @@ export async function settleTokenRedemption({
 export async function createClaimedTokenRedemption({
   userId,
   asset,
+  rewardAssetId,
+  rewardProgramId,
   tokenAmount,
   source,
   metadata,
 }: {
   userId: string;
   asset: TokenSettlementItem["asset"];
+  rewardAssetId?: string | null;
+  rewardProgramId?: string | null;
   tokenAmount: number;
   source: string;
   metadata: Record<string, string | number | boolean | null>;
 }) {
   await runQuery(
     `INSERT INTO token_redemptions (
-       id, user_id, asset, eligibility_points_spent, token_amount, status, source, metadata
+       id, user_id, asset, reward_asset_id, reward_program_id, eligibility_points_spent, token_amount, status, source, metadata
      ) VALUES (
-       $1, $2, $3, 0, $4, 'claimed', $5, $6::jsonb
+       $1, $2, $3, $4, $5, 0, $6, 'claimed', $7, $8::jsonb
      )`,
-    [randomUUID(), userId, asset, tokenAmount, source, JSON.stringify(metadata)],
+    [randomUUID(), userId, asset, rewardAssetId ?? null, rewardProgramId ?? null, tokenAmount, source, JSON.stringify(metadata)],
   );
 }
 

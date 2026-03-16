@@ -78,7 +78,8 @@ function validateRewardConfig(slug, rewardConfig, xpReward, errors) {
       !isRecord(rewardConfig.directTokenReward) ||
       typeof rewardConfig.directTokenReward.amount !== "number" ||
       typeof rewardConfig.directTokenReward.requiresWallet !== "boolean" ||
-      !["EMR", "EGLD", "PARTNER"].includes(String(rewardConfig.directTokenReward.asset))
+      typeof rewardConfig.directTokenReward.asset !== "string" ||
+      !String(rewardConfig.directTokenReward.asset).trim()
     ) {
       errors.push(`${slug}: metadata.rewardConfig.directTokenReward must include asset, amount, and requiresWallet.`);
     }

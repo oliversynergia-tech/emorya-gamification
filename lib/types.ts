@@ -1,6 +1,6 @@
 export type SubscriptionTier = "free" | "monthly" | "annual";
 export type AppRole = "super_admin" | "admin" | "reviewer";
-export type TokenAsset = "EMR" | "EGLD" | "PARTNER";
+export type TokenAsset = string;
 export type CampaignSource = "direct" | "zealy" | "galxe" | "layer3";
 export type QuestTrack =
   | "starter"
@@ -434,6 +434,8 @@ export type AdminOverviewData = {
   }>;
   economySettings: EconomySettings;
   economySettingsAudit: EconomySettingsAuditEntry[];
+  rewardAssets: RewardAsset[];
+  rewardPrograms: RewardProgram[];
   tokenSettlementQueue: Array<TokenSettlementItem>;
   settlementAnalytics: {
     pendingCount: number;
@@ -580,6 +582,42 @@ export type EconomySettingsAuditEntry = {
   changedByDisplayName: string | null;
   createdAt: string;
   summary: string;
+};
+
+export type RewardAsset = {
+  id: string;
+  assetId: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+  iconUrl: string | null;
+  issuerName: string | null;
+  isActive: boolean;
+  isPartnerAsset: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RewardProgram = {
+  id: string;
+  slug: string;
+  name: string;
+  rewardAssetId: string;
+  assetSymbol: string;
+  assetName: string;
+  isActive: boolean;
+  redemptionEnabled: boolean;
+  directRewardsEnabled: boolean;
+  referralRewardsEnabled: boolean;
+  premiumRewardsEnabled: boolean;
+  ambassadorRewardsEnabled: boolean;
+  minimumEligibilityPoints: number;
+  pointsPerToken: number;
+  notes: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type CompletionRuleGroup = {
@@ -730,6 +768,9 @@ export type TokenSettlementItem = {
   userDisplayName: string;
   userEmail: string | null;
   asset: TokenAsset;
+  rewardAssetId: string | null;
+  rewardProgramId: string | null;
+  rewardProgramName: string | null;
   tokenAmount: number;
   eligibilityPointsSpent: number;
   source: string;

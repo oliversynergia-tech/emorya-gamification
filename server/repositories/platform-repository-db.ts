@@ -33,6 +33,7 @@ import type {
   LeaderboardEntry,
   Quest,
   SubscriptionTier,
+  TokenAsset,
   UserSnapshot,
   VerificationType,
 } from "@/lib/types";
@@ -66,6 +67,10 @@ import {
   getTokenSettlementAnalytics,
   listPendingTokenSettlements,
 } from "@/server/repositories/token-redemption-repository";
+import {
+  listRewardAssets,
+  listRewardPrograms,
+} from "@/server/repositories/reward-program-repository";
 import { buildDashboardQuestBoard } from "@/server/services/build-dashboard-quest-board";
 import { buildModerationNotifications } from "@/server/services/moderation-notifications";
 import { syncAchievementProgressForUser } from "@/server/services/progression-service";
@@ -139,7 +144,7 @@ type ApprovedRewardQuestRow = QueryResultRow & {
 
 type TokenRedemptionRow = QueryResultRow & {
   id: string;
-  asset: "EMR" | "EGLD" | "PARTNER";
+  asset: TokenAsset;
   eligibility_points_spent: number | string;
   token_amount: number | string;
   status: "claimed" | "settled";
@@ -325,7 +330,7 @@ async function getUserSnapshot(
     economySettings,
     progressState.campaignSource,
   );
-  const scheduledDirectRewardMap = new Map<"EMR" | "EGLD" | "PARTNER", number>();
+  const scheduledDirectRewardMap = new Map<TokenAsset, number>();
 
   for (const reward of rewardSummaries) {
     if (!reward.directTokenReward) {
@@ -739,7 +744,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, tokenSettlementQueue, settlementAnalytics] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, settlementAnalytics] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -764,6 +769,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     getReviewerTypeMatrix(),
     getActiveEconomySettings(),
     listEconomySettingsAudit(),
+    listRewardAssets(),
+    listRewardPrograms(),
     listPendingTokenSettlements(),
     getTokenSettlementAnalytics(),
   ]);
@@ -797,6 +804,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     moderationNotificationHistory,
     economySettings,
     economySettingsAudit,
+    rewardAssets,
+    rewardPrograms,
     tokenSettlementQueue,
     settlementAnalytics,
     reviewInsights: {
