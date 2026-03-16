@@ -5,6 +5,10 @@ import {
   runQuestDefinitionCreateRoute,
   runQuestDefinitionDeleteRoute,
   runQuestDefinitionDirectoryRoute,
+  runQuestDefinitionTemplateCreateRoute,
+  runQuestDefinitionTemplateDeleteRoute,
+  runQuestDefinitionTemplateDirectoryRoute,
+  runQuestDefinitionTemplateUpdateRoute,
   runQuestDefinitionUpdateRoute,
   runRewardAssetDirectoryRoute,
   runRewardAssetSaveRoute,
@@ -84,6 +88,78 @@ test("runQuestDefinitionDeleteRoute forwards the quest id", async () => {
   assert.deepEqual(result.body, {
     ok: true,
     quests: [],
+  });
+});
+
+test("runQuestDefinitionTemplateDirectoryRoute returns template payload", async () => {
+  const services = {
+    getQuestDefinitionTemplateDirectory: mock.fn(async () => [{ id: "template-1" }]),
+  };
+
+  const result = await runQuestDefinitionTemplateDirectoryRoute(services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    templates: [{ id: "template-1" }],
+  });
+});
+
+test("runQuestDefinitionTemplateCreateRoute forwards create body", async () => {
+  const services = {
+    createQuestDefinitionTemplate: mock.fn(async (input: Record<string, unknown>) => {
+      assert.equal(input.label, "Starter template");
+      return [{ id: "template-2" }];
+    }),
+  };
+
+  const result = await runQuestDefinitionTemplateCreateRoute({ label: "Starter template" }, services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    templates: [{ id: "template-2" }],
+  });
+});
+
+test("runQuestDefinitionTemplateUpdateRoute forwards template id and body", async () => {
+  const services = {
+    updateQuestDefinitionTemplate: mock.fn(async (templateId: string, input: Record<string, unknown>) => {
+      assert.equal(templateId, "template-3");
+      assert.equal(input.label, "Updated template");
+      return [{ id: "template-3" }];
+    }),
+  };
+
+  const result = await runQuestDefinitionTemplateUpdateRoute(
+    {
+      templateId: "template-3",
+      body: { label: "Updated template" },
+    },
+    services,
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    templates: [{ id: "template-3" }],
+  });
+});
+
+test("runQuestDefinitionTemplateDeleteRoute forwards the template id", async () => {
+  const services = {
+    deleteQuestDefinitionTemplate: mock.fn(async (templateId: string) => {
+      assert.equal(templateId, "template-4");
+      return [];
+    }),
+  };
+
+  const result = await runQuestDefinitionTemplateDeleteRoute("template-4", services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    templates: [],
   });
 });
 

@@ -3,12 +3,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { QuestDefinitionAdminItem, RewardAsset, RewardProgram } from "@/lib/types";
+import type {
+  QuestDefinitionAdminItem,
+  QuestDefinitionTemplateItem,
+  RewardAsset,
+  RewardProgram,
+} from "@/lib/types";
 
 type QuestDefinitionResponse = {
   ok: boolean;
   error?: string;
   quests?: QuestDefinitionAdminItem[];
+};
+
+type QuestDefinitionTemplateResponse = {
+  ok: boolean;
+  error?: string;
+  templates?: QuestDefinitionTemplateItem[];
 };
 
 type QuestDefinitionFormState = {
@@ -126,6 +137,12 @@ type QuestTemplate = {
   metadata: Record<string, unknown>;
 };
 
+type TemplateFormState = {
+  label: string;
+  description: string;
+  isActive: boolean;
+};
+
 function parseMetadata(metadataText: string) {
   try {
     const parsed = JSON.parse(metadataText) as Record<string, unknown>;
@@ -144,14 +161,23 @@ function parseMetadata(metadataText: string) {
 export function QuestDefinitionManagementPanel({
   availableAssets,
   availablePrograms,
+  initialTemplates,
 }: {
   availableAssets: RewardAsset[];
   availablePrograms: RewardProgram[];
+  initialTemplates: QuestDefinitionTemplateItem[];
 }) {
   const router = useRouter();
   const [quests, setQuests] = useState<QuestDefinitionAdminItem[]>([]);
+  const [templates, setTemplates] = useState<QuestDefinitionTemplateItem[]>(initialTemplates);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...emptyForm });
+  const [templateForm, setTemplateForm] = useState<TemplateFormState>({
+    label: "",
+    description: "",
+    isActive: true,
+  });
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -355,8 +381,25 @@ export function QuestDefinitionManagementPanel({
     }
   }
 
+  async function refreshTemplateDirectory() {
+    try {
+      const response = await fetch("/api/admin/quest-definition-templates", { cache: "no-store" });
+      const result = (await response.json()) as QuestDefinitionTemplateResponse;
+
+      if (!response.ok || !result.ok || !result.templates) {
+        setError(result.error ?? "Unable to load quest templates.");
+        return;
+      }
+
+      setTemplates(result.templates);
+    } catch {
+      setError("Unable to reach the quest template service.");
+    }
+  }
+
   useEffect(() => {
     void refreshQuestDirectory();
+    void refreshTemplateDirectory();
   }, []);
 
   function startEdit(quest: QuestDefinitionAdminItem) {
@@ -398,6 +441,43 @@ export function QuestDefinitionManagementPanel({
       ...template.form,
       metadataText: JSON.stringify(template.metadata, null, 2),
     }));
+  }
+
+  function applySavedTemplate(template: QuestDefinitionTemplateItem) {
+    setForm((current) => ({
+      ...current,
+      category: template.form.category,
+      difficulty: template.form.difficulty,
+      verificationType: template.form.verificationType,
+      recurrence: template.form.recurrence,
+      requiredTier: template.form.requiredTier,
+      requiredLevel: template.form.requiredLevel,
+      xpReward: template.form.xpReward,
+      isPremiumPreview: template.form.isPremiumPreview,
+      isActive: template.form.isActive,
+      metadataText: JSON.stringify(template.metadata, null, 2),
+    }));
+  }
+
+  function resetTemplateForm() {
+    setEditingTemplateId(null);
+    setTemplateForm({
+      label: "",
+      description: "",
+      isActive: true,
+    });
+  }
+
+  function startEditTemplate(template: QuestDefinitionTemplateItem) {
+    setEditingTemplateId(template.id);
+    setTemplateForm({
+      label: template.label,
+      description: template.description,
+      isActive: template.isActive,
+    });
+    applySavedTemplate(template);
+    setMessage(null);
+    setError(null);
   }
 
   function updateMetadataBuilder(updater: (current: MetadataBuilderState) => MetadataBuilderState) {
@@ -518,6 +598,64 @@ export function QuestDefinitionManagementPanel({
     }
   }
 
+  async function submitTemplate() {
+    setPending(editingTemplateId ?? "template-create");
+    setMessage(null);
+    setError(null);
+
+    if (metadataState.error || !metadataState.parsed) {
+      setError(`Template metadata JSON is invalid: ${metadataState.error ?? "Invalid JSON."}`);
+      setPending(null);
+      return;
+    }
+
+    const payload = {
+      label: templateForm.label.trim(),
+      description: templateForm.description.trim(),
+      isActive: templateForm.isActive,
+      form: {
+        category: form.category,
+        difficulty: form.difficulty,
+        verificationType: form.verificationType,
+        recurrence: form.recurrence,
+        requiredTier: form.requiredTier,
+        requiredLevel: Number(form.requiredLevel),
+        xpReward: Number(form.xpReward),
+        isPremiumPreview: form.isPremiumPreview,
+        isActive: form.isActive,
+      },
+      metadata: metadataState.parsed,
+    };
+
+    try {
+      const endpoint = editingTemplateId
+        ? `/api/admin/quest-definition-templates/${editingTemplateId}`
+        : "/api/admin/quest-definition-templates";
+      const response = await fetch(endpoint, {
+        method: editingTemplateId ? "PATCH" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = (await response.json()) as QuestDefinitionTemplateResponse;
+
+      if (!response.ok || !result.ok || !result.templates) {
+        setError(result.error ?? "Unable to save quest template.");
+        return;
+      }
+
+      setTemplates(result.templates);
+      setMessage(editingTemplateId ? "Quest template updated." : "Quest template saved.");
+      resetTemplateForm();
+      router.refresh();
+    } catch {
+      setError("Unable to reach the quest template service.");
+    } finally {
+      setPending(null);
+    }
+  }
+
   async function removeQuest(questId: string) {
     setPending(questId);
     setMessage(null);
@@ -542,6 +680,35 @@ export function QuestDefinitionManagementPanel({
       router.refresh();
     } catch {
       setError("Unable to reach the quest definition service.");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  async function removeTemplate(templateId: string) {
+    setPending(templateId);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/quest-definition-templates/${templateId}`, {
+        method: "DELETE",
+      });
+      const result = (await response.json()) as QuestDefinitionTemplateResponse;
+
+      if (!response.ok || !result.ok || !result.templates) {
+        setError(result.error ?? "Unable to delete quest template.");
+        return;
+      }
+
+      setTemplates(result.templates);
+      setMessage("Quest template deleted.");
+      if (editingTemplateId === templateId) {
+        resetTemplateForm();
+      }
+      router.refresh();
+    } catch {
+      setError("Unable to reach the quest template service.");
     } finally {
       setPending(null);
     }
@@ -663,6 +830,90 @@ export function QuestDefinitionManagementPanel({
           </article>
         ))}
       </div>
+      <section className="panel panel--glass">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Saved templates</p>
+            <h3>Reusable admin presets</h3>
+          </div>
+          <span className="badge">{templates.length} saved</span>
+        </div>
+        <div className="profile-grid">
+          <label className="field">
+            <span>Template label</span>
+            <input
+              value={templateForm.label}
+              onChange={(event) => setTemplateForm((current) => ({ ...current, label: event.target.value }))}
+            />
+          </label>
+          <label className="field field--checkbox">
+            <span>Template active</span>
+            <input
+              type="checkbox"
+              checked={templateForm.isActive}
+              onChange={(event) => setTemplateForm((current) => ({ ...current, isActive: event.target.checked }))}
+            />
+          </label>
+        </div>
+        <label className="field">
+          <span>Template description</span>
+          <textarea
+            rows={2}
+            value={templateForm.description}
+            onChange={(event) => setTemplateForm((current) => ({ ...current, description: event.target.value }))}
+          />
+        </label>
+        <div className="review-bulk-actions">
+          <button
+            className="button button--secondary button--small"
+            type="button"
+            disabled={
+              pending !== null ||
+              Boolean(metadataState.error) ||
+              !templateForm.label.trim() ||
+              !templateForm.description.trim()
+            }
+            onClick={submitTemplate}
+          >
+            {pending === "template-create" || (editingTemplateId && pending === editingTemplateId)
+              ? "Saving..."
+              : editingTemplateId
+                ? "Update template"
+                : "Save as template"}
+          </button>
+          <button className="button button--secondary button--small" type="button" disabled={pending !== null} onClick={resetTemplateForm}>
+            Reset template
+          </button>
+        </div>
+        <div className="review-history__list">
+          {templates.map((template) => (
+            <article key={template.id} className="review-history__item">
+              <div className="quest-card__meta">
+                <span>{template.label}</span>
+                <span>{template.isActive ? "active" : "inactive"}</span>
+              </div>
+              <h4>{template.description}</h4>
+              <div className="review-history__meta">
+                <span>{template.form.category}</span>
+                <span>{template.form.requiredTier}</span>
+                <span>Lv {template.form.requiredLevel}</span>
+                <span>{template.form.xpReward} XP</span>
+              </div>
+              <div className="review-bulk-actions">
+                <button className="button button--secondary button--small" type="button" disabled={pending !== null} onClick={() => applySavedTemplate(template)}>
+                  Apply
+                </button>
+                <button className="button button--secondary button--small" type="button" disabled={pending !== null} onClick={() => startEditTemplate(template)}>
+                  Edit template
+                </button>
+                <button className="button button--secondary button--small" type="button" disabled={pending !== null} onClick={() => removeTemplate(template.id)}>
+                  {pending === template.id ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
       <label className="field">
         <span>Metadata JSON</span>
         <textarea rows={12} value={form.metadataText} onChange={(event) => setForm((current) => ({ ...current, metadataText: event.target.value }))} />

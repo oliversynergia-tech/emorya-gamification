@@ -829,10 +829,10 @@ INSERT INTO economy_settings (
   300,
   25.0000,
   '{
-    "direct": {"signupBonusXp": 0, "monthlyConversionBonusXp": 0, "annualConversionBonusXp": 0, "annualDirectTokenBonus": 0, "questXpMultiplierBonus": 0, "eligibilityPointsMultiplierBonus": 0, "tokenYieldMultiplierBonus": 0, "minimumEligibilityPointsOffset": 0, "directTokenRewardBonus": 0},
-    "zealy": {"signupBonusXp": 10, "monthlyConversionBonusXp": 20, "annualConversionBonusXp": 40, "annualDirectTokenBonus": 5, "questXpMultiplierBonus": 0.05, "eligibilityPointsMultiplierBonus": 0.10, "tokenYieldMultiplierBonus": 0.05, "minimumEligibilityPointsOffset": -10, "directTokenRewardBonus": 1},
-    "galxe": {"signupBonusXp": 5, "monthlyConversionBonusXp": 30, "annualConversionBonusXp": 55, "annualDirectTokenBonus": 7, "questXpMultiplierBonus": 0.03, "eligibilityPointsMultiplierBonus": 0.12, "tokenYieldMultiplierBonus": 0.08, "minimumEligibilityPointsOffset": -5, "directTokenRewardBonus": 2},
-    "layer3": {"signupBonusXp": 15, "monthlyConversionBonusXp": 25, "annualConversionBonusXp": 70, "annualDirectTokenBonus": 10, "questXpMultiplierBonus": 0.08, "eligibilityPointsMultiplierBonus": 0.15, "tokenYieldMultiplierBonus": 0.10, "minimumEligibilityPointsOffset": -15, "directTokenRewardBonus": 2}
+    "direct": {"signupBonusXp": 0, "monthlyConversionBonusXp": 0, "annualConversionBonusXp": 0, "annualDirectTokenBonus": 0, "questXpMultiplierBonus": 0, "eligibilityPointsMultiplierBonus": 0, "tokenYieldMultiplierBonus": 0, "minimumEligibilityPointsOffset": 0, "directTokenRewardBonus": 0, "weeklyTargetXpOffset": 0, "premiumUpsellBonusMultiplier": 0, "leaderboardMomentumBonus": 0},
+    "zealy": {"signupBonusXp": 10, "monthlyConversionBonusXp": 20, "annualConversionBonusXp": 40, "annualDirectTokenBonus": 5, "questXpMultiplierBonus": 0.05, "eligibilityPointsMultiplierBonus": 0.10, "tokenYieldMultiplierBonus": 0.05, "minimumEligibilityPointsOffset": -10, "directTokenRewardBonus": 1, "weeklyTargetXpOffset": -15, "premiumUpsellBonusMultiplier": 0.08, "leaderboardMomentumBonus": 0.05},
+    "galxe": {"signupBonusXp": 5, "monthlyConversionBonusXp": 30, "annualConversionBonusXp": 55, "annualDirectTokenBonus": 7, "questXpMultiplierBonus": 0.03, "eligibilityPointsMultiplierBonus": 0.12, "tokenYieldMultiplierBonus": 0.08, "minimumEligibilityPointsOffset": -5, "directTokenRewardBonus": 2, "weeklyTargetXpOffset": -10, "premiumUpsellBonusMultiplier": 0.10, "leaderboardMomentumBonus": 0.08},
+    "layer3": {"signupBonusXp": 15, "monthlyConversionBonusXp": 25, "annualConversionBonusXp": 70, "annualDirectTokenBonus": 10, "questXpMultiplierBonus": 0.08, "eligibilityPointsMultiplierBonus": 0.15, "tokenYieldMultiplierBonus": 0.10, "minimumEligibilityPointsOffset": -15, "directTokenRewardBonus": 2, "weeklyTargetXpOffset": -20, "premiumUpsellBonusMultiplier": 0.12, "leaderboardMomentumBonus": 0.12}
   }'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -917,6 +917,45 @@ ON CONFLICT (id) DO UPDATE SET
   minimum_eligibility_points = EXCLUDED.minimum_eligibility_points,
   points_per_token = EXCLUDED.points_per_token,
   notes = EXCLUDED.notes,
+  updated_at = NOW();
+
+INSERT INTO quest_definition_templates (
+  id,
+  label,
+  description,
+  form_config,
+  metadata,
+  is_active
+) VALUES
+  (
+    '9f71a1d8-90f7-490c-8e5d-c4ba1afb7232',
+    'Starter ladder quest',
+    'Low-friction onboarding step with XP-only progression.',
+    '{"category":"app","difficulty":"easy","verificationType":"link-visit","recurrence":"one-time","requiredTier":"free","requiredLevel":1,"xpReward":25,"isPremiumPreview":false,"isActive":true}'::jsonb,
+    '{"track":"starter","rewardConfig":{"xp":{"base":25,"premiumMultiplierEligible":true},"tokenEffect":"none"},"previewConfig":{"label":"Starter unlock"}}'::jsonb,
+    TRUE
+  ),
+  (
+    '0bc190f7-c0e8-4377-a5f9-c6bf9203069c',
+    'Partner token flash quest',
+    'Annual or premium spike quest with direct token payout and program mapping.',
+    '{"category":"limited","difficulty":"hard","verificationType":"manual-review","recurrence":"weekly","requiredTier":"annual","requiredLevel":5,"xpReward":180,"isPremiumPreview":false,"isActive":true}'::jsonb,
+    '{"track":"premium","rewardProgramId":"4bec0c54-1f7d-4f74-b9cf-1e5b842d7fa4","rewardConfig":{"xp":{"base":180,"premiumMultiplierEligible":true},"tokenEffect":"direct_token_reward","directTokenReward":{"asset":"EGLD","amount":20,"requiresWallet":true}},"unlockRules":{"all":[{"type":"subscription_tier","value":"annual"}]},"previewConfig":{"label":"Partner flash payout"}}'::jsonb,
+    TRUE
+  ),
+  (
+    '3926b1e8-657b-4afd-a8c8-f686b7b4a7a2',
+    'Wallet growth milestone',
+    'Eligibility-point quest mapped to wallet-linked progression.',
+    '{"category":"staking","difficulty":"medium","verificationType":"wallet-check","recurrence":"weekly","requiredTier":"free","requiredLevel":3,"xpReward":70,"isPremiumPreview":false,"isActive":true}'::jsonb,
+    '{"track":"wallet","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","rewardConfig":{"xp":{"base":70,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":15}},"unlockRules":{"all":[{"type":"wallet_linked","value":true}]},"previewConfig":{"label":"Wallet lane"}}'::jsonb,
+    TRUE
+  )
+ON CONFLICT (label) DO UPDATE SET
+  description = EXCLUDED.description,
+  form_config = EXCLUDED.form_config,
+  metadata = EXCLUDED.metadata,
+  is_active = EXCLUDED.is_active,
   updated_at = NOW();
 
 UPDATE token_redemptions

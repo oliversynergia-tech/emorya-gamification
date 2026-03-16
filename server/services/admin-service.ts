@@ -33,11 +33,23 @@ import {
   updateQuestDefinitionForAdmin,
 } from "@/server/repositories/quest-definition-admin-repository";
 import {
+  createQuestDefinitionTemplateForAdmin,
+  deleteQuestDefinitionTemplateForAdmin,
+  listQuestDefinitionTemplatesForAdmin,
+  updateQuestDefinitionTemplateForAdmin,
+} from "@/server/repositories/quest-template-admin-repository";
+import {
   getTokenSettlementAnalytics,
   listPendingTokenSettlements,
   settleTokenRedemption,
 } from "@/server/repositories/token-redemption-repository";
-import type { EconomySettings, QuestDefinitionAdminItem, RewardAsset, RewardProgram } from "@/lib/types";
+import type {
+  EconomySettings,
+  QuestDefinitionAdminItem,
+  QuestDefinitionTemplateItem,
+  RewardAsset,
+  RewardProgram,
+} from "@/lib/types";
 
 export async function getRoleDirectory() {
   const currentUser = await getAuthenticatedUser();
@@ -248,6 +260,95 @@ export async function deleteQuestDefinition(questId: string) {
   return listQuestDefinitionsForAdmin();
 }
 
+function normalizeQuestDefinitionTemplateInput(
+  input: Partial<Omit<QuestDefinitionTemplateItem, "id" | "createdAt" | "updatedAt">>,
+) {
+  if (!input.label || !input.description || !input.form) {
+    throw new Error("Quest definition template requires label, description, and form.");
+  }
+
+  const form = input.form;
+
+  if (
+    !form.category ||
+    !form.difficulty ||
+    !form.verificationType ||
+    !form.recurrence ||
+    !form.requiredTier ||
+    typeof form.requiredLevel !== "number" ||
+    typeof form.xpReward !== "number"
+  ) {
+    throw new Error("Quest definition template form requires category, difficulty, verificationType, recurrence, requiredTier, requiredLevel, and xpReward.");
+  }
+
+  return {
+    label: input.label.trim(),
+    description: input.description.trim(),
+    form: {
+      category: form.category,
+      difficulty: form.difficulty,
+      verificationType: form.verificationType,
+      recurrence: form.recurrence,
+      requiredTier: form.requiredTier,
+      requiredLevel: form.requiredLevel,
+      xpReward: form.xpReward,
+      isPremiumPreview: form.isPremiumPreview ?? false,
+      isActive: form.isActive ?? true,
+    },
+    metadata: input.metadata ?? {},
+    isActive: input.isActive ?? true,
+  };
+}
+
+export async function getQuestDefinitionTemplateDirectory() {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  return listQuestDefinitionTemplatesForAdmin();
+}
+
+export async function createQuestDefinitionTemplate(
+  input: Partial<Omit<QuestDefinitionTemplateItem, "id" | "createdAt" | "updatedAt">>,
+) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  const normalized = normalizeQuestDefinitionTemplateInput(input);
+  await createQuestDefinitionTemplateForAdmin(normalized);
+
+  return listQuestDefinitionTemplatesForAdmin();
+}
+
+export async function updateQuestDefinitionTemplate(
+  templateId: string,
+  input: Partial<Omit<QuestDefinitionTemplateItem, "id" | "createdAt" | "updatedAt">>,
+) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  const normalized = normalizeQuestDefinitionTemplateInput(input);
+  const updated = await updateQuestDefinitionTemplateForAdmin(templateId, normalized);
+
+  if (!updated) {
+    throw new Error("Quest definition template not found.");
+  }
+
+  return listQuestDefinitionTemplatesForAdmin();
+}
+
+export async function deleteQuestDefinitionTemplate(templateId: string) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  const deleted = await deleteQuestDefinitionTemplateForAdmin(templateId);
+
+  if (!deleted) {
+    throw new Error("Quest definition template not found.");
+  }
+
+  return listQuestDefinitionTemplatesForAdmin();
+}
+
 export async function getModerationNotificationHistory() {
   const currentUser = await getAuthenticatedUser();
   await assertAdminUser(currentUser);
@@ -389,6 +490,9 @@ function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id"
         tokenYieldMultiplierBonus: Math.max(input.campaignOverrides?.direct?.tokenYieldMultiplierBonus ?? 0, 0),
         minimumEligibilityPointsOffset: Number(input.campaignOverrides?.direct?.minimumEligibilityPointsOffset ?? 0),
         directTokenRewardBonus: Math.max(input.campaignOverrides?.direct?.directTokenRewardBonus ?? 0, 0),
+        weeklyTargetXpOffset: Number(input.campaignOverrides?.direct?.weeklyTargetXpOffset ?? 0),
+        premiumUpsellBonusMultiplier: Math.max(input.campaignOverrides?.direct?.premiumUpsellBonusMultiplier ?? 0, 0),
+        leaderboardMomentumBonus: Math.max(input.campaignOverrides?.direct?.leaderboardMomentumBonus ?? 0, 0),
       },
       zealy: {
         signupBonusXp: Math.max(input.campaignOverrides?.zealy?.signupBonusXp ?? 0, 0),
@@ -400,6 +504,9 @@ function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id"
         tokenYieldMultiplierBonus: Math.max(input.campaignOverrides?.zealy?.tokenYieldMultiplierBonus ?? 0, 0),
         minimumEligibilityPointsOffset: Number(input.campaignOverrides?.zealy?.minimumEligibilityPointsOffset ?? 0),
         directTokenRewardBonus: Math.max(input.campaignOverrides?.zealy?.directTokenRewardBonus ?? 0, 0),
+        weeklyTargetXpOffset: Number(input.campaignOverrides?.zealy?.weeklyTargetXpOffset ?? 0),
+        premiumUpsellBonusMultiplier: Math.max(input.campaignOverrides?.zealy?.premiumUpsellBonusMultiplier ?? 0, 0),
+        leaderboardMomentumBonus: Math.max(input.campaignOverrides?.zealy?.leaderboardMomentumBonus ?? 0, 0),
       },
       galxe: {
         signupBonusXp: Math.max(input.campaignOverrides?.galxe?.signupBonusXp ?? 0, 0),
@@ -411,6 +518,9 @@ function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id"
         tokenYieldMultiplierBonus: Math.max(input.campaignOverrides?.galxe?.tokenYieldMultiplierBonus ?? 0, 0),
         minimumEligibilityPointsOffset: Number(input.campaignOverrides?.galxe?.minimumEligibilityPointsOffset ?? 0),
         directTokenRewardBonus: Math.max(input.campaignOverrides?.galxe?.directTokenRewardBonus ?? 0, 0),
+        weeklyTargetXpOffset: Number(input.campaignOverrides?.galxe?.weeklyTargetXpOffset ?? 0),
+        premiumUpsellBonusMultiplier: Math.max(input.campaignOverrides?.galxe?.premiumUpsellBonusMultiplier ?? 0, 0),
+        leaderboardMomentumBonus: Math.max(input.campaignOverrides?.galxe?.leaderboardMomentumBonus ?? 0, 0),
       },
       layer3: {
         signupBonusXp: Math.max(input.campaignOverrides?.layer3?.signupBonusXp ?? 0, 0),
@@ -422,6 +532,9 @@ function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id"
         tokenYieldMultiplierBonus: Math.max(input.campaignOverrides?.layer3?.tokenYieldMultiplierBonus ?? 0, 0),
         minimumEligibilityPointsOffset: Number(input.campaignOverrides?.layer3?.minimumEligibilityPointsOffset ?? 0),
         directTokenRewardBonus: Math.max(input.campaignOverrides?.layer3?.directTokenRewardBonus ?? 0, 0),
+        weeklyTargetXpOffset: Number(input.campaignOverrides?.layer3?.weeklyTargetXpOffset ?? 0),
+        premiumUpsellBonusMultiplier: Math.max(input.campaignOverrides?.layer3?.premiumUpsellBonusMultiplier ?? 0, 0),
+        leaderboardMomentumBonus: Math.max(input.campaignOverrides?.layer3?.leaderboardMomentumBonus ?? 0, 0),
       },
     },
   };

@@ -12,6 +12,7 @@ export default async function LeaderboardPage() {
   const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
   const topEntry = data.leaderboard[0];
   const topReferralEntry = data.referralLeaderboard[0];
+  const campaignPreset = data.economy.campaignPreset;
 
   return (
     <SiteShell eyebrow="Competitive pressure" currentUser={session?.user ?? null}>
@@ -64,6 +65,15 @@ export default async function LeaderboardPage() {
               {data.user.campaignSource
                 ? `${data.user.campaignSource} entrants should see campaign bridge quests near the top of the board.`
                 : "Direct entrants see the default Starter and Daily Momentum pressure first."}
+            </small>
+          </div>
+          <div className="metric-card">
+            <span>Lane reward preset</span>
+            <strong>
+              +{(campaignPreset.questXpBoost * 100).toFixed(0)}% XP / +{(campaignPreset.tokenYieldBoost * 100).toFixed(0)}% yield
+            </strong>
+            <small>
+              Weekly shaping {campaignPreset.weeklyTargetOffset} XP, premium pressure {campaignPreset.premiumUpsellMultiplier.toFixed(2)}x.
             </small>
           </div>
         </div>

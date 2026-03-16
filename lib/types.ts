@@ -355,6 +355,15 @@ export type DashboardData = {
     payoutAsset: TokenAsset;
     xpMultipliers: Record<SubscriptionTier, number>;
     tokenMultipliers: Record<SubscriptionTier, number>;
+    campaignPreset: {
+      source: CampaignSource | "direct";
+      questXpBoost: number;
+      eligibilityBoost: number;
+      tokenYieldBoost: number;
+      weeklyTargetOffset: number;
+      premiumUpsellMultiplier: number;
+      leaderboardMomentumMultiplier: number;
+    };
   };
   quests: Quest[];
   achievements: Achievement[];
@@ -499,6 +508,7 @@ export type AdminOverviewData = {
     }>;
   };
   questDefinitionDirectory?: Array<QuestDefinitionAdminItem>;
+  questDefinitionTemplates?: Array<QuestDefinitionTemplateItem>;
 };
 
 export type AuthUser = {
@@ -585,6 +595,21 @@ export type TokenRedemptionProgram = {
 
 export type PayoutOperationsMode = "manual" | "review_required" | "automation_ready";
 
+export type CampaignEconomyOverride = {
+  signupBonusXp: number;
+  monthlyConversionBonusXp: number;
+  annualConversionBonusXp: number;
+  annualDirectTokenBonus: number;
+  questXpMultiplierBonus: number;
+  eligibilityPointsMultiplierBonus: number;
+  tokenYieldMultiplierBonus: number;
+  minimumEligibilityPointsOffset: number;
+  directTokenRewardBonus: number;
+  weeklyTargetXpOffset: number;
+  premiumUpsellBonusMultiplier: number;
+  leaderboardMomentumBonus: number;
+};
+
 export type EconomySettings = {
   id: string;
   payoutAsset: TokenAsset;
@@ -605,17 +630,7 @@ export type EconomySettings = {
   referralMonthlyConversionBaseXp: number;
   referralAnnualConversionBaseXp: number;
   annualReferralDirectTokenAmount: number;
-  campaignOverrides: Record<CampaignSource, {
-    signupBonusXp: number;
-    monthlyConversionBonusXp: number;
-    annualConversionBonusXp: number;
-    annualDirectTokenBonus: number;
-    questXpMultiplierBonus: number;
-    eligibilityPointsMultiplierBonus: number;
-    tokenYieldMultiplierBonus: number;
-    minimumEligibilityPointsOffset: number;
-    directTokenRewardBonus: number;
-  }>;
+  campaignOverrides: Record<CampaignSource, CampaignEconomyOverride>;
   updatedAt: string;
 };
 
@@ -801,6 +816,27 @@ export type QuestDefinitionAdminItem = {
   isPremiumPreview: boolean;
   isActive: boolean;
   metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type QuestDefinitionTemplateItem = {
+  id: string;
+  label: string;
+  description: string;
+  form: {
+    category: QuestCategory;
+    difficulty: "easy" | "medium" | "hard";
+    verificationType: VerificationType;
+    recurrence: "one-time" | "daily" | "weekly";
+    requiredTier: SubscriptionTier;
+    requiredLevel: number;
+    xpReward: number;
+    isPremiumPreview: boolean;
+    isActive: boolean;
+  };
+  metadata: Record<string, unknown>;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 };

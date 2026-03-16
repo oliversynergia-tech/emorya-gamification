@@ -39,6 +39,9 @@ export const defaultEconomySettings: EconomySettings = {
       tokenYieldMultiplierBonus: 0,
       minimumEligibilityPointsOffset: 0,
       directTokenRewardBonus: 0,
+      weeklyTargetXpOffset: 0,
+      premiumUpsellBonusMultiplier: 0,
+      leaderboardMomentumBonus: 0,
     },
     zealy: {
       signupBonusXp: 10,
@@ -50,6 +53,9 @@ export const defaultEconomySettings: EconomySettings = {
       tokenYieldMultiplierBonus: 0.05,
       minimumEligibilityPointsOffset: -10,
       directTokenRewardBonus: 1,
+      weeklyTargetXpOffset: -15,
+      premiumUpsellBonusMultiplier: 0.08,
+      leaderboardMomentumBonus: 0.05,
     },
     galxe: {
       signupBonusXp: 5,
@@ -61,6 +67,9 @@ export const defaultEconomySettings: EconomySettings = {
       tokenYieldMultiplierBonus: 0.08,
       minimumEligibilityPointsOffset: -5,
       directTokenRewardBonus: 2,
+      weeklyTargetXpOffset: -10,
+      premiumUpsellBonusMultiplier: 0.1,
+      leaderboardMomentumBonus: 0.08,
     },
     layer3: {
       signupBonusXp: 15,
@@ -72,6 +81,9 @@ export const defaultEconomySettings: EconomySettings = {
       tokenYieldMultiplierBonus: 0.1,
       minimumEligibilityPointsOffset: -15,
       directTokenRewardBonus: 2,
+      weeklyTargetXpOffset: -20,
+      premiumUpsellBonusMultiplier: 0.12,
+      leaderboardMomentumBonus: 0.12,
     },
   },
   updatedAt: new Date(0).toISOString(),
@@ -127,6 +139,27 @@ export function applyDirectTokenRewardBonus(
 ) {
   const override = getCampaignEconomyOverride(settings, source);
   return Math.max(amount + override.directTokenRewardBonus, 0);
+}
+
+export function getCampaignWeeklyTargetOffset(
+  settings: EconomySettings,
+  source?: CampaignSource | null,
+) {
+  return getCampaignEconomyOverride(settings, source).weeklyTargetXpOffset;
+}
+
+export function getCampaignPremiumUpsellMultiplier(
+  settings: EconomySettings,
+  source?: CampaignSource | null,
+) {
+  return 1 + getCampaignEconomyOverride(settings, source).premiumUpsellBonusMultiplier;
+}
+
+export function getCampaignLeaderboardMomentumMultiplier(
+  settings: EconomySettings,
+  source?: CampaignSource | null,
+) {
+  return 1 + getCampaignEconomyOverride(settings, source).leaderboardMomentumBonus;
 }
 
 export function isDirectRewardAllowedForTrack({

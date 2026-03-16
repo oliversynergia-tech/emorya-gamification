@@ -40,6 +40,9 @@ type EconomySettingsRow = QueryResultRow & {
     tokenYieldMultiplierBonus?: number;
     minimumEligibilityPointsOffset?: number;
     directTokenRewardBonus?: number;
+    weeklyTargetXpOffset?: number;
+    premiumUpsellBonusMultiplier?: number;
+    leaderboardMomentumBonus?: number;
   }>;
   updated_at: string;
 };

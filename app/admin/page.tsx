@@ -96,7 +96,11 @@ export default async function AdminPage() {
       />
       <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
       <QuestDefinitionToolingPanel />
-      <QuestDefinitionManagementPanel availableAssets={data.rewardAssets} availablePrograms={data.rewardPrograms} />
+      <QuestDefinitionManagementPanel
+        availableAssets={data.rewardAssets}
+        availablePrograms={data.rewardPrograms}
+        initialTemplates={data.questDefinitionTemplates ?? []}
+      />
       <RoleManagementPanel
         initialUsers={data.roleDirectory}
         initialAdmins={data.adminDirectory}

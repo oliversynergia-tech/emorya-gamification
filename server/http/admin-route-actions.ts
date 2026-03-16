@@ -2,6 +2,10 @@ import {
   handleQuestDefinitionCreateRequest,
   handleQuestDefinitionDeleteRequest,
   handleQuestDefinitionDirectoryRequest,
+  handleQuestDefinitionTemplateCreateRequest,
+  handleQuestDefinitionTemplateDeleteRequest,
+  handleQuestDefinitionTemplateDirectoryRequest,
+  handleQuestDefinitionTemplateUpdateRequest,
   handleQuestDefinitionUpdateRequest,
   handleRewardAssetDirectoryRequest,
   handleRewardAssetSaveRequest,
@@ -16,6 +20,10 @@ export type AdminRouteActionServices = {
   createQuestDefinition: (input: Record<string, unknown>) => Promise<unknown>;
   updateQuestDefinition: (questId: string, input: Record<string, unknown>) => Promise<unknown>;
   deleteQuestDefinition: (questId: string) => Promise<unknown>;
+  getQuestDefinitionTemplateDirectory: () => Promise<unknown>;
+  createQuestDefinitionTemplate: (input: Record<string, unknown>) => Promise<unknown>;
+  updateQuestDefinitionTemplate: (templateId: string, input: Record<string, unknown>) => Promise<unknown>;
+  deleteQuestDefinitionTemplate: (templateId: string) => Promise<unknown>;
   getRewardAssetDirectory: () => Promise<unknown>;
   saveRewardAsset: (input: Record<string, unknown>, assetId?: string) => Promise<unknown>;
   getRewardProgramDirectory: () => Promise<unknown>;
@@ -59,6 +67,42 @@ export async function runQuestDefinitionDeleteRoute(
   services: Pick<AdminRouteActionServices, "deleteQuestDefinition">,
 ) {
   return handleQuestDefinitionDeleteRequest(questId, services.deleteQuestDefinition);
+}
+
+export async function runQuestDefinitionTemplateDirectoryRoute(
+  services: Pick<AdminRouteActionServices, "getQuestDefinitionTemplateDirectory">,
+) {
+  return handleQuestDefinitionTemplateDirectoryRequest(services.getQuestDefinitionTemplateDirectory);
+}
+
+export async function runQuestDefinitionTemplateCreateRoute(
+  body: Record<string, unknown>,
+  services: Pick<AdminRouteActionServices, "createQuestDefinitionTemplate">,
+) {
+  return handleQuestDefinitionTemplateCreateRequest(body, services.createQuestDefinitionTemplate);
+}
+
+export async function runQuestDefinitionTemplateUpdateRoute(
+  {
+    templateId,
+    body,
+  }: {
+    templateId: string;
+    body: Record<string, unknown>;
+  },
+  services: Pick<AdminRouteActionServices, "updateQuestDefinitionTemplate">,
+) {
+  return handleQuestDefinitionTemplateUpdateRequest(
+    { templateId, body },
+    services.updateQuestDefinitionTemplate,
+  );
+}
+
+export async function runQuestDefinitionTemplateDeleteRoute(
+  templateId: string,
+  services: Pick<AdminRouteActionServices, "deleteQuestDefinitionTemplate">,
+) {
+  return handleQuestDefinitionTemplateDeleteRequest(templateId, services.deleteQuestDefinitionTemplate);
 }
 
 export async function runRewardAssetDirectoryRoute(

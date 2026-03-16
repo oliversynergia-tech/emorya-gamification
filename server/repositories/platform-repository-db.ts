@@ -5,6 +5,9 @@ import {
   applyEligibilityPointsMultiplier,
   defaultEconomySettings,
   getCampaignEconomyOverride,
+  getCampaignLeaderboardMomentumMultiplier,
+  getCampaignPremiumUpsellMultiplier,
+  getCampaignWeeklyTargetOffset,
   getXpTierMultiplier,
 } from "@/lib/economy-settings";
 import {
@@ -71,6 +74,7 @@ import {
   listRewardAssets,
   listRewardPrograms,
 } from "@/server/repositories/reward-program-repository";
+import { listQuestDefinitionTemplatesForAdmin } from "@/server/repositories/quest-template-admin-repository";
 import { buildDashboardQuestBoard } from "@/server/services/build-dashboard-quest-board";
 import { buildModerationNotifications } from "@/server/services/moderation-notifications";
 import { syncAchievementProgressForUser } from "@/server/services/progression-service";
@@ -429,7 +433,7 @@ async function getUserSnapshot(
       id: `campaign-override-${progressState.campaignSource}`,
       tone: "info",
       title: `${progressState.campaignSource} reward preset active`,
-      detail: `This lane adds +${campaignEconomy.questXpMultiplierBonus.toFixed(2)}x quest XP, ${(campaignEconomy.eligibilityPointsMultiplierBonus * 100).toFixed(0)}% extra eligibility-point growth, ${(campaignEconomy.tokenYieldMultiplierBonus * 100).toFixed(0)}% token-yield lift, and ${campaignEconomy.minimumEligibilityPointsOffset} points on the redemption threshold.`,
+      detail: `This lane adds +${campaignEconomy.questXpMultiplierBonus.toFixed(2)}x quest XP, ${(campaignEconomy.eligibilityPointsMultiplierBonus * 100).toFixed(0)}% extra eligibility-point growth, ${(campaignEconomy.tokenYieldMultiplierBonus * 100).toFixed(0)}% token-yield lift, ${campaignEconomy.minimumEligibilityPointsOffset} points on the redemption threshold, ${campaignEconomy.weeklyTargetXpOffset} XP on weekly target shaping, and ${(campaignEconomy.premiumUpsellBonusMultiplier * 100).toFixed(0)}% extra premium pressure.`,
     });
   }
 
@@ -768,6 +772,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     getReferralLeaderboard(),
     getActivityFeed(),
   ]);
+  const campaignEconomy = getCampaignEconomyOverride(economySettings, user.campaignSource);
 
   return {
     user,
@@ -775,6 +780,15 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
       payoutAsset: economySettings.payoutAsset,
       xpMultipliers: economySettings.xpTierMultipliers,
       tokenMultipliers: economySettings.tokenTierMultipliers,
+      campaignPreset: {
+        source: user.campaignSource ?? "direct",
+        questXpBoost: campaignEconomy.questXpMultiplierBonus,
+        eligibilityBoost: campaignEconomy.eligibilityPointsMultiplierBonus,
+        tokenYieldBoost: campaignEconomy.tokenYieldMultiplierBonus,
+        weeklyTargetOffset: getCampaignWeeklyTargetOffset(economySettings, user.campaignSource),
+        premiumUpsellMultiplier: getCampaignPremiumUpsellMultiplier(economySettings, user.campaignSource),
+        leaderboardMomentumMultiplier: getCampaignLeaderboardMomentumMultiplier(economySettings, user.campaignSource),
+      },
     },
     quests,
     achievements,
@@ -786,12 +800,13 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
       `Monthly earns ${economySettings.xpTierMultipliers.monthly.toFixed(2)}x XP. Annual earns ${economySettings.xpTierMultipliers.annual.toFixed(2)}x XP.`,
       `Your ${user.currentStreak}-day streak becomes safer with Annual streak freezes.`,
       `Redemptions are ${economySettings.redemptionEnabled ? "enabled" : "paused"} for ${economySettings.payoutAsset}.`,
+      `${user.campaignSource ?? "direct"} lane currently adds ${(campaignEconomy.premiumUpsellBonusMultiplier * 100).toFixed(0)}% extra premium pressure and ${campaignEconomy.weeklyTargetXpOffset} XP on weekly target shaping.`,
     ],
   };
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, settlementAnalytics] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, settlementAnalytics, questDefinitionTemplates] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -820,6 +835,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     listRewardPrograms(),
     listPendingTokenSettlements(),
     getTokenSettlementAnalytics(),
+    listQuestDefinitionTemplatesForAdmin(),
   ]);
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -855,6 +871,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     rewardPrograms,
     tokenSettlementQueue,
     settlementAnalytics,
+    questDefinitionTemplates,
     reviewInsights: {
       byVerificationType: reviewBreakdownByVerificationType,
       reviewerTypeMatrix,

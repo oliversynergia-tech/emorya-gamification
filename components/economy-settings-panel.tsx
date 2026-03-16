@@ -61,7 +61,10 @@ export function EconomySettingsPanel({
       | "eligibilityPointsMultiplierBonus"
       | "tokenYieldMultiplierBonus"
       | "minimumEligibilityPointsOffset"
-      | "directTokenRewardBonus",
+      | "directTokenRewardBonus"
+      | "weeklyTargetXpOffset"
+      | "premiumUpsellBonusMultiplier"
+      | "leaderboardMomentumBonus",
     value: string,
   ) {
     setSettings((current) => ({
@@ -349,7 +352,7 @@ export function EconomySettingsPanel({
         <div className="panel__header">
           <div>
             <p className="eyebrow">Campaign overrides</p>
-            <h3>Per-source referral and token economics</h3>
+            <h3>Per-source funnel and reward presets</h3>
           </div>
         </div>
         <div className="tooling-grid">
@@ -444,6 +447,35 @@ export function EconomySettingsPanel({
                     step="0.01"
                     value={settings.campaignOverrides[source].directTokenRewardBonus}
                     onChange={(event) => updateCampaignOverride(source, "directTokenRewardBonus", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Weekly target offset</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    value={settings.campaignOverrides[source].weeklyTargetXpOffset}
+                    onChange={(event) => updateCampaignOverride(source, "weeklyTargetXpOffset", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Premium upsell boost</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignOverrides[source].premiumUpsellBonusMultiplier}
+                    onChange={(event) => updateCampaignOverride(source, "premiumUpsellBonusMultiplier", event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Leaderboard momentum boost</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignOverrides[source].leaderboardMomentumBonus}
+                    onChange={(event) => updateCampaignOverride(source, "leaderboardMomentumBonus", event.target.value)}
                   />
                 </label>
               </div>

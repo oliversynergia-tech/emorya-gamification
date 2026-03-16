@@ -617,6 +617,7 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
 
 export function PremiumFunnelSection({ data }: { data: DashboardData }) {
   const premiumOffer = getCampaignPremiumOffer(data.user.campaignSource);
+  const campaignPreset = data.economy.campaignPreset;
 
   return (
     <section className="grid grid--funnel">
@@ -651,6 +652,18 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
               </div>
             </article>
           ))}
+          <article className="achievement-card">
+            <div>
+              <strong>Active lane pressure</strong>
+              <p>
+                {campaignPreset.source} currently adds {(campaignPreset.premiumUpsellMultiplier * 100 - 100).toFixed(0)}%
+                extra premium urgency and shifts weekly targets by {campaignPreset.weeklyTargetOffset} XP.
+              </p>
+            </div>
+            <span className="badge">
+              {(campaignPreset.leaderboardMomentumMultiplier * 100 - 100).toFixed(0)}% board momentum
+            </span>
+          </article>
         </div>
         <p className="form-note">{premiumOffer.cta}</p>
       </div>
@@ -736,6 +749,7 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
 export function LeaderboardSection({ data }: { data: DashboardData }) {
   const topReferralEntry = data.referralLeaderboard[0];
   const annualDirectReward = data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward;
+  const campaignPreset = data.economy.campaignPreset;
 
   return (
     <section className="grid grid--leaderboard">
@@ -774,6 +788,14 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           <div className="info-card">
             <span>Claimed / settled</span>
             <strong>{data.user.tokenProgram.claimedBalance} / {data.user.tokenProgram.settledBalance}</strong>
+          </div>
+          <div className="info-card">
+            <span>Lane momentum</span>
+            <strong>{campaignPreset.leaderboardMomentumMultiplier.toFixed(2)}x</strong>
+          </div>
+          <div className="info-card">
+            <span>Premium lane pressure</span>
+            <strong>{campaignPreset.premiumUpsellMultiplier.toFixed(2)}x</strong>
           </div>
         </div>
         <div className="reward-visual-grid">
@@ -831,6 +853,25 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
               </div>
             </div>
             <small>Claimed rewards are reserved. Settled rewards have completed the manual payout path.</small>
+          </article>
+          <article className="reward-visual-card">
+            <div className="quest-card__meta">
+              <span>{campaignPreset.source} preset</span>
+              <span>{data.user.campaignSource ?? "direct"}</span>
+            </div>
+            <strong>
+              +{(campaignPreset.questXpBoost * 100).toFixed(0)}% quest XP, +{(campaignPreset.eligibilityBoost * 100).toFixed(0)}%
+              eligibility growth, +{(campaignPreset.tokenYieldBoost * 100).toFixed(0)}% token yield
+            </strong>
+            <div className="reward-ladder__meter">
+              <div
+                className="reward-ladder__fill reward-state-bars__fill--gold"
+                style={{ width: `${Math.min((campaignPreset.leaderboardMomentumMultiplier / 1.5) * 100, 100)}%` }}
+              />
+            </div>
+            <small>
+              This acquisition lane is not just copy. It changes how aggressively premium, weekly milestones, and leaderboard pressure are framed.
+            </small>
           </article>
         </div>
         <p className="form-note">

@@ -104,6 +104,17 @@ CREATE TABLE quest_definitions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE quest_definition_templates (
+  id UUID PRIMARY KEY,
+  label TEXT NOT NULL UNIQUE,
+  description TEXT NOT NULL,
+  form_config JSONB NOT NULL DEFAULT '{}'::JSONB,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE quest_completions (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -296,6 +307,7 @@ CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id, expires_at DESC
 CREATE INDEX idx_user_roles_role ON user_roles(role, created_at DESC);
 CREATE INDEX idx_wallet_link_challenges_user_id ON wallet_link_challenges(user_id, created_at DESC);
 CREATE INDEX idx_quest_definitions_category ON quest_definitions(category);
+CREATE INDEX idx_quest_definition_templates_active ON quest_definition_templates(is_active, created_at DESC);
 CREATE INDEX idx_quest_completions_status ON quest_completions(status);
 CREATE INDEX idx_activity_log_user_id ON activity_log(user_id, created_at DESC);
 CREATE INDEX idx_leaderboard_snapshots_period_rank ON leaderboard_snapshots(period, rank);

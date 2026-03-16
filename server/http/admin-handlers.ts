@@ -4,6 +4,7 @@ type AdminDirectoryResponse = {
 };
 
 type QuestDefinitionInput = Record<string, unknown>;
+type QuestDefinitionTemplateInput = Record<string, unknown>;
 type EconomySettingsInput = Record<string, unknown>;
 type RewardAssetInput = Record<string, unknown>;
 type RewardProgramInput = Record<string, unknown>;
@@ -186,6 +187,99 @@ export async function handleQuestDefinitionDeleteRequest(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to delete quest definition.";
+
+    return {
+      status: message.includes("not found") ? 404 : getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleQuestDefinitionTemplateDirectoryRequest(
+  getQuestDefinitionTemplateDirectory: () => Promise<unknown>,
+) {
+  try {
+    const templates = await getQuestDefinitionTemplateDirectory();
+
+    return {
+      status: 200,
+      body: { ok: true, templates },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to load quest definition templates.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleQuestDefinitionTemplateCreateRequest(
+  body: QuestDefinitionTemplateInput,
+  createQuestDefinitionTemplate: (input: QuestDefinitionTemplateInput) => Promise<unknown>,
+) {
+  try {
+    const templates = await createQuestDefinitionTemplate(body);
+
+    return {
+      status: 200,
+      body: { ok: true, templates },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to create quest definition template.";
+
+    return {
+      status: message.includes("requires") ? 400 : getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleQuestDefinitionTemplateUpdateRequest(
+  {
+    templateId,
+    body,
+  }: {
+    templateId: string;
+    body: QuestDefinitionTemplateInput;
+  },
+  updateQuestDefinitionTemplate: (templateId: string, input: QuestDefinitionTemplateInput) => Promise<unknown>,
+) {
+  try {
+    const templates = await updateQuestDefinitionTemplate(templateId, body);
+
+    return {
+      status: 200,
+      body: { ok: true, templates },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to update quest definition template.";
+
+    return {
+      status: message.includes("not found")
+        ? 404
+        : message.includes("requires")
+          ? 400
+          : getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleQuestDefinitionTemplateDeleteRequest(
+  templateId: string,
+  deleteQuestDefinitionTemplate: (templateId: string) => Promise<unknown>,
+) {
+  try {
+    const templates = await deleteQuestDefinitionTemplate(templateId);
+
+    return {
+      status: 200,
+      body: { ok: true, templates },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to delete quest definition template.";
 
     return {
       status: message.includes("not found") ? 404 : getErrorStatus(message),

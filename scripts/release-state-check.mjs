@@ -46,6 +46,9 @@ function validateOverrideObject(source, value, errors) {
     "tokenYieldMultiplierBonus",
     "minimumEligibilityPointsOffset",
     "directTokenRewardBonus",
+    "weeklyTargetXpOffset",
+    "premiumUpsellBonusMultiplier",
+    "leaderboardMomentumBonus",
   ]) {
     if (!isNumber(value[key])) {
       errors.push(`campaignOverrides.${source}.${key} must be a number.`);
@@ -201,7 +204,7 @@ await withClient(async (client) => {
   const migrationResult = await client.query(
     `SELECT filename
      FROM schema_migrations
-     WHERE filename IN ('013_add_token_redemption_settlement_details.sql', '014_add_campaign_overrides_and_referral_direct_rewards.sql', '016_add_reward_assets_and_programs.sql', '017_add_payout_operation_controls.sql')
+     WHERE filename IN ('013_add_token_redemption_settlement_details.sql', '014_add_campaign_overrides_and_referral_direct_rewards.sql', '016_add_reward_assets_and_programs.sql', '017_add_payout_operation_controls.sql', '018_add_quest_definition_templates.sql', '019_expand_campaign_override_funnel_presets.sql')
      ORDER BY filename ASC`,
   );
   const appliedMigrations = new Set(migrationResult.rows.map((row) => String(row.filename)));
@@ -211,6 +214,8 @@ await withClient(async (client) => {
     "014_add_campaign_overrides_and_referral_direct_rewards.sql",
     "016_add_reward_assets_and_programs.sql",
     "017_add_payout_operation_controls.sql",
+    "018_add_quest_definition_templates.sql",
+    "019_expand_campaign_override_funnel_presets.sql",
   ]) {
     if (!appliedMigrations.has(filename)) {
       errors.push(`Required migration not applied: ${filename}`);
