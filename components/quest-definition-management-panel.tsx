@@ -158,6 +158,28 @@ function parseMetadata(metadataText: string) {
   }
 }
 
+function getTemplateLaneSummary(metadata: Record<string, unknown>) {
+  const templateKind =
+    typeof metadata.campaignTemplateKind === "string" ? metadata.campaignTemplateKind : null;
+  const attributionSource =
+    typeof metadata.campaignAttributionSource === "string" ? metadata.campaignAttributionSource : null;
+  const activeLane = typeof metadata.campaignExperienceLane === "string" ? metadata.campaignExperienceLane : null;
+
+  if (!templateKind || !attributionSource || !activeLane) {
+    return null;
+  }
+
+  if (templateKind === "bridge") {
+    return `${attributionSource} bridge template running on the ${activeLane} live lane.`;
+  }
+
+  if (templateKind === "feeder") {
+    return `${attributionSource} feeder template that defaults into the ${activeLane} bridge lane.`;
+  }
+
+  return `${attributionSource} template aligned to the ${activeLane} lane.`;
+}
+
 export function QuestDefinitionManagementPanel({
   availableAssets,
   availablePrograms,
@@ -354,6 +376,110 @@ export function QuestDefinitionManagementPanel({
           },
           previewConfig: {
             label: "Wallet lane",
+          },
+        },
+      },
+      {
+        label: "Zealy bridge quest",
+        description: "Live Zealy bridge step that turns campaign momentum into wallet-linked Emorya progress.",
+        form: {
+          category: "app",
+          difficulty: "medium",
+          verificationType: "link-visit",
+          recurrence: "one-time",
+          requiredTier: "free",
+          requiredLevel: 1,
+          xpReward: 85,
+        },
+        metadata: {
+          track: "campaign",
+          rewardProgramId: coreProgram,
+          targetUrl: "https://example.com/zealy-bridge",
+          campaignTemplateKind: "bridge",
+          campaignAttributionSource: "zealy",
+          campaignExperienceLane: "zealy",
+          rewardConfig: {
+            xp: { base: 85, premiumMultiplierEligible: true },
+            tokenEffect: "eligibility_progress",
+            tokenEligibility: {
+              progressPoints: 18,
+            },
+          },
+          unlockRules: {
+            all: [{ type: "campaign_source", value: "zealy" }],
+          },
+          previewConfig: {
+            label: "Zealy bridge",
+          },
+        },
+      },
+      {
+        label: "Galxe feeder quest",
+        description: "External discovery quest that captures Galxe users and hands them into the Zealy bridge.",
+        form: {
+          category: "social",
+          difficulty: "easy",
+          verificationType: "link-visit",
+          recurrence: "one-time",
+          requiredTier: "free",
+          requiredLevel: 1,
+          xpReward: 55,
+        },
+        metadata: {
+          track: "campaign",
+          rewardProgramId: coreProgram,
+          targetUrl: "https://example.com/galxe-bridge",
+          campaignTemplateKind: "feeder",
+          campaignAttributionSource: "galxe",
+          campaignExperienceLane: "zealy",
+          requiresUpstreamDifferentiation: false,
+          rewardConfig: {
+            xp: { base: 55, premiumMultiplierEligible: true },
+            tokenEffect: "eligibility_progress",
+            tokenEligibility: {
+              progressPoints: 10,
+            },
+          },
+          unlockRules: {
+            all: [{ type: "campaign_source", value: "galxe" }],
+          },
+          previewConfig: {
+            label: "Galxe to Zealy feeder",
+          },
+        },
+      },
+      {
+        label: "TaskOn feeder quest",
+        description: "Task-completion handoff quest that moves TaskOn users into the Zealy bridge path.",
+        form: {
+          category: "app",
+          difficulty: "medium",
+          verificationType: "link-visit",
+          recurrence: "one-time",
+          requiredTier: "free",
+          requiredLevel: 1,
+          xpReward: 60,
+        },
+        metadata: {
+          track: "campaign",
+          rewardProgramId: coreProgram,
+          targetUrl: "https://example.com/taskon-bridge",
+          campaignTemplateKind: "feeder",
+          campaignAttributionSource: "taskon",
+          campaignExperienceLane: "zealy",
+          requiresUpstreamDifferentiation: false,
+          rewardConfig: {
+            xp: { base: 60, premiumMultiplierEligible: true },
+            tokenEffect: "eligibility_progress",
+            tokenEligibility: {
+              progressPoints: 12,
+            },
+          },
+          unlockRules: {
+            all: [{ type: "campaign_source", value: "taskon" }],
+          },
+          previewConfig: {
+            label: "TaskOn to Zealy feeder",
           },
         },
       },
@@ -823,6 +949,9 @@ export function QuestDefinitionManagementPanel({
             <div>
               <strong>{template.label}</strong>
               <p>{template.description}</p>
+              {getTemplateLaneSummary(template.metadata) ? (
+                <p className="form-note">{getTemplateLaneSummary(template.metadata)}</p>
+              ) : null}
             </div>
             <button className="button button--secondary button--small" type="button" onClick={() => applyTemplate(template)}>
               Apply template
@@ -899,6 +1028,9 @@ export function QuestDefinitionManagementPanel({
                 <span>Lv {template.form.requiredLevel}</span>
                 <span>{template.form.xpReward} XP</span>
               </div>
+              {getTemplateLaneSummary(template.metadata) ? (
+                <p className="form-note">{getTemplateLaneSummary(template.metadata)}</p>
+              ) : null}
               <div className="review-bulk-actions">
                 <button className="button button--secondary button--small" type="button" disabled={pending !== null} onClick={() => applySavedTemplate(template)}>
                   Apply
