@@ -180,6 +180,21 @@ function getTemplateLaneSummary(metadata: Record<string, unknown>) {
   return `${attributionSource} template aligned to the ${activeLane} lane.`;
 }
 
+function getTemplateKindLabel(metadata: Record<string, unknown>) {
+  const templateKind =
+    typeof metadata.campaignTemplateKind === "string" ? metadata.campaignTemplateKind : null;
+
+  if (templateKind === "bridge") {
+    return "Bridge";
+  }
+
+  if (templateKind === "feeder") {
+    return "Feeder";
+  }
+
+  return null;
+}
+
 function getBridgeTemplateWarning(
   metadata: Record<string, unknown>,
   differentiateUpstreamCampaignSources: boolean,
@@ -994,6 +1009,11 @@ export function QuestDefinitionManagementPanel({
           <article key={template.label} className="achievement-card">
             <div>
               <strong>{template.label}</strong>
+              {getTemplateKindLabel(template.metadata) ? (
+                <p className="review-history__meta">
+                  <span>{getTemplateKindLabel(template.metadata)}</span>
+                </p>
+              ) : null}
               <p>{template.description}</p>
               {getTemplateLaneSummary(template.metadata) ? (
                 <p className="form-note">{getTemplateLaneSummary(template.metadata)}</p>
@@ -1079,6 +1099,11 @@ export function QuestDefinitionManagementPanel({
                 <span>{template.label}</span>
                 <span>{template.isActive ? "active" : "inactive"}</span>
               </div>
+              {getTemplateKindLabel(template.metadata) ? (
+                <div className="review-history__meta">
+                  <span>{getTemplateKindLabel(template.metadata)}</span>
+                </div>
+              ) : null}
               <h4>{template.description}</h4>
               <div className="review-history__meta">
                 <span>{template.form.category}</span>
