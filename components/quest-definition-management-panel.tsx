@@ -180,14 +180,41 @@ function getTemplateLaneSummary(metadata: Record<string, unknown>) {
   return `${attributionSource} template aligned to the ${activeLane} lane.`;
 }
 
+function getBridgeTemplateWarning(
+  metadata: Record<string, unknown>,
+  differentiateUpstreamCampaignSources: boolean,
+) {
+  if (!differentiateUpstreamCampaignSources) {
+    return null;
+  }
+
+  const templateKind =
+    typeof metadata.campaignTemplateKind === "string" ? metadata.campaignTemplateKind : null;
+  const attributionSource =
+    typeof metadata.campaignAttributionSource === "string" ? metadata.campaignAttributionSource : null;
+  const activeLane = typeof metadata.campaignExperienceLane === "string" ? metadata.campaignExperienceLane : null;
+
+  if (templateKind !== "feeder" || !attributionSource || !activeLane) {
+    return null;
+  }
+
+  if (attributionSource !== "galxe" && attributionSource !== "taskon") {
+    return null;
+  }
+
+  return `${attributionSource} is currently running as its own live lane, but this template is still configured as a feeder into the ${activeLane} bridge. Review copy, quest ordering, and reward framing before saving it live.`;
+}
+
 export function QuestDefinitionManagementPanel({
   availableAssets,
   availablePrograms,
   initialTemplates,
+  differentiateUpstreamCampaignSources,
 }: {
   availableAssets: RewardAsset[];
   availablePrograms: RewardProgram[];
   initialTemplates: QuestDefinitionTemplateItem[];
+  differentiateUpstreamCampaignSources: boolean;
 }) {
   const router = useRouter();
   const [quests, setQuests] = useState<QuestDefinitionAdminItem[]>([]);
@@ -206,6 +233,11 @@ export function QuestDefinitionManagementPanel({
   const [error, setError] = useState<string | null>(null);
 
   const metadataState = useMemo(() => parseMetadata(form.metadataText), [form.metadataText]);
+  const bridgeTemplateWarning = useMemo(
+    () =>
+      getBridgeTemplateWarning(metadataState.parsed ?? {}, differentiateUpstreamCampaignSources),
+    [differentiateUpstreamCampaignSources, metadataState.parsed],
+  );
   const duplicateSlug = useMemo(
     () =>
       quests.find(
@@ -1146,6 +1178,15 @@ export function QuestDefinitionManagementPanel({
             <span>{preview.directTokenReward ?? "No direct token reward"}</span>
           </div>
         </article>
+        {bridgeTemplateWarning ? (
+          <article className="achievement-card">
+            <div>
+              <strong>Bridge-oriented feeder warning</strong>
+              <p>{bridgeTemplateWarning}</p>
+            </div>
+            <span className="badge">Review lane fit</span>
+          </article>
+        ) : null}
       </div>
       <div className="review-bulk-actions">
         <button className="button button--primary button--small" type="button" disabled={pending !== null || Boolean(metadataState.error) || Boolean(duplicateSlug)} onClick={submit}>

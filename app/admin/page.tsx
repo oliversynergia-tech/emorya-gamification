@@ -100,6 +100,7 @@ export default async function AdminPage() {
         availableAssets={data.rewardAssets}
         availablePrograms={data.rewardPrograms}
         initialTemplates={data.questDefinitionTemplates ?? []}
+        differentiateUpstreamCampaignSources={data.economySettings.differentiateUpstreamCampaignSources}
       />
       <RoleManagementPanel
         initialUsers={data.roleDirectory}
