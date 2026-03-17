@@ -1,6 +1,7 @@
 import { normalizeTokenAsset } from "@/lib/economy-settings";
 import { assertAdminUser, assertSuperAdminUser } from "@/server/auth/admin";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
+import { transitionPendingTokenRedemptionWithDependencies } from "@/server/services/token-redemption-transition";
 import {
   countUsersWithRole,
   findUserByEmailForRoleDirectory,
@@ -398,111 +399,22 @@ export async function transitionPendingTokenRedemption({
   receiptReference: string;
   settlementNote?: string | null;
 }) {
-  const currentUser = await getAuthenticatedUser();
-  await assertAdminUser(currentUser);
-
-  if (!currentUser) {
-    throw new Error("You must be signed in to access admin controls.");
-  }
-
-  const economySettings = await getActiveEconomySettings();
-
-  if (!economySettings.settlementProcessingEnabled) {
-    throw new Error("Settlement processing is currently disabled in payout controls.");
-  }
-
-  if (action === "approve") {
-    await assertAdminUser(currentUser);
-  } else {
-    await assertSuperAdminUser(currentUser);
-  }
-
-  const queueBefore = await listPendingTokenSettlements(100);
-  const existingEntry = queueBefore.find((entry) => entry.id === redemptionId);
-
-  if (!existingEntry) {
-    throw new Error("Token redemption not found or already settled.");
-  }
-
-  if (action === "settle" && !receiptReference.trim()) {
-    throw new Error("Settlement requires a receiptReference.");
-  }
-
-  if (action === "settle" && economySettings.settlementNotesRequired && !settlementNote?.trim()) {
-    throw new Error("Settlement note is required while payout controls require notes.");
-  }
-
-  if (action === "approve") {
-    const approved = await approveTokenRedemption({
-      redemptionId,
-      approvedBy: currentUser.id,
-    });
-
-    if (!approved) {
-      throw new Error("Token redemption not found or is not in a queued state.");
-    }
-    await createTokenRedemptionAudit({
-      redemptionId,
-      action,
-      changedBy: currentUser.id,
-      previousWorkflowState: existingEntry.workflowState,
-      nextWorkflowState: "approved",
-      metadata: {
-        source: existingEntry.source,
-        asset: existingEntry.asset,
-      },
-    });
-  } else if (action === "processing") {
-    if (economySettings.payoutMode === "manual") {
-      throw new Error("Processing state is only available when payout mode is review_required or automation_ready.");
-    }
-
-    const processing = await markTokenRedemptionProcessing({
-      redemptionId,
-      processingBy: currentUser.id,
-    });
-
-    if (!processing) {
-      throw new Error("Token redemption not found or is not ready to move into processing.");
-    }
-    await createTokenRedemptionAudit({
-      redemptionId,
-      action,
-      changedBy: currentUser.id,
-      previousWorkflowState: existingEntry.workflowState,
-      nextWorkflowState: "processing",
-      metadata: {
-        source: existingEntry.source,
-        asset: existingEntry.asset,
-      },
-    });
-  } else {
-    const settled = await settleTokenRedemption({
-      redemptionId,
-      settledBy: currentUser.id,
-      receiptReference: receiptReference.trim(),
-      settlementNote: settlementNote?.trim() ? settlementNote.trim() : null,
-    });
-
-    if (!settled) {
-      throw new Error("Token redemption not found or already settled.");
-    }
-    await createTokenRedemptionAudit({
-      redemptionId,
-      action,
-      changedBy: currentUser.id,
-      previousWorkflowState: existingEntry.workflowState,
-      nextWorkflowState: "settled",
-      receiptReference: receiptReference.trim(),
-      settlementNote: settlementNote?.trim() ? settlementNote.trim() : null,
-      metadata: {
-        source: existingEntry.source,
-        asset: existingEntry.asset,
-      },
-    });
-  }
-
-  return listPendingTokenSettlements();
+  return transitionPendingTokenRedemptionWithDependencies({
+    redemptionId,
+    action,
+    receiptReference,
+    settlementNote,
+  }, {
+    getCurrentUser: getAuthenticatedUser,
+    assertAdmin: assertAdminUser,
+    assertSuperAdmin: assertSuperAdminUser,
+    getEconomySettings: getActiveEconomySettings,
+    listPendingSettlements: listPendingTokenSettlements,
+    approveRedemption: approveTokenRedemption,
+    markRedemptionProcessing: markTokenRedemptionProcessing,
+    settleRedemption: settleTokenRedemption,
+    createAuditEntry: createTokenRedemptionAudit,
+  });
 }
 
 function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id" | "updatedAt">>) {
