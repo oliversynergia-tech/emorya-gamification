@@ -33,6 +33,8 @@ export function TokenSettlementPanel({
   const [analyticsState, setAnalyticsState] = useState(analytics);
   const [selectedWindow, setSelectedWindow] = useState(String(analytics.periodDays));
   const [compareWindow, setCompareWindow] = useState(String(analytics.comparePeriodDays));
+  const [workflowFilter, setWorkflowFilter] = useState<"all" | "queued" | "approved" | "processing">("all");
+  const [sourceFilter, setSourceFilter] = useState<"all" | string>("all");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [analyticsPending, setAnalyticsPending] = useState(false);
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, string>>({});
@@ -41,6 +43,18 @@ export function TokenSettlementPanel({
   const [error, setError] = useState<string | null>(null);
   const annualReferralQueue = queue.filter((entry) => entry.source === "annual-referral-direct");
   const standardQueue = queue.filter((entry) => entry.source !== "annual-referral-direct");
+  const queueSources = Array.from(new Set(queue.map((entry) => entry.source))).sort();
+  const filteredQueue = [...annualReferralQueue, ...standardQueue].filter((entry) => {
+    if (workflowFilter !== "all" && entry.workflowState !== workflowFilter) {
+      return false;
+    }
+
+    if (sourceFilter !== "all" && entry.source !== sourceFilter) {
+      return false;
+    }
+
+    return true;
+  });
 
   function renderWorkflowTimeline(entry: AdminOverviewData["tokenSettlementQueue"][number]) {
     const steps = [
@@ -238,6 +252,26 @@ export function TokenSettlementPanel({
             <option value="180">180 days</option>
           </select>
         </label>
+        <label className="field">
+          <span>Workflow slice</span>
+          <select value={workflowFilter} onChange={(event) => setWorkflowFilter(event.target.value as typeof workflowFilter)}>
+            <option value="all">All pending states</option>
+            <option value="queued">Queued only</option>
+            <option value="approved">Approved only</option>
+            <option value="processing">Processing only</option>
+          </select>
+        </label>
+        <label className="field">
+          <span>Queue source</span>
+          <select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)}>
+            <option value="all">All sources</option>
+            {queueSources.map((source) => (
+              <option key={source} value={source}>
+                {source}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
       <div className="achievement-list">
         <article className="achievement-card">
@@ -309,8 +343,10 @@ export function TokenSettlementPanel({
       <div className="review-history__list">
         {queue.length === 0 ? (
           <p className="form-note">No claimed redemptions are waiting for settlement.</p>
+        ) : filteredQueue.length === 0 ? (
+          <p className="form-note">No payouts match the current workflow and source filters.</p>
         ) : (
-          [...annualReferralQueue, ...standardQueue].map((entry) => (
+          filteredQueue.map((entry) => (
             <article key={entry.id} className="review-history__item">
               <div className="quest-card__meta">
                 <span>{entry.userDisplayName}</span>

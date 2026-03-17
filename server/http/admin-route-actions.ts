@@ -1,4 +1,6 @@
 import {
+  handleEconomySettingsRequest,
+  handleEconomySettingsUpdateRequest,
   handleQuestDefinitionCreateRequest,
   handleQuestDefinitionDeleteRequest,
   handleQuestDefinitionDirectoryRequest,
@@ -24,6 +26,8 @@ export type AdminRouteActionServices = {
   createQuestDefinitionTemplate: (input: Record<string, unknown>) => Promise<unknown>;
   updateQuestDefinitionTemplate: (templateId: string, input: Record<string, unknown>) => Promise<unknown>;
   deleteQuestDefinitionTemplate: (templateId: string) => Promise<unknown>;
+  getEconomySettings: () => Promise<unknown>;
+  saveEconomySettings: (input: Record<string, unknown>) => Promise<unknown>;
   getRewardAssetDirectory: () => Promise<unknown>;
   saveRewardAsset: (input: Record<string, unknown>, assetId?: string) => Promise<unknown>;
   getRewardProgramDirectory: () => Promise<unknown>;
@@ -104,6 +108,19 @@ export async function runQuestDefinitionTemplateDeleteRoute(
   services: Pick<AdminRouteActionServices, "deleteQuestDefinitionTemplate">,
 ) {
   return handleQuestDefinitionTemplateDeleteRequest(templateId, services.deleteQuestDefinitionTemplate);
+}
+
+export async function runEconomySettingsRoute(
+  services: Pick<AdminRouteActionServices, "getEconomySettings">,
+) {
+  return handleEconomySettingsRequest(services.getEconomySettings);
+}
+
+export async function runEconomySettingsUpdateRoute(
+  body: Record<string, unknown>,
+  services: Pick<AdminRouteActionServices, "saveEconomySettings">,
+) {
+  return handleEconomySettingsUpdateRequest(body, services.saveEconomySettings);
 }
 
 export async function runRewardAssetDirectoryRoute(

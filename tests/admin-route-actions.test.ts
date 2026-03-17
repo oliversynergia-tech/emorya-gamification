@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test, { mock } from "node:test";
 
 import {
+  runEconomySettingsRoute,
+  runEconomySettingsUpdateRoute,
   runQuestDefinitionCreateRoute,
   runQuestDefinitionDeleteRoute,
   runQuestDefinitionDirectoryRoute,
@@ -163,6 +165,43 @@ test("runQuestDefinitionTemplateDeleteRoute forwards the template id", async () 
   });
 });
 
+test("runEconomySettingsRoute returns economy payload", async () => {
+  const services = {
+    getEconomySettings: mock.fn(async () => ({
+      economySettings: { payoutAsset: "EMR" },
+      rewardAssets: [{ id: "asset-1" }],
+    })),
+  };
+
+  const result = await runEconomySettingsRoute(services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    economySettings: { payoutAsset: "EMR" },
+    rewardAssets: [{ id: "asset-1" }],
+  });
+});
+
+test("runEconomySettingsUpdateRoute forwards the update body", async () => {
+  const services = {
+    saveEconomySettings: mock.fn(async (input: Record<string, unknown>) => {
+      assert.equal(input.payoutAsset, "EGLD");
+      return {
+        economySettings: { payoutAsset: "EGLD" },
+      };
+    }),
+  };
+
+  const result = await runEconomySettingsUpdateRoute({ payoutAsset: "EGLD" }, services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    economySettings: { payoutAsset: "EGLD" },
+  });
+});
+
 test("runTokenSettlementRoute forwards settlement payload", async () => {
   const services = {
     transitionPendingTokenRedemption: mock.fn(
@@ -282,6 +321,22 @@ test("runRewardAssetSaveRoute surfaces validation failures", async () => {
   });
 });
 
+test("runRewardAssetDirectoryRoute surfaces access failures", async () => {
+  const services = {
+    getRewardAssetDirectory: mock.fn(async () => {
+      throw new Error("Admin access required.");
+    }),
+  };
+
+  const result = await runRewardAssetDirectoryRoute(services);
+
+  assert.equal(result.status, 403);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Admin access required.",
+  });
+});
+
 test("runRewardProgramSaveRoute surfaces missing program errors", async () => {
   const services = {
     saveRewardProgram: mock.fn(async () => {
@@ -298,6 +353,38 @@ test("runRewardProgramSaveRoute surfaces missing program errors", async () => {
   assert.deepEqual(result.body, {
     ok: false,
     error: "Reward program not found.",
+  });
+});
+
+test("runRewardProgramDirectoryRoute surfaces access failures", async () => {
+  const services = {
+    getRewardProgramDirectory: mock.fn(async () => {
+      throw new Error("Admin access required.");
+    }),
+  };
+
+  const result = await runRewardProgramDirectoryRoute(services);
+
+  assert.equal(result.status, 403);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Admin access required.",
+  });
+});
+
+test("runEconomySettingsUpdateRoute surfaces validation failures", async () => {
+  const services = {
+    saveEconomySettings: mock.fn(async () => {
+      throw new Error("Economy settings require payoutAsset, thresholds, multipliers, and referral reward values.");
+    }),
+  };
+
+  const result = await runEconomySettingsUpdateRoute({}, services);
+
+  assert.equal(result.status, 400);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Economy settings require payoutAsset, thresholds, multipliers, and referral reward values.",
   });
 });
 
