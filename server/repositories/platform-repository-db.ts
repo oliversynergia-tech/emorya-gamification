@@ -69,6 +69,7 @@ import {
 } from "@/server/repositories/quest-repository";
 import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/referral-repository";
 import {
+  listRecentTokenRedemptionAudit,
   getTokenSettlementAnalytics,
   listPendingTokenSettlements,
 } from "@/server/repositories/token-redemption-repository";
@@ -871,7 +872,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, settlementAnalytics, questDefinitionTemplates] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -899,6 +900,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     listRewardAssets(),
     listRewardPrograms(),
     listPendingTokenSettlements(),
+    listRecentTokenRedemptionAudit(),
     getTokenSettlementAnalytics(),
     listQuestDefinitionTemplatesForAdmin(),
   ]);
@@ -962,6 +964,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     rewardAssets,
     rewardPrograms,
     tokenSettlementQueue,
+    tokenSettlementAudit,
     settlementAnalytics,
     questDefinitionTemplates,
     campaignOperations: {

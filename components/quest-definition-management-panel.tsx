@@ -227,6 +227,42 @@ function getBridgeTemplateWarning(
   return `${attributionSource} is currently running as its own live lane, but this template is still configured as a feeder into the ${activeLane} bridge. Review copy, quest ordering, and reward framing before saving it live.`;
 }
 
+function validateCampaignPackTemplates(
+  templates: QuestDefinitionTemplateItem[],
+  differentiateUpstreamCampaignSources: boolean,
+) {
+  const requiredTemplates = [
+    { label: "Zealy bridge quest", kind: "bridge", source: "zealy", lane: "zealy" },
+    { label: "Galxe feeder quest", kind: "feeder", source: "galxe", lane: "zealy" },
+    { label: "TaskOn feeder quest", kind: "feeder", source: "taskon", lane: "zealy" },
+  ] as const;
+
+  if (differentiateUpstreamCampaignSources) {
+    return "Campaign pack creation is blocked while separate Galxe and TaskOn live lanes are enabled. Switch back to Zealy bridge mode or build lane-specific packs.";
+  }
+
+  for (const requiredTemplate of requiredTemplates) {
+    const template = templates.find((entry) => entry.label === requiredTemplate.label);
+
+    if (!template || !template.isActive) {
+      return `${requiredTemplate.label} must exist and be active before creating a campaign pack.`;
+    }
+
+    const metadata = template.metadata ?? {};
+    if (metadata.campaignTemplateKind !== requiredTemplate.kind) {
+      return `${requiredTemplate.label} is not marked as a ${requiredTemplate.kind} template.`;
+    }
+    if (metadata.campaignAttributionSource !== requiredTemplate.source) {
+      return `${requiredTemplate.label} has the wrong attribution source.`;
+    }
+    if (metadata.campaignExperienceLane !== requiredTemplate.lane) {
+      return `${requiredTemplate.label} has the wrong active experience lane.`;
+    }
+  }
+
+  return null;
+}
+
 export function QuestDefinitionManagementPanel({
   availableAssets,
   availablePrograms,
@@ -566,6 +602,10 @@ export function QuestDefinitionManagementPanel({
       return matchesSearch && matchesKind && matchesSource && matchesStatus;
     });
   }, [templateFilters, templates]);
+  const campaignPackValidationError = useMemo(
+    () => validateCampaignPackTemplates(templates, differentiateUpstreamCampaignSources),
+    [differentiateUpstreamCampaignSources, templates],
+  );
 
   async function refreshQuestDirectory() {
     setLoading(true);
@@ -935,6 +975,11 @@ export function QuestDefinitionManagementPanel({
   }
 
   async function createCampaignPack() {
+    if (campaignPackValidationError) {
+      setError(campaignPackValidationError);
+      return;
+    }
+
     const packTemplates = templates.filter((template) =>
       ["Zealy bridge quest", "Galxe feeder quest", "TaskOn feeder quest"].includes(template.label),
     );
@@ -1269,7 +1314,7 @@ export function QuestDefinitionManagementPanel({
             <button
               className="button button--secondary button--small"
               type="button"
-              disabled={pending !== null || !campaignPackLabel.trim()}
+              disabled={pending !== null || !campaignPackLabel.trim() || Boolean(campaignPackValidationError)}
               onClick={createCampaignPack}
             >
               {pending === "campaign-pack" ? "Creating..." : "Create campaign pack"}
@@ -1278,6 +1323,11 @@ export function QuestDefinitionManagementPanel({
           <p className="form-note">
             This creates one live Zealy bridge quest plus Galxe and TaskOn feeder quests using the saved templates.
           </p>
+          {campaignPackValidationError ? (
+            <p className="status status--error">{campaignPackValidationError}</p>
+          ) : (
+            <p className="status status--success">Campaign pack validation passed.</p>
+          )}
         </div>
         <div className="review-history__list">
           {filteredTemplates.map((template) => (

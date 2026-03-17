@@ -40,9 +40,10 @@ import {
 } from "@/server/repositories/quest-template-admin-repository";
 import {
   approveTokenRedemption,
-  markTokenRedemptionProcessing,
+  createTokenRedemptionAudit,
   getTokenSettlementAnalytics,
   listPendingTokenSettlements,
+  markTokenRedemptionProcessing,
   settleTokenRedemption,
 } from "@/server/repositories/token-redemption-repository";
 import type {
@@ -416,6 +417,13 @@ export async function transitionPendingTokenRedemption({
     await assertSuperAdminUser(currentUser);
   }
 
+  const queueBefore = await listPendingTokenSettlements(100);
+  const existingEntry = queueBefore.find((entry) => entry.id === redemptionId);
+
+  if (!existingEntry) {
+    throw new Error("Token redemption not found or already settled.");
+  }
+
   if (action === "settle" && !receiptReference.trim()) {
     throw new Error("Settlement requires a receiptReference.");
   }
@@ -433,6 +441,17 @@ export async function transitionPendingTokenRedemption({
     if (!approved) {
       throw new Error("Token redemption not found or is not in a queued state.");
     }
+    await createTokenRedemptionAudit({
+      redemptionId,
+      action,
+      changedBy: currentUser.id,
+      previousWorkflowState: existingEntry.workflowState,
+      nextWorkflowState: "approved",
+      metadata: {
+        source: existingEntry.source,
+        asset: existingEntry.asset,
+      },
+    });
   } else if (action === "processing") {
     if (economySettings.payoutMode === "manual") {
       throw new Error("Processing state is only available when payout mode is review_required or automation_ready.");
@@ -446,6 +465,17 @@ export async function transitionPendingTokenRedemption({
     if (!processing) {
       throw new Error("Token redemption not found or is not ready to move into processing.");
     }
+    await createTokenRedemptionAudit({
+      redemptionId,
+      action,
+      changedBy: currentUser.id,
+      previousWorkflowState: existingEntry.workflowState,
+      nextWorkflowState: "processing",
+      metadata: {
+        source: existingEntry.source,
+        asset: existingEntry.asset,
+      },
+    });
   } else {
     const settled = await settleTokenRedemption({
       redemptionId,
@@ -457,6 +487,19 @@ export async function transitionPendingTokenRedemption({
     if (!settled) {
       throw new Error("Token redemption not found or already settled.");
     }
+    await createTokenRedemptionAudit({
+      redemptionId,
+      action,
+      changedBy: currentUser.id,
+      previousWorkflowState: existingEntry.workflowState,
+      nextWorkflowState: "settled",
+      receiptReference: receiptReference.trim(),
+      settlementNote: settlementNote?.trim() ? settlementNote.trim() : null,
+      metadata: {
+        source: existingEntry.source,
+        asset: existingEntry.asset,
+      },
+    });
   }
 
   return listPendingTokenSettlements();

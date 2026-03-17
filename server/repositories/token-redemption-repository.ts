@@ -190,6 +190,72 @@ export async function createClaimedTokenRedemption({
   );
 }
 
+export async function createTokenRedemptionAudit({
+  redemptionId,
+  action,
+  changedBy,
+  previousWorkflowState,
+  nextWorkflowState,
+  receiptReference,
+  settlementNote,
+  metadata,
+}: {
+  redemptionId: string;
+  action: "approve" | "processing" | "settle";
+  changedBy: string;
+  previousWorkflowState: TokenSettlementItem["workflowState"];
+  nextWorkflowState: TokenSettlementItem["workflowState"];
+  receiptReference?: string | null;
+  settlementNote?: string | null;
+  metadata?: Record<string, string | number | boolean | null>;
+}) {
+  await runQuery(
+    `INSERT INTO token_redemption_audit (
+       id, redemption_id, action, changed_by, previous_workflow_state, next_workflow_state,
+       receipt_reference, settlement_note, metadata
+     ) VALUES (
+       $1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb
+     )`,
+    [
+      randomUUID(),
+      redemptionId,
+      action,
+      changedBy,
+      previousWorkflowState,
+      nextWorkflowState,
+      receiptReference ?? null,
+      settlementNote ?? null,
+      JSON.stringify(metadata ?? {}),
+    ],
+  );
+}
+
+export async function listRecentTokenRedemptionAudit(limit = 12) {
+  const result = await runQuery<TokenRedemptionAuditRow>(
+    `SELECT audit.id, audit.redemption_id, audit.action, audit.previous_workflow_state, audit.next_workflow_state,
+            users.display_name AS changed_by_display_name, audit.receipt_reference, audit.settlement_note,
+            audit.created_at, audit.metadata
+     FROM token_redemption_audit audit
+     LEFT JOIN users ON users.id = audit.changed_by
+     ORDER BY audit.created_at DESC
+     LIMIT $1`,
+    [limit],
+  );
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    redemptionId: row.redemption_id,
+    action: row.action,
+    previousWorkflowState: row.previous_workflow_state,
+    nextWorkflowState: row.next_workflow_state,
+    changedByDisplayName: row.changed_by_display_name,
+    receiptReference: row.receipt_reference,
+    settlementNote: row.settlement_note,
+    createdAt: row.created_at,
+    metadata: row.metadata ?? {},
+  }));
+}
+
 type SettlementAnalyticsRow = QueryResultRow & {
   pending_count: number | string;
   pending_token_amount: number | string;
@@ -228,6 +294,19 @@ type SettlementByProgramRow = QueryResultRow & {
 type SettlementWorkflowRow = QueryResultRow & {
   workflow_state: TokenSettlementItem["workflowState"];
   count: number | string;
+};
+
+type TokenRedemptionAuditRow = QueryResultRow & {
+  id: string;
+  redemption_id: string;
+  action: "approve" | "processing" | "settle";
+  previous_workflow_state: TokenSettlementItem["workflowState"];
+  next_workflow_state: TokenSettlementItem["workflowState"];
+  changed_by_display_name: string | null;
+  receipt_reference: string | null;
+  settlement_note: string | null;
+  created_at: string;
+  metadata: Record<string, string | number | boolean | null>;
 };
 
 export async function getTokenSettlementAnalytics(days = 7, compareDays?: number): Promise<AdminOverviewData["settlementAnalytics"]> {

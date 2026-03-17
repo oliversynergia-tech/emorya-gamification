@@ -1625,6 +1625,37 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
           <div>
+            <p className="eyebrow">Payout audit trail</p>
+            <h3>Who changed payout workflow state and when</h3>
+          </div>
+        </div>
+        <div className="achievement-list">
+          {data.tokenSettlementAudit.map((entry) => (
+            <article key={entry.id} className="achievement-card">
+              <div>
+                <strong>
+                  {entry.action} · {entry.previousWorkflowState} {"->"} {entry.nextWorkflowState}
+                </strong>
+                <p>
+                  Redemption {entry.redemptionId}
+                  {entry.changedByDisplayName ? ` · ${entry.changedByDisplayName}` : ""}
+                  {entry.receiptReference ? ` · receipt ${entry.receiptReference}` : ""}
+                </p>
+                {entry.settlementNote ? <p>{entry.settlementNote}</p> : null}
+              </div>
+              <div className="achievement-card__side">
+                <span>{new Date(entry.createdAt).toLocaleString()}</span>
+              </div>
+            </article>
+          ))}
+          {data.tokenSettlementAudit.length === 0 ? (
+            <p className="form-note">No payout workflow actions have been recorded yet.</p>
+          ) : null}
+        </div>
+      </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
             <p className="eyebrow">Reviewer workload</p>
             <h3>Who is carrying moderation right now</h3>
           </div>

@@ -512,6 +512,18 @@ export type AdminOverviewData = {
   rewardAssets: RewardAsset[];
   rewardPrograms: RewardProgram[];
   tokenSettlementQueue: Array<TokenSettlementItem>;
+  tokenSettlementAudit: Array<{
+    id: string;
+    redemptionId: string;
+    action: "approve" | "processing" | "settle";
+    previousWorkflowState: "queued" | "approved" | "processing" | "settled";
+    nextWorkflowState: "queued" | "approved" | "processing" | "settled";
+    changedByDisplayName: string | null;
+    receiptReference: string | null;
+    settlementNote: string | null;
+    createdAt: string;
+    metadata: Record<string, string | number | boolean | null>;
+  }>;
   settlementAnalytics: {
     periodDays: number;
     comparePeriodDays: number;

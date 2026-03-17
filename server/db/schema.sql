@@ -308,6 +308,19 @@ CREATE TABLE economy_settings_audit (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE token_redemption_audit (
+  id UUID PRIMARY KEY,
+  redemption_id UUID NOT NULL REFERENCES token_redemptions(id) ON DELETE CASCADE,
+  action TEXT NOT NULL CHECK (action IN ('approve', 'processing', 'settle')),
+  changed_by UUID REFERENCES users(id),
+  previous_workflow_state TEXT NOT NULL CHECK (previous_workflow_state IN ('queued', 'approved', 'processing', 'settled')),
+  next_workflow_state TEXT NOT NULL CHECK (next_workflow_state IN ('queued', 'approved', 'processing', 'settled')),
+  receipt_reference TEXT,
+  settlement_note TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX idx_users_subscription_tier ON users(subscription_tier);
 CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id, expires_at DESC);
 CREATE INDEX idx_user_roles_role ON user_roles(role, created_at DESC);
@@ -323,3 +336,4 @@ CREATE INDEX idx_reward_programs_active ON reward_programs(is_active, slug);
 CREATE INDEX idx_moderation_notification_deliveries_created_at ON moderation_notification_deliveries(created_at DESC);
 CREATE UNIQUE INDEX idx_economy_settings_active_single ON economy_settings(is_active) WHERE is_active = TRUE;
 CREATE INDEX idx_economy_settings_audit_created_at ON economy_settings_audit(created_at DESC);
+CREATE INDEX idx_token_redemption_audit_created_at ON token_redemption_audit(created_at DESC);
