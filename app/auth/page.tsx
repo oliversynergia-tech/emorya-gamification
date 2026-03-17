@@ -1,7 +1,7 @@
 import { AuthClientPanel } from "@/components/auth-client-panel";
 import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
-import { getCampaignPremiumOffer, getCampaignSourceProfile } from "@/lib/campaign-source";
+import { getCampaignPremiumJourney, getCampaignPremiumOffer, getCampaignSourceProfile } from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -12,6 +12,11 @@ export default async function AuthPage() {
   const data = await loadDashboardOverview(session?.user ?? null);
   const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
   const premiumOffer = getCampaignPremiumOffer(data.user.campaignSource);
+  const premiumJourney = getCampaignPremiumJourney(data.user.campaignSource, {
+    featuredTracks: data.economy.campaignPreset.featuredTracks,
+    premiumUpsellMultiplier: data.economy.campaignPreset.premiumUpsellMultiplier,
+    weeklyTargetOffset: data.economy.campaignPreset.weeklyTargetOffset,
+  });
 
   return (
     <SiteShell eyebrow="Account access" currentUser={session?.user ?? null}>
@@ -63,6 +68,11 @@ export default async function AuthPage() {
             <strong>{premiumOffer.title}</strong>
             <small>{premiumOffer.cta}</small>
           </div>
+          <div className="metric-card">
+            <span>Premium path</span>
+            <strong>{premiumJourney.recommendedTier} first</strong>
+            <small>{premiumJourney.nextAction}</small>
+          </div>
         </div>
       </section>
       <section className="grid grid--auth">
@@ -105,6 +115,14 @@ export default async function AuthPage() {
                 </div>
               </article>
             ))}
+            {premiumJourney.pathSteps.map((step, index) => (
+              <article key={step} className="achievement-card">
+                <div>
+                  <strong>Premium step {index + 1}</strong>
+                  <p>{step}</p>
+                </div>
+              </article>
+            ))}
           </div>
         </section>
         <section className="panel panel--glass">
@@ -130,7 +148,11 @@ export default async function AuthPage() {
       </section>
       <section className="grid grid--auth">
         <div id="auth-panel">
-          <AuthClientPanel campaignSource={data.user.campaignSource} premiumOffer={premiumOffer} />
+          <AuthClientPanel
+            campaignSource={data.user.campaignSource}
+            premiumOffer={premiumOffer}
+            premiumJourney={premiumJourney}
+          />
         </div>
         {session ? (
           <WalletLinkPanel walletAddresses={session.walletAddresses} />

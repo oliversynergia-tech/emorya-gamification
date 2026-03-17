@@ -4,7 +4,7 @@ import { ProfileEditor } from "@/components/profile-editor";
 import { ProfileSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
-import { getCampaignPremiumOffer } from "@/lib/campaign-source";
+import { getCampaignPremiumJourney, getCampaignPremiumOffer } from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { getCurrentProfile } from "@/server/services/profile-service";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
@@ -17,6 +17,11 @@ export default async function ProfilePage() {
   const profile = await getCurrentProfile();
   const walletCount = session?.walletAddresses.length ?? 0;
   const premiumOffer = getCampaignPremiumOffer(data.user.campaignSource);
+  const premiumJourney = getCampaignPremiumJourney(data.user.campaignSource, {
+    featuredTracks: data.economy.campaignPreset.featuredTracks,
+    premiumUpsellMultiplier: data.economy.campaignPreset.premiumUpsellMultiplier,
+    weeklyTargetOffset: data.economy.campaignPreset.weeklyTargetOffset,
+  });
 
   return (
     <SiteShell eyebrow="Profile and social connections" currentUser={session?.user ?? null}>
@@ -44,6 +49,11 @@ export default async function ProfilePage() {
             <span>Premium path</span>
             <strong>{premiumOffer.title}</strong>
             <small>{premiumOffer.cta}</small>
+          </div>
+          <div className="metric-card">
+            <span>Recommended next premium move</span>
+            <strong>{premiumJourney.recommendedTier} first</strong>
+            <small>{premiumJourney.nextAction}</small>
           </div>
         </div>
       </section>

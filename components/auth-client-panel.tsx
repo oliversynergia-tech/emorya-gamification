@@ -15,6 +15,7 @@ type AuthResponse = {
 export function AuthClientPanel({
   campaignSource,
   premiumOffer,
+  premiumJourney,
 }: {
   campaignSource?: UserSnapshot["campaignSource"];
   premiumOffer?: {
@@ -23,9 +24,17 @@ export function AuthClientPanel({
     hooks: string[];
     cta: string;
   };
+  premiumJourney?: {
+    recommendedTier: "monthly" | "annual";
+    nextAction: string;
+    monthlyReason: string;
+    annualReason: string;
+    pathSteps: string[];
+    lanePressure: string;
+  };
 }) {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>("signin");
+  const [mode, setMode] = useState<AuthMode>(campaignSource && campaignSource !== "direct" ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -155,12 +164,36 @@ export function AuthClientPanel({
               </div>
             </article>
           ))}
+          {premiumJourney ? (
+            <>
+              <article className="achievement-card achievement-card--unlocked">
+                <div>
+                  <strong>Recommended first premium move</strong>
+                  <p>{premiumJourney.nextAction}</p>
+                </div>
+                <span className="badge badge--pink">{premiumJourney.recommendedTier}</span>
+              </article>
+              <article className="achievement-card">
+                <div>
+                  <strong>Why monthly first</strong>
+                  <p>{premiumJourney.monthlyReason}</p>
+                </div>
+              </article>
+              <article className="achievement-card">
+                <div>
+                  <strong>Why annual later</strong>
+                  <p>{premiumJourney.annualReason}</p>
+                </div>
+              </article>
+            </>
+          ) : null}
         </div>
       ) : null}
       <p className="form-note">
         Sign-up requires a password of at least 10 characters. Referral codes are optional, issue rewards to the inviter automatically, and feed into the monthly and annual premium reward ladder.
       </p>
       {premiumOffer ? <p className="form-note">{premiumOffer.cta}</p> : null}
+      {premiumJourney ? <p className="form-note">{premiumJourney.lanePressure}</p> : null}
     </section>
   );
 }

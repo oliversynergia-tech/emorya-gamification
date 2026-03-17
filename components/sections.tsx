@@ -1,4 +1,4 @@
-import { getCampaignPremiumOffer, getCampaignSourceProfile } from "@/lib/campaign-source";
+import { getCampaignPremiumJourney, getCampaignPremiumOffer, getCampaignSourceProfile } from "@/lib/campaign-source";
 import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
@@ -621,6 +621,11 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
 export function PremiumFunnelSection({ data }: { data: DashboardData }) {
   const premiumOffer = getCampaignPremiumOffer(data.user.campaignSource);
   const campaignPreset = data.economy.campaignPreset;
+  const premiumJourney = getCampaignPremiumJourney(data.user.campaignSource, {
+    featuredTracks: campaignPreset.featuredTracks,
+    premiumUpsellMultiplier: campaignPreset.premiumUpsellMultiplier,
+    weeklyTargetOffset: campaignPreset.weeklyTargetOffset,
+  });
 
   return (
     <section className="grid grid--funnel">
@@ -667,8 +672,24 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
               {(campaignPreset.leaderboardMomentumMultiplier * 100 - 100).toFixed(0)}% board momentum
             </span>
           </article>
+          <article className="achievement-card achievement-card--unlocked">
+            <div>
+              <strong>Recommended premium sequence</strong>
+              <p>{premiumJourney.nextAction}</p>
+            </div>
+            <span className="badge badge--pink">{premiumJourney.recommendedTier}</span>
+          </article>
+          {premiumJourney.pathSteps.map((step, index) => (
+            <article key={step} className="achievement-card">
+              <div>
+                <strong>Step {index + 1}</strong>
+                <p>{step}</p>
+              </div>
+            </article>
+          ))}
         </div>
         <p className="form-note">{premiumOffer.cta}</p>
+        <p className="form-note">{premiumJourney.lanePressure}</p>
       </div>
       <div className="panel">
         <div className="panel__header">
@@ -686,12 +707,12 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
           <article className="tier-card">
             <span className={tierClass("monthly")}>Monthly</span>
             <strong>{data.economy.xpMultipliers.monthly.toFixed(2)}x XP</strong>
-            <p>Premium quests, subscriber leaderboard, raffle access, draw entry.</p>
+            <p>{premiumJourney.monthlyReason}</p>
           </article>
           <article className="tier-card">
             <span className={tierClass("annual")}>Annual</span>
             <strong>{data.economy.xpMultipliers.annual.toFixed(2)}x XP</strong>
-            <p>Best badge, fastest leveling, exclusive quests, 3 streak freezes.</p>
+            <p>{premiumJourney.annualReason}</p>
           </article>
         </div>
       </div>
