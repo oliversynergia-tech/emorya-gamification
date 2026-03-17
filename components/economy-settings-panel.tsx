@@ -31,10 +31,14 @@ export function EconomySettingsPanel({
 }) {
   const router = useRouter();
   const [settings, setSettings] = useState(initialSettings);
+  const [savedDifferentiateUpstream, setSavedDifferentiateUpstream] = useState(
+    initialSettings.differentiateUpstreamCampaignSources,
+  );
   const [audit, setAudit] = useState(initialAudit);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDifferentiateUpstream, setConfirmDifferentiateUpstream] = useState(false);
 
   function updateTierMultiplier<K extends "xpTierMultipliers" | "tokenTierMultipliers">(
     key: K,
@@ -80,6 +84,24 @@ export function EconomySettingsPanel({
   }
 
   async function save() {
+    const enablingSeparateLiveLanes =
+      settings.differentiateUpstreamCampaignSources && !savedDifferentiateUpstream;
+
+    if (enablingSeparateLiveLanes && !confirmDifferentiateUpstream) {
+      setError("Confirm the upstream lane warning before saving this change.");
+      return;
+    }
+
+    if (
+      enablingSeparateLiveLanes &&
+      typeof window !== "undefined" &&
+      !window.confirm(
+        "Turn on separate live lanes for Galxe and TaskOn? This will stop routing those sources through the Zealy bridge and make them run their own live funnel behavior.",
+      )
+    ) {
+      return;
+    }
+
     setPending(true);
     setMessage(null);
     setError(null);
@@ -121,6 +143,8 @@ export function EconomySettingsPanel({
       }
 
       setSettings(result.settings);
+      setSavedDifferentiateUpstream(result.settings.differentiateUpstreamCampaignSources);
+      setConfirmDifferentiateUpstream(false);
       setAudit(result.audit);
       setMessage("Economy settings updated.");
       router.refresh();
@@ -238,9 +262,13 @@ export function EconomySettingsPanel({
             disabled={!canManage || pending}
             type="checkbox"
             checked={settings.differentiateUpstreamCampaignSources}
-            onChange={(event) =>
-              setSettings((current) => ({ ...current, differentiateUpstreamCampaignSources: event.target.checked }))
-            }
+            onChange={(event) => {
+              const checked = event.target.checked;
+              setSettings((current) => ({ ...current, differentiateUpstreamCampaignSources: checked }));
+              if (!checked) {
+                setConfirmDifferentiateUpstream(false);
+              }
+            }}
           />
         </label>
       </div>
@@ -249,6 +277,28 @@ export function EconomySettingsPanel({
           ? "Separate upstream differentiation is on. Galxe and TaskOn now drive their own live funnel behavior instead of being routed through the Zealy bridge."
           : "Separate upstream differentiation is off. Galxe and TaskOn attribution is preserved, but the live funnel is currently routed through the Zealy bridge by default."}
       </p>
+      {settings.differentiateUpstreamCampaignSources && !savedDifferentiateUpstream ? (
+        <article className="achievement-card achievement-card--notification-warning">
+          <div>
+            <strong>Upstream lane activation warning</strong>
+            <p>
+              Saving this will make Galxe and TaskOn behave as separate live funnel lanes. Quest ordering, premium framing,
+              weekly shaping, and reward economics will stop defaulting through the Zealy bridge for those sources.
+            </p>
+          </div>
+          <div className="achievement-card__side">
+            <label className="field field--checkbox">
+              <span>I understand this changes live funnel behavior</span>
+              <input
+                disabled={!canManage || pending}
+                type="checkbox"
+                checked={confirmDifferentiateUpstream}
+                onChange={(event) => setConfirmDifferentiateUpstream(event.target.checked)}
+              />
+            </label>
+          </div>
+        </article>
+      ) : null}
       <div className="profile-grid">
         <label className="field">
           <span>Monthly XP multiplier</span>
