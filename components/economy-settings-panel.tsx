@@ -233,7 +233,7 @@ export function EconomySettingsPanel({
           />
         </label>
         <label className="field field--checkbox">
-          <span>Differentiate upstream platforms</span>
+          <span>Run Galxe and TaskOn as separate live lanes</span>
           <input
             disabled={!canManage || pending}
             type="checkbox"
@@ -244,6 +244,11 @@ export function EconomySettingsPanel({
           />
         </label>
       </div>
+      <p className="form-note">
+        {settings.differentiateUpstreamCampaignSources
+          ? "Separate upstream differentiation is on. Galxe and TaskOn now drive their own live funnel behavior instead of being routed through the Zealy bridge."
+          : "Separate upstream differentiation is off. Galxe and TaskOn attribution is preserved, but the live funnel is currently routed through the Zealy bridge by default."}
+      </p>
       <div className="profile-grid">
         <label className="field">
           <span>Monthly XP multiplier</span>
@@ -367,6 +372,9 @@ export function EconomySettingsPanel({
             <h3>Per-source funnel and reward presets</h3>
           </div>
         </div>
+        <p className="form-note">
+          `direct` and `zealy` are always live. `galxe` and `taskon` presets are kept here so they can either feed the Zealy bridge or be switched on as separate lanes instantly.
+        </p>
         <div className="tooling-grid">
           {(["direct", "zealy", "galxe", "taskon"] as CampaignOverrideKey[]).map((source) => (
             <article key={source} className="achievement-card">
@@ -374,8 +382,10 @@ export function EconomySettingsPanel({
                 <strong>{source}</strong>
                 <p>
                   {source === "galxe" || source === "taskon"
-                    ? "Adjust the feeder-platform preset. These values stay available even when the live funnel is currently bridged through Zealy."
-                    : "Adjust how this acquisition lane modifies signup, conversion, and direct-token referral rewards."}
+                    ? settings.differentiateUpstreamCampaignSources
+                      ? "Adjust how this upstream platform currently runs its own live funnel, conversion pressure, and reward economics."
+                      : "Adjust the stored feeder-platform preset. These values are preserved now so the platform can be switched into a separate live lane later without another refactor."
+                    : "Adjust how this live acquisition lane modifies signup, conversion, and direct-token referral rewards."}
                 </p>
               </div>
               <div className="profile-grid">
