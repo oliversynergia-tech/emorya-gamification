@@ -155,8 +155,13 @@ type TokenRedemptionRow = QueryResultRow & {
   eligibility_points_spent: number | string;
   token_amount: number | string;
   status: "claimed" | "settled";
+  workflow_state: "queued" | "approved" | "processing" | "settled";
   source: string;
   created_at: string;
+  approved_at: string | null;
+  approved_by_display_name: string | null;
+  processing_started_at: string | null;
+  processing_by_display_name: string | null;
   settled_at: string | null;
   receipt_reference: string | null;
   settlement_note: string | null;
@@ -299,11 +304,16 @@ async function getUserSnapshot(
     runQuery<TokenRedemptionRow>(
       `SELECT redemptions.id, redemptions.asset, programs.name AS reward_program_name,
               redemptions.eligibility_points_spent, redemptions.token_amount,
-              redemptions.status, redemptions.source, redemptions.created_at, redemptions.settled_at,
+              redemptions.status, redemptions.workflow_state, redemptions.source, redemptions.created_at,
+              redemptions.approved_at, approved_by_users.display_name AS approved_by_display_name,
+              redemptions.processing_started_at, processing_by_users.display_name AS processing_by_display_name,
+              redemptions.settled_at,
               redemptions.receipt_reference, redemptions.settlement_note,
               settled_by_users.display_name AS settled_by_display_name
        FROM token_redemptions redemptions
        LEFT JOIN reward_programs programs ON programs.id = redemptions.reward_program_id
+       LEFT JOIN users approved_by_users ON approved_by_users.id = redemptions.approved_by
+       LEFT JOIN users processing_by_users ON processing_by_users.id = redemptions.processing_by
        LEFT JOIN users settled_by_users ON settled_by_users.id = redemptions.settled_by
        WHERE redemptions.user_id = $1
        ORDER BY redemptions.created_at DESC
@@ -375,8 +385,13 @@ async function getUserSnapshot(
     tokenAmount: Number(row.token_amount),
     eligibilityPointsSpent: Number(row.eligibility_points_spent),
     status: row.status,
+    workflowState: row.workflow_state,
     source: row.source,
     createdAt: row.created_at,
+    approvedAt: row.approved_at,
+    approvedByDisplayName: row.approved_by_display_name,
+    processingStartedAt: row.processing_started_at,
+    processingByDisplayName: row.processing_by_display_name,
     settledAt: row.settled_at,
     receiptReference: row.receipt_reference,
     settlementNote: row.settlement_note,
@@ -403,6 +418,8 @@ async function getUserSnapshot(
   const featuredTracks = getCampaignFeaturedTracks(activeCampaignLane, campaignEconomy);
   const tokenNotifications: UserSnapshot["tokenProgram"]["notifications"] = [];
   const latestClaimedRedemption = redemptionHistory.find((entry) => entry.status === "claimed");
+  const latestApprovedRedemption = redemptionHistory.find((entry) => entry.workflowState === "approved");
+  const latestProcessingRedemption = redemptionHistory.find((entry) => entry.workflowState === "processing");
   const latestSettledRedemption = redemptionHistory.find((entry) => entry.status === "settled");
 
   if (latestClaimedRedemption) {
@@ -411,6 +428,24 @@ async function getUserSnapshot(
       tone: "warning",
       title: "Claimed payout awaiting settlement",
       detail: `${latestClaimedRedemption.tokenAmount} ${latestClaimedRedemption.asset} from ${latestClaimedRedemption.source} is reserved and waiting for receipt-confirmed payout.`,
+    });
+  }
+
+  if (latestApprovedRedemption) {
+    tokenNotifications.push({
+      id: `approved-${latestApprovedRedemption.id}`,
+      tone: "info",
+      title: "Payout approved",
+      detail: `${latestApprovedRedemption.tokenAmount} ${latestApprovedRedemption.asset} has been approved${latestApprovedRedemption.approvedByDisplayName ? ` by ${latestApprovedRedemption.approvedByDisplayName}` : ""} and is waiting for processing.`,
+    });
+  }
+
+  if (latestProcessingRedemption) {
+    tokenNotifications.push({
+      id: `processing-${latestProcessingRedemption.id}`,
+      tone: "info",
+      title: "Payout in processing",
+      detail: `${latestProcessingRedemption.tokenAmount} ${latestProcessingRedemption.asset} is currently in processing${latestProcessingRedemption.processingByDisplayName ? ` with ${latestProcessingRedemption.processingByDisplayName}` : ""}.`,
     });
   }
 
@@ -539,7 +574,7 @@ async function getUserSnapshot(
             : progressState.walletLinked
             ? `Reach ${redemptionProjection.minimumPoints} eligibility points to unlock your first redemption.`
             : "Connect xPortal to unlock token redemption.",
-      notifications: tokenNotifications.slice(0, 4),
+      notifications: tokenNotifications.slice(0, 6),
     },
     referral: {
       rank: referralRank,
@@ -890,6 +925,20 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         : `${source} attribution is currently preserved, but the live funnel resolves through the ${activeLane} bridge lane. The stored ${source} preset remains available if separate platform differentiation is enabled.`,
     };
   });
+  const templateCounts = {
+    total: questDefinitionTemplates.length,
+    bridge: questDefinitionTemplates.filter((template) => template.metadata?.campaignTemplateKind === "bridge").length,
+    feeder: questDefinitionTemplates.filter((template) => template.metadata?.campaignTemplateKind === "feeder").length,
+    active: questDefinitionTemplates.filter((template) => template.isActive).length,
+  };
+  const sourceTemplateCounts: AdminOverviewData["campaignOperations"]["sourceTemplateCounts"] = (["zealy", "galxe", "taskon"] as const).map((source) => {
+    const matching = questDefinitionTemplates.filter((template) => template.metadata?.campaignAttributionSource === source);
+    return {
+      source,
+      total: matching.length,
+      active: matching.filter((template) => template.isActive).length,
+    };
+  });
 
   return {
     stats: [
@@ -915,6 +964,15 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     tokenSettlementQueue,
     settlementAnalytics,
     questDefinitionTemplates,
+    campaignOperations: {
+      templateCounts,
+      sourceTemplateCounts,
+      packReady:
+        ["Zealy bridge quest", "Galxe feeder quest", "TaskOn feeder quest"].every((label) =>
+          questDefinitionTemplates.some((template) => template.label === label && template.isActive),
+        ),
+      activeLaneMode: economySettings.differentiateUpstreamCampaignSources ? "separate" : "bridged",
+    },
     reviewInsights: {
       byVerificationType: reviewBreakdownByVerificationType,
       reviewerTypeMatrix,

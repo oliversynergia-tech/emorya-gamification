@@ -93,6 +93,7 @@ export default async function AdminPage() {
         initialQueue={data.tokenSettlementQueue}
         analytics={data.settlementAnalytics}
         payoutControls={data.economySettings}
+        canProcessAndSettle={hasSuperAdminAccess}
       />
       <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
       <QuestDefinitionToolingPanel />

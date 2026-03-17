@@ -288,8 +288,13 @@ export type UserSnapshot = {
       tokenAmount: number;
       eligibilityPointsSpent: number;
       status: "claimed" | "settled";
+      workflowState: "queued" | "approved" | "processing" | "settled";
       source: string;
       createdAt: string;
+      approvedAt: string | null;
+      approvedByDisplayName: string | null;
+      processingStartedAt: string | null;
+      processingByDisplayName: string | null;
       settledAt: string | null;
       receiptReference: string | null;
       settlementNote: string | null;
@@ -564,6 +569,21 @@ export type AdminOverviewData = {
   };
   questDefinitionDirectory?: Array<QuestDefinitionAdminItem>;
   questDefinitionTemplates?: Array<QuestDefinitionTemplateItem>;
+  campaignOperations: {
+    templateCounts: {
+      total: number;
+      bridge: number;
+      feeder: number;
+      active: number;
+    };
+    sourceTemplateCounts: Array<{
+      source: CampaignSource;
+      total: number;
+      active: number;
+    }>;
+    packReady: boolean;
+    activeLaneMode: "bridged" | "separate";
+  };
 };
 
 export type AuthUser = {

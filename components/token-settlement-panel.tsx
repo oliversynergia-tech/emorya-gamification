@@ -21,10 +21,12 @@ export function TokenSettlementPanel({
   initialQueue,
   analytics,
   payoutControls,
+  canProcessAndSettle,
 }: {
   initialQueue: AdminOverviewData["tokenSettlementQueue"];
   analytics: AdminOverviewData["settlementAnalytics"];
   payoutControls: AdminOverviewData["economySettings"];
+  canProcessAndSettle: boolean;
 }) {
   const router = useRouter();
   const [queue, setQueue] = useState(initialQueue);
@@ -39,6 +41,47 @@ export function TokenSettlementPanel({
   const [error, setError] = useState<string | null>(null);
   const annualReferralQueue = queue.filter((entry) => entry.source === "annual-referral-direct");
   const standardQueue = queue.filter((entry) => entry.source !== "annual-referral-direct");
+
+  function renderWorkflowTimeline(entry: AdminOverviewData["tokenSettlementQueue"][number]) {
+    const steps = [
+      { label: "Queued", detail: new Date(entry.createdAt).toLocaleString(), complete: true },
+      {
+        label: "Approved",
+        detail: entry.approvedAt
+          ? `${new Date(entry.approvedAt).toLocaleString()}${entry.approvedByDisplayName ? ` · ${entry.approvedByDisplayName}` : ""}`
+          : "Waiting for approval",
+        complete: entry.workflowState === "approved" || entry.workflowState === "processing" || entry.workflowState === "settled",
+      },
+      {
+        label: "Processing",
+        detail: entry.processingStartedAt
+          ? `${new Date(entry.processingStartedAt).toLocaleString()}${entry.processingByDisplayName ? ` · ${entry.processingByDisplayName}` : ""}`
+          : "Waiting for processing",
+        complete: entry.workflowState === "processing" || entry.workflowState === "settled",
+      },
+      {
+        label: "Settled",
+        detail: entry.settledAt
+          ? `${new Date(entry.settledAt).toLocaleString()}${entry.receiptReference ? ` · receipt ${entry.receiptReference}` : ""}`
+          : "Waiting for settlement",
+        complete: entry.workflowState === "settled",
+      },
+    ];
+
+    return (
+      <div className="achievement-list">
+        {steps.map((step) => (
+          <article key={`${entry.id}-${step.label}`} className="achievement-card">
+            <div>
+              <strong>{step.label}</strong>
+              <p>{step.detail}</p>
+            </div>
+            <span className={step.complete ? "badge badge--pink" : "badge"}>{step.complete ? "Done" : "Pending"}</span>
+          </article>
+        ))}
+      </div>
+    );
+  }
 
   function exportSettlement(entry: AdminOverviewData["tokenSettlementQueue"][number]) {
     const lines = [
@@ -78,6 +121,11 @@ export function TokenSettlementPanel({
 
     if (!payoutControls.settlementProcessingEnabled) {
       setError("Settlement processing is currently disabled in payout controls.");
+      return;
+    }
+
+    if ((action === "processing" || action === "settle") && !canProcessAndSettle) {
+      setError("Only super admins can move payouts into processing or settle them.");
       return;
     }
 
@@ -168,6 +216,9 @@ export function TokenSettlementPanel({
         <strong>{payoutControls.settlementProcessingEnabled ? "enabled" : "disabled"}</strong> · direct reward queue{" "}
         <strong>{payoutControls.directRewardQueueEnabled ? "enabled" : "disabled"}</strong>
       </p>
+      <p className="form-note">
+        Approval can be handled by admins. Processing and settlement require <strong>super admin</strong> access.
+      </p>
       <div className="review-bulk-actions">
         <label className="field">
           <span>Analytics window</span>
@@ -241,6 +292,20 @@ export function TokenSettlementPanel({
       {analyticsPending ? <p className="form-note">Refreshing analytics…</p> : null}
       {message ? <p className="status status--success">{message}</p> : null}
       {error ? <p className="status status--error">{error}</p> : null}
+      {queue.length > 0 ? (
+        <div className="achievement-list">
+          <article className="achievement-card">
+            <div>
+              <strong>Payout workflow permissions</strong>
+              <p>Queued payouts can be approved by admins, but only super admins can move them into processing or settle with receipts.</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>Approve: admin</span>
+              <span>Process / settle: super_admin</span>
+            </div>
+          </article>
+        </div>
+      ) : null}
       <div className="review-history__list">
         {queue.length === 0 ? (
           <p className="form-note">No claimed redemptions are waiting for settlement.</p>
@@ -292,11 +357,19 @@ export function TokenSettlementPanel({
                   />
                 </label>
               </div>
+              {renderWorkflowTimeline(entry)}
               <div className="review-bulk-actions">
                 <button
                   className="button button--primary button--small"
                   type="button"
-                  disabled={pendingId !== null || !payoutControls.settlementProcessingEnabled}
+                  disabled={
+                    pendingId !== null ||
+                    !payoutControls.settlementProcessingEnabled ||
+                    (((entry.workflowState === "approved" && payoutControls.payoutMode === "automation_ready") ||
+                      (entry.workflowState !== "queued" && entry.workflowState !== "settled") ||
+                      (entry.workflowState === "queued" && payoutControls.payoutMode === "manual")) &&
+                      !canProcessAndSettle)
+                  }
                   onClick={() =>
                     transitionSettlement(
                       entry.workflowState === "queued" && payoutControls.payoutMode !== "manual"
@@ -320,7 +393,7 @@ export function TokenSettlementPanel({
                   <button
                     className="button button--secondary button--small"
                     type="button"
-                    disabled={pendingId !== null || !payoutControls.settlementProcessingEnabled}
+                    disabled={pendingId !== null || !payoutControls.settlementProcessingEnabled || !canProcessAndSettle}
                     onClick={() => transitionSettlement("settle", entry.id)}
                   >
                     Force settle

@@ -1484,6 +1484,49 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
           <div>
+            <p className="eyebrow">Campaign operations</p>
+            <h3>Bridge mode, template readiness, and source pack health</h3>
+          </div>
+          <span className="badge badge--pink">
+            {data.campaignOperations.activeLaneMode === "bridged" ? "Zealy bridge mode" : "separate live lanes"}
+          </span>
+        </div>
+        <div className="info-grid">
+          <div className="info-card">
+            <span>Saved templates</span>
+            <strong>{data.campaignOperations.templateCounts.total}</strong>
+          </div>
+          <div className="info-card">
+            <span>Bridge templates</span>
+            <strong>{data.campaignOperations.templateCounts.bridge}</strong>
+          </div>
+          <div className="info-card">
+            <span>Feeder templates</span>
+            <strong>{data.campaignOperations.templateCounts.feeder}</strong>
+          </div>
+          <div className="info-card">
+            <span>Campaign pack ready</span>
+            <strong>{data.campaignOperations.packReady ? "Yes" : "No"}</strong>
+          </div>
+        </div>
+        <div className="achievement-list">
+          {data.campaignOperations.sourceTemplateCounts.map((entry) => (
+            <article key={entry.source} className="achievement-card">
+              <div>
+                <strong>{entry.source}</strong>
+                <p>Saved campaign templates for this attribution source.</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{entry.total} total</span>
+                <span>{entry.active} active</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
             <p className="eyebrow">Settlement analytics</p>
             <h3>Throughput, pending age, and direct-reward flow</h3>
           </div>

@@ -213,7 +213,7 @@ await withClient(async (client) => {
   const migrationResult = await client.query(
     `SELECT filename
      FROM schema_migrations
-     WHERE filename IN ('013_add_token_redemption_settlement_details.sql', '014_add_campaign_overrides_and_referral_direct_rewards.sql', '016_add_reward_assets_and_programs.sql', '017_add_payout_operation_controls.sql', '018_add_quest_definition_templates.sql', '019_expand_campaign_override_funnel_presets.sql', '020_add_token_redemption_workflow_states.sql', '021_add_upstream_campaign_differentiation.sql')
+     WHERE filename IN ('013_add_token_redemption_settlement_details.sql', '014_add_campaign_overrides_and_referral_direct_rewards.sql', '016_add_reward_assets_and_programs.sql', '017_add_payout_operation_controls.sql', '018_add_quest_definition_templates.sql', '019_expand_campaign_override_funnel_presets.sql', '020_add_token_redemption_workflow_states.sql', '021_add_upstream_campaign_differentiation.sql', '022_add_bridge_and_feeder_templates.sql')
      ORDER BY filename ASC`,
   );
   const appliedMigrations = new Set(migrationResult.rows.map((row) => String(row.filename)));
@@ -227,9 +227,78 @@ await withClient(async (client) => {
     "019_expand_campaign_override_funnel_presets.sql",
     "020_add_token_redemption_workflow_states.sql",
     "021_add_upstream_campaign_differentiation.sql",
+    "022_add_bridge_and_feeder_templates.sql",
   ]) {
     if (!appliedMigrations.has(filename)) {
       errors.push(`Required migration not applied: ${filename}`);
+    }
+  }
+
+  const templateResult = await client.query(
+    `SELECT label, metadata, is_active
+     FROM quest_definition_templates
+     ORDER BY label ASC`,
+  );
+
+  for (const row of templateResult.rows) {
+    const metadata = row.metadata ?? {};
+    const label = String(row.label);
+    const kind = typeof metadata.campaignTemplateKind === "string" ? metadata.campaignTemplateKind : null;
+    const source = typeof metadata.campaignAttributionSource === "string" ? metadata.campaignAttributionSource : null;
+    const lane = typeof metadata.campaignExperienceLane === "string" ? metadata.campaignExperienceLane : null;
+    const rewardProgramId = typeof metadata.rewardProgramId === "string" ? metadata.rewardProgramId : null;
+
+    if (!kind) {
+      continue;
+    }
+
+    if (!source || !lane) {
+      errors.push(`Quest template "${label}" is missing campaignAttributionSource or campaignExperienceLane.`);
+    }
+
+    if (rewardProgramId) {
+      const rewardProgramResult = await client.query(
+        `SELECT COUNT(*)::int AS count FROM reward_programs WHERE id = $1`,
+        [rewardProgramId],
+      );
+      if (Number(rewardProgramResult.rows[0]?.count ?? 0) < 1) {
+        errors.push(`Quest template "${label}" points to a missing reward program.`);
+      }
+    }
+
+    if (kind === "bridge" && source !== lane) {
+      errors.push(`Bridge template "${label}" must use the same attribution source and experience lane.`);
+    }
+
+    if (kind === "feeder") {
+      if (!["galxe", "taskon"].includes(String(source))) {
+        errors.push(`Feeder template "${label}" must use galxe or taskon attribution.`);
+      }
+
+      if (lane !== "zealy") {
+        errors.push(`Feeder template "${label}" must point at the zealy experience lane.`);
+      }
+    }
+  }
+
+  if (economy?.differentiate_upstream_campaign_sources === true) {
+    const liveQuestResult = await client.query(
+      `SELECT slug, title, metadata
+       FROM quest_definitions
+       WHERE is_active = TRUE`,
+    );
+
+    for (const row of liveQuestResult.rows) {
+      const metadata = row.metadata ?? {};
+      const kind = typeof metadata.campaignTemplateKind === "string" ? metadata.campaignTemplateKind : null;
+      const source = typeof metadata.campaignAttributionSource === "string" ? metadata.campaignAttributionSource : null;
+      const lane = typeof metadata.campaignExperienceLane === "string" ? metadata.campaignExperienceLane : null;
+
+      if (kind === "feeder" && (source === "galxe" || source === "taskon") && lane === "zealy") {
+        errors.push(
+          `Active quest "${row.slug}" is still configured as a Zealy feeder while upstream source differentiation is enabled.`,
+        );
+      }
     }
   }
 

@@ -410,7 +410,9 @@ export async function transitionPendingTokenRedemption({
     throw new Error("Settlement processing is currently disabled in payout controls.");
   }
 
-  if ((economySettings.payoutMode === "review_required" || action !== "settle") && action !== "approve") {
+  if (action === "approve") {
+    await assertAdminUser(currentUser);
+  } else {
     await assertSuperAdminUser(currentUser);
   }
 
