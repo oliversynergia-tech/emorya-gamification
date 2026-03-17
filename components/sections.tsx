@@ -317,6 +317,9 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
               ? `Reward eligible with ${data.user.rewardEligibility.trustScoreBand} trust status.`
               : `Next requirement: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing"}.`}
           </p>
+          <p className="form-note">
+            Active lane focus: {data.economy.campaignPreset.featuredTracks.join(", ")}. Weekly thresholds are being shaped by {data.economy.campaignPreset.weeklyTargetOffset} XP for this source.
+          </p>
         </div>
         <div className="panel panel--glass">
           <div className="panel__header">
@@ -716,6 +719,9 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
         </div>
         <span className="badge">{activeQuests.length} active / {lockedPreviews.length} previewed</span>
       </div>
+      <p className="form-note">
+        Featured funnel tracks for this lane: {data.economy.campaignPreset.featuredTracks.join(", ")}.
+      </p>
       <div className="track-board">
         {groupedActiveTracks.map((group) => (
           <section key={group.track} className="panel panel--glass">

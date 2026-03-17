@@ -7,6 +7,8 @@ import {
   inferTokenEffect,
   mapQuestCadence,
 } from "../../lib/progression-rules.ts";
+import { getCampaignEconomyOverride } from "../../lib/economy-settings.ts";
+import { getCampaignFeaturedTracks } from "../../lib/campaign-source.ts";
 import type {
   EconomySettings,
   EvaluatedQuest,
@@ -112,6 +114,10 @@ export function buildDashboardQuestBoard({
   settings?: EconomySettings;
 }) {
   const runtimeContext = createDefaultQuestRuntimeContext();
+  const featuredTracks = getCampaignFeaturedTracks(
+    userProgressState.campaignSource,
+    getCampaignEconomyOverride(settings, userProgressState.campaignSource),
+  );
   const evaluatedByQuestId = new Map<string, { evaluatedQuest: EvaluatedQuest; cadence: QuestCadence }>();
 
   for (const quest of quests) {
@@ -150,7 +156,8 @@ export function buildDashboardQuestBoard({
           (track === "campaign" && userProgressState.campaignSource !== null && userProgressState.campaignSource !== "direct"))) ||
       (journeyState === "reward_eligible_free" && (track === "wallet" || track === "referral" || track === "premium")) ||
       ((journeyState === "monthly_premium" || journeyState === "annual_premium") &&
-        (track === "premium" || track === "referral" || track === "wallet"));
+        (track === "premium" || track === "referral" || track === "wallet")) ||
+      featuredTracks.includes(track);
 
     evaluatedByQuestId.set(quest.id, {
       evaluatedQuest: evaluateQuest({
@@ -174,6 +181,7 @@ export function buildDashboardQuestBoard({
     quests: Array.from(evaluatedByQuestId.values()).map((entry) => entry.evaluatedQuest),
     journeyState,
     campaignSource: userProgressState.campaignSource,
+    featuredTracks,
   });
 
   return selectedBoard.quests

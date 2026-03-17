@@ -115,3 +115,51 @@ test("selectQuestBoard promotes campaign quests for sourced onboarding ladders",
     ["starter-1", "campaign-1"],
   );
 });
+
+test("selectQuestBoard prioritizes featured tracks from the active campaign preset", () => {
+  const result = selectQuestBoard({
+    quests: [
+      {
+        id: "daily-1",
+        title: "Daily",
+        track: "daily" as const,
+        status: "active" as const,
+        visible: true,
+        lockedReason: null,
+        unlockHint: null,
+        projectedReward: { xp: 40, tokenEffect: "none" as const },
+        sortScore: 700,
+      },
+      {
+        id: "premium-1",
+        title: "Premium",
+        track: "premium" as const,
+        status: "active" as const,
+        visible: true,
+        lockedReason: null,
+        unlockHint: null,
+        projectedReward: { xp: 90, tokenEffect: "eligibility_progress" as const },
+        sortScore: 650,
+      },
+      {
+        id: "wallet-1",
+        title: "Wallet",
+        track: "wallet" as const,
+        status: "active" as const,
+        visible: true,
+        lockedReason: null,
+        unlockHint: null,
+        projectedReward: { xp: 80, tokenEffect: "eligibility_progress" as const },
+        sortScore: 600,
+      },
+    ],
+    journeyState: "signed_up_free",
+    campaignSource: "galxe",
+    featuredTracks: ["premium", "wallet", "campaign"],
+  });
+
+  assert.deepEqual(
+    result.active.slice(0, 2).map((quest) => quest.id),
+    ["premium-1", "wallet-1"],
+  );
+});

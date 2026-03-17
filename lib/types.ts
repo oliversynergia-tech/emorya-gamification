@@ -363,6 +363,7 @@ export type DashboardData = {
       weeklyTargetOffset: number;
       premiumUpsellMultiplier: number;
       leaderboardMomentumMultiplier: number;
+      featuredTracks: string[];
     };
   };
   quests: Quest[];

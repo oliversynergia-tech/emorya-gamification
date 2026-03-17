@@ -73,7 +73,7 @@ export default async function LeaderboardPage() {
               +{(campaignPreset.questXpBoost * 100).toFixed(0)}% XP / +{(campaignPreset.tokenYieldBoost * 100).toFixed(0)}% yield
             </strong>
             <small>
-              Weekly shaping {campaignPreset.weeklyTargetOffset} XP, premium pressure {campaignPreset.premiumUpsellMultiplier.toFixed(2)}x.
+              Weekly shaping {campaignPreset.weeklyTargetOffset} XP, premium pressure {campaignPreset.premiumUpsellMultiplier.toFixed(2)}x, featured tracks {campaignPreset.featuredTracks.join(", ")}.
             </small>
           </div>
         </div>

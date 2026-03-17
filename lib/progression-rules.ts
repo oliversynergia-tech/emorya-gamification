@@ -119,23 +119,24 @@ export function applyCampaignDirectRewardBonus({
   return applyDirectTokenRewardBonus(amount, settings, campaignSource);
 }
 
-export function getWeeklyProgressBand(weeklyXp: number) {
+export function getWeeklyProgressBand(weeklyXp: number, thresholdOffset = 0) {
   const labels = ["Participation", "Engaged", "Reward Eligible", "Max Weekly Band"] as const;
+  const adjustedThresholds = weeklyProgressThresholds.map((threshold) => Math.max(threshold + thresholdOffset, 25));
   let currentThreshold = 0;
-  let nextThreshold: number | null = weeklyProgressThresholds[0];
+  let nextThreshold: number | null = adjustedThresholds[0];
   let tierLabel: string = labels[0];
 
-  for (let index = 0; index < weeklyProgressThresholds.length; index += 1) {
-    const threshold = weeklyProgressThresholds[index];
+  for (let index = 0; index < adjustedThresholds.length; index += 1) {
+    const threshold = adjustedThresholds[index];
 
     if (weeklyXp >= threshold) {
       currentThreshold = threshold;
       tierLabel = labels[index] ?? labels[labels.length - 1];
-      nextThreshold = weeklyProgressThresholds[index + 1] ?? null;
+      nextThreshold = adjustedThresholds[index + 1] ?? null;
     }
   }
 
-  const maxThreshold = weeklyProgressThresholds[weeklyProgressThresholds.length - 1];
+  const maxThreshold = adjustedThresholds[adjustedThresholds.length - 1];
   const progressDenominator =
     nextThreshold === null ? Math.max(maxThreshold - currentThreshold, 1) : Math.max(nextThreshold - currentThreshold, 1);
   const progressNumerator =

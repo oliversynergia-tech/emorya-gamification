@@ -1,4 +1,4 @@
-import type { UserSnapshot } from "@/lib/types";
+import type { CampaignEconomyOverride, QuestTrack, UserSnapshot } from "@/lib/types";
 
 export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"]) {
   switch (source) {
@@ -80,4 +80,27 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
         cta: "Upgrade when you want the fastest route from Starter Path to high-value reward lanes.",
       };
   }
+}
+
+export function getCampaignFeaturedTracks(
+  source: UserSnapshot["campaignSource"],
+  override: CampaignEconomyOverride,
+): QuestTrack[] {
+  const scores = new Map<QuestTrack, number>([
+    ["starter", source === "direct" ? 2 : 0.5],
+    ["daily", Math.max(1, Math.abs(override.weeklyTargetXpOffset) / 10)],
+    ["social", 1],
+    ["wallet", 1 + override.eligibilityPointsMultiplierBonus * 10 + override.questXpMultiplierBonus * 5],
+    ["referral", 1 + (override.monthlyConversionBonusXp + override.annualConversionBonusXp) / 50],
+    ["premium", 1 + override.premiumUpsellBonusMultiplier * 10],
+    ["ambassador", source === "layer3" ? 1.8 : 0.5],
+    ["creative", source === "layer3" ? 1.4 : 0.4],
+    ["campaign", source && source !== "direct" ? 2 + override.leaderboardMomentumBonus * 10 : 0.5],
+    ["quiz", source === "layer3" ? 1.5 : 0.6],
+  ]);
+
+  return Array.from(scores.entries())
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 3)
+    .map(([track]) => track);
 }

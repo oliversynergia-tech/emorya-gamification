@@ -11,70 +11,93 @@ function injectCampaignPriority(order: string[], campaignSource: UserProgressSta
   return withoutCampaign;
 }
 
-function getRecommendedTrackOrder(journeyState: UserJourneyState, campaignSource: UserProgressState["campaignSource"]) {
+function injectFeaturedTracks(order: string[], featuredTracks: string[] | undefined) {
+  if (!featuredTracks || featuredTracks.length === 0) {
+    return order;
+  }
+
+  const uniqueFeatured = featuredTracks.filter((track, index) => featuredTracks.indexOf(track) === index);
+  const remainder = order.filter((track) => !uniqueFeatured.includes(track));
+  return [...uniqueFeatured, ...remainder];
+}
+
+function getRecommendedTrackOrder(
+  journeyState: UserJourneyState,
+  campaignSource: UserProgressState["campaignSource"],
+  featuredTracks?: string[],
+) {
   switch (journeyState) {
     case "signed_up_free":
-      return injectCampaignPriority(
+      return injectFeaturedTracks(injectCampaignPriority(
         ["starter", "daily", "social", "wallet", "referral", "premium", "campaign", "creative", "ambassador", "quiz"],
         campaignSource,
-      );
+      ), featuredTracks);
     case "activated_free":
-      return injectCampaignPriority(
+      return injectFeaturedTracks(injectCampaignPriority(
         ["daily", "wallet", "referral", "social", "premium", "campaign", "quiz", "creative", "ambassador", "starter"],
         campaignSource,
-      );
+      ), featuredTracks);
     case "reward_eligible_free":
-      return injectCampaignPriority(
+      return injectFeaturedTracks(injectCampaignPriority(
         ["wallet", "referral", "daily", "premium", "social", "campaign", "creative", "ambassador", "quiz", "starter"],
         campaignSource,
-      );
+      ), featuredTracks);
     case "monthly_premium":
-      return injectCampaignPriority(
+      return injectFeaturedTracks(injectCampaignPriority(
         ["premium", "referral", "daily", "wallet", "campaign", "social", "creative", "ambassador", "quiz", "starter"],
         campaignSource,
-      );
+      ), featuredTracks);
     case "annual_premium":
-      return injectCampaignPriority(
+      return injectFeaturedTracks(injectCampaignPriority(
         ["premium", "referral", "wallet", "campaign", "daily", "ambassador", "social", "creative", "quiz", "starter"],
         campaignSource,
-      );
+      ), featuredTracks);
     case "ambassador_candidate":
     case "ambassador":
-      return injectCampaignPriority(
+      return injectFeaturedTracks(injectCampaignPriority(
         ["ambassador", "referral", "wallet", "premium", "campaign", "daily", "creative", "social", "quiz", "starter"],
         campaignSource,
-      );
+      ), featuredTracks);
     default:
-      return injectCampaignPriority(
+      return injectFeaturedTracks(injectCampaignPriority(
         ["starter", "daily", "social", "wallet", "referral", "premium", "campaign", "creative", "ambassador", "quiz"],
         campaignSource,
-      );
+      ), featuredTracks);
   }
 }
 
-function computeTrackPriority(track: string, journeyState: UserJourneyState, campaignSource: UserProgressState["campaignSource"]) {
-  const order = getRecommendedTrackOrder(journeyState, campaignSource);
+function computeTrackPriority(
+  track: string,
+  journeyState: UserJourneyState,
+  campaignSource: UserProgressState["campaignSource"],
+  featuredTracks?: string[],
+) {
+  const order = getRecommendedTrackOrder(journeyState, campaignSource, featuredTracks);
   const index = order.indexOf(track);
   return index === -1 ? order.length : index;
 }
 
-function getTargetTracks(journeyState: UserJourneyState, campaignSource: UserProgressState["campaignSource"]) {
+function getTargetTracks(
+  journeyState: UserJourneyState,
+  campaignSource: UserProgressState["campaignSource"],
+  featuredTracks?: string[],
+) {
   switch (journeyState) {
     case "signed_up_free":
-      return injectCampaignPriority(["starter", "daily", "social", "wallet", "referral"], campaignSource);
+      return injectFeaturedTracks(injectCampaignPriority(["starter", "daily", "social", "wallet", "referral"], campaignSource), featuredTracks);
     case "activated_free":
-      return injectCampaignPriority(["daily", "social", "wallet", "referral", "premium"], campaignSource);
+      return injectFeaturedTracks(injectCampaignPriority(["daily", "social", "wallet", "referral", "premium"], campaignSource), featuredTracks);
     case "reward_eligible_free":
-      return injectCampaignPriority(["daily", "wallet", "referral", "premium", "campaign"], campaignSource);
+      return injectFeaturedTracks(injectCampaignPriority(["daily", "wallet", "referral", "premium", "campaign"], campaignSource), featuredTracks);
     case "monthly_premium":
-      return injectCampaignPriority(["premium", "daily", "wallet", "referral", "campaign"], campaignSource);
+      return injectFeaturedTracks(injectCampaignPriority(["premium", "daily", "wallet", "referral", "campaign"], campaignSource), featuredTracks);
     case "annual_premium":
-      return injectCampaignPriority(["premium", "wallet", "referral", "campaign", "daily"], campaignSource);
+      return injectFeaturedTracks(injectCampaignPriority(["premium", "wallet", "referral", "campaign", "daily"], campaignSource), featuredTracks);
     case "ambassador_candidate":
     case "ambassador":
-      return injectCampaignPriority(["ambassador", "referral", "wallet", "premium", "campaign"], campaignSource);
+      return injectFeaturedTracks(injectCampaignPriority(["ambassador", "referral", "wallet", "premium", "campaign"], campaignSource), featuredTracks);
     default:
-      return injectCampaignPriority(["starter", "daily", "social", "wallet", "referral"], campaignSource);
+      return injectFeaturedTracks(injectCampaignPriority(["starter", "daily", "social", "wallet", "referral"], campaignSource), featuredTracks);
   }
 }
 
@@ -82,17 +105,19 @@ export function selectQuestBoard({
   quests,
   journeyState,
   campaignSource,
+  featuredTracks,
 }: {
   quests: EvaluatedQuest[];
   journeyState: UserJourneyState;
   campaignSource: UserProgressState["campaignSource"];
+  featuredTracks?: string[];
 }) {
   const activePool = quests
     .filter((quest) => quest.visible && (quest.status === "active" || quest.status === "in_progress" || quest.status === "rejected"))
     .sort((left, right) => {
       const priorityDelta =
-        computeTrackPriority(left.track, journeyState, campaignSource) -
-        computeTrackPriority(right.track, journeyState, campaignSource);
+        computeTrackPriority(left.track, journeyState, campaignSource, featuredTracks) -
+        computeTrackPriority(right.track, journeyState, campaignSource, featuredTracks);
       if (priorityDelta !== 0) {
         return priorityDelta;
       }
@@ -100,7 +125,7 @@ export function selectQuestBoard({
       return right.sortScore - left.sortScore;
     });
   const selectedActive = new Map<string, EvaluatedQuest>();
-  const targetTracks = getTargetTracks(journeyState, campaignSource);
+  const targetTracks = getTargetTracks(journeyState, campaignSource, featuredTracks);
 
   for (const track of targetTracks) {
     if (selectedActive.size >= 15) {
@@ -130,8 +155,8 @@ export function selectQuestBoard({
 
   const active = Array.from(selectedActive.values()).sort((left, right) => {
     const priorityDelta =
-      computeTrackPriority(left.track, journeyState, campaignSource) -
-      computeTrackPriority(right.track, journeyState, campaignSource);
+      computeTrackPriority(left.track, journeyState, campaignSource, featuredTracks) -
+      computeTrackPriority(right.track, journeyState, campaignSource, featuredTracks);
     if (priorityDelta !== 0) {
       return priorityDelta;
     }

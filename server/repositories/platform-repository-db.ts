@@ -10,6 +10,7 @@ import {
   getCampaignWeeklyTargetOffset,
   getXpTierMultiplier,
 } from "@/lib/economy-settings";
+import { getCampaignFeaturedTracks } from "@/lib/campaign-source";
 import {
   getModerationAlertChannelConfig,
   getQueueAlertThresholds,
@@ -311,7 +312,10 @@ async function getUserSnapshot(
   ]);
 
   const nextLevelXp = getLevelProgress(user.total_xp).nextThreshold;
-  const weeklyProgress = getWeeklyProgressBand(progressState.weeklyXp);
+  const weeklyProgress = getWeeklyProgressBand(
+    progressState.weeklyXp,
+    getCampaignWeeklyTargetOffset(economySettings, progressState.campaignSource),
+  );
   const rewardSummaries = approvedRewardQuestResult.rows.map((quest) => {
     const track = inferQuestTrack({
       slug: quest.slug,
@@ -394,6 +398,7 @@ async function getUserSnapshot(
     campaignSource: progressState.campaignSource,
   });
   const campaignEconomy = getCampaignEconomyOverride(economySettings, progressState.campaignSource);
+  const featuredTracks = getCampaignFeaturedTracks(progressState.campaignSource, campaignEconomy);
   const tokenNotifications: UserSnapshot["tokenProgram"]["notifications"] = [];
   const latestClaimedRedemption = redemptionHistory.find((entry) => entry.status === "claimed");
   const latestSettledRedemption = redemptionHistory.find((entry) => entry.status === "settled");
@@ -434,6 +439,12 @@ async function getUserSnapshot(
       tone: "info",
       title: `${progressState.campaignSource} reward preset active`,
       detail: `This lane adds +${campaignEconomy.questXpMultiplierBonus.toFixed(2)}x quest XP, ${(campaignEconomy.eligibilityPointsMultiplierBonus * 100).toFixed(0)}% extra eligibility-point growth, ${(campaignEconomy.tokenYieldMultiplierBonus * 100).toFixed(0)}% token-yield lift, ${campaignEconomy.minimumEligibilityPointsOffset} points on the redemption threshold, ${campaignEconomy.weeklyTargetXpOffset} XP on weekly target shaping, and ${(campaignEconomy.premiumUpsellBonusMultiplier * 100).toFixed(0)}% extra premium pressure.`,
+    });
+    tokenNotifications.push({
+      id: `campaign-featured-${progressState.campaignSource}`,
+      tone: "info",
+      title: `${progressState.campaignSource} featured tracks`,
+      detail: `This lane is currently pushing ${featuredTracks.join(", ")} higher in the funnel so onboarding pressure matches the acquisition source.`,
     });
   }
 
@@ -773,6 +784,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     getActivityFeed(),
   ]);
   const campaignEconomy = getCampaignEconomyOverride(economySettings, user.campaignSource);
+  const featuredTracks = getCampaignFeaturedTracks(user.campaignSource, campaignEconomy);
 
   return {
     user,
@@ -788,6 +800,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
         weeklyTargetOffset: getCampaignWeeklyTargetOffset(economySettings, user.campaignSource),
         premiumUpsellMultiplier: getCampaignPremiumUpsellMultiplier(economySettings, user.campaignSource),
         leaderboardMomentumMultiplier: getCampaignLeaderboardMomentumMultiplier(economySettings, user.campaignSource),
+        featuredTracks,
       },
     },
     quests,
