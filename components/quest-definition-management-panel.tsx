@@ -959,6 +959,8 @@ export function QuestDefinitionManagementPanel({
     setError(null);
 
     try {
+      const packCreatedAt = new Date().toISOString();
+      const packId = `pack-${new Date().toISOString().replace(/[:.]/g, "-").toLowerCase()}`;
       const slugPrefix = campaignPackLabel
         .trim()
         .toLowerCase()
@@ -989,7 +991,13 @@ export function QuestDefinitionManagementPanel({
             xpReward: template.form.xpReward,
             isPremiumPreview: template.form.isPremiumPreview,
             isActive: template.form.isActive,
-            metadata: template.metadata,
+            metadata: {
+              ...template.metadata,
+              campaignPackId: packId,
+              campaignPackLabel: campaignPackLabel.trim(),
+              campaignPackCreatedAt: packCreatedAt,
+              campaignPackTemplateLabel: template.label,
+            },
           }),
         });
         const result = (await response.json()) as QuestDefinitionResponse;

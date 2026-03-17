@@ -351,6 +351,72 @@ await withClient(async (client) => {
     }
   }
 
+  const activePackQuestResult = await client.query(
+    `SELECT slug, metadata, is_active
+     FROM quest_definitions
+     WHERE is_active = TRUE
+       AND metadata ? 'campaignPackId'`,
+  );
+  const packMap = new Map();
+  for (const row of activePackQuestResult.rows) {
+    const metadata = row.metadata ?? {};
+    const packId = typeof metadata.campaignPackId === "string" ? metadata.campaignPackId : null;
+    if (!packId) {
+      continue;
+    }
+    const source = typeof metadata.campaignAttributionSource === "string" ? metadata.campaignAttributionSource : null;
+    const lane = typeof metadata.campaignExperienceLane === "string" ? metadata.campaignExperienceLane : null;
+    const kind = typeof metadata.campaignTemplateKind === "string" ? metadata.campaignTemplateKind : null;
+    const rewardProgramId = typeof metadata.rewardProgramId === "string" ? metadata.rewardProgramId : null;
+    const packEntry =
+      packMap.get(packId) ??
+      {
+        bridgeCount: 0,
+        feederSources: new Set(),
+        invalidFeeder: false,
+        rewardProgramIds: new Set(),
+      };
+    if (kind === "bridge") {
+      packEntry.bridgeCount += 1;
+    }
+    if (kind === "feeder") {
+      if (source === "galxe" || source === "taskon") {
+        packEntry.feederSources.add(source);
+      }
+      if (lane !== "zealy") {
+        packEntry.invalidFeeder = true;
+      }
+    }
+    if (rewardProgramId) {
+      packEntry.rewardProgramIds.add(rewardProgramId);
+    }
+    packMap.set(packId, packEntry);
+  }
+
+  for (const [packId, packEntry] of packMap.entries()) {
+    if (packEntry.bridgeCount < 1) {
+      errors.push(`Campaign pack "${packId}" is missing a bridge quest.`);
+    }
+    if (!packEntry.feederSources.has("galxe") || !packEntry.feederSources.has("taskon")) {
+      errors.push(`Campaign pack "${packId}" must include both Galxe and TaskOn feeder quests.`);
+    }
+    if (packEntry.invalidFeeder) {
+      errors.push(`Campaign pack "${packId}" contains a feeder quest that does not point to the Zealy bridge lane.`);
+    }
+    for (const rewardProgramId of packEntry.rewardProgramIds) {
+      const rewardProgramResult = await client.query(
+        `SELECT COUNT(*)::int AS count
+         FROM reward_programs
+         WHERE id = $1
+           AND is_active = TRUE`,
+        [rewardProgramId],
+      );
+      if (Number(rewardProgramResult.rows[0]?.count ?? 0) < 1) {
+        errors.push(`Campaign pack "${packId}" points to an inactive or missing reward program.`);
+      }
+    }
+  }
+
   if (errors.length > 0) {
     console.error("Release state validation failed:");
     for (const error of errors) {

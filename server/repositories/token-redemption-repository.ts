@@ -309,9 +309,58 @@ type TokenRedemptionAuditRow = QueryResultRow & {
   metadata: Record<string, string | number | boolean | null>;
 };
 
-export async function getTokenSettlementAnalytics(days = 7, compareDays?: number): Promise<AdminOverviewData["settlementAnalytics"]> {
-  const safeDays = Math.min(Math.max(Math.round(days), 1), 180);
-  const safeCompareDays = Math.min(Math.max(Math.round(compareDays ?? days), 1), 180);
+export async function getTokenSettlementAnalytics(input?: {
+  days?: number;
+  compareDays?: number;
+  startDate?: string;
+  endDate?: string;
+  compareStartDate?: string;
+  compareEndDate?: string;
+}): Promise<AdminOverviewData["settlementAnalytics"]> {
+  const safeDays = Math.min(Math.max(Math.round(input?.days ?? 7), 1), 365);
+  const safeCompareDays = Math.min(Math.max(Math.round(input?.compareDays ?? input?.days ?? 7), 1), 365);
+  const customStartDate = input?.startDate ? new Date(`${input.startDate}T00:00:00.000Z`) : null;
+  const customEndDate = input?.endDate ? new Date(`${input.endDate}T00:00:00.000Z`) : null;
+  const hasCustomRange =
+    customStartDate instanceof Date &&
+    customEndDate instanceof Date &&
+    Number.isFinite(customStartDate.getTime()) &&
+    Number.isFinite(customEndDate.getTime()) &&
+    customEndDate.getTime() >= customStartDate.getTime();
+  const currentRangeStart = hasCustomRange
+    ? customStartDate
+    : new Date(Date.now() - (safeDays - 1) * 24 * 60 * 60 * 1000);
+  currentRangeStart.setUTCHours(0, 0, 0, 0);
+  const currentRangeEndExclusive = hasCustomRange ? new Date(customEndDate.getTime() + 24 * 60 * 60 * 1000) : new Date();
+  currentRangeEndExclusive.setUTCHours(0, 0, 0, 0);
+  if (!hasCustomRange) {
+    currentRangeEndExclusive.setUTCDate(currentRangeEndExclusive.getUTCDate() + 1);
+  }
+
+  const currentRangeDays = Math.max(
+    Math.round((currentRangeEndExclusive.getTime() - currentRangeStart.getTime()) / (24 * 60 * 60 * 1000)),
+    1,
+  );
+  const compareCustomStartDate = input?.compareStartDate ? new Date(`${input.compareStartDate}T00:00:00.000Z`) : null;
+  const compareCustomEndDate = input?.compareEndDate ? new Date(`${input.compareEndDate}T00:00:00.000Z`) : null;
+  const hasCustomCompareRange =
+    compareCustomStartDate instanceof Date &&
+    compareCustomEndDate instanceof Date &&
+    Number.isFinite(compareCustomStartDate.getTime()) &&
+    Number.isFinite(compareCustomEndDate.getTime()) &&
+    compareCustomEndDate.getTime() >= compareCustomStartDate.getTime();
+  const compareRangeStart = hasCustomCompareRange
+    ? compareCustomStartDate
+    : new Date(currentRangeStart.getTime() - (hasCustomRange ? currentRangeDays : safeCompareDays) * 24 * 60 * 60 * 1000);
+  compareRangeStart.setUTCHours(0, 0, 0, 0);
+  const compareRangeEndExclusive = hasCustomCompareRange
+    ? new Date(compareCustomEndDate.getTime() + 24 * 60 * 60 * 1000)
+    : new Date(currentRangeStart);
+  compareRangeEndExclusive.setUTCHours(0, 0, 0, 0);
+  const compareRangeDays = Math.max(
+    Math.round((compareRangeEndExclusive.getTime() - compareRangeStart.getTime()) / (24 * 60 * 60 * 1000)),
+    1,
+  );
   const [summaryResult, throughputResult, byAssetResult, byProgramResult, workflowResult] = await Promise.all([
     runQuery<SettlementAnalyticsRow>(
       `WITH pending AS (
@@ -325,8 +374,8 @@ export async function getTokenSettlementAnalytics(days = 7, compareDays?: number
      settled AS (
        SELECT
         COALESCE(AVG(EXTRACT(EPOCH FROM (settled_at - created_at)) / 3600), 0)::numeric AS average_settlement_hours,
-        COUNT(*) FILTER (WHERE settled_at >= NOW() - ($1::int * INTERVAL '1 day'))::int AS settled_last_7_days_count,
-        COALESCE(SUM(token_amount) FILTER (WHERE settled_at >= NOW() - ($1::int * INTERVAL '1 day')), 0)::numeric AS settled_last_7_days_token_amount
+        COUNT(*) FILTER (WHERE settled_at >= $1::timestamptz AND settled_at < $2::timestamptz)::int AS settled_last_7_days_count,
+        COALESCE(SUM(token_amount) FILTER (WHERE settled_at >= $1::timestamptz AND settled_at < $2::timestamptz), 0)::numeric AS settled_last_7_days_token_amount
        FROM token_redemptions
        WHERE status = 'settled'
          AND settled_at IS NOT NULL
@@ -341,12 +390,12 @@ export async function getTokenSettlementAnalytics(days = 7, compareDays?: number
      previous_period AS (
        SELECT
         COUNT(*) FILTER (
-          WHERE settled_at >= NOW() - (($1::int + $2::int) * INTERVAL '1 day')
-            AND settled_at < NOW() - ($1::int * INTERVAL '1 day')
+          WHERE settled_at >= $3::timestamptz
+            AND settled_at < $4::timestamptz
         )::int AS previous_settled_count,
         COALESCE(SUM(token_amount) FILTER (
-          WHERE settled_at >= NOW() - (($1::int + $2::int) * INTERVAL '1 day')
-            AND settled_at < NOW() - ($1::int * INTERVAL '1 day')
+          WHERE settled_at >= $3::timestamptz
+            AND settled_at < $4::timestamptz
         ), 0)::numeric AS previous_settled_token_amount
        FROM token_redemptions
        WHERE status = 'settled'
@@ -364,7 +413,7 @@ export async function getTokenSettlementAnalytics(days = 7, compareDays?: number
        previous_period.previous_settled_count,
        previous_period.previous_settled_token_amount
      FROM pending, settled, direct_rewards, previous_period`,
-      [safeDays, safeCompareDays],
+      [currentRangeStart, currentRangeEndExclusive, compareRangeStart, compareRangeEndExclusive],
     ),
     runQuery<SettlementThroughputRow>(
       `SELECT TO_CHAR(day_bucket.day, 'Mon DD') AS day_label,
@@ -372,8 +421,8 @@ export async function getTokenSettlementAnalytics(days = 7, compareDays?: number
               COALESCE(SUM(redemptions.token_amount), 0)::numeric AS settled_token_amount
        FROM (
          SELECT generate_series(
-           date_trunc('day', NOW() - (($1::int - 1) * INTERVAL '1 day')),
-           date_trunc('day', NOW()),
+           $1::timestamptz,
+           $2::timestamptz - INTERVAL '1 day',
            INTERVAL '1 day'
          ) AS day
        ) AS day_bucket
@@ -382,7 +431,7 @@ export async function getTokenSettlementAnalytics(days = 7, compareDays?: number
         AND redemptions.status = 'settled'
        GROUP BY day_bucket.day
        ORDER BY day_bucket.day ASC`,
-      [safeDays],
+      [currentRangeStart, currentRangeEndExclusive],
     ),
     runQuery<SettlementByAssetRow>(
       `SELECT redemptions.asset,
@@ -417,12 +466,18 @@ export async function getTokenSettlementAnalytics(days = 7, compareDays?: number
   const settledLast7DaysCount = Number(row?.settled_last_7_days_count ?? 0);
   const previousSettledCount = Number(row?.previous_settled_count ?? 0);
   const previousSettledTokenAmount = Number(row?.previous_settled_token_amount ?? 0);
-  const currentVelocity = Number((settledLast7DaysCount / safeDays).toFixed(2));
-  const previousVelocity = Number((previousSettledCount / safeCompareDays).toFixed(2));
+  const currentVelocity = Number((settledLast7DaysCount / currentRangeDays).toFixed(2));
+  const previousVelocity = Number((previousSettledCount / compareRangeDays).toFixed(2));
 
   return {
-    periodDays: safeDays,
-    comparePeriodDays: safeCompareDays,
+    periodDays: currentRangeDays,
+    comparePeriodDays: compareRangeDays,
+    periodLabel: hasCustomRange
+      ? `${input?.startDate} to ${input?.endDate}`
+      : `Last ${safeDays} days`,
+    comparePeriodLabel: hasCustomCompareRange
+      ? `${input?.compareStartDate} to ${input?.compareEndDate}`
+      : `Previous ${hasCustomRange ? currentRangeDays : safeCompareDays} days`,
     pendingCount: Number(row?.pending_count ?? 0),
     pendingTokenAmount: Number(row?.pending_token_amount ?? 0),
     oldestPendingHours: Number(row?.oldest_pending_hours ?? 0),

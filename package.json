@@ -21,6 +21,7 @@
     "ops:db:migrate:status": "node scripts/ops.mjs migrate-status",
     "ops:db:validate:quests": "node scripts/ops.mjs validate-quests",
     "ops:db:snapshot:scheduled": "node scripts/ops.mjs snapshot-scheduled",
+    "ops:payouts:process": "node scripts/process-token-payouts.mjs",
     "ops:env:check": "node scripts/env-check.mjs",
     "ops:release:state-check": "node scripts/release-state-check.mjs",
     "ops:release:gate": "npm run ops:env:check && npm run ops:db:migrate && npm run ops:db:migrate:status && npm run ops:db:validate:quests && npm run ops:release:state-check",

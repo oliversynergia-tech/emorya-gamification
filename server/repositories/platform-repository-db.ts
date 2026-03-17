@@ -67,6 +67,7 @@ import {
   getReviewerTypeMatrix,
   getReviewerWorkload,
 } from "@/server/repositories/quest-repository";
+import { listQuestDefinitionsForAdmin } from "@/server/repositories/quest-definition-admin-repository";
 import { getReferralAnalytics, getReferralSummary } from "@/server/repositories/referral-repository";
 import {
   listRecentTokenRedemptionAudit,
@@ -872,7 +873,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -903,6 +904,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     listRecentTokenRedemptionAudit(),
     getTokenSettlementAnalytics(),
     listQuestDefinitionTemplatesForAdmin(),
+    listQuestDefinitionsForAdmin(),
   ]);
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -932,6 +934,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     bridge: questDefinitionTemplates.filter((template) => template.metadata?.campaignTemplateKind === "bridge").length,
     feeder: questDefinitionTemplates.filter((template) => template.metadata?.campaignTemplateKind === "feeder").length,
     active: questDefinitionTemplates.filter((template) => template.isActive).length,
+    generatedPacks: 0,
+    activeGeneratedPacks: 0,
   };
   const sourceTemplateCounts: AdminOverviewData["campaignOperations"]["sourceTemplateCounts"] = (["zealy", "galxe", "taskon"] as const).map((source) => {
     const matching = questDefinitionTemplates.filter((template) => template.metadata?.campaignAttributionSource === source);
@@ -941,6 +945,55 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       active: matching.filter((template) => template.isActive).length,
     };
   });
+  const packAnalyticsMap = new Map<string, AdminOverviewData["campaignOperations"]["packAnalytics"][number]>();
+  for (const quest of questDefinitionDirectory) {
+    const packId = typeof quest.metadata?.campaignPackId === "string" ? quest.metadata.campaignPackId : null;
+    if (!packId) {
+      continue;
+    }
+    const packLabel =
+      typeof quest.metadata?.campaignPackLabel === "string" ? quest.metadata.campaignPackLabel : packId;
+    const source =
+      typeof quest.metadata?.campaignAttributionSource === "string"
+        ? (quest.metadata.campaignAttributionSource as "zealy" | "galxe" | "taskon" | "direct")
+        : "direct";
+    const kind =
+      typeof quest.metadata?.campaignTemplateKind === "string" ? quest.metadata.campaignTemplateKind : null;
+    const current =
+      packAnalyticsMap.get(packId) ??
+      {
+        packId,
+        label: packLabel,
+        questCount: 0,
+        activeQuestCount: 0,
+        bridgeCount: 0,
+        feederCount: 0,
+        sources: [] as ("zealy" | "galxe" | "taskon" | "direct")[],
+        createdAt: quest.createdAt,
+        lastUpdatedAt: quest.updatedAt,
+      };
+    current.questCount += 1;
+    if (quest.isActive) {
+      current.activeQuestCount += 1;
+    }
+    if (kind === "bridge") {
+      current.bridgeCount += 1;
+    }
+    if (kind === "feeder") {
+      current.feederCount += 1;
+    }
+    if (!current.sources.includes(source)) {
+      current.sources.push(source);
+    }
+    current.createdAt = current.createdAt < quest.createdAt ? current.createdAt : quest.createdAt;
+    current.lastUpdatedAt = current.lastUpdatedAt > quest.updatedAt ? current.lastUpdatedAt : quest.updatedAt;
+    packAnalyticsMap.set(packId, current);
+  }
+  const packAnalytics = Array.from(packAnalyticsMap.values()).sort(
+    (left, right) => right.activeQuestCount - left.activeQuestCount || right.questCount - left.questCount,
+  );
+  templateCounts.generatedPacks = packAnalytics.length;
+  templateCounts.activeGeneratedPacks = packAnalytics.filter((entry) => entry.activeQuestCount > 0).length;
 
   return {
     stats: [
@@ -967,9 +1020,11 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     tokenSettlementAudit,
     settlementAnalytics,
     questDefinitionTemplates,
+    questDefinitionDirectory,
     campaignOperations: {
       templateCounts,
       sourceTemplateCounts,
+      packAnalytics,
       packReady:
         ["Zealy bridge quest", "Galxe feeder quest", "TaskOn feeder quest"].every((label) =>
           questDefinitionTemplates.some((template) => template.label === label && template.isActive),

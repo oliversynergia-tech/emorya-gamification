@@ -390,9 +390,9 @@ test("runEconomySettingsUpdateRoute surfaces validation failures", async () => {
 
 test("runSettlementAnalyticsRoute forwards selected day window", async () => {
   const services = {
-    getSettlementAnalytics: mock.fn(async (days?: number, compareDays?: number) => {
-      assert.equal(days, 30);
-      assert.equal(compareDays, 7);
+    getSettlementAnalytics: mock.fn(async (input: Record<string, unknown>) => {
+      assert.equal(input.days, 30);
+      assert.equal(input.compareDays, 7);
       return { periodDays: 30, pendingCount: 2 };
     }),
   };
@@ -403,6 +403,34 @@ test("runSettlementAnalyticsRoute forwards selected day window", async () => {
   assert.deepEqual(result.body, {
     ok: true,
     analytics: { periodDays: 30, pendingCount: 2 },
+  });
+});
+
+test("runSettlementAnalyticsRoute forwards custom date ranges", async () => {
+  const services = {
+    getSettlementAnalytics: mock.fn(async (input: Record<string, unknown>) => {
+      assert.equal(input.startDate, "2026-03-01");
+      assert.equal(input.endDate, "2026-03-15");
+      assert.equal(input.compareStartDate, "2026-02-15");
+      assert.equal(input.compareEndDate, "2026-02-29");
+      return { periodDays: 15, pendingCount: 1 };
+    }),
+  };
+
+  const result = await runSettlementAnalyticsRoute(
+    {
+      startDate: "2026-03-01",
+      endDate: "2026-03-15",
+      compareStartDate: "2026-02-15",
+      compareEndDate: "2026-02-29",
+    },
+    services,
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    analytics: { periodDays: 15, pendingCount: 1 },
   });
 });
 
@@ -431,5 +459,19 @@ test("runSettlementAnalyticsRoute rejects invalid day windows", async () => {
   assert.deepEqual(result.body, {
     ok: false,
     error: "days must be a positive number.",
+  });
+});
+
+test("runSettlementAnalyticsRoute rejects partial custom date ranges", async () => {
+  const services = {
+    getSettlementAnalytics: mock.fn(async () => ({ periodDays: 7 })),
+  };
+
+  const result = await runSettlementAnalyticsRoute({ startDate: "2026-03-01" }, services);
+
+  assert.equal(result.status, 400);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "Custom settlement analytics requires both startDate and endDate.",
   });
 });

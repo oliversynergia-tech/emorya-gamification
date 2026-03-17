@@ -1486,6 +1486,14 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
             <span>Campaign pack ready</span>
             <strong>{data.campaignOperations.packReady ? "Yes" : "No"}</strong>
           </div>
+          <div className="info-card">
+            <span>Generated packs</span>
+            <strong>{data.campaignOperations.templateCounts.generatedPacks}</strong>
+          </div>
+          <div className="info-card">
+            <span>Active generated packs</span>
+            <strong>{data.campaignOperations.templateCounts.activeGeneratedPacks}</strong>
+          </div>
         </div>
         <div className="achievement-list">
           {data.campaignOperations.sourceTemplateCounts.map((entry) => (
@@ -1501,6 +1509,25 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
             </article>
           ))}
         </div>
+        <div className="achievement-list">
+          {data.campaignOperations.packAnalytics.map((pack) => (
+            <article key={pack.packId} className="achievement-card">
+              <div>
+                <strong>{pack.label}</strong>
+                <p>
+                  {pack.bridgeCount} bridge quests, {pack.feederCount} feeder quests, sources: {pack.sources.join(", ")}.
+                </p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{pack.questCount} quests</span>
+                <span>{pack.activeQuestCount} active</span>
+              </div>
+            </article>
+          ))}
+          {data.campaignOperations.packAnalytics.length === 0 ? (
+            <p className="form-note">No generated campaign packs have been recorded yet.</p>
+          ) : null}
+        </div>
       </div>
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
@@ -1510,6 +1537,9 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
           </div>
           <span className="badge badge--pink">{data.settlementAnalytics.pendingCount} pending</span>
         </div>
+        <p className="form-note">
+          Current period: {data.settlementAnalytics.periodLabel}. Compared against {data.settlementAnalytics.comparePeriodLabel}.
+        </p>
         <div className="info-grid">
           <div className="info-card">
             <span>Pending payouts</span>
@@ -1528,7 +1558,7 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
             <strong>{formatCompactHours(data.settlementAnalytics.averageSettlementHours)}</strong>
           </div>
           <div className="info-card">
-            <span>7-day throughput</span>
+            <span>Period throughput</span>
             <strong>{data.settlementAnalytics.settledLast7DaysCount}</strong>
           </div>
           <div className="info-card">
@@ -1539,7 +1569,7 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
         <div className="achievement-list">
           <article className="achievement-card">
             <div>
-              <strong>Settled last 7 days</strong>
+              <strong>{data.settlementAnalytics.periodLabel}</strong>
               <p>Total settled volume across standard redemptions and direct payouts.</p>
             </div>
             <div className="achievement-card__side">
@@ -1774,6 +1804,32 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
               <div className="achievement-card__side">
                 <span>{Math.round(entry.premiumConversionRate * 100)}% premium</span>
                 <span>{Math.round(entry.annualConversionRate * 100)}% annual</span>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.referralAnalytics.bridgeComparison.map((entry) => (
+            <article key={`${entry.source}-${entry.activeLane}-comparison`} className="achievement-card">
+              <div>
+                <strong>
+                  {entry.source} vs {entry.activeLane} lane
+                </strong>
+                <p>
+                  {entry.invitedCount} invited, {entry.convertedCount} converted before lane aggregation.
+                </p>
+              </div>
+              <div className="achievement-card__side">
+                <span>
+                  premium {Math.round(entry.sourcePremiumConversionRate * 100)}% / {Math.round(entry.lanePremiumConversionRate * 100)}%
+                </span>
+                <span>
+                  annual {Math.round(entry.sourceAnnualConversionRate * 100)}% / {Math.round(entry.laneAnnualConversionRate * 100)}%
+                </span>
+                <span>
+                  delta {entry.premiumConversionDelta >= 0 ? "+" : ""}
+                  {Math.round(entry.premiumConversionDelta * 100)} pts
+                </span>
               </div>
             </article>
           ))}

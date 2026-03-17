@@ -33,6 +33,11 @@ export function TokenSettlementPanel({
   const [analyticsState, setAnalyticsState] = useState(analytics);
   const [selectedWindow, setSelectedWindow] = useState(String(analytics.periodDays));
   const [compareWindow, setCompareWindow] = useState(String(analytics.comparePeriodDays));
+  const [rangeMode, setRangeMode] = useState<"preset" | "custom">("preset");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [customCompareStartDate, setCustomCompareStartDate] = useState("");
+  const [customCompareEndDate, setCustomCompareEndDate] = useState("");
   const [workflowFilter, setWorkflowFilter] = useState<"all" | "queued" | "approved" | "processing">("all");
   const [sourceFilter, setSourceFilter] = useState<"all" | string>("all");
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -183,6 +188,7 @@ export function TokenSettlementPanel({
   }
 
   async function updateWindow(nextWindow: string, nextCompareWindow = compareWindow) {
+    setRangeMode("preset");
     setSelectedWindow(nextWindow);
     setCompareWindow(nextCompareWindow);
     setAnalyticsPending(true);
@@ -193,6 +199,43 @@ export function TokenSettlementPanel({
         `/api/admin/settlement-analytics?days=${nextWindow}&compareDays=${nextCompareWindow}`,
         { cache: "no-store" },
       );
+      const result = (await response.json()) as SettlementAnalyticsResponse;
+
+      if (!response.ok || !result.ok || !result.analytics) {
+        setError(result.error ?? "Unable to refresh settlement analytics.");
+        return;
+      }
+
+      setAnalyticsState(result.analytics);
+    } catch {
+      setError("Unable to refresh settlement analytics.");
+    } finally {
+      setAnalyticsPending(false);
+    }
+  }
+
+  async function updateCustomRange() {
+    if (!customStartDate || !customEndDate) {
+      setError("Choose both a custom start and end date.");
+      return;
+    }
+
+    setRangeMode("custom");
+    setAnalyticsPending(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams({
+        startDate: customStartDate,
+        endDate: customEndDate,
+      });
+      if (customCompareStartDate && customCompareEndDate) {
+        params.set("compareStartDate", customCompareStartDate);
+        params.set("compareEndDate", customCompareEndDate);
+      }
+      const response = await fetch(`/api/admin/settlement-analytics?${params.toString()}`, {
+        cache: "no-store",
+      });
       const result = (await response.json()) as SettlementAnalyticsResponse;
 
       if (!response.ok || !result.ok || !result.analytics) {
@@ -236,11 +279,22 @@ export function TokenSettlementPanel({
       <div className="review-bulk-actions">
         <label className="field">
           <span>Analytics window</span>
-          <select value={selectedWindow} onChange={(event) => void updateWindow(event.target.value, compareWindow)}>
+          <select
+            value={rangeMode === "custom" ? "custom" : selectedWindow}
+            onChange={(event) => {
+              if (event.target.value === "custom") {
+                setRangeMode("custom");
+                return;
+              }
+              void updateWindow(event.target.value, compareWindow);
+            }}
+          >
             <option value="7">7 days</option>
             <option value="30">30 days</option>
             <option value="90">90 days</option>
             <option value="180">180 days</option>
+            <option value="365">365 days</option>
+            <option value="custom">Custom range</option>
           </select>
         </label>
         <label className="field">
@@ -250,6 +304,7 @@ export function TokenSettlementPanel({
             <option value="30">30 days</option>
             <option value="90">90 days</option>
             <option value="180">180 days</option>
+            <option value="365">365 days</option>
           </select>
         </label>
         <label className="field">
@@ -273,6 +328,32 @@ export function TokenSettlementPanel({
           </select>
         </label>
       </div>
+      {rangeMode === "custom" ? (
+        <div className="profile-grid">
+          <label className="field">
+            <span>Start date</span>
+            <input type="date" value={customStartDate} onChange={(event) => setCustomStartDate(event.target.value)} />
+          </label>
+          <label className="field">
+            <span>End date</span>
+            <input type="date" value={customEndDate} onChange={(event) => setCustomEndDate(event.target.value)} />
+          </label>
+          <label className="field">
+            <span>Compare start</span>
+            <input type="date" value={customCompareStartDate} onChange={(event) => setCustomCompareStartDate(event.target.value)} />
+          </label>
+          <label className="field">
+            <span>Compare end</span>
+            <input type="date" value={customCompareEndDate} onChange={(event) => setCustomCompareEndDate(event.target.value)} />
+          </label>
+          <button className="button button--secondary" type="button" disabled={analyticsPending} onClick={() => void updateCustomRange()}>
+            {analyticsPending ? "Refreshing..." : "Apply custom range"}
+          </button>
+        </div>
+      ) : null}
+      <p className="form-note">
+        Current period: {analyticsState.periodLabel}. Compared against {analyticsState.comparePeriodLabel}.
+      </p>
       <div className="achievement-list">
         <article className="achievement-card">
           <div>

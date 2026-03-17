@@ -32,7 +32,14 @@ export type AdminRouteActionServices = {
   saveRewardAsset: (input: Record<string, unknown>, assetId?: string) => Promise<unknown>;
   getRewardProgramDirectory: () => Promise<unknown>;
   saveRewardProgram: (input: Record<string, unknown>, programId?: string) => Promise<unknown>;
-  getSettlementAnalytics: (days?: number, compareDays?: number) => Promise<unknown>;
+  getSettlementAnalytics: (input: {
+    days?: number;
+    compareDays?: number;
+    startDate?: string;
+    endDate?: string;
+    compareStartDate?: string;
+    compareEndDate?: string;
+  }) => Promise<unknown>;
   transitionPendingTokenRedemption: (input: {
     redemptionId: string;
     action: "approve" | "processing" | "settle";
@@ -162,7 +169,14 @@ export async function runRewardProgramSaveRoute(
 }
 
 export async function runSettlementAnalyticsRoute(
-  input: { days?: number; compareDays?: number },
+  input: {
+    days?: number;
+    compareDays?: number;
+    startDate?: string;
+    endDate?: string;
+    compareStartDate?: string;
+    compareEndDate?: string;
+  },
   services: Pick<AdminRouteActionServices, "getSettlementAnalytics">,
 ) {
   return handleSettlementAnalyticsRequest(input, services.getSettlementAnalytics);

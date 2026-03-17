@@ -458,6 +458,18 @@ export type AdminOverviewData = {
       premiumConversionRate: number;
       annualConversionRate: number;
     }>;
+    bridgeComparison: Array<{
+      source: CampaignSource | "unknown";
+      activeLane: CampaignSource | "direct";
+      invitedCount: number;
+      convertedCount: number;
+      sourcePremiumConversionRate: number;
+      lanePremiumConversionRate: number;
+      premiumConversionDelta: number;
+      sourceAnnualConversionRate: number;
+      laneAnnualConversionRate: number;
+      annualConversionDelta: number;
+    }>;
   };
   reviewQueue: ReviewQueueItem[];
   reviewHistory: ReviewHistoryItem[];
@@ -527,6 +539,8 @@ export type AdminOverviewData = {
   settlementAnalytics: {
     periodDays: number;
     comparePeriodDays: number;
+    periodLabel: string;
+    comparePeriodLabel: string;
     pendingCount: number;
     pendingTokenAmount: number;
     oldestPendingHours: number;
@@ -587,11 +601,24 @@ export type AdminOverviewData = {
       bridge: number;
       feeder: number;
       active: number;
+      generatedPacks: number;
+      activeGeneratedPacks: number;
     };
     sourceTemplateCounts: Array<{
       source: CampaignSource;
       total: number;
       active: number;
+    }>;
+    packAnalytics: Array<{
+      packId: string;
+      label: string;
+      questCount: number;
+      activeQuestCount: number;
+      bridgeCount: number;
+      feederCount: number;
+      sources: CampaignSource[];
+      createdAt: string;
+      lastUpdatedAt: string;
     }>;
     packReady: boolean;
     activeLaneMode: "bridged" | "separate";

@@ -11,6 +11,10 @@ type RewardProgramInput = Record<string, unknown>;
 type SettlementAnalyticsInput = {
   days?: number;
   compareDays?: number;
+  startDate?: string;
+  endDate?: string;
+  compareStartDate?: string;
+  compareEndDate?: string;
 };
 type TokenSettlementInput = {
   action?: "approve" | "processing" | "settle";
@@ -394,7 +398,7 @@ export async function handleRewardProgramSaveRequest(
 
 export async function handleSettlementAnalyticsRequest(
   input: SettlementAnalyticsInput,
-  getSettlementAnalytics: (days?: number, compareDays?: number) => Promise<unknown>,
+  getSettlementAnalytics: (input: SettlementAnalyticsInput) => Promise<unknown>,
 ) {
   if (input.days !== undefined && (!Number.isFinite(input.days) || input.days <= 0)) {
     return {
@@ -410,8 +414,37 @@ export async function handleSettlementAnalyticsRequest(
     };
   }
 
+  const dateFields = [
+    input.startDate,
+    input.endDate,
+    input.compareStartDate,
+    input.compareEndDate,
+  ].filter(Boolean);
+  if (
+    dateFields.some((value) => typeof value !== "string" || Number.isNaN(Date.parse(`${value}T00:00:00.000Z`)))
+  ) {
+    return {
+      status: 400,
+      body: { ok: false, error: "Custom settlement analytics dates must use YYYY-MM-DD." },
+    };
+  }
+
+  if ((input.startDate && !input.endDate) || (!input.startDate && input.endDate)) {
+    return {
+      status: 400,
+      body: { ok: false, error: "Custom settlement analytics requires both startDate and endDate." },
+    };
+  }
+
+  if ((input.compareStartDate && !input.compareEndDate) || (!input.compareStartDate && input.compareEndDate)) {
+    return {
+      status: 400,
+      body: { ok: false, error: "Custom comparison analytics requires both compareStartDate and compareEndDate." },
+    };
+  }
+
   try {
-    const analytics = await getSettlementAnalytics(input.days, input.compareDays);
+    const analytics = await getSettlementAnalytics(input);
 
     return {
       status: 200,

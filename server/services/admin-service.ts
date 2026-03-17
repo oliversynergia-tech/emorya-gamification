@@ -381,11 +381,18 @@ export async function getTokenSettlementQueue() {
   return listPendingTokenSettlements();
 }
 
-export async function getSettlementAnalytics(days?: number, compareDays?: number) {
+export async function getSettlementAnalytics(input?: {
+  days?: number;
+  compareDays?: number;
+  startDate?: string;
+  endDate?: string;
+  compareStartDate?: string;
+  compareEndDate?: string;
+}) {
   const currentUser = await getAuthenticatedUser();
   await assertAdminUser(currentUser);
 
-  return getTokenSettlementAnalytics(days, compareDays);
+  return getTokenSettlementAnalytics(input);
 }
 
 export async function transitionPendingTokenRedemption({

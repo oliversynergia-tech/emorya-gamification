@@ -492,5 +492,35 @@ export async function getReferralAnalytics() {
         annualConversionRate: entry.invitedCount > 0 ? entry.annualCount / entry.invitedCount : 0,
       }))
       .sort((left, right) => right.invitedCount - left.invitedCount || left.lane.localeCompare(right.lane)),
+    bridgeComparison: Array.from(sourceQualityMap.values())
+      .map((entry) => {
+        const laneEntry = laneQualityMap.get(entry.activeLane) ?? {
+          lane: entry.activeLane,
+          invitedCount: 0,
+          convertedCount: 0,
+          monthlyCount: 0,
+          annualCount: 0,
+        };
+        const sourcePremiumConversionRate = entry.invitedCount > 0 ? entry.convertedCount / entry.invitedCount : 0;
+        const sourceAnnualConversionRate = entry.invitedCount > 0 ? entry.annualCount / entry.invitedCount : 0;
+        const lanePremiumConversionRate =
+          laneEntry.invitedCount > 0 ? laneEntry.convertedCount / laneEntry.invitedCount : 0;
+        const laneAnnualConversionRate =
+          laneEntry.invitedCount > 0 ? laneEntry.annualCount / laneEntry.invitedCount : 0;
+
+        return {
+          source: entry.source,
+          activeLane: entry.activeLane,
+          invitedCount: entry.invitedCount,
+          convertedCount: entry.convertedCount,
+          sourcePremiumConversionRate,
+          lanePremiumConversionRate,
+          premiumConversionDelta: sourcePremiumConversionRate - lanePremiumConversionRate,
+          sourceAnnualConversionRate,
+          laneAnnualConversionRate,
+          annualConversionDelta: sourceAnnualConversionRate - laneAnnualConversionRate,
+        };
+      })
+      .sort((left, right) => right.invitedCount - left.invitedCount || left.source.localeCompare(right.source)),
   };
 }
