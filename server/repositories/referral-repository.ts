@@ -75,6 +75,13 @@ type CampaignAttributionRow = QueryResultRow & {
   count: string;
 };
 
+type ReferralSourceQualityRow = QueryResultRow & {
+  source: string | null;
+  subscription_tier: SubscriptionTier;
+  invited_count: string;
+  converted_count: string;
+};
+
 export async function findReferrerByCode(referralCode: string) {
   const result = await runQuery<ReferrerRow>(
     `SELECT id
@@ -202,7 +209,7 @@ export async function getReferralSummary(userId: string) {
 
 export async function getReferralAnalytics() {
   const economySettings = await getActiveEconomySettings();
-  const [summaryResult, topReferrersResult, sourceBreakdownResult, conversionWindowResult, rewardRowsResult, attributionRowsResult] = await Promise.all([
+  const [summaryResult, topReferrersResult, sourceBreakdownResult, conversionWindowResult, rewardRowsResult, attributionRowsResult, sourceQualityRowsResult] = await Promise.all([
     runQuery<ReferralAnalyticsSummaryRow>(
       `SELECT COUNT(*)::text AS invited_count,
               COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE)::text AS converted_count,
@@ -266,6 +273,15 @@ export async function getReferralAnalytics() {
        FROM users
        GROUP BY attribution_source, subscription_tier`,
     ),
+    runQuery<ReferralSourceQualityRow>(
+      `SELECT u.attribution_source AS source,
+              u.subscription_tier,
+              COUNT(r.id)::text AS invited_count,
+              COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE)::text AS converted_count
+       FROM referrals r
+       INNER JOIN users u ON u.id = r.referee_user_id
+       GROUP BY u.attribution_source, u.subscription_tier`,
+    ),
   ]);
 
   const summary = summaryResult.rows[0];
@@ -302,6 +318,27 @@ export async function getReferralAnalytics() {
       monthlyCount: number;
       annualCount: number;
       premiumCount: number;
+    }
+  >();
+  const sourceQualityMap = new Map<
+    string,
+    {
+      source: CampaignSource | "unknown";
+      activeLane: CampaignSource | "direct";
+      invitedCount: number;
+      convertedCount: number;
+      monthlyCount: number;
+      annualCount: number;
+    }
+  >();
+  const laneQualityMap = new Map<
+    string,
+    {
+      lane: CampaignSource | "direct";
+      invitedCount: number;
+      convertedCount: number;
+      monthlyCount: number;
+      annualCount: number;
     }
   >();
 
@@ -360,6 +397,56 @@ export async function getReferralAnalytics() {
     laneComparisonMap.set(activeLane, laneEntry);
   }
 
+  for (const row of sourceQualityRowsResult.rows) {
+    const normalizedSource = normalizeReferralCampaignSource(row.source) ?? "unknown";
+    const activeLane =
+      normalizedSource === "unknown"
+        ? "direct"
+        : resolveCampaignExperienceSource(economySettings, normalizedSource);
+    const invitedCount = Number(row.invited_count);
+    const convertedCount = Number(row.converted_count);
+    const tier = row.subscription_tier;
+
+    const sourceEntry =
+      sourceQualityMap.get(normalizedSource) ??
+      {
+        source: normalizedSource,
+        activeLane,
+        invitedCount: 0,
+        convertedCount: 0,
+        monthlyCount: 0,
+        annualCount: 0,
+      };
+
+    sourceEntry.invitedCount += invitedCount;
+    sourceEntry.convertedCount += convertedCount;
+    if (tier === "monthly") {
+      sourceEntry.monthlyCount += convertedCount;
+    } else if (tier === "annual") {
+      sourceEntry.annualCount += convertedCount;
+    }
+    sourceQualityMap.set(normalizedSource, sourceEntry);
+
+    const laneEntry =
+      laneQualityMap.get(activeLane) ??
+      {
+        lane: activeLane,
+        invitedCount: 0,
+        convertedCount: 0,
+        monthlyCount: 0,
+        annualCount: 0,
+      };
+
+    laneEntry.invitedCount += invitedCount;
+    laneEntry.convertedCount += convertedCount;
+    if (tier === "monthly") {
+      laneEntry.monthlyCount += convertedCount;
+    } else if (tier === "annual") {
+      laneEntry.annualCount += convertedCount;
+    }
+    laneQualityMap.set(activeLane, laneEntry);
+  }
+
   return {
     invitedCount,
     convertedCount,
@@ -391,5 +478,19 @@ export async function getReferralAnalytics() {
     laneComparison: Array.from(laneComparisonMap.values()).sort(
       (left, right) => right.activeUsers - left.activeUsers || left.lane.localeCompare(right.lane),
     ),
+    sourceQuality: Array.from(sourceQualityMap.values())
+      .map((entry) => ({
+        ...entry,
+        premiumConversionRate: entry.invitedCount > 0 ? entry.convertedCount / entry.invitedCount : 0,
+        annualConversionRate: entry.invitedCount > 0 ? entry.annualCount / entry.invitedCount : 0,
+      }))
+      .sort((left, right) => right.invitedCount - left.invitedCount || left.source.localeCompare(right.source)),
+    laneQuality: Array.from(laneQualityMap.values())
+      .map((entry) => ({
+        ...entry,
+        premiumConversionRate: entry.invitedCount > 0 ? entry.convertedCount / entry.invitedCount : 0,
+        annualConversionRate: entry.invitedCount > 0 ? entry.annualCount / entry.invitedCount : 0,
+      }))
+      .sort((left, right) => right.invitedCount - left.invitedCount || left.lane.localeCompare(right.lane)),
   };
 }

@@ -143,6 +143,13 @@ type TemplateFormState = {
   isActive: boolean;
 };
 
+type TemplateFilterState = {
+  search: string;
+  kind: "all" | "bridge" | "feeder";
+  source: "all" | "zealy" | "galxe" | "taskon";
+  status: "all" | "active" | "inactive";
+};
+
 function parseMetadata(metadataText: string) {
   try {
     const parsed = JSON.parse(metadataText) as Record<string, unknown>;
@@ -247,6 +254,13 @@ export function QuestDefinitionManagementPanel({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [templateWarningAcknowledged, setTemplateWarningAcknowledged] = useState(false);
+  const [templateFilters, setTemplateFilters] = useState<TemplateFilterState>({
+    search: "",
+    kind: "all",
+    source: "all",
+    status: "all",
+  });
+  const [campaignPackLabel, setCampaignPackLabel] = useState("March Campaign");
 
   const metadataState = useMemo(() => parseMetadata(form.metadataText), [form.metadataText]);
   const bridgeTemplateWarning = useMemo(
@@ -533,6 +547,25 @@ export function QuestDefinitionManagementPanel({
       },
     ];
   }, [availableAssets, availablePrograms]);
+  const filteredTemplates = useMemo(() => {
+    return templates.filter((template) => {
+      const metadata = template.metadata ?? {};
+      const kind =
+        typeof metadata.campaignTemplateKind === "string" ? metadata.campaignTemplateKind : "other";
+      const source =
+        typeof metadata.campaignAttributionSource === "string" ? metadata.campaignAttributionSource : "other";
+      const matchesSearch =
+        template.label.toLowerCase().includes(templateFilters.search.toLowerCase()) ||
+        template.description.toLowerCase().includes(templateFilters.search.toLowerCase());
+      const matchesKind = templateFilters.kind === "all" || kind === templateFilters.kind;
+      const matchesSource = templateFilters.source === "all" || source === templateFilters.source;
+      const matchesStatus =
+        templateFilters.status === "all" ||
+        (templateFilters.status === "active" ? template.isActive : !template.isActive);
+
+      return matchesSearch && matchesKind && matchesSource && matchesStatus;
+    });
+  }, [templateFilters, templates]);
 
   async function refreshQuestDirectory() {
     setLoading(true);
@@ -901,6 +934,72 @@ export function QuestDefinitionManagementPanel({
     }
   }
 
+  async function createCampaignPack() {
+    const packTemplates = templates.filter((template) =>
+      ["Zealy bridge quest", "Galxe feeder quest", "TaskOn feeder quest"].includes(template.label),
+    );
+
+    if (packTemplates.length < 3) {
+      setError("The saved bridge/feeder templates are not available yet.");
+      return;
+    }
+
+    setPending("campaign-pack");
+    setMessage(null);
+    setError(null);
+
+    try {
+      const slugPrefix = campaignPackLabel
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+      const suffix = new Date().toISOString().replace(/[:.]/g, "-").toLowerCase();
+
+      for (const template of packTemplates) {
+        const source =
+          typeof template.metadata.campaignAttributionSource === "string"
+            ? template.metadata.campaignAttributionSource
+            : "campaign";
+        const response = await fetch("/api/admin/quest-definitions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            slug: `${slugPrefix}-${source}-${suffix}`,
+            title: `${campaignPackLabel.trim()} · ${template.label}`,
+            description: template.description,
+            category: template.form.category,
+            difficulty: template.form.difficulty,
+            verificationType: template.form.verificationType,
+            recurrence: template.form.recurrence,
+            requiredTier: template.form.requiredTier,
+            requiredLevel: template.form.requiredLevel,
+            xpReward: template.form.xpReward,
+            isPremiumPreview: template.form.isPremiumPreview,
+            isActive: template.form.isActive,
+            metadata: template.metadata,
+          }),
+        });
+        const result = (await response.json()) as QuestDefinitionResponse;
+
+        if (!response.ok || !result.ok || !result.quests) {
+          throw new Error(result.error ?? `Unable to create quest from ${template.label}.`);
+        }
+
+        setQuests(result.quests);
+      }
+
+      setMessage(`Created campaign pack: ${campaignPackLabel.trim()}.`);
+      router.refresh();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Unable to create campaign pack.");
+    } finally {
+      setPending(null);
+    }
+  }
+
   return (
     <section className="panel panel--glass">
       <div className="panel__header">
@@ -1035,6 +1134,64 @@ export function QuestDefinitionManagementPanel({
         </div>
         <div className="profile-grid">
           <label className="field">
+            <span>Search templates</span>
+            <input
+              value={templateFilters.search}
+              onChange={(event) => setTemplateFilters((current) => ({ ...current, search: event.target.value }))}
+            />
+          </label>
+          <label className="field">
+            <span>Kind</span>
+            <select
+              value={templateFilters.kind}
+              onChange={(event) =>
+                setTemplateFilters((current) => ({
+                  ...current,
+                  kind: event.target.value as TemplateFilterState["kind"],
+                }))
+              }
+            >
+              <option value="all">all</option>
+              <option value="bridge">bridge</option>
+              <option value="feeder">feeder</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Source</span>
+            <select
+              value={templateFilters.source}
+              onChange={(event) =>
+                setTemplateFilters((current) => ({
+                  ...current,
+                  source: event.target.value as TemplateFilterState["source"],
+                }))
+              }
+            >
+              <option value="all">all</option>
+              <option value="zealy">zealy</option>
+              <option value="galxe">galxe</option>
+              <option value="taskon">taskon</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Status</span>
+            <select
+              value={templateFilters.status}
+              onChange={(event) =>
+                setTemplateFilters((current) => ({
+                  ...current,
+                  status: event.target.value as TemplateFilterState["status"],
+                }))
+              }
+            >
+              <option value="all">all</option>
+              <option value="active">active</option>
+              <option value="inactive">inactive</option>
+            </select>
+          </label>
+        </div>
+        <div className="profile-grid">
+          <label className="field">
             <span>Template label</span>
             <input
               value={templateForm.label}
@@ -1092,8 +1249,38 @@ export function QuestDefinitionManagementPanel({
             Reset template
           </button>
         </div>
+        <div className="panel panel--glass">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Campaign pack</p>
+              <h3>Create the Zealy bridge + feeder set together</h3>
+            </div>
+          </div>
+          <div className="profile-grid">
+            <label className="field">
+              <span>Pack label</span>
+              <input
+                value={campaignPackLabel}
+                onChange={(event) => setCampaignPackLabel(event.target.value)}
+              />
+            </label>
+          </div>
+          <div className="review-bulk-actions">
+            <button
+              className="button button--secondary button--small"
+              type="button"
+              disabled={pending !== null || !campaignPackLabel.trim()}
+              onClick={createCampaignPack}
+            >
+              {pending === "campaign-pack" ? "Creating..." : "Create campaign pack"}
+            </button>
+          </div>
+          <p className="form-note">
+            This creates one live Zealy bridge quest plus Galxe and TaskOn feeder quests using the saved templates.
+          </p>
+        </div>
         <div className="review-history__list">
-          {templates.map((template) => (
+          {filteredTemplates.map((template) => (
             <article key={template.id} className="review-history__item">
               <div className="quest-card__meta">
                 <span>{template.label}</span>
@@ -1127,6 +1314,7 @@ export function QuestDefinitionManagementPanel({
               </div>
             </article>
           ))}
+          {filteredTemplates.length === 0 ? <p className="form-note">No templates match the current filters.</p> : null}
         </div>
       </section>
       <label className="field">

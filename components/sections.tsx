@@ -1718,6 +1718,48 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
           <div>
+            <p className="eyebrow">Source quality</p>
+            <h3>Which sources convert best before and after the Zealy bridge</h3>
+          </div>
+        </div>
+        <div className="achievement-list">
+          {data.referralAnalytics.sourceQuality.map((entry) => (
+            <article key={`${entry.source}-${entry.activeLane}`} className="achievement-card">
+              <div>
+                <strong>
+                  {entry.source} {"->"} {entry.activeLane}
+                </strong>
+                <p>
+                  {entry.invitedCount} invited, {entry.convertedCount} premium, {entry.annualCount} annual.
+                </p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{Math.round(entry.premiumConversionRate * 100)}% premium</span>
+                <span>{Math.round(entry.annualConversionRate * 100)}% annual</span>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.referralAnalytics.laneQuality.map((entry) => (
+            <article key={entry.lane} className="achievement-card">
+              <div>
+                <strong>{entry.lane} lane quality</strong>
+                <p>
+                  {entry.invitedCount} invited routed through this lane, with {entry.convertedCount} paid and {entry.annualCount} annual.
+                </p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{Math.round(entry.premiumConversionRate * 100)}% premium</span>
+                <span>{Math.round(entry.annualConversionRate * 100)}% annual</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
             <p className="eyebrow">Lane preview</p>
             <h3>What the upstream toggle is currently resolving to</h3>
           </div>

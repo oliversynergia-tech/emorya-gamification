@@ -434,6 +434,25 @@ export type AdminOverviewData = {
       annualCount: number;
       premiumCount: number;
     }>;
+    sourceQuality: Array<{
+      source: CampaignSource | "unknown";
+      activeLane: CampaignSource | "direct";
+      invitedCount: number;
+      convertedCount: number;
+      monthlyCount: number;
+      annualCount: number;
+      premiumConversionRate: number;
+      annualConversionRate: number;
+    }>;
+    laneQuality: Array<{
+      lane: CampaignSource | "direct";
+      invitedCount: number;
+      convertedCount: number;
+      monthlyCount: number;
+      annualCount: number;
+      premiumConversionRate: number;
+      annualConversionRate: number;
+    }>;
   };
   reviewQueue: ReviewQueueItem[];
   reviewHistory: ReviewHistoryItem[];
