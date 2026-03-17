@@ -231,6 +231,7 @@ export function QuestDefinitionManagementPanel({
   const [pending, setPending] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [templateWarningAcknowledged, setTemplateWarningAcknowledged] = useState(false);
 
   const metadataState = useMemo(() => parseMetadata(form.metadataText), [form.metadataText]);
   const bridgeTemplateWarning = useMemo(
@@ -560,6 +561,12 @@ export function QuestDefinitionManagementPanel({
     void refreshTemplateDirectory();
   }, []);
 
+  useEffect(() => {
+    if (!bridgeTemplateWarning) {
+      setTemplateWarningAcknowledged(false);
+    }
+  }, [bridgeTemplateWarning]);
+
   function startEdit(quest: QuestDefinitionAdminItem) {
     setEditingId(quest.id);
     setForm({
@@ -624,6 +631,7 @@ export function QuestDefinitionManagementPanel({
       description: "",
       isActive: true,
     });
+    setTemplateWarningAcknowledged(false);
   }
 
   function startEditTemplate(template: QuestDefinitionTemplateItem) {
@@ -763,6 +771,12 @@ export function QuestDefinitionManagementPanel({
 
     if (metadataState.error || !metadataState.parsed) {
       setError(`Template metadata JSON is invalid: ${metadataState.error ?? "Invalid JSON."}`);
+      setPending(null);
+      return;
+    }
+
+    if (bridgeTemplateWarning && !templateWarningAcknowledged) {
+      setError("Acknowledge the live-lane warning before saving this feeder template.");
       setPending(null);
       return;
     }
@@ -1024,6 +1038,17 @@ export function QuestDefinitionManagementPanel({
             onChange={(event) => setTemplateForm((current) => ({ ...current, description: event.target.value }))}
           />
         </label>
+        {bridgeTemplateWarning ? (
+          <label className="field field--checkbox">
+            <span>Acknowledge feeder template warning</span>
+            <input
+              type="checkbox"
+              checked={templateWarningAcknowledged}
+              onChange={(event) => setTemplateWarningAcknowledged(event.target.checked)}
+            />
+          </label>
+        ) : null}
+        {bridgeTemplateWarning ? <p className="status status--error">{bridgeTemplateWarning}</p> : null}
         <div className="review-bulk-actions">
           <button
             className="button button--secondary button--small"
@@ -1031,6 +1056,7 @@ export function QuestDefinitionManagementPanel({
             disabled={
               pending !== null ||
               Boolean(metadataState.error) ||
+              (Boolean(bridgeTemplateWarning) && !templateWarningAcknowledged) ||
               !templateForm.label.trim() ||
               !templateForm.description.trim()
             }
