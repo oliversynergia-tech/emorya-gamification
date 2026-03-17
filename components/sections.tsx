@@ -4,6 +4,7 @@ import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionTier } from "@/lib/types";
 import { PayoutAuditTrailPanel } from "@/components/payout-audit-trail-panel";
+import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
 import { TokenReceiptHistoryPanel } from "@/components/token-receipt-history-panel";
 
 function tierClass(tier: SubscriptionTier) {
@@ -451,33 +452,11 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             </div>
           ) : null}
         </div>
-        {data.user.tokenProgram.notifications.length > 0 ? (
-          <div className="panel panel--glass">
-            <div className="panel__header">
-              <div>
-                <p className="eyebrow">Payout notifications</p>
-                <h3>Claimed, settled, and scheduled reward events</h3>
-              </div>
-              <span className="badge">{data.user.tokenProgram.notifications.length} live</span>
-            </div>
-            <div className="achievement-list">
-              {data.user.tokenProgram.notifications.map((notification) => (
-                <article
-                  key={notification.id}
-                  className={`achievement-card achievement-card--notification achievement-card--notification-${notification.tone}`}
-                >
-                  <div>
-                    <strong>{notification.title}</strong>
-                    <p>{notification.detail}</p>
-                  </div>
-                  <div className="achievement-card__side">
-                    <span>{notification.tone}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        ) : null}
+        <PayoutNotificationsPanel
+          notifications={data.user.tokenProgram.notifications}
+          scheduledDirectRewards={data.user.tokenProgram.scheduledDirectRewards}
+          title="Claimed, settled, and scheduled reward events"
+        />
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>
@@ -983,6 +962,12 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         title="Reward receipts and settlement history"
         eyebrow="Token receipts"
       />
+      <PayoutNotificationsPanel
+        notifications={data.user.tokenProgram.notifications}
+        scheduledDirectRewards={data.user.tokenProgram.scheduledDirectRewards}
+        title="Reward status alerts"
+        eyebrow="Payout status"
+      />
       <div className="panel">
         <div className="panel__header">
           <div>
@@ -1175,20 +1160,12 @@ export function ProfileSection({ data }: { data: DashboardData }) {
               </div>
             </article>
           ))}
-          {data.user.tokenProgram.notifications.map((notification) => (
-            <article
-              key={notification.id}
-              className={`achievement-card achievement-card--notification achievement-card--notification-${notification.tone}`}
-            >
-              <div>
-                <strong>{notification.title}</strong>
-                <p>{notification.detail}</p>
-              </div>
-              <div className="achievement-card__side">
-                <span>{notification.tone}</span>
-              </div>
-            </article>
-          ))}
+          <PayoutNotificationsPanel
+            notifications={data.user.tokenProgram.notifications}
+            scheduledDirectRewards={data.user.tokenProgram.scheduledDirectRewards}
+            title="Profile payout status"
+            eyebrow="Payout notifications"
+          />
         </div>
       </div>
       <div className="panel">

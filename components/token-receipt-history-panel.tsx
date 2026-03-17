@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 import type { DashboardData } from "@/lib/types";
 
 function downloadReceipt(entry: DashboardData["user"]["tokenProgram"]["redemptionHistory"][number]) {
@@ -39,7 +41,11 @@ export function TokenReceiptHistoryPanel({
   title: string;
   eyebrow: string;
 }) {
-  const latestEntry = history[0] ?? null;
+  const [selectedReceiptId, setSelectedReceiptId] = useState<string | null>(history[0]?.id ?? null);
+  const selectedEntry = useMemo(
+    () => history.find((entry) => entry.id === selectedReceiptId) ?? history[0] ?? null,
+    [history, selectedReceiptId],
+  );
 
   function renderTimeline(
     entry: DashboardData["user"]["tokenProgram"]["redemptionHistory"][number],
@@ -93,31 +99,68 @@ export function TokenReceiptHistoryPanel({
         </div>
         <span className="badge">{history.length} receipts</span>
       </div>
-      {latestEntry ? (
+      {selectedEntry ? (
         <div className="receipt-detail">
           <article className="achievement-card achievement-card--unlocked">
             <div>
-              <strong>{latestEntry.status === "settled" ? "Latest settled payout" : "Latest claimed payout"}</strong>
+              <strong>{selectedEntry.status === "settled" ? "Selected settled payout" : "Selected claimed payout"}</strong>
               <p>
-                {latestEntry.tokenAmount} {latestEntry.asset} from {latestEntry.source}.
-                {latestEntry.rewardProgramName ? ` ${latestEntry.rewardProgramName}.` : ""}
-                {latestEntry.receiptReference ? ` Receipt ${latestEntry.receiptReference}.` : ""}
+                {selectedEntry.tokenAmount} {selectedEntry.asset} from {selectedEntry.source}.
+                {selectedEntry.rewardProgramName ? ` ${selectedEntry.rewardProgramName}.` : ""}
+                {selectedEntry.receiptReference ? ` Receipt ${selectedEntry.receiptReference}.` : ""}
               </p>
-              {latestEntry.settlementNote ? <p>{latestEntry.settlementNote}</p> : null}
-              <p>Workflow state: {latestEntry.workflowState}</p>
+              {selectedEntry.settlementNote ? <p>{selectedEntry.settlementNote}</p> : null}
+              <p>Workflow state: {selectedEntry.workflowState}</p>
             </div>
             <div className="achievement-card__side">
-              <span>{new Date(latestEntry.createdAt).toLocaleDateString()}</span>
-              <span>{latestEntry.status}</span>
-              <button className="button button--secondary button--small" type="button" onClick={() => downloadReceipt(latestEntry)}>
+              <span>{new Date(selectedEntry.createdAt).toLocaleDateString()}</span>
+              <span>{selectedEntry.status}</span>
+              <button className="button button--secondary button--small" type="button" onClick={() => downloadReceipt(selectedEntry)}>
                 Download receipt
               </button>
             </div>
           </article>
-          {renderTimeline(latestEntry)}
+          <div className="info-grid">
+            <div className="info-card">
+              <span>Reward program</span>
+              <strong>{selectedEntry.rewardProgramName ?? "Unassigned"}</strong>
+            </div>
+            <div className="info-card">
+              <span>Source</span>
+              <strong>{selectedEntry.source}</strong>
+            </div>
+            <div className="info-card">
+              <span>Eligibility spent</span>
+              <strong>{selectedEntry.eligibilityPointsSpent} pts</strong>
+            </div>
+            <div className="info-card">
+              <span>Workflow state</span>
+              <strong>{selectedEntry.workflowState}</strong>
+            </div>
+            <div className="info-card">
+              <span>Approved by</span>
+              <strong>{selectedEntry.approvedByDisplayName ?? "Pending"}</strong>
+            </div>
+            <div className="info-card">
+              <span>Processing by</span>
+              <strong>{selectedEntry.processingByDisplayName ?? "Pending"}</strong>
+            </div>
+            <div className="info-card">
+              <span>Settled by</span>
+              <strong>{selectedEntry.settledByDisplayName ?? "Pending"}</strong>
+            </div>
+            <div className="info-card">
+              <span>Receipt reference</span>
+              <strong>{selectedEntry.receiptReference ?? "Not issued"}</strong>
+            </div>
+          </div>
+          {renderTimeline(selectedEntry)}
           <div className="achievement-list">
             {history.map((entry) => (
-              <article key={entry.id} className="achievement-card">
+              <article
+                key={entry.id}
+                className={`achievement-card ${selectedEntry.id === entry.id ? "achievement-card--unlocked" : ""}`}
+              >
                 <div>
                   <strong>
                     {entry.tokenAmount} {entry.asset}
@@ -137,6 +180,13 @@ export function TokenReceiptHistoryPanel({
                 <div className="achievement-card__side">
                   <span>{entry.receiptReference ?? "No receipt yet"}</span>
                   <span>{entry.eligibilityPointsSpent} pts</span>
+                  <button
+                    className="button button--secondary button--small"
+                    type="button"
+                    onClick={() => setSelectedReceiptId(entry.id)}
+                  >
+                    View detail
+                  </button>
                   <button
                     className="button button--secondary button--small"
                     type="button"

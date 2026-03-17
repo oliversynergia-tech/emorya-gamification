@@ -94,6 +94,35 @@ await withClient(async (client) => {
       errors.push("economy_settings.payout_asset must point to an active reward asset.");
     }
 
+    const activeProgramSummaryResult = await client.query(
+      `SELECT COUNT(*)::int AS total,
+              COUNT(*) FILTER (WHERE redemption_enabled = TRUE)::int AS redemption_total,
+              COUNT(*) FILTER (WHERE direct_rewards_enabled = TRUE)::int AS direct_total
+       FROM reward_programs programs
+       INNER JOIN reward_assets assets ON assets.id = programs.reward_asset_id
+       WHERE programs.is_active = TRUE
+         AND assets.is_active = TRUE
+         AND assets.symbol = $1`,
+      [String(economy.payout_asset)],
+    );
+    const activeProgramSummary = activeProgramSummaryResult.rows[0] ?? {
+      total: 0,
+      redemption_total: 0,
+      direct_total: 0,
+    };
+
+    if (Number(activeProgramSummary.total ?? 0) < 1) {
+      errors.push("At least one active reward program must exist for the active payout asset.");
+    }
+
+    if (economy.redemption_enabled === true && Number(activeProgramSummary.redemption_total ?? 0) < 1) {
+      errors.push("Redemption is enabled but no active reward program supports redemption for the active payout asset.");
+    }
+
+    if (economy.direct_rewards_enabled === true && Number(activeProgramSummary.direct_total ?? 0) < 1) {
+      errors.push("Direct rewards are enabled but no active reward program supports direct rewards for the active payout asset.");
+    }
+
     const minimumPoints = Number(economy.minimum_eligibility_points);
     const pointsPerToken = Number(economy.points_per_token);
     const xpFree = Number(economy.xp_multiplier_free);
@@ -115,6 +144,26 @@ await withClient(async (client) => {
 
     if (economy.direct_reward_queue_enabled === false && economy.direct_rewards_enabled === true) {
       errors.push("direct_reward_queue_enabled cannot be false while direct rewards remain enabled.");
+    }
+
+    if (economy.direct_rewards_enabled === false) {
+      for (const key of [
+        "direct_annual_referral_enabled",
+        "direct_premium_flash_enabled",
+        "direct_ambassador_enabled",
+      ]) {
+        if (economy[key] === true) {
+          errors.push(`${key} cannot remain enabled while direct_rewards_enabled is false.`);
+        }
+      }
+    }
+
+    if (payoutMode === "manual" && economy.settlement_notes_required === true) {
+      errors.push("settlement_notes_required should stay off while payout_mode is manual.");
+    }
+
+    if (payoutMode === "automation_ready" && economy.redemption_enabled !== true) {
+      errors.push("automation_ready payout mode requires redemption_enabled to stay true.");
     }
 
     if (typeof economy.differentiate_upstream_campaign_sources !== "boolean") {
