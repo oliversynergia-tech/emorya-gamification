@@ -1,4 +1,5 @@
 import {
+  handleCampaignPackCreateRequest,
   handleEconomySettingsRequest,
   handleEconomySettingsUpdateRequest,
   handleQuestDefinitionCreateRequest,
@@ -20,6 +21,7 @@ import {
 export type AdminRouteActionServices = {
   getQuestDefinitionDirectory: () => Promise<unknown>;
   createQuestDefinition: (input: Record<string, unknown>) => Promise<unknown>;
+  createCampaignPack: (input: { label: string }) => Promise<unknown>;
   updateQuestDefinition: (questId: string, input: Record<string, unknown>) => Promise<unknown>;
   deleteQuestDefinition: (questId: string) => Promise<unknown>;
   getQuestDefinitionTemplateDirectory: () => Promise<unknown>;
@@ -46,6 +48,11 @@ export type AdminRouteActionServices = {
     receiptReference: string;
     settlementNote?: string | null;
   }) => Promise<unknown>;
+  saveTokenRedemptionAutomationMetadata: (input: {
+    redemptionId: string;
+    automationReceiptReference?: string | null;
+    automationSettlementNote?: string | null;
+  }) => Promise<unknown>;
 };
 
 export async function runQuestDefinitionDirectoryRoute(
@@ -59,6 +66,13 @@ export async function runQuestDefinitionCreateRoute(
   services: Pick<AdminRouteActionServices, "createQuestDefinition">,
 ) {
   return handleQuestDefinitionCreateRequest(body, services.createQuestDefinition);
+}
+
+export async function runCampaignPackCreateRoute(
+  body: { label?: string },
+  services: Pick<AdminRouteActionServices, "createCampaignPack">,
+) {
+  return handleCampaignPackCreateRequest(body, services.createCampaignPack);
 }
 
 export async function runQuestDefinitionUpdateRoute(
@@ -192,15 +206,23 @@ export async function runTokenSettlementRoute(
       action?: "approve" | "processing" | "settle";
       receiptReference?: string;
       settlementNote?: string | null;
+      automationReceiptReference?: string | null;
+      automationSettlementNote?: string | null;
     };
   },
-  services: Pick<AdminRouteActionServices, "transitionPendingTokenRedemption">,
+  services: Pick<
+    AdminRouteActionServices,
+    "transitionPendingTokenRedemption" | "saveTokenRedemptionAutomationMetadata"
+  >,
 ) {
   return handleTokenSettlementRequest(
     {
       redemptionId,
       body,
     },
-    services.transitionPendingTokenRedemption,
+    {
+      transitionPendingTokenRedemption: services.transitionPendingTokenRedemption,
+      saveTokenRedemptionAutomationMetadata: services.saveTokenRedemptionAutomationMetadata,
+    },
   );
 }

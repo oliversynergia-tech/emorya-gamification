@@ -163,6 +163,48 @@ export async function settleTokenRedemption({
   return Boolean(result.rows[0]);
 }
 
+export async function updateTokenRedemptionAutomationMetadata({
+  redemptionId,
+  automationReceiptReference,
+  automationSettlementNote,
+}: {
+  redemptionId: string;
+  automationReceiptReference?: string | null;
+  automationSettlementNote?: string | null;
+}) {
+  if (automationReceiptReference === undefined && automationSettlementNote === undefined) {
+    return false;
+  }
+
+  const values: Array<string | null> = [redemptionId];
+  let metadataExpression = "COALESCE(metadata, '{}'::jsonb)";
+  let position = 2;
+
+  if (automationReceiptReference !== undefined) {
+    metadataExpression = `jsonb_set(${metadataExpression}, '{automationReceiptReference}', to_jsonb($${position}::text), true)`;
+    values.push(automationReceiptReference);
+    position += 1;
+  }
+
+  if (automationSettlementNote !== undefined) {
+    metadataExpression = `jsonb_set(${metadataExpression}, '{automationSettlementNote}', to_jsonb($${position}::text), true)`;
+    values.push(automationSettlementNote);
+    position += 1;
+  }
+
+  const result = await runQuery<{ id: string }>(
+    `UPDATE token_redemptions
+     SET metadata = ${metadataExpression},
+         updated_at = NOW()
+     WHERE id = $1
+       AND status = 'claimed'
+     RETURNING id`,
+    values,
+  );
+
+  return Boolean(result.rows[0]?.id);
+}
+
 export async function createClaimedTokenRedemption({
   userId,
   asset,

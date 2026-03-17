@@ -5,6 +5,9 @@ type AdminDirectoryResponse = {
 
 type QuestDefinitionInput = Record<string, unknown>;
 type QuestDefinitionTemplateInput = Record<string, unknown>;
+type CampaignPackInput = {
+  label?: string;
+};
 type EconomySettingsInput = Record<string, unknown>;
 type RewardAssetInput = Record<string, unknown>;
 type RewardProgramInput = Record<string, unknown>;
@@ -20,6 +23,8 @@ type TokenSettlementInput = {
   action?: "approve" | "processing" | "settle";
   receiptReference?: string;
   settlementNote?: string | null;
+  automationReceiptReference?: string | null;
+  automationSettlementNote?: string | null;
 };
 
 function getErrorStatus(message: string) {
@@ -144,6 +149,34 @@ export async function handleQuestDefinitionCreateRequest(
       status: message.includes("requires")
         ? 400
         : getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleCampaignPackCreateRequest(
+  body: CampaignPackInput,
+  createCampaignPack: (input: { label: string }) => Promise<unknown>,
+) {
+  if (!body.label || typeof body.label !== "string" || !body.label.trim()) {
+    return {
+      status: 400,
+      body: { ok: false, error: "Campaign pack label is required." },
+    };
+  }
+
+  try {
+    const result = await createCampaignPack({ label: body.label });
+
+    return {
+      status: 200,
+      body: { ok: true, ...((result as Record<string, unknown>) ?? {}) },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to create campaign pack.";
+
+    return {
+      status: message.includes("required") || message.includes("blocked") ? 400 : getErrorStatus(message),
       body: { ok: false, error: message },
     };
   }
@@ -496,13 +529,36 @@ export async function handleTokenSettlementRequest(
     redemptionId: string;
     body: TokenSettlementInput;
   },
-  settleRedemption: (input: {
-    redemptionId: string;
-    action: "approve" | "processing" | "settle";
-    receiptReference: string;
-    settlementNote?: string | null;
-  }) => Promise<unknown>,
+  services:
+    | {
+        transitionPendingTokenRedemption: (input: {
+          redemptionId: string;
+          action: "approve" | "processing" | "settle";
+          receiptReference: string;
+          settlementNote?: string | null;
+        }) => Promise<unknown>;
+        saveTokenRedemptionAutomationMetadata: (input: {
+          redemptionId: string;
+          automationReceiptReference?: string | null;
+          automationSettlementNote?: string | null;
+        }) => Promise<unknown>;
+      }
+    | ((input: {
+        redemptionId: string;
+        action: "approve" | "processing" | "settle";
+        receiptReference: string;
+        settlementNote?: string | null;
+      }) => Promise<unknown>),
 ) {
+  const serviceBag =
+    typeof services === "function"
+      ? {
+          transitionPendingTokenRedemption: services,
+          saveTokenRedemptionAutomationMetadata: async () => {
+            throw new Error("Automation metadata updates are not available in this handler shape.");
+          },
+        }
+      : services;
   if (!redemptionId) {
     return {
       status: 400,
@@ -510,9 +566,19 @@ export async function handleTokenSettlementRequest(
     };
   }
 
-  const action = body.action ?? "settle";
+  const hasAutomationMetadata =
+    body.automationReceiptReference !== undefined || body.automationSettlementNote !== undefined;
 
-  if (!["approve", "processing", "settle"].includes(action)) {
+  if (!body.action && !hasAutomationMetadata) {
+    return {
+      status: 400,
+      body: { ok: false, error: "Action or automation metadata is required." },
+    };
+  }
+
+  const action = body.action;
+
+  if (action && !["approve", "processing", "settle"].includes(action)) {
     return {
       status: 400,
       body: { ok: false, error: "action must be approve, processing, or settle." },
@@ -527,13 +593,18 @@ export async function handleTokenSettlementRequest(
   }
 
   try {
-    const queue = await settleRedemption({
-      redemptionId,
-      action,
-      receiptReference: body.receiptReference?.trim() ?? "",
-      settlementNote: body.settlementNote,
-    });
-
+    const queue = action
+      ? await serviceBag.transitionPendingTokenRedemption({
+          redemptionId,
+          action,
+          receiptReference: body.receiptReference?.trim() ?? "",
+          settlementNote: body.settlementNote,
+        })
+      : await serviceBag.saveTokenRedemptionAutomationMetadata({
+          redemptionId,
+          automationReceiptReference: body.automationReceiptReference,
+          automationSettlementNote: body.automationSettlementNote,
+        });
     return {
       status: 200,
       body: { ok: true, queue },

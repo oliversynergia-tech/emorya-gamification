@@ -44,6 +44,8 @@ export function TokenSettlementPanel({
   const [analyticsPending, setAnalyticsPending] = useState(false);
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, string>>({});
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [automationReceiptDrafts, setAutomationReceiptDrafts] = useState<Record<string, string>>({});
+  const [automationNoteDrafts, setAutomationNoteDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const annualReferralQueue = queue.filter((entry) => entry.source === "annual-referral-direct");
@@ -187,6 +189,47 @@ export function TokenSettlementPanel({
     }
   }
 
+  async function saveAutomationMetadata(redemptionId: string) {
+    const automationReceiptReference = automationReceiptDrafts[redemptionId]?.trim() ?? "";
+    const automationSettlementNote = automationNoteDrafts[redemptionId]?.trim() ?? "";
+
+    if (!automationReceiptReference) {
+      setError("Automation receipt reference is required before auto-settlement can complete.");
+      return;
+    }
+
+    setPendingId(redemptionId);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/token-redemptions/${redemptionId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          automationReceiptReference,
+          automationSettlementNote,
+        }),
+      });
+      const result = (await response.json()) as TokenSettlementResponse;
+
+      if (!response.ok || !result.ok || !result.queue) {
+        setError(result.error ?? "Unable to save automation settlement metadata.");
+        return;
+      }
+
+      setQueue(result.queue);
+      setMessage("Automation receipt metadata saved.");
+      router.refresh();
+    } catch {
+      setError("Unable to reach the token settlement service.");
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   async function updateWindow(nextWindow: string, nextCompareWindow = compareWindow) {
     setRangeMode("preset");
     setSelectedWindow(nextWindow);
@@ -275,6 +318,11 @@ export function TokenSettlementPanel({
       </p>
       <p className="form-note">
         Approval can be handled by admins. Processing and settlement require <strong>super admin</strong> access.
+      </p>
+      <p className="form-note">
+        In <strong>automation_ready</strong> mode, auto-settlement only completes after each payout stores
+        <code> metadata.automationReceiptReference </code>
+        and, optionally, <code>metadata.automationSettlementNote</code>. You can attach those values from this queue.
       </p>
       <div className="review-bulk-actions">
         <label className="field">
@@ -473,9 +521,50 @@ export function TokenSettlementPanel({
                     }
                   />
                 </label>
+                <label className="field">
+                  <span>Automation receipt</span>
+                  <input
+                    value={
+                      automationReceiptDrafts[entry.id] ??
+                      (typeof entry.metadata.automationReceiptReference === "string"
+                        ? entry.metadata.automationReceiptReference
+                        : "")
+                    }
+                    onChange={(event) =>
+                      setAutomationReceiptDrafts((current) => ({ ...current, [entry.id]: event.target.value }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Automation note</span>
+                  <input
+                    value={
+                      automationNoteDrafts[entry.id] ??
+                      (typeof entry.metadata.automationSettlementNote === "string"
+                        ? entry.metadata.automationSettlementNote
+                        : "")
+                    }
+                    onChange={(event) =>
+                      setAutomationNoteDrafts((current) => ({ ...current, [entry.id]: event.target.value }))
+                    }
+                  />
+                </label>
               </div>
+              {payoutControls.payoutMode === "automation_ready" ? (
+                <p className="form-note">
+                  Auto-settlement will only finish this payout after the automation receipt reference is saved here.
+                </p>
+              ) : null}
               {renderWorkflowTimeline(entry)}
               <div className="review-bulk-actions">
+                <button
+                  className="button button--secondary button--small"
+                  type="button"
+                  disabled={pendingId !== null}
+                  onClick={() => void saveAutomationMetadata(entry.id)}
+                >
+                  Save automation metadata
+                </button>
                 <button
                   className="button button--primary button--small"
                   type="button"

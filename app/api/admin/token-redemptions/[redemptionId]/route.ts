@@ -23,11 +23,16 @@ export async function PATCH(request: Request, context: RouteContext) {
             ? body.action
             : undefined,
         receiptReference: typeof body.receiptReference === "string" ? body.receiptReference : undefined,
-        settlementNote: typeof body.settlementNote === "string" ? body.settlementNote : null,
+        settlementNote: typeof body.settlementNote === "string" ? body.settlementNote : undefined,
+        automationReceiptReference:
+          typeof body.automationReceiptReference === "string" ? body.automationReceiptReference : undefined,
+        automationSettlementNote:
+          typeof body.automationSettlementNote === "string" ? body.automationSettlementNote : undefined,
       },
     },
     {
       transitionPendingTokenRedemption: adminService.transitionPendingTokenRedemption,
+      saveTokenRedemptionAutomationMetadata: adminService.saveTokenRedemptionAutomationMetadata,
     },
   );
 

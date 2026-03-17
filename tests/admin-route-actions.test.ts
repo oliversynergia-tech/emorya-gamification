@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test, { mock } from "node:test";
 
 import {
+  runCampaignPackCreateRoute,
   runEconomySettingsRoute,
   runEconomySettingsUpdateRoute,
   runQuestDefinitionCreateRoute,
@@ -49,6 +50,27 @@ test("runQuestDefinitionCreateRoute forwards create body", async () => {
   assert.deepEqual(result.body, {
     ok: true,
     quests: [{ id: "quest-2" }],
+  });
+});
+
+test("runCampaignPackCreateRoute forwards the pack label", async () => {
+  const services = {
+    createCampaignPack: mock.fn(async (input: { label: string }) => {
+      assert.equal(input.label, "March Bridge Pack");
+      return {
+        quests: [{ id: "quest-pack-1" }],
+        packSummary: { packId: "pack-1", label: "March Bridge Pack", createdCount: 3 },
+      };
+    }),
+  };
+
+  const result = await runCampaignPackCreateRoute({ label: "March Bridge Pack" }, services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    quests: [{ id: "quest-pack-1" }],
+    packSummary: { packId: "pack-1", label: "March Bridge Pack", createdCount: 3 },
   });
 });
 
@@ -218,6 +240,9 @@ test("runTokenSettlementRoute forwards settlement payload", async () => {
         return [];
       },
     ),
+    saveTokenRedemptionAutomationMetadata: mock.fn(async () => {
+      throw new Error("should not be called");
+    }),
   };
 
   const result = await runTokenSettlementRoute(
@@ -227,6 +252,43 @@ test("runTokenSettlementRoute forwards settlement payload", async () => {
         action: "settle",
         receiptReference: "EMR-SETTLED-1",
         settlementNote: "Manually paid",
+      },
+    },
+    services,
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    queue: [],
+  });
+});
+
+test("runTokenSettlementRoute forwards automation metadata updates without an action", async () => {
+  const services = {
+    transitionPendingTokenRedemption: mock.fn(async () => {
+      throw new Error("should not be called");
+    }),
+    saveTokenRedemptionAutomationMetadata: mock.fn(
+      async (input: {
+        redemptionId: string;
+        automationReceiptReference?: string | null;
+        automationSettlementNote?: string | null;
+      }) => {
+        assert.equal(input.redemptionId, "redemption-2");
+        assert.equal(input.automationReceiptReference, "AUTO-SETTLED-2");
+        assert.equal(input.automationSettlementNote, "Settled by worker");
+        return [];
+      },
+    ),
+  };
+
+  const result = await runTokenSettlementRoute(
+    {
+      redemptionId: "redemption-2",
+      body: {
+        automationReceiptReference: "AUTO-SETTLED-2",
+        automationSettlementNote: "Settled by worker",
       },
     },
     services,

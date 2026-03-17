@@ -23,6 +23,17 @@ type QuestDefinitionTemplateResponse = {
   templates?: QuestDefinitionTemplateItem[];
 };
 
+type CampaignPackResponse = {
+  ok: boolean;
+  error?: string;
+  quests?: QuestDefinitionAdminItem[];
+  packSummary?: {
+    packId: string;
+    label: string;
+    createdCount: number;
+  };
+};
+
 type QuestDefinitionFormState = {
   slug: string;
   title: string;
@@ -945,71 +956,32 @@ export function QuestDefinitionManagementPanel({
       return;
     }
 
-    const packTemplates = templates.filter((template) =>
-      ["Zealy bridge quest", "Galxe feeder quest", "TaskOn feeder quest"].includes(template.label),
-    );
-
-    if (packTemplates.length < 3) {
-      setError("The saved bridge/feeder templates are not available yet.");
-      return;
-    }
-
     setPending("campaign-pack");
     setMessage(null);
     setError(null);
 
     try {
-      const packCreatedAt = new Date().toISOString();
-      const packId = `pack-${new Date().toISOString().replace(/[:.]/g, "-").toLowerCase()}`;
-      const slugPrefix = campaignPackLabel
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-      const suffix = new Date().toISOString().replace(/[:.]/g, "-").toLowerCase();
+      const response = await fetch("/api/admin/campaign-packs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          label: campaignPackLabel.trim(),
+        }),
+      });
+      const result = (await response.json()) as CampaignPackResponse;
 
-      for (const template of packTemplates) {
-        const source =
-          typeof template.metadata.campaignAttributionSource === "string"
-            ? template.metadata.campaignAttributionSource
-            : "campaign";
-        const response = await fetch("/api/admin/quest-definitions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            slug: `${slugPrefix}-${source}-${suffix}`,
-            title: `${campaignPackLabel.trim()} · ${template.label}`,
-            description: template.description,
-            category: template.form.category,
-            difficulty: template.form.difficulty,
-            verificationType: template.form.verificationType,
-            recurrence: template.form.recurrence,
-            requiredTier: template.form.requiredTier,
-            requiredLevel: template.form.requiredLevel,
-            xpReward: template.form.xpReward,
-            isPremiumPreview: template.form.isPremiumPreview,
-            isActive: template.form.isActive,
-            metadata: {
-              ...template.metadata,
-              campaignPackId: packId,
-              campaignPackLabel: campaignPackLabel.trim(),
-              campaignPackCreatedAt: packCreatedAt,
-              campaignPackTemplateLabel: template.label,
-            },
-          }),
-        });
-        const result = (await response.json()) as QuestDefinitionResponse;
-
-        if (!response.ok || !result.ok || !result.quests) {
-          throw new Error(result.error ?? `Unable to create quest from ${template.label}.`);
-        }
-
-        setQuests(result.quests);
+      if (!response.ok || !result.ok || !result.quests) {
+        throw new Error(result.error ?? "Unable to create campaign pack.");
       }
 
-      setMessage(`Created campaign pack: ${campaignPackLabel.trim()}.`);
+      setQuests(result.quests);
+      setMessage(
+        result.packSummary
+          ? `Created campaign pack: ${result.packSummary.label} (${result.packSummary.createdCount} quests).`
+          : `Created campaign pack: ${campaignPackLabel.trim()}.`,
+      );
       router.refresh();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Unable to create campaign pack.");

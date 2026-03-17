@@ -3,8 +3,10 @@ import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionTier } from "@/lib/types";
+import { CampaignPackAnalyticsPanel } from "@/components/campaign-pack-analytics-panel";
 import { PayoutAuditTrailPanel } from "@/components/payout-audit-trail-panel";
 import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
+import { SourceLaneReportPanel } from "@/components/source-lane-report-panel";
 import { TokenReceiptHistoryPanel } from "@/components/token-receipt-history-panel";
 
 function tierClass(tier: SubscriptionTier) {
@@ -1509,25 +1511,7 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
             </article>
           ))}
         </div>
-        <div className="achievement-list">
-          {data.campaignOperations.packAnalytics.map((pack) => (
-            <article key={pack.packId} className="achievement-card">
-              <div>
-                <strong>{pack.label}</strong>
-                <p>
-                  {pack.bridgeCount} bridge quests, {pack.feederCount} feeder quests, sources: {pack.sources.join(", ")}.
-                </p>
-              </div>
-              <div className="achievement-card__side">
-                <span>{pack.questCount} quests</span>
-                <span>{pack.activeQuestCount} active</span>
-              </div>
-            </article>
-          ))}
-          {data.campaignOperations.packAnalytics.length === 0 ? (
-            <p className="form-note">No generated campaign packs have been recorded yet.</p>
-          ) : null}
-        </div>
+        <CampaignPackAnalyticsPanel packs={data.campaignOperations.packAnalytics} />
       </div>
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
@@ -1808,32 +1792,7 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
             </article>
           ))}
         </div>
-        <div className="achievement-list">
-          {data.referralAnalytics.bridgeComparison.map((entry) => (
-            <article key={`${entry.source}-${entry.activeLane}-comparison`} className="achievement-card">
-              <div>
-                <strong>
-                  {entry.source} vs {entry.activeLane} lane
-                </strong>
-                <p>
-                  {entry.invitedCount} invited, {entry.convertedCount} converted before lane aggregation.
-                </p>
-              </div>
-              <div className="achievement-card__side">
-                <span>
-                  premium {Math.round(entry.sourcePremiumConversionRate * 100)}% / {Math.round(entry.lanePremiumConversionRate * 100)}%
-                </span>
-                <span>
-                  annual {Math.round(entry.sourceAnnualConversionRate * 100)}% / {Math.round(entry.laneAnnualConversionRate * 100)}%
-                </span>
-                <span>
-                  delta {entry.premiumConversionDelta >= 0 ? "+" : ""}
-                  {Math.round(entry.premiumConversionDelta * 100)} pts
-                </span>
-              </div>
-            </article>
-          ))}
-        </div>
+        <SourceLaneReportPanel entries={data.referralAnalytics.bridgeComparison} />
       </div>
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">

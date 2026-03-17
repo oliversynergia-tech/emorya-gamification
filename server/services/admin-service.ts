@@ -1,4 +1,5 @@
 import { normalizeTokenAsset } from "@/lib/economy-settings";
+import { validateCampaignPackTemplates } from "@/lib/campaign-pack";
 import { assertAdminUser, assertSuperAdminUser } from "@/server/auth/admin";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
 import { transitionPendingTokenRedemptionWithDependencies } from "@/server/services/token-redemption-transition";
@@ -46,6 +47,7 @@ import {
   listPendingTokenSettlements,
   markTokenRedemptionProcessing,
   settleTokenRedemption,
+  updateTokenRedemptionAutomationMetadata,
 } from "@/server/repositories/token-redemption-repository";
 import type {
   EconomySettings,
@@ -232,6 +234,93 @@ export async function createQuestDefinition(
   await createQuestDefinitionForAdmin(normalized);
 
   return listQuestDefinitionsForAdmin();
+}
+
+export async function createCampaignPack({
+  label,
+}: {
+  label: string;
+}) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  const trimmedLabel = label.trim();
+  if (!trimmedLabel) {
+    throw new Error("Campaign pack label is required.");
+  }
+
+  const [templates, economySettings] = await Promise.all([
+    listQuestDefinitionTemplatesForAdmin(),
+    getActiveEconomySettings(),
+  ]);
+
+  const validationError = validateCampaignPackTemplates(
+    templates,
+    economySettings.differentiateUpstreamCampaignSources,
+  );
+
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  const requiredTemplates = [
+    "Zealy bridge quest",
+    "Galxe feeder quest",
+    "TaskOn feeder quest",
+  ] as const;
+  const selectedTemplates = requiredTemplates
+    .map((requiredLabel) => templates.find((template) => template.label === requiredLabel))
+    .filter((template): template is QuestDefinitionTemplateItem => Boolean(template));
+
+  if (selectedTemplates.length !== requiredTemplates.length) {
+    throw new Error("The saved bridge/feeder templates are not available yet.");
+  }
+
+  const packCreatedAt = new Date().toISOString();
+  const packId = `pack-${packCreatedAt.replace(/[:.]/g, "-").toLowerCase()}`;
+  const slugPrefix = trimmedLabel
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  const suffix = packCreatedAt.replace(/[:.]/g, "-").toLowerCase();
+
+  for (const template of selectedTemplates) {
+    const source =
+      typeof template.metadata.campaignAttributionSource === "string"
+        ? template.metadata.campaignAttributionSource
+        : "campaign";
+
+    await createQuestDefinitionForAdmin({
+      slug: `${slugPrefix}-${source}-${suffix}`,
+      title: `${trimmedLabel} · ${template.label}`,
+      description: template.description,
+      category: template.form.category,
+      difficulty: template.form.difficulty,
+      verificationType: template.form.verificationType,
+      recurrence: template.form.recurrence,
+      requiredTier: template.form.requiredTier,
+      requiredLevel: template.form.requiredLevel,
+      xpReward: template.form.xpReward,
+      isPremiumPreview: template.form.isPremiumPreview,
+      isActive: template.form.isActive,
+      metadata: {
+        ...template.metadata,
+        campaignPackId: packId,
+        campaignPackLabel: trimmedLabel,
+        campaignPackCreatedAt: packCreatedAt,
+        campaignPackTemplateLabel: template.label,
+      },
+    });
+  }
+
+  return {
+    quests: await listQuestDefinitionsForAdmin(),
+    packSummary: {
+      packId,
+      label: trimmedLabel,
+      createdCount: selectedTemplates.length,
+    },
+  };
 }
 
 export async function updateQuestDefinition(
@@ -422,6 +511,31 @@ export async function transitionPendingTokenRedemption({
     settleRedemption: settleTokenRedemption,
     createAuditEntry: createTokenRedemptionAudit,
   });
+}
+
+export async function saveTokenRedemptionAutomationMetadata({
+  redemptionId,
+  automationReceiptReference,
+  automationSettlementNote,
+}: {
+  redemptionId: string;
+  automationReceiptReference?: string | null;
+  automationSettlementNote?: string | null;
+}) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  const updated = await updateTokenRedemptionAutomationMetadata({
+    redemptionId,
+    automationReceiptReference,
+    automationSettlementNote,
+  });
+
+  if (!updated) {
+    throw new Error("Token redemption not found.");
+  }
+
+  return listPendingTokenSettlements();
 }
 
 function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id" | "updatedAt">>) {
