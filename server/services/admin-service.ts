@@ -39,6 +39,8 @@ import {
   updateQuestDefinitionTemplateForAdmin,
 } from "@/server/repositories/quest-template-admin-repository";
 import {
+  approveTokenRedemption,
+  markTokenRedemptionProcessing,
   getTokenSettlementAnalytics,
   listPendingTokenSettlements,
   settleTokenRedemption,
@@ -377,19 +379,21 @@ export async function getTokenSettlementQueue() {
   return listPendingTokenSettlements();
 }
 
-export async function getSettlementAnalytics(days?: number) {
+export async function getSettlementAnalytics(days?: number, compareDays?: number) {
   const currentUser = await getAuthenticatedUser();
   await assertAdminUser(currentUser);
 
-  return getTokenSettlementAnalytics(days);
+  return getTokenSettlementAnalytics(days, compareDays);
 }
 
-export async function settlePendingTokenRedemption({
+export async function transitionPendingTokenRedemption({
   redemptionId,
+  action,
   receiptReference,
   settlementNote,
 }: {
   redemptionId: string;
+  action: "approve" | "processing" | "settle";
   receiptReference: string;
   settlementNote?: string | null;
 }) {
@@ -406,27 +410,51 @@ export async function settlePendingTokenRedemption({
     throw new Error("Settlement processing is currently disabled in payout controls.");
   }
 
-  if (economySettings.payoutMode === "review_required") {
+  if ((economySettings.payoutMode === "review_required" || action !== "settle") && action !== "approve") {
     await assertSuperAdminUser(currentUser);
   }
 
-  if (!receiptReference.trim()) {
+  if (action === "settle" && !receiptReference.trim()) {
     throw new Error("Settlement requires a receiptReference.");
   }
 
-  if (economySettings.settlementNotesRequired && !settlementNote?.trim()) {
+  if (action === "settle" && economySettings.settlementNotesRequired && !settlementNote?.trim()) {
     throw new Error("Settlement note is required while payout controls require notes.");
   }
 
-  const settled = await settleTokenRedemption({
-    redemptionId,
-    settledBy: currentUser.id,
-    receiptReference: receiptReference.trim(),
-    settlementNote: settlementNote?.trim() ? settlementNote.trim() : null,
-  });
+  if (action === "approve") {
+    const approved = await approveTokenRedemption({
+      redemptionId,
+      approvedBy: currentUser.id,
+    });
 
-  if (!settled) {
-    throw new Error("Token redemption not found or already settled.");
+    if (!approved) {
+      throw new Error("Token redemption not found or is not in a queued state.");
+    }
+  } else if (action === "processing") {
+    if (economySettings.payoutMode === "manual") {
+      throw new Error("Processing state is only available when payout mode is review_required or automation_ready.");
+    }
+
+    const processing = await markTokenRedemptionProcessing({
+      redemptionId,
+      processingBy: currentUser.id,
+    });
+
+    if (!processing) {
+      throw new Error("Token redemption not found or is not ready to move into processing.");
+    }
+  } else {
+    const settled = await settleTokenRedemption({
+      redemptionId,
+      settledBy: currentUser.id,
+      receiptReference: receiptReference.trim(),
+      settlementNote: settlementNote?.trim() ? settlementNote.trim() : null,
+    });
+
+    if (!settled) {
+      throw new Error("Token redemption not found or already settled.");
+    }
   }
 
   return listPendingTokenSettlements();

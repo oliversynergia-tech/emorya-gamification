@@ -165,9 +165,15 @@ test("runQuestDefinitionTemplateDeleteRoute forwards the template id", async () 
 
 test("runTokenSettlementRoute forwards settlement payload", async () => {
   const services = {
-    settlePendingTokenRedemption: mock.fn(
-      async (input: { redemptionId: string; receiptReference: string; settlementNote?: string | null }) => {
+    transitionPendingTokenRedemption: mock.fn(
+      async (input: {
+        redemptionId: string;
+        action: "approve" | "processing" | "settle";
+        receiptReference: string;
+        settlementNote?: string | null;
+      }) => {
         assert.equal(input.redemptionId, "redemption-1");
+        assert.equal(input.action, "settle");
         assert.equal(input.receiptReference, "EMR-SETTLED-1");
         assert.equal(input.settlementNote, "Manually paid");
         return [];
@@ -179,6 +185,7 @@ test("runTokenSettlementRoute forwards settlement payload", async () => {
     {
       redemptionId: "redemption-1",
       body: {
+        action: "settle",
         receiptReference: "EMR-SETTLED-1",
         settlementNote: "Manually paid",
       },
@@ -296,18 +303,33 @@ test("runRewardProgramSaveRoute surfaces missing program errors", async () => {
 
 test("runSettlementAnalyticsRoute forwards selected day window", async () => {
   const services = {
-    getSettlementAnalytics: mock.fn(async (days?: number) => {
+    getSettlementAnalytics: mock.fn(async (days?: number, compareDays?: number) => {
       assert.equal(days, 30);
+      assert.equal(compareDays, 7);
       return { periodDays: 30, pendingCount: 2 };
     }),
   };
 
-  const result = await runSettlementAnalyticsRoute({ days: 30 }, services);
+  const result = await runSettlementAnalyticsRoute({ days: 30, compareDays: 7 }, services);
 
   assert.equal(result.status, 200);
   assert.deepEqual(result.body, {
     ok: true,
     analytics: { periodDays: 30, pendingCount: 2 },
+  });
+});
+
+test("runSettlementAnalyticsRoute rejects invalid comparison windows", async () => {
+  const services = {
+    getSettlementAnalytics: mock.fn(async () => ({ periodDays: 7 })),
+  };
+
+  const result = await runSettlementAnalyticsRoute({ days: 7, compareDays: 0 }, services);
+
+  assert.equal(result.status, 400);
+  assert.deepEqual(result.body, {
+    ok: false,
+    error: "compareDays must be a positive number.",
   });
 });
 

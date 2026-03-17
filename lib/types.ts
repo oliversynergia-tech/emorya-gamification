@@ -465,16 +465,27 @@ export type AdminOverviewData = {
   tokenSettlementQueue: Array<TokenSettlementItem>;
   settlementAnalytics: {
     periodDays: number;
+    comparePeriodDays: number;
     pendingCount: number;
     pendingTokenAmount: number;
     oldestPendingHours: number;
     averageSettlementHours: number;
     settledLast7DaysCount: number;
     settledLast7DaysTokenAmount: number;
+    previousSettledCount: number;
+    previousSettledTokenAmount: number;
+    previousRedemptionVelocityPerDay: number;
+    settledCountDelta: number;
+    settledTokenAmountDelta: number;
+    velocityDelta: number;
     directRewardPendingCount: number;
     directRewardSettledCount: number;
     directRewardSettledTokenAmount: number;
     redemptionVelocityPerDay: number;
+    workflowBreakdown: Array<{
+      state: "queued" | "approved" | "processing" | "settled";
+      count: number;
+    }>;
     dailyThroughput: Array<{
       label: string;
       settledCount: number;
@@ -853,7 +864,12 @@ export type TokenSettlementItem = {
   tokenAmount: number;
   eligibilityPointsSpent: number;
   source: string;
+  workflowState: "queued" | "approved" | "processing" | "settled";
   createdAt: string;
+  approvedAt: string | null;
+  approvedByDisplayName: string | null;
+  processingStartedAt: string | null;
+  processingByDisplayName: string | null;
   settledAt: string | null;
   receiptReference: string | null;
   settlementNote: string | null;

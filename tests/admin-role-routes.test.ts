@@ -252,7 +252,7 @@ test("handleTokenSettlementRequest validates required fields", async () => {
   assert.equal(result.status, 400);
   assert.deepEqual(result.body, {
     ok: false,
-    error: "redemptionId and receiptReference are required.",
+    error: "redemptionId is required.",
   });
 });
 
@@ -261,14 +261,39 @@ test("handleTokenSettlementRequest returns refreshed queue on success", async ()
     {
       redemptionId: "redemption-1",
       body: {
+        action: "settle",
         receiptReference: "EMR-PAYOUT-123",
         settlementNote: "Paid manually",
       },
     },
-    async ({ redemptionId, receiptReference, settlementNote }) => {
+    async ({ redemptionId, action, receiptReference, settlementNote }) => {
       assert.equal(redemptionId, "redemption-1");
+      assert.equal(action, "settle");
       assert.equal(receiptReference, "EMR-PAYOUT-123");
       assert.equal(settlementNote, "Paid manually");
+      return [];
+    },
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    queue: [],
+  });
+});
+
+test("handleTokenSettlementRequest allows approval without receipt references", async () => {
+  const result = await handleTokenSettlementRequest(
+    {
+      redemptionId: "redemption-2",
+      body: {
+        action: "approve",
+      },
+    },
+    async ({ redemptionId, action, receiptReference }) => {
+      assert.equal(redemptionId, "redemption-2");
+      assert.equal(action, "approve");
+      assert.equal(receiptReference, "");
       return [];
     },
   );

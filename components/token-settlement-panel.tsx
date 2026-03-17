@@ -30,6 +30,7 @@ export function TokenSettlementPanel({
   const [queue, setQueue] = useState(initialQueue);
   const [analyticsState, setAnalyticsState] = useState(analytics);
   const [selectedWindow, setSelectedWindow] = useState(String(analytics.periodDays));
+  const [compareWindow, setCompareWindow] = useState(String(analytics.comparePeriodDays));
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [analyticsPending, setAnalyticsPending] = useState(false);
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, string>>({});
@@ -66,11 +67,11 @@ export function TokenSettlementPanel({
     URL.revokeObjectURL(url);
   }
 
-  async function settle(redemptionId: string) {
+  async function transitionSettlement(action: "approve" | "processing" | "settle", redemptionId: string) {
     const receiptReference = receiptDrafts[redemptionId]?.trim() ?? "";
     const settlementNote = noteDrafts[redemptionId]?.trim() ?? "";
 
-    if (!receiptReference) {
+    if (action === "settle" && !receiptReference) {
       setError("Every settlement needs a receipt reference.");
       return;
     }
@@ -91,6 +92,7 @@ export function TokenSettlementPanel({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          action,
           receiptReference,
           settlementNote,
         }),
@@ -103,7 +105,13 @@ export function TokenSettlementPanel({
       }
 
       setQueue(result.queue);
-      setMessage("Token redemption settled.");
+      setMessage(
+        action === "approve"
+          ? "Token redemption approved for payout."
+          : action === "processing"
+            ? "Token redemption moved into processing."
+            : "Token redemption settled.",
+      );
       router.refresh();
     } catch {
       setError("Unable to reach the token settlement service.");
@@ -112,13 +120,17 @@ export function TokenSettlementPanel({
     }
   }
 
-  async function updateWindow(nextWindow: string) {
+  async function updateWindow(nextWindow: string, nextCompareWindow = compareWindow) {
     setSelectedWindow(nextWindow);
+    setCompareWindow(nextCompareWindow);
     setAnalyticsPending(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/admin/settlement-analytics?days=${nextWindow}`, { cache: "no-store" });
+      const response = await fetch(
+        `/api/admin/settlement-analytics?days=${nextWindow}&compareDays=${nextCompareWindow}`,
+        { cache: "no-store" },
+      );
       const result = (await response.json()) as SettlementAnalyticsResponse;
 
       if (!response.ok || !result.ok || !result.analytics) {
@@ -159,10 +171,20 @@ export function TokenSettlementPanel({
       <div className="review-bulk-actions">
         <label className="field">
           <span>Analytics window</span>
-          <select value={selectedWindow} onChange={(event) => void updateWindow(event.target.value)}>
+          <select value={selectedWindow} onChange={(event) => void updateWindow(event.target.value, compareWindow)}>
             <option value="7">7 days</option>
             <option value="30">30 days</option>
             <option value="90">90 days</option>
+            <option value="180">180 days</option>
+          </select>
+        </label>
+        <label className="field">
+          <span>Compare against</span>
+          <select value={compareWindow} onChange={(event) => void updateWindow(selectedWindow, event.target.value)}>
+            <option value="7">7 days</option>
+            <option value="30">30 days</option>
+            <option value="90">90 days</option>
+            <option value="180">180 days</option>
           </select>
         </label>
       </div>
@@ -177,6 +199,32 @@ export function TokenSettlementPanel({
             <span>{analyticsState.settledLast7DaysTokenAmount.toFixed(2)} tokens</span>
           </div>
         </article>
+        <article className="achievement-card">
+          <div>
+            <strong>Comparison window</strong>
+            <p>
+              Compared against the previous {analyticsState.comparePeriodDays}-day period, throughput moved by{" "}
+              {analyticsState.settledCountDelta >= 0 ? "+" : ""}
+              {analyticsState.settledCountDelta} payouts and {analyticsState.velocityDelta >= 0 ? "+" : ""}
+              {analyticsState.velocityDelta.toFixed(2)} payouts/day.
+            </p>
+          </div>
+          <div className="achievement-card__side">
+            <span>{analyticsState.previousSettledCount} previous payouts</span>
+            <span>{analyticsState.previousSettledTokenAmount.toFixed(2)} tokens</span>
+          </div>
+        </article>
+        {analyticsState.workflowBreakdown.map((entry) => (
+          <article key={entry.state} className="achievement-card">
+            <div>
+              <strong>{entry.state}</strong>
+              <p>Current workflow-state count across the payout pipeline.</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{entry.count} items</span>
+            </div>
+          </article>
+        ))}
         {analyticsState.byAsset.slice(0, 3).map((asset) => (
           <article key={asset.asset} className="achievement-card">
             <div>
@@ -201,7 +249,9 @@ export function TokenSettlementPanel({
             <article key={entry.id} className="review-history__item">
               <div className="quest-card__meta">
                 <span>{entry.userDisplayName}</span>
-                <span>{entry.source === "annual-referral-direct" ? "Annual referral payout" : entry.asset}</span>
+                <span>
+                  {entry.source === "annual-referral-direct" ? "Annual referral payout" : entry.asset} · {entry.workflowState}
+                </span>
               </div>
               <h4>
                 {entry.tokenAmount} {entry.asset} pending
@@ -210,6 +260,8 @@ export function TokenSettlementPanel({
                 <span>{entry.eligibilityPointsSpent} points</span>
                 <span>{entry.source}</span>
                 {entry.rewardProgramName ? <span>{entry.rewardProgramName}</span> : null}
+                {entry.approvedByDisplayName ? <span>approved by {entry.approvedByDisplayName}</span> : null}
+                {entry.processingByDisplayName ? <span>processing by {entry.processingByDisplayName}</span> : null}
                 <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
               </div>
               <p className="form-note">
@@ -245,10 +297,35 @@ export function TokenSettlementPanel({
                   className="button button--primary button--small"
                   type="button"
                   disabled={pendingId !== null || !payoutControls.settlementProcessingEnabled}
-                  onClick={() => settle(entry.id)}
+                  onClick={() =>
+                    transitionSettlement(
+                      entry.workflowState === "queued" && payoutControls.payoutMode !== "manual"
+                        ? "approve"
+                        : entry.workflowState === "approved" && payoutControls.payoutMode === "automation_ready"
+                          ? "processing"
+                          : "settle",
+                      entry.id,
+                    )
+                  }
                 >
-                  {pendingId === entry.id ? "Settling..." : "Mark settled"}
+                  {pendingId === entry.id
+                    ? "Updating..."
+                    : entry.workflowState === "queued" && payoutControls.payoutMode !== "manual"
+                      ? "Approve payout"
+                      : entry.workflowState === "approved" && payoutControls.payoutMode === "automation_ready"
+                        ? "Mark processing"
+                        : "Mark settled"}
                 </button>
+                {entry.workflowState !== "queued" && entry.workflowState !== "settled" ? (
+                  <button
+                    className="button button--secondary button--small"
+                    type="button"
+                    disabled={pendingId !== null || !payoutControls.settlementProcessingEnabled}
+                    onClick={() => transitionSettlement("settle", entry.id)}
+                  >
+                    Force settle
+                  </button>
+                ) : null}
                 <button
                   className="button button--secondary button--small"
                   type="button"

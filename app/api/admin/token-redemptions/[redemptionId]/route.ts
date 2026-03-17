@@ -18,12 +18,16 @@ export async function PATCH(request: Request, context: RouteContext) {
     {
       redemptionId,
       body: {
+        action:
+          body.action === "approve" || body.action === "processing" || body.action === "settle"
+            ? body.action
+            : undefined,
         receiptReference: typeof body.receiptReference === "string" ? body.receiptReference : undefined,
         settlementNote: typeof body.settlementNote === "string" ? body.settlementNote : null,
       },
     },
     {
-      settlePendingTokenRedemption: adminService.settlePendingTokenRedemption,
+      transitionPendingTokenRedemption: adminService.transitionPendingTokenRedemption,
     },
   );
 

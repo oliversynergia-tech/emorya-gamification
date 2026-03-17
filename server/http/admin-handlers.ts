@@ -10,8 +10,10 @@ type RewardAssetInput = Record<string, unknown>;
 type RewardProgramInput = Record<string, unknown>;
 type SettlementAnalyticsInput = {
   days?: number;
+  compareDays?: number;
 };
 type TokenSettlementInput = {
+  action?: "approve" | "processing" | "settle";
   receiptReference?: string;
   settlementNote?: string | null;
 };
@@ -392,7 +394,7 @@ export async function handleRewardProgramSaveRequest(
 
 export async function handleSettlementAnalyticsRequest(
   input: SettlementAnalyticsInput,
-  getSettlementAnalytics: (days?: number) => Promise<unknown>,
+  getSettlementAnalytics: (days?: number, compareDays?: number) => Promise<unknown>,
 ) {
   if (input.days !== undefined && (!Number.isFinite(input.days) || input.days <= 0)) {
     return {
@@ -401,8 +403,15 @@ export async function handleSettlementAnalyticsRequest(
     };
   }
 
+  if (input.compareDays !== undefined && (!Number.isFinite(input.compareDays) || input.compareDays <= 0)) {
+    return {
+      status: 400,
+      body: { ok: false, error: "compareDays must be a positive number." },
+    };
+  }
+
   try {
-    const analytics = await getSettlementAnalytics(input.days);
+    const analytics = await getSettlementAnalytics(input.days, input.compareDays);
 
     return {
       status: 200,
@@ -456,21 +465,39 @@ export async function handleTokenSettlementRequest(
   },
   settleRedemption: (input: {
     redemptionId: string;
+    action: "approve" | "processing" | "settle";
     receiptReference: string;
     settlementNote?: string | null;
   }) => Promise<unknown>,
 ) {
-  if (!redemptionId || !body.receiptReference) {
+  if (!redemptionId) {
     return {
       status: 400,
-      body: { ok: false, error: "redemptionId and receiptReference are required." },
+      body: { ok: false, error: "redemptionId is required." },
+    };
+  }
+
+  const action = body.action ?? "settle";
+
+  if (!["approve", "processing", "settle"].includes(action)) {
+    return {
+      status: 400,
+      body: { ok: false, error: "action must be approve, processing, or settle." },
+    };
+  }
+
+  if (action === "settle" && !body.receiptReference?.trim()) {
+    return {
+      status: 400,
+      body: { ok: false, error: "receiptReference is required when action is settle." },
     };
   }
 
   try {
     const queue = await settleRedemption({
       redemptionId,
-      receiptReference: body.receiptReference,
+      action,
+      receiptReference: body.receiptReference?.trim() ?? "",
       settlementNote: body.settlementNote,
     });
 

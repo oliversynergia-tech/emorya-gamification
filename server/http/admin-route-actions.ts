@@ -28,9 +28,10 @@ export type AdminRouteActionServices = {
   saveRewardAsset: (input: Record<string, unknown>, assetId?: string) => Promise<unknown>;
   getRewardProgramDirectory: () => Promise<unknown>;
   saveRewardProgram: (input: Record<string, unknown>, programId?: string) => Promise<unknown>;
-  getSettlementAnalytics: (days?: number) => Promise<unknown>;
-  settlePendingTokenRedemption: (input: {
+  getSettlementAnalytics: (days?: number, compareDays?: number) => Promise<unknown>;
+  transitionPendingTokenRedemption: (input: {
     redemptionId: string;
+    action: "approve" | "processing" | "settle";
     receiptReference: string;
     settlementNote?: string | null;
   }) => Promise<unknown>;
@@ -144,7 +145,7 @@ export async function runRewardProgramSaveRoute(
 }
 
 export async function runSettlementAnalyticsRoute(
-  input: { days?: number },
+  input: { days?: number; compareDays?: number },
   services: Pick<AdminRouteActionServices, "getSettlementAnalytics">,
 ) {
   return handleSettlementAnalyticsRequest(input, services.getSettlementAnalytics);
@@ -157,17 +158,18 @@ export async function runTokenSettlementRoute(
   }: {
     redemptionId: string;
     body: {
+      action?: "approve" | "processing" | "settle";
       receiptReference?: string;
       settlementNote?: string | null;
     };
   },
-  services: Pick<AdminRouteActionServices, "settlePendingTokenRedemption">,
+  services: Pick<AdminRouteActionServices, "transitionPendingTokenRedemption">,
 ) {
   return handleTokenSettlementRequest(
     {
       redemptionId,
       body,
     },
-    services.settlePendingTokenRedemption,
+    services.transitionPendingTokenRedemption,
   );
 }
