@@ -878,6 +878,18 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
   });
   await syncModerationNotificationHistory(moderationNotifications);
   const moderationNotificationHistory = await listRecentModerationNotificationDeliveries();
+  const upstreamLanePreview: AdminOverviewData["upstreamLanePreview"] = (["galxe", "taskon"] as const).map((source) => {
+    const activeLane = resolveCampaignExperienceSource(economySettings, source);
+
+    return {
+      attributionSource: source,
+      activeLane,
+      differentiated: economySettings.differentiateUpstreamCampaignSources,
+      detail: economySettings.differentiateUpstreamCampaignSources
+        ? `${source} is currently running as its own live lane. Premium framing, quest ordering, and reward shaping resolve directly from the ${source} preset.`
+        : `${source} attribution is currently preserved, but the live funnel resolves through the ${activeLane} bridge lane. The stored ${source} preset remains available if separate platform differentiation is enabled.`,
+    };
+  });
 
   return {
     stats: [
@@ -897,6 +909,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     moderationNotificationHistory,
     economySettings,
     economySettingsAudit,
+    upstreamLanePreview,
     rewardAssets,
     rewardPrograms,
     tokenSettlementQueue,

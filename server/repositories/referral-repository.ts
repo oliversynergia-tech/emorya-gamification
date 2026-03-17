@@ -2,10 +2,11 @@ import { randomUUID } from "crypto";
 
 import type { QueryResultRow } from "pg";
 
-import type { SubscriptionTier } from "@/lib/types";
+import type { CampaignSource, SubscriptionTier } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
 import { getActiveEconomySettings } from "@/server/repositories/economy-settings-repository";
 import { getReferralRewardTargets, normalizeReferralCampaignSource } from "@/server/services/referral-rules";
+import { resolveCampaignExperienceSource } from "@/lib/economy-settings";
 
 type ReferrerRow = QueryResultRow & {
   id: string;
@@ -66,6 +67,12 @@ type ReferralAnalyticsRewardRow = QueryResultRow & {
   referee_subscription_tier: SubscriptionTier;
   referee_attribution_source: string | null;
   conversion_reward_xp: number;
+};
+
+type CampaignAttributionRow = QueryResultRow & {
+  attribution_source: string | null;
+  subscription_tier: SubscriptionTier;
+  count: string;
 };
 
 export async function findReferrerByCode(referralCode: string) {
@@ -195,7 +202,7 @@ export async function getReferralSummary(userId: string) {
 
 export async function getReferralAnalytics() {
   const economySettings = await getActiveEconomySettings();
-  const [summaryResult, topReferrersResult, sourceBreakdownResult, conversionWindowResult, rewardRowsResult] = await Promise.all([
+  const [summaryResult, topReferrersResult, sourceBreakdownResult, conversionWindowResult, rewardRowsResult, attributionRowsResult] = await Promise.all([
     runQuery<ReferralAnalyticsSummaryRow>(
       `SELECT COUNT(*)::text AS invited_count,
               COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE)::text AS converted_count,
@@ -254,6 +261,11 @@ export async function getReferralAnalytics() {
        FROM referrals r
        INNER JOIN users referee_user ON referee_user.id = r.referee_user_id`,
     ),
+    runQuery<CampaignAttributionRow>(
+      `SELECT attribution_source, subscription_tier, COUNT(*)::text AS count
+       FROM users
+       GROUP BY attribution_source, subscription_tier`,
+    ),
   ]);
 
   const summary = summaryResult.rows[0];
@@ -269,6 +281,84 @@ export async function getReferralAnalytics() {
 
     return sum + Math.max(targets.conversionXp - Number(row.conversion_reward_xp), 0);
   }, 0);
+
+  const attributionVsLaneMap = new Map<
+    string,
+    {
+      attributionSource: CampaignSource | "unknown";
+      activeLane: CampaignSource | "direct";
+      userCount: number;
+      monthlyCount: number;
+      annualCount: number;
+      premiumCount: number;
+    }
+  >();
+  const laneComparisonMap = new Map<
+    string,
+    {
+      lane: CampaignSource | "direct";
+      attributedUsers: number;
+      activeUsers: number;
+      monthlyCount: number;
+      annualCount: number;
+      premiumCount: number;
+    }
+  >();
+
+  for (const row of attributionRowsResult.rows) {
+    const normalizedAttribution = normalizeReferralCampaignSource(row.attribution_source) ?? "unknown";
+    const activeLane =
+      normalizedAttribution === "unknown"
+        ? "direct"
+        : resolveCampaignExperienceSource(economySettings, normalizedAttribution);
+    const count = Number(row.count);
+    const tier = row.subscription_tier;
+    const pairKey = `${normalizedAttribution}:${activeLane}`;
+    const pairEntry =
+      attributionVsLaneMap.get(pairKey) ??
+      {
+        attributionSource: normalizedAttribution,
+        activeLane,
+        userCount: 0,
+        monthlyCount: 0,
+        annualCount: 0,
+        premiumCount: 0,
+      };
+
+    pairEntry.userCount += count;
+    if (tier === "monthly") {
+      pairEntry.monthlyCount += count;
+      pairEntry.premiumCount += count;
+    } else if (tier === "annual") {
+      pairEntry.annualCount += count;
+      pairEntry.premiumCount += count;
+    }
+    attributionVsLaneMap.set(pairKey, pairEntry);
+
+    const laneEntry =
+      laneComparisonMap.get(activeLane) ??
+      {
+        lane: activeLane,
+        attributedUsers: 0,
+        activeUsers: 0,
+        monthlyCount: 0,
+        annualCount: 0,
+        premiumCount: 0,
+      };
+
+    laneEntry.activeUsers += count;
+    if (normalizedAttribution === activeLane) {
+      laneEntry.attributedUsers += count;
+    }
+    if (tier === "monthly") {
+      laneEntry.monthlyCount += count;
+      laneEntry.premiumCount += count;
+    } else if (tier === "annual") {
+      laneEntry.annualCount += count;
+      laneEntry.premiumCount += count;
+    }
+    laneComparisonMap.set(activeLane, laneEntry);
+  }
 
   return {
     invitedCount,
@@ -292,5 +382,14 @@ export async function getReferralAnalytics() {
       convertedCount: Number(row.converted_count),
       rewardXpEarned: Number(row.reward_xp_earned),
     })),
+    attributionVsLane: Array.from(attributionVsLaneMap.values())
+      .map((entry) => ({
+        ...entry,
+        conversionRate: entry.userCount > 0 ? entry.premiumCount / entry.userCount : 0,
+      }))
+      .sort((left, right) => right.userCount - left.userCount || left.attributionSource.localeCompare(right.attributionSource)),
+    laneComparison: Array.from(laneComparisonMap.values()).sort(
+      (left, right) => right.activeUsers - left.activeUsers || left.lane.localeCompare(right.lane),
+    ),
   };
 }

@@ -417,6 +417,23 @@ export type AdminOverviewData = {
       convertedCount: number;
       rewardXpEarned: number;
     }>;
+    attributionVsLane: Array<{
+      attributionSource: CampaignSource | "unknown";
+      activeLane: CampaignSource | "direct";
+      userCount: number;
+      monthlyCount: number;
+      annualCount: number;
+      premiumCount: number;
+      conversionRate: number;
+    }>;
+    laneComparison: Array<{
+      lane: CampaignSource | "direct";
+      attributedUsers: number;
+      activeUsers: number;
+      monthlyCount: number;
+      annualCount: number;
+      premiumCount: number;
+    }>;
   };
   reviewQueue: ReviewQueueItem[];
   reviewHistory: ReviewHistoryItem[];
@@ -462,6 +479,12 @@ export type AdminOverviewData = {
   }>;
   economySettings: EconomySettings;
   economySettingsAudit: EconomySettingsAuditEntry[];
+  upstreamLanePreview: Array<{
+    attributionSource: CampaignSource;
+    activeLane: CampaignSource | "direct";
+    differentiated: boolean;
+    detail: string;
+  }>;
   rewardAssets: RewardAsset[];
   rewardPrograms: RewardProgram[];
   tokenSettlementQueue: Array<TokenSettlementItem>;

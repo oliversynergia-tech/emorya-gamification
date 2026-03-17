@@ -1680,6 +1680,70 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
           <div>
+            <p className="eyebrow">Source vs lane</p>
+            <h3>Attribution source against active experience lane</h3>
+          </div>
+        </div>
+        <div className="info-grid">
+          {data.referralAnalytics.laneComparison.map((lane) => (
+            <div key={lane.lane} className="info-card">
+              <span>{lane.lane} lane</span>
+              <strong>{lane.activeUsers} users</strong>
+              <small>
+                {lane.premiumCount} premium, {lane.annualCount} annual, {lane.attributedUsers} directly attributed.
+              </small>
+            </div>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.referralAnalytics.attributionVsLane.map((entry) => (
+            <article key={`${entry.attributionSource}-${entry.activeLane}`} className="achievement-card">
+              <div>
+                <strong>
+                  {entry.attributionSource} {"->"} {entry.activeLane}
+                </strong>
+                <p>
+                  {entry.userCount} users currently resolve through this pairing, with {Math.round(entry.conversionRate * 100)}%
+                  already on a paid tier.
+                </p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{entry.monthlyCount} monthly</span>
+                <span>{entry.annualCount} annual</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Lane preview</p>
+            <h3>What the upstream toggle is currently resolving to</h3>
+          </div>
+          <span className="badge badge--pink">
+            {data.economySettings.differentiateUpstreamCampaignSources ? "separate live lanes" : "zealy bridge mode"}
+          </span>
+        </div>
+        <div className="achievement-list">
+          {data.upstreamLanePreview.map((entry) => (
+            <article key={entry.attributionSource} className="achievement-card">
+              <div>
+                <strong>
+                  {entry.attributionSource} {"->"} {entry.activeLane}
+                </strong>
+                <p>{entry.detail}</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{entry.differentiated ? "separate" : "bridged"}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
             <p className="eyebrow">Review drill-down</p>
             <h3>Reviewer and quest-type performance</h3>
           </div>
