@@ -71,7 +71,7 @@ type DeriveUserProgressStateInput = {
 function normalizeCampaignSource(source: string | null): UserProgressState["campaignSource"] {
   const normalized = source?.trim().toLowerCase() ?? "";
 
-  if (normalized === "zealy" || normalized === "galxe" || normalized === "layer3" || normalized === "direct") {
+  if (normalized === "zealy" || normalized === "galxe" || normalized === "taskon" || normalized === "direct") {
     return normalized;
   }
 

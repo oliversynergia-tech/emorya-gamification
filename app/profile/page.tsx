@@ -16,8 +16,9 @@ export default async function ProfilePage() {
   const data = await loadDashboardOverview(session?.user ?? null);
   const profile = await getCurrentProfile();
   const walletCount = session?.walletAddresses.length ?? 0;
-  const premiumOffer = getCampaignPremiumOffer(data.user.campaignSource);
-  const premiumJourney = getCampaignPremiumJourney(data.user.campaignSource, {
+  const activeCampaignLane = data.economy.campaignPreset.source;
+  const premiumOffer = getCampaignPremiumOffer(activeCampaignLane);
+  const premiumJourney = getCampaignPremiumJourney(activeCampaignLane, {
     featuredTracks: data.economy.campaignPreset.featuredTracks,
     premiumUpsellMultiplier: data.economy.campaignPreset.premiumUpsellMultiplier,
     weeklyTargetOffset: data.economy.campaignPreset.weeklyTargetOffset,
@@ -48,7 +49,11 @@ export default async function ProfilePage() {
           <div className="metric-card">
             <span>Premium path</span>
             <strong>{premiumOffer.title}</strong>
-            <small>{premiumOffer.cta}</small>
+            <small>
+              {data.user.campaignSource && data.user.campaignSource !== activeCampaignLane
+                ? `${premiumOffer.cta} Attribution stays on ${data.user.campaignSource}, but the live bridge runs through ${activeCampaignLane}.`
+                : premiumOffer.cta}
+            </small>
           </div>
           <div className="metric-card">
             <span>Recommended next premium move</span>

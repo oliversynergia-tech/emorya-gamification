@@ -9,6 +9,7 @@ import {
   getCampaignPremiumUpsellMultiplier,
   getCampaignWeeklyTargetOffset,
   getXpTierMultiplier,
+  resolveCampaignExperienceSource,
 } from "@/lib/economy-settings";
 import { getCampaignFeaturedTracks } from "@/lib/campaign-source";
 import {
@@ -398,7 +399,8 @@ async function getUserSnapshot(
     campaignSource: progressState.campaignSource,
   });
   const campaignEconomy = getCampaignEconomyOverride(economySettings, progressState.campaignSource);
-  const featuredTracks = getCampaignFeaturedTracks(progressState.campaignSource, campaignEconomy);
+  const activeCampaignLane = resolveCampaignExperienceSource(economySettings, progressState.campaignSource);
+  const featuredTracks = getCampaignFeaturedTracks(activeCampaignLane, campaignEconomy);
   const tokenNotifications: UserSnapshot["tokenProgram"]["notifications"] = [];
   const latestClaimedRedemption = redemptionHistory.find((entry) => entry.status === "claimed");
   const latestSettledRedemption = redemptionHistory.find((entry) => entry.status === "settled");
@@ -434,17 +436,20 @@ async function getUserSnapshot(
   }
 
   if (progressState.campaignSource) {
+    const attributionDetail = progressState.campaignSource !== activeCampaignLane
+      ? ` Attributed from ${progressState.campaignSource}, but currently routed through the ${activeCampaignLane} bridge lane.`
+      : "";
     tokenNotifications.push({
       id: `campaign-override-${progressState.campaignSource}`,
       tone: "info",
-      title: `${progressState.campaignSource} reward preset active`,
-      detail: `This lane adds +${campaignEconomy.questXpMultiplierBonus.toFixed(2)}x quest XP, ${(campaignEconomy.eligibilityPointsMultiplierBonus * 100).toFixed(0)}% extra eligibility-point growth, ${(campaignEconomy.tokenYieldMultiplierBonus * 100).toFixed(0)}% token-yield lift, ${campaignEconomy.minimumEligibilityPointsOffset} points on the redemption threshold, ${campaignEconomy.weeklyTargetXpOffset} XP on weekly target shaping, and ${(campaignEconomy.premiumUpsellBonusMultiplier * 100).toFixed(0)}% extra premium pressure.`,
+      title: `${activeCampaignLane} reward preset active`,
+      detail: `This lane adds +${campaignEconomy.questXpMultiplierBonus.toFixed(2)}x quest XP, ${(campaignEconomy.eligibilityPointsMultiplierBonus * 100).toFixed(0)}% extra eligibility-point growth, ${(campaignEconomy.tokenYieldMultiplierBonus * 100).toFixed(0)}% token-yield lift, ${campaignEconomy.minimumEligibilityPointsOffset} points on the redemption threshold, ${campaignEconomy.weeklyTargetXpOffset} XP on weekly target shaping, and ${(campaignEconomy.premiumUpsellBonusMultiplier * 100).toFixed(0)}% extra premium pressure.${attributionDetail}`,
     });
     tokenNotifications.push({
       id: `campaign-featured-${progressState.campaignSource}`,
       tone: "info",
-      title: `${progressState.campaignSource} featured tracks`,
-      detail: `This lane is currently pushing ${featuredTracks.join(", ")} higher in the funnel so onboarding pressure matches the acquisition source.`,
+      title: `${activeCampaignLane} featured tracks`,
+      detail: `This lane is currently pushing ${featuredTracks.join(", ")} higher in the funnel so onboarding pressure matches the active bridge path.${attributionDetail}`,
     });
   }
 
@@ -556,15 +561,25 @@ async function getUserSnapshot(
         },
         sourceBonuses: referralCampaignIncentives.map((incentive) => ({
           source: incentive.source,
-          label: incentive.label,
-          signupXp: economySettings.referralSignupBaseXp + economySettings.campaignOverrides[incentive.source].signupBonusXp,
-          monthlyPremiumXp: economySettings.referralMonthlyConversionBaseXp + economySettings.campaignOverrides[incentive.source].monthlyConversionBonusXp,
-          annualPremiumXp: economySettings.referralAnnualConversionBaseXp + economySettings.campaignOverrides[incentive.source].annualConversionBonusXp,
+          label:
+            incentive.source !== resolveCampaignExperienceSource(economySettings, incentive.source)
+              ? `${incentive.label} via ${resolveCampaignExperienceSource(economySettings, incentive.source)} bridge`
+              : incentive.label,
+          signupXp:
+            economySettings.referralSignupBaseXp +
+            economySettings.campaignOverrides[resolveCampaignExperienceSource(economySettings, incentive.source)].signupBonusXp,
+          monthlyPremiumXp:
+            economySettings.referralMonthlyConversionBaseXp +
+            economySettings.campaignOverrides[resolveCampaignExperienceSource(economySettings, incentive.source)].monthlyConversionBonusXp,
+          annualPremiumXp:
+            economySettings.referralAnnualConversionBaseXp +
+            economySettings.campaignOverrides[resolveCampaignExperienceSource(economySettings, incentive.source)].annualConversionBonusXp,
           annualDirectTokenReward: {
             asset: economySettings.payoutAsset,
             amount:
               economySettings.directRewardsEnabled && economySettings.directAnnualReferralEnabled
-                ? economySettings.annualReferralDirectTokenAmount + economySettings.campaignOverrides[incentive.source].annualDirectTokenBonus
+                ? economySettings.annualReferralDirectTokenAmount +
+                  economySettings.campaignOverrides[resolveCampaignExperienceSource(economySettings, incentive.source)].annualDirectTokenBonus
                 : 0,
           },
         })),
@@ -784,7 +799,8 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     getActivityFeed(),
   ]);
   const campaignEconomy = getCampaignEconomyOverride(economySettings, user.campaignSource);
-  const featuredTracks = getCampaignFeaturedTracks(user.campaignSource, campaignEconomy);
+  const activeCampaignLane = resolveCampaignExperienceSource(economySettings, user.campaignSource);
+  const featuredTracks = getCampaignFeaturedTracks(activeCampaignLane, campaignEconomy);
 
   return {
     user,
@@ -793,7 +809,8 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
       xpMultipliers: economySettings.xpTierMultipliers,
       tokenMultipliers: economySettings.tokenTierMultipliers,
       campaignPreset: {
-        source: user.campaignSource ?? "direct",
+        source: activeCampaignLane,
+        attributionSource: user.campaignSource ?? "direct",
         questXpBoost: campaignEconomy.questXpMultiplierBonus,
         eligibilityBoost: campaignEconomy.eligibilityPointsMultiplierBonus,
         tokenYieldBoost: campaignEconomy.tokenYieldMultiplierBonus,
@@ -813,7 +830,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
       `Monthly earns ${economySettings.xpTierMultipliers.monthly.toFixed(2)}x XP. Annual earns ${economySettings.xpTierMultipliers.annual.toFixed(2)}x XP.`,
       `Your ${user.currentStreak}-day streak becomes safer with Annual streak freezes.`,
       `Redemptions are ${economySettings.redemptionEnabled ? "enabled" : "paused"} for ${economySettings.payoutAsset}.`,
-      `${user.campaignSource ?? "direct"} lane currently adds ${(campaignEconomy.premiumUpsellBonusMultiplier * 100).toFixed(0)}% extra premium pressure and ${campaignEconomy.weeklyTargetXpOffset} XP on weekly target shaping.`,
+      `${activeCampaignLane} lane currently adds ${(campaignEconomy.premiumUpsellBonusMultiplier * 100).toFixed(0)}% extra premium pressure and ${campaignEconomy.weeklyTargetXpOffset} XP on weekly target shaping${user.campaignSource && user.campaignSource !== activeCampaignLane ? ` while preserving ${user.campaignSource} attribution.` : "."}`,
     ],
   };
 }

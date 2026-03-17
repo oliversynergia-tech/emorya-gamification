@@ -3,8 +3,8 @@ import test from "node:test";
 
 import { getCampaignPremiumJourney } from "../lib/campaign-source.ts";
 
-test("getCampaignPremiumJourney recommends annual first for layer3 lanes", () => {
-  const journey = getCampaignPremiumJourney("layer3", {
+test("getCampaignPremiumJourney recommends annual first for taskon lanes", () => {
+  const journey = getCampaignPremiumJourney("taskon", {
     featuredTracks: ["premium", "wallet", "campaign"],
     premiumUpsellMultiplier: 1.12,
     weeklyTargetOffset: 35,

@@ -108,7 +108,7 @@ function renderQuestCard(quest: Quest) {
 
 export function HeroSection({ data }: { data: DashboardData }) {
   const progress = getLevelProgress(data.user.totalXp);
-  const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
+  const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
 
   return (
     <section className="hero grid">
@@ -164,7 +164,7 @@ export function HeroSection({ data }: { data: DashboardData }) {
 
 export function DashboardSnapshot({ data }: { data: DashboardData }) {
   const progress = getLevelProgress(data.user.totalXp);
-  const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
+  const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
   const unlockedAchievements = data.achievements.filter((achievement) => achievement.unlocked);
   const upcomingAchievements = data.achievements
     .filter((achievement) => !achievement.unlocked)
@@ -248,7 +248,11 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Campaign bridge ladder</p>
-                <h3>{data.user.campaignSource} onboarding path</h3>
+                <h3>
+                  {data.user.campaignSource === data.economy.campaignPreset.source
+                    ? `${data.user.campaignSource} onboarding path`
+                    : `${data.user.campaignSource} to ${data.economy.campaignPreset.source} bridge path`}
+                </h3>
               </div>
               <span className="badge badge--pink">Source aware</span>
             </div>
@@ -619,9 +623,9 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
 }
 
 export function PremiumFunnelSection({ data }: { data: DashboardData }) {
-  const premiumOffer = getCampaignPremiumOffer(data.user.campaignSource);
+  const premiumOffer = getCampaignPremiumOffer(data.economy.campaignPreset.source);
   const campaignPreset = data.economy.campaignPreset;
-  const premiumJourney = getCampaignPremiumJourney(data.user.campaignSource, {
+  const premiumJourney = getCampaignPremiumJourney(campaignPreset.source, {
     featuredTracks: campaignPreset.featuredTracks,
     premiumUpsellMultiplier: campaignPreset.premiumUpsellMultiplier,
     weeklyTargetOffset: campaignPreset.weeklyTargetOffset,
@@ -650,7 +654,7 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
               <strong>{premiumOffer.title}</strong>
               <p>{premiumOffer.summary}</p>
             </div>
-            <span className="badge badge--pink">{data.user.campaignSource ?? "direct"}</span>
+            <span className="badge badge--pink">{campaignPreset.source}</span>
           </article>
           {premiumOffer.hooks.map((hook) => (
             <article key={hook} className="achievement-card">
@@ -884,7 +888,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           <article className="reward-visual-card">
             <div className="quest-card__meta">
               <span>{campaignPreset.source} preset</span>
-              <span>{data.user.campaignSource ?? "direct"}</span>
+              <span>{campaignPreset.attributionSource}</span>
             </div>
             <strong>
               +{(campaignPreset.questXpBoost * 100).toFixed(0)}% quest XP, +{(campaignPreset.eligibilityBoost * 100).toFixed(0)}%

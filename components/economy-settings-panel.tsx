@@ -13,7 +13,7 @@ type EconomySettingsResponse = {
 };
 
 type TierForm = Record<SubscriptionTier, number>;
-type CampaignOverrideKey = "direct" | "zealy" | "galxe" | "layer3";
+type CampaignOverrideKey = "direct" | "zealy" | "galxe" | "taskon";
 
 function parseNumber(value: string) {
   const parsed = Number(value);
@@ -101,6 +101,7 @@ export function EconomySettingsPanel({
           directAnnualReferralEnabled: settings.directAnnualReferralEnabled,
           directPremiumFlashEnabled: settings.directPremiumFlashEnabled,
           directAmbassadorEnabled: settings.directAmbassadorEnabled,
+          differentiateUpstreamCampaignSources: settings.differentiateUpstreamCampaignSources,
           minimumEligibilityPoints: settings.minimumEligibilityPoints,
           pointsPerToken: settings.pointsPerToken,
           xpTierMultipliers: settings.xpTierMultipliers,
@@ -231,6 +232,17 @@ export function EconomySettingsPanel({
             }
           />
         </label>
+        <label className="field field--checkbox">
+          <span>Differentiate upstream platforms</span>
+          <input
+            disabled={!canManage || pending}
+            type="checkbox"
+            checked={settings.differentiateUpstreamCampaignSources}
+            onChange={(event) =>
+              setSettings((current) => ({ ...current, differentiateUpstreamCampaignSources: event.target.checked }))
+            }
+          />
+        </label>
       </div>
       <div className="profile-grid">
         <label className="field">
@@ -356,11 +368,15 @@ export function EconomySettingsPanel({
           </div>
         </div>
         <div className="tooling-grid">
-          {(["direct", "zealy", "galxe", "layer3"] as CampaignOverrideKey[]).map((source) => (
+          {(["direct", "zealy", "galxe", "taskon"] as CampaignOverrideKey[]).map((source) => (
             <article key={source} className="achievement-card">
               <div>
                 <strong>{source}</strong>
-                <p>Adjust how this acquisition lane modifies signup, conversion, and direct-token referral rewards.</p>
+                <p>
+                  {source === "galxe" || source === "taskon"
+                    ? "Adjust the feeder-platform preset. These values stay available even when the live funnel is currently bridged through Zealy."
+                    : "Adjust how this acquisition lane modifies signup, conversion, and direct-token referral rewards."}
+                </p>
               </div>
               <div className="profile-grid">
                 <label className="field">

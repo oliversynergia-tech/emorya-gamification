@@ -18,6 +18,7 @@ type EconomySettingsRow = QueryResultRow & {
   direct_annual_referral_enabled: boolean;
   direct_premium_flash_enabled: boolean;
   direct_ambassador_enabled: boolean;
+  differentiate_upstream_campaign_sources: boolean;
   minimum_eligibility_points: number | string;
   points_per_token: number | string;
   xp_multiplier_free: number | string;
@@ -71,6 +72,7 @@ function mapEconomySettings(row: EconomySettingsRow): EconomySettings {
     directAmbassadorEnabled: row.direct_ambassador_enabled,
     minimumEligibilityPoints: Number(row.minimum_eligibility_points),
     pointsPerToken: Number(row.points_per_token),
+    differentiateUpstreamCampaignSources: row.differentiate_upstream_campaign_sources ?? false,
     xpTierMultipliers: {
       free: Number(row.xp_multiplier_free),
       monthly: Number(row.xp_multiplier_monthly),
@@ -98,9 +100,9 @@ function mapEconomySettings(row: EconomySettingsRow): EconomySettings {
         ...defaultEconomySettings.campaignOverrides.galxe,
         ...(row.campaign_overrides?.galxe ?? {}),
       },
-      layer3: {
-        ...defaultEconomySettings.campaignOverrides.layer3,
-        ...(row.campaign_overrides?.layer3 ?? {}),
+      taskon: {
+        ...defaultEconomySettings.campaignOverrides.taskon,
+        ...(row.campaign_overrides?.taskon ?? {}),
       },
     },
     updatedAt: row.updated_at,
@@ -112,6 +114,7 @@ export async function getActiveEconomySettings() {
     `SELECT id, payout_asset, payout_mode, redemption_enabled, settlement_processing_enabled,
             direct_reward_queue_enabled, settlement_notes_required, direct_rewards_enabled,
             direct_annual_referral_enabled, direct_premium_flash_enabled, direct_ambassador_enabled,
+            differentiate_upstream_campaign_sources,
             minimum_eligibility_points, points_per_token,
             xp_multiplier_free, xp_multiplier_monthly, xp_multiplier_annual,
             token_multiplier_free, token_multiplier_monthly, token_multiplier_annual,
@@ -164,6 +167,7 @@ export async function updateActiveEconomySettings({
        id, is_active, payout_asset, payout_mode, redemption_enabled, settlement_processing_enabled,
        direct_reward_queue_enabled, settlement_notes_required, direct_rewards_enabled,
        direct_annual_referral_enabled, direct_premium_flash_enabled, direct_ambassador_enabled,
+       differentiate_upstream_campaign_sources,
        minimum_eligibility_points, points_per_token,
        xp_multiplier_free, xp_multiplier_monthly, xp_multiplier_annual,
        token_multiplier_free, token_multiplier_monthly, token_multiplier_annual,
@@ -172,7 +176,7 @@ export async function updateActiveEconomySettings({
        campaign_overrides, updated_at
      ) VALUES (
        $1, TRUE, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-       $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24::jsonb, NOW()
+       $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25::jsonb, NOW()
      )
      ON CONFLICT (id) DO UPDATE SET
        payout_asset = EXCLUDED.payout_asset,
@@ -185,6 +189,7 @@ export async function updateActiveEconomySettings({
        direct_annual_referral_enabled = EXCLUDED.direct_annual_referral_enabled,
        direct_premium_flash_enabled = EXCLUDED.direct_premium_flash_enabled,
        direct_ambassador_enabled = EXCLUDED.direct_ambassador_enabled,
+       differentiate_upstream_campaign_sources = EXCLUDED.differentiate_upstream_campaign_sources,
        minimum_eligibility_points = EXCLUDED.minimum_eligibility_points,
        points_per_token = EXCLUDED.points_per_token,
        xp_multiplier_free = EXCLUDED.xp_multiplier_free,
@@ -211,6 +216,7 @@ export async function updateActiveEconomySettings({
       next.directAnnualReferralEnabled,
       next.directPremiumFlashEnabled,
       next.directAmbassadorEnabled,
+      next.differentiateUpstreamCampaignSources,
       next.minimumEligibilityPoints,
       next.pointsPerToken,
       next.xpTierMultipliers.free,

@@ -1,4 +1,4 @@
-import { defaultEconomySettings } from "../../lib/economy-settings.ts";
+import { defaultEconomySettings, getCampaignEconomyOverride, resolveCampaignExperienceSource } from "../../lib/economy-settings.ts";
 import {
   buildRewardConfig,
   buildUnlockRules,
@@ -7,7 +7,6 @@ import {
   inferTokenEffect,
   mapQuestCadence,
 } from "../../lib/progression-rules.ts";
-import { getCampaignEconomyOverride } from "../../lib/economy-settings.ts";
 import { getCampaignFeaturedTracks } from "../../lib/campaign-source.ts";
 import type {
   EconomySettings,
@@ -114,8 +113,9 @@ export function buildDashboardQuestBoard({
   settings?: EconomySettings;
 }) {
   const runtimeContext = createDefaultQuestRuntimeContext();
+  const activeCampaignLane = resolveCampaignExperienceSource(settings, userProgressState.campaignSource);
   const featuredTracks = getCampaignFeaturedTracks(
-    userProgressState.campaignSource,
+    activeCampaignLane,
     getCampaignEconomyOverride(settings, userProgressState.campaignSource),
   );
   const evaluatedByQuestId = new Map<string, { evaluatedQuest: EvaluatedQuest; cadence: QuestCadence }>();
@@ -148,12 +148,12 @@ export function buildDashboardQuestBoard({
         (track === "starter" ||
           track === "wallet" ||
           track === "social" ||
-          (track === "campaign" && userProgressState.campaignSource !== null && userProgressState.campaignSource !== "direct"))) ||
+          (track === "campaign" && activeCampaignLane !== "direct"))) ||
       (journeyState === "activated_free" &&
         (track === "daily" ||
           track === "wallet" ||
           track === "referral" ||
-          (track === "campaign" && userProgressState.campaignSource !== null && userProgressState.campaignSource !== "direct"))) ||
+          (track === "campaign" && activeCampaignLane !== "direct"))) ||
       (journeyState === "reward_eligible_free" && (track === "wallet" || track === "referral" || track === "premium")) ||
       ((journeyState === "monthly_premium" || journeyState === "annual_premium") &&
         (track === "premium" || track === "referral" || track === "wallet")) ||
@@ -180,7 +180,7 @@ export function buildDashboardQuestBoard({
   const selectedBoard = selectQuestBoard({
     quests: Array.from(evaluatedByQuestId.values()).map((entry) => entry.evaluatedQuest),
     journeyState,
-    campaignSource: userProgressState.campaignSource,
+    campaignSource: activeCampaignLane,
     featuredTracks,
   });
 

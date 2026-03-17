@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function LeaderboardPage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
-  const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
+  const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
   const topEntry = data.leaderboard[0];
   const topReferralEntry = data.referralLeaderboard[0];
   const campaignPreset = data.economy.campaignPreset;
@@ -63,7 +63,9 @@ export default async function LeaderboardPage() {
             <strong>{campaignProfile.accent}</strong>
             <small>
               {data.user.campaignSource
-                ? `${data.user.campaignSource} entrants should see campaign bridge quests near the top of the board.`
+                ? data.user.campaignSource === campaignPreset.source
+                  ? `${campaignPreset.source} entrants should see campaign bridge quests near the top of the board.`
+                  : `${data.user.campaignSource} traffic is currently being bridged through ${campaignPreset.source}, so that bridge lane’s campaign quests should rise first.`
                 : "Direct entrants see the default Starter and Daily Momentum pressure first."}
             </small>
           </div>

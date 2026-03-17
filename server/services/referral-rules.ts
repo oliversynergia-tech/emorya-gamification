@@ -1,4 +1,4 @@
-import { defaultEconomySettings } from "../../lib/economy-settings.ts";
+import { defaultEconomySettings, resolveCampaignExperienceSource } from "../../lib/economy-settings.ts";
 import { getLevelProgress } from "../../lib/progression.ts";
 import type { EconomySettings, SubscriptionTier, UserSnapshot } from "../../lib/types.ts";
 
@@ -48,8 +48,8 @@ export const referralCampaignIncentives: ReferralCampaignIncentive[] = [
     annualDirectTokenBonus: 7,
   },
   {
-    source: "layer3",
-    label: "Layer3 operator",
+    source: "taskon",
+    label: "TaskOn operator",
     signupBonusXp: 15,
     monthlyConversionBonusXp: 25,
     annualConversionBonusXp: 70,
@@ -61,10 +61,11 @@ function applyCampaignOverride(
   source: Exclude<ReferralCampaignSource, null>,
   settings?: EconomySettings,
 ): ReferralCampaignIncentive {
+  const resolvedSource = settings ? resolveCampaignExperienceSource(settings, source) : source;
   const base =
-    referralCampaignIncentives.find((entry) => entry.source === source) ??
+    referralCampaignIncentives.find((entry) => entry.source === resolvedSource) ??
     referralCampaignIncentives[0];
-  const override = settings?.campaignOverrides?.[source];
+  const override = settings?.campaignOverrides?.[resolvedSource];
 
   if (!override) {
     return base;
@@ -82,7 +83,7 @@ function applyCampaignOverride(
 export function normalizeReferralCampaignSource(source: string | null | undefined): ReferralCampaignSource {
   const normalized = source?.trim().toLowerCase() ?? "";
 
-  if (normalized === "zealy" || normalized === "galxe" || normalized === "layer3" || normalized === "direct") {
+  if (normalized === "zealy" || normalized === "galxe" || normalized === "taskon" || normalized === "direct") {
     return normalized;
   }
 

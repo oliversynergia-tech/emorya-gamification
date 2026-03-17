@@ -1,7 +1,7 @@
 export type SubscriptionTier = "free" | "monthly" | "annual";
 export type AppRole = "super_admin" | "admin" | "reviewer";
 export type TokenAsset = string;
-export type CampaignSource = "direct" | "zealy" | "galxe" | "layer3";
+export type CampaignSource = "direct" | "zealy" | "galxe" | "taskon";
 export type QuestTrack =
   | "starter"
   | "daily"
@@ -357,6 +357,7 @@ export type DashboardData = {
     tokenMultipliers: Record<SubscriptionTier, number>;
     campaignPreset: {
       source: CampaignSource | "direct";
+      attributionSource: CampaignSource | "direct";
       questXpBoost: number;
       eligibilityBoost: number;
       tokenYieldBoost: number;
@@ -547,7 +548,7 @@ export type UnlockRule =
   | { type: "annual_premium_referrals"; value: number }
   | { type: "ambassador_candidate"; value: true }
   | { type: "ambassador_active"; value: true }
-  | { type: "campaign_source"; value: "direct" | "zealy" | "galxe" | "layer3" }
+  | { type: "campaign_source"; value: "direct" | "zealy" | "galxe" | "taskon" }
   | { type: "trust_score_band"; value: Exclude<TrustScoreBand, "low"> }
   | { type: "wallet_age_days"; value: number }
   | { type: "quest_completed"; value: string }
@@ -642,6 +643,7 @@ export type EconomySettings = {
   referralMonthlyConversionBaseXp: number;
   referralAnnualConversionBaseXp: number;
   annualReferralDirectTokenAmount: number;
+  differentiateUpstreamCampaignSources: boolean;
   campaignOverrides: Record<CampaignSource, CampaignEconomyOverride>;
   updatedAt: string;
 };

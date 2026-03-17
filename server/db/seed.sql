@@ -403,9 +403,9 @@ INSERT INTO quest_definitions (
   ),
   (
     '59a8048b-8c8a-4f7a-b383-a08cf69ee6d4',
-    'layer3-conversion-lane',
-    'Layer3 conversion lane',
-    'Guide a Layer3 entrant from campaign claim behavior into recurring Emorya progress.',
+    'taskon-conversion-lane',
+    'TaskOn conversion lane',
+    'Guide a TaskOn entrant from campaign claim behavior into recurring Emorya progress.',
     'limited',
     90,
     'medium',
@@ -415,7 +415,7 @@ INSERT INTO quest_definitions (
     3,
     FALSE,
     TRUE,
-    '{"track":"campaign","targetUrl":"https://example.com/layer3-bridge","unlockRules":{"all":[{"type":"campaign_source","value":"layer3"}]},"rewardConfig":{"xp":{"base":90,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}}}'::jsonb
+    '{"track":"campaign","targetUrl":"https://example.com/taskon-bridge","unlockRules":{"all":[{"type":"campaign_source","value":"taskon"}]},"rewardConfig":{"xp":{"base":90,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}}}'::jsonb
   ),
   (
     '8ec2112e-eebc-48dd-a32c-a2ca6c705c5a',
@@ -790,6 +790,7 @@ INSERT INTO economy_settings (
   direct_annual_referral_enabled,
   direct_premium_flash_enabled,
   direct_ambassador_enabled,
+  differentiate_upstream_campaign_sources,
   minimum_eligibility_points,
   points_per_token,
   xp_multiplier_free,
@@ -816,6 +817,7 @@ INSERT INTO economy_settings (
   TRUE,
   TRUE,
   TRUE,
+  FALSE,
   100,
   20,
   1.00,
@@ -832,7 +834,7 @@ INSERT INTO economy_settings (
     "direct": {"signupBonusXp": 0, "monthlyConversionBonusXp": 0, "annualConversionBonusXp": 0, "annualDirectTokenBonus": 0, "questXpMultiplierBonus": 0, "eligibilityPointsMultiplierBonus": 0, "tokenYieldMultiplierBonus": 0, "minimumEligibilityPointsOffset": 0, "directTokenRewardBonus": 0, "weeklyTargetXpOffset": 0, "premiumUpsellBonusMultiplier": 0, "leaderboardMomentumBonus": 0},
     "zealy": {"signupBonusXp": 10, "monthlyConversionBonusXp": 20, "annualConversionBonusXp": 40, "annualDirectTokenBonus": 5, "questXpMultiplierBonus": 0.05, "eligibilityPointsMultiplierBonus": 0.10, "tokenYieldMultiplierBonus": 0.05, "minimumEligibilityPointsOffset": -10, "directTokenRewardBonus": 1, "weeklyTargetXpOffset": -15, "premiumUpsellBonusMultiplier": 0.08, "leaderboardMomentumBonus": 0.05},
     "galxe": {"signupBonusXp": 5, "monthlyConversionBonusXp": 30, "annualConversionBonusXp": 55, "annualDirectTokenBonus": 7, "questXpMultiplierBonus": 0.03, "eligibilityPointsMultiplierBonus": 0.12, "tokenYieldMultiplierBonus": 0.08, "minimumEligibilityPointsOffset": -5, "directTokenRewardBonus": 2, "weeklyTargetXpOffset": -10, "premiumUpsellBonusMultiplier": 0.10, "leaderboardMomentumBonus": 0.08},
-    "layer3": {"signupBonusXp": 15, "monthlyConversionBonusXp": 25, "annualConversionBonusXp": 70, "annualDirectTokenBonus": 10, "questXpMultiplierBonus": 0.08, "eligibilityPointsMultiplierBonus": 0.15, "tokenYieldMultiplierBonus": 0.10, "minimumEligibilityPointsOffset": -15, "directTokenRewardBonus": 2, "weeklyTargetXpOffset": -20, "premiumUpsellBonusMultiplier": 0.12, "leaderboardMomentumBonus": 0.12}
+    "taskon": {"signupBonusXp": 15, "monthlyConversionBonusXp": 25, "annualConversionBonusXp": 70, "annualDirectTokenBonus": 10, "questXpMultiplierBonus": 0.08, "eligibilityPointsMultiplierBonus": 0.15, "tokenYieldMultiplierBonus": 0.10, "minimumEligibilityPointsOffset": -15, "directTokenRewardBonus": 2, "weeklyTargetXpOffset": -20, "premiumUpsellBonusMultiplier": 0.12, "leaderboardMomentumBonus": 0.12}
   }'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -846,6 +848,7 @@ ON CONFLICT (id) DO UPDATE SET
   direct_annual_referral_enabled = EXCLUDED.direct_annual_referral_enabled,
   direct_premium_flash_enabled = EXCLUDED.direct_premium_flash_enabled,
   direct_ambassador_enabled = EXCLUDED.direct_ambassador_enabled,
+  differentiate_upstream_campaign_sources = EXCLUDED.differentiate_upstream_campaign_sources,
   minimum_eligibility_points = EXCLUDED.minimum_eligibility_points,
   points_per_token = EXCLUDED.points_per_token,
   xp_multiplier_free = EXCLUDED.xp_multiplier_free,

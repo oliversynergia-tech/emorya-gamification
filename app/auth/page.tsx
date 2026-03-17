@@ -10,9 +10,10 @@ export const dynamic = "force-dynamic";
 export default async function AuthPage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
-  const campaignProfile = getCampaignSourceProfile(data.user.campaignSource);
-  const premiumOffer = getCampaignPremiumOffer(data.user.campaignSource);
-  const premiumJourney = getCampaignPremiumJourney(data.user.campaignSource, {
+  const activeCampaignLane = data.economy.campaignPreset.source;
+  const campaignProfile = getCampaignSourceProfile(activeCampaignLane);
+  const premiumOffer = getCampaignPremiumOffer(activeCampaignLane);
+  const premiumJourney = getCampaignPremiumJourney(activeCampaignLane, {
     featuredTracks: data.economy.campaignPreset.featuredTracks,
     premiumUpsellMultiplier: data.economy.campaignPreset.premiumUpsellMultiplier,
     weeklyTargetOffset: data.economy.campaignPreset.weeklyTargetOffset,
@@ -59,7 +60,9 @@ export default async function AuthPage() {
             <strong>{campaignProfile.accent}</strong>
             <small>
               {data.user.campaignSource
-                ? `This account is currently being steered through the ${data.user.campaignSource} bridge path.`
+                ? data.user.campaignSource === activeCampaignLane
+                  ? `This account is currently being steered through the ${activeCampaignLane} bridge path.`
+                  : `This account is attributed to ${data.user.campaignSource} and currently being routed through the ${activeCampaignLane} bridge path.`
                 : "Direct onboarding uses the default Emorya starter ladder."}
             </small>
           </div>

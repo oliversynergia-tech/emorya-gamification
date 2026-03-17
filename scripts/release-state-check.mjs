@@ -6,7 +6,7 @@ import { createDbToolContext } from "./db-tools.mjs";
 const rootDir = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const { withClient } = createDbToolContext(rootDir);
 
-const requiredCampaignSources = ["direct", "zealy", "galxe", "layer3"];
+const requiredCampaignSources = ["direct", "zealy", "galxe", "taskon"];
 const requiredSettlementColumns = [
   "receipt_reference",
   "settlement_note",
@@ -67,7 +67,7 @@ await withClient(async (client) => {
   const economyResult = await client.query(`
     SELECT payout_asset, payout_mode, redemption_enabled, settlement_processing_enabled,
            direct_reward_queue_enabled, settlement_notes_required, direct_rewards_enabled,
-           direct_annual_referral_enabled, minimum_eligibility_points,
+           direct_annual_referral_enabled, differentiate_upstream_campaign_sources, minimum_eligibility_points,
            points_per_token, xp_multiplier_free, xp_multiplier_monthly, xp_multiplier_annual,
            token_multiplier_free, token_multiplier_monthly, token_multiplier_annual,
            annual_referral_direct_token_amount, campaign_overrides
@@ -115,6 +115,10 @@ await withClient(async (client) => {
 
     if (economy.direct_reward_queue_enabled === false && economy.direct_rewards_enabled === true) {
       errors.push("direct_reward_queue_enabled cannot be false while direct rewards remain enabled.");
+    }
+
+    if (typeof economy.differentiate_upstream_campaign_sources !== "boolean") {
+      errors.push("economy_settings.differentiate_upstream_campaign_sources must be a boolean.");
     }
 
     if (minimumPoints <= 0) {
@@ -209,7 +213,7 @@ await withClient(async (client) => {
   const migrationResult = await client.query(
     `SELECT filename
      FROM schema_migrations
-     WHERE filename IN ('013_add_token_redemption_settlement_details.sql', '014_add_campaign_overrides_and_referral_direct_rewards.sql', '016_add_reward_assets_and_programs.sql', '017_add_payout_operation_controls.sql', '018_add_quest_definition_templates.sql', '019_expand_campaign_override_funnel_presets.sql', '020_add_token_redemption_workflow_states.sql')
+     WHERE filename IN ('013_add_token_redemption_settlement_details.sql', '014_add_campaign_overrides_and_referral_direct_rewards.sql', '016_add_reward_assets_and_programs.sql', '017_add_payout_operation_controls.sql', '018_add_quest_definition_templates.sql', '019_expand_campaign_override_funnel_presets.sql', '020_add_token_redemption_workflow_states.sql', '021_add_upstream_campaign_differentiation.sql')
      ORDER BY filename ASC`,
   );
   const appliedMigrations = new Set(migrationResult.rows.map((row) => String(row.filename)));
@@ -222,6 +226,7 @@ await withClient(async (client) => {
     "018_add_quest_definition_templates.sql",
     "019_expand_campaign_override_funnel_presets.sql",
     "020_add_token_redemption_workflow_states.sql",
+    "021_add_upstream_campaign_differentiation.sql",
   ]) {
     if (!appliedMigrations.has(filename)) {
       errors.push(`Required migration not applied: ${filename}`);

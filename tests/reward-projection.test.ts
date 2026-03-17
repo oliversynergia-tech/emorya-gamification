@@ -67,7 +67,7 @@ test("projectQuestReward only projects direct token payouts when wallet requirem
   });
 });
 
-test("projectQuestReward applies campaign-source XP and direct-token bonuses", () => {
+test("projectQuestReward bridges taskon reward projection into zealy by default", () => {
   const result = projectQuestReward({
     track: "campaign",
     rewardConfig: {
@@ -85,8 +85,43 @@ test("projectQuestReward applies campaign-source XP and direct-token bonuses", (
     subscriptionTier: "free",
     runtimeContext: createDefaultQuestRuntimeContext(),
     walletLinked: true,
-    campaignSource: "layer3",
+    campaignSource: "taskon",
     settings: defaultEconomySettings,
+  });
+
+  assert.deepEqual(result, {
+    xp: 105,
+    tokenEffect: "direct_token_reward",
+    directTokenReward: {
+      asset: "EMR",
+      amount: 11,
+    },
+  });
+});
+
+test("projectQuestReward can differentiate taskon reward projection when enabled", () => {
+  const result = projectQuestReward({
+    track: "campaign",
+    rewardConfig: {
+      xp: {
+        base: 100,
+        premiumMultiplierEligible: true,
+      },
+      tokenEffect: "direct_token_reward",
+      directTokenReward: {
+        asset: "EMR",
+        amount: 10,
+        requiresWallet: true,
+      },
+    },
+    subscriptionTier: "free",
+    runtimeContext: createDefaultQuestRuntimeContext(),
+    walletLinked: true,
+    campaignSource: "taskon",
+    settings: {
+      ...defaultEconomySettings,
+      differentiateUpstreamCampaignSources: true,
+    },
   });
 
   assert.deepEqual(result, {

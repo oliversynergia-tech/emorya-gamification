@@ -28,6 +28,7 @@ export const defaultEconomySettings: EconomySettings = {
   referralMonthlyConversionBaseXp: 150,
   referralAnnualConversionBaseXp: 300,
   annualReferralDirectTokenAmount: 25,
+  differentiateUpstreamCampaignSources: false,
   campaignOverrides: {
     direct: {
       signupBonusXp: 0,
@@ -71,7 +72,7 @@ export const defaultEconomySettings: EconomySettings = {
       premiumUpsellBonusMultiplier: 0.1,
       leaderboardMomentumBonus: 0.08,
     },
-    layer3: {
+    taskon: {
       signupBonusXp: 15,
       monthlyConversionBonusXp: 25,
       annualConversionBonusXp: 70,
@@ -89,11 +90,27 @@ export const defaultEconomySettings: EconomySettings = {
   updatedAt: new Date(0).toISOString(),
 };
 
+export function resolveCampaignExperienceSource(
+  settings: EconomySettings,
+  source: CampaignSource | null | undefined,
+): CampaignSource | "direct" {
+  if (!source || source === "direct" || source === "zealy") {
+    return source ?? "direct";
+  }
+
+  if (!settings.differentiateUpstreamCampaignSources && (source === "galxe" || source === "taskon")) {
+    return "zealy";
+  }
+
+  return source;
+}
+
 export function getCampaignEconomyOverride(
   settings: EconomySettings,
   source: CampaignSource | null | undefined,
 ) {
-  return settings.campaignOverrides[source ?? "direct"] ?? settings.campaignOverrides.direct;
+  const resolvedSource = resolveCampaignExperienceSource(settings, source);
+  return settings.campaignOverrides[resolvedSource] ?? settings.campaignOverrides.direct;
 }
 
 export function getXpTierMultiplier(
@@ -219,6 +236,11 @@ export function buildEconomySettingsSummary(previous: EconomySettings, next: Eco
   }
   if (previous.annualReferralDirectTokenAmount !== next.annualReferralDirectTokenAmount) {
     changes.push(`annual referral direct reward ${previous.annualReferralDirectTokenAmount} -> ${next.annualReferralDirectTokenAmount}`);
+  }
+  if (previous.differentiateUpstreamCampaignSources !== next.differentiateUpstreamCampaignSources) {
+    changes.push(
+      `upstream campaign differentiation ${next.differentiateUpstreamCampaignSources ? "enabled" : "disabled"}`,
+    );
   }
   if (JSON.stringify(previous.campaignOverrides) !== JSON.stringify(next.campaignOverrides)) {
     changes.push("campaign overrides updated");

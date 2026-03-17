@@ -281,6 +281,7 @@ CREATE TABLE economy_settings (
   direct_annual_referral_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   direct_premium_flash_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   direct_ambassador_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  differentiate_upstream_campaign_sources BOOLEAN NOT NULL DEFAULT FALSE,
   minimum_eligibility_points INTEGER NOT NULL DEFAULT 100,
   points_per_token INTEGER NOT NULL DEFAULT 20,
   xp_multiplier_free NUMERIC(6, 2) NOT NULL DEFAULT 1.00,

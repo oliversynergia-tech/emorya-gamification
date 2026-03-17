@@ -7,20 +7,20 @@ import {
   getReferralRewardTargets,
 } from "../server/services/referral-rules.ts";
 
-test("getReferralRewardTargets applies campaign-source bonuses", () => {
+test("getReferralRewardTargets bridges taskon into zealy by default", () => {
   const zealyMonthly = getReferralRewardTargets({
     subscriptionTier: "monthly",
     campaignSource: "zealy",
   });
-  const layer3Annual = getReferralRewardTargets({
+  const taskonAnnual = getReferralRewardTargets({
     subscriptionTier: "annual",
-    campaignSource: "layer3",
+    campaignSource: "taskon",
   });
 
   assert.equal(zealyMonthly.signupXp, 50);
   assert.equal(zealyMonthly.conversionXp, 170);
-  assert.equal(layer3Annual.conversionXp, 370);
-  assert.equal(layer3Annual.annualDirectTokenReward, 35);
+  assert.equal(taskonAnnual.conversionXp, 340);
+  assert.equal(taskonAnnual.annualDirectTokenReward, 30);
 });
 
 test("getReferralRewardTargets respects configured campaign overrides", () => {
@@ -29,6 +29,7 @@ test("getReferralRewardTargets respects configured campaign overrides", () => {
     campaignSource: "galxe",
     settings: {
       ...defaultEconomySettings,
+      differentiateUpstreamCampaignSources: true,
       campaignOverrides: {
         ...defaultEconomySettings.campaignOverrides,
         galxe: {
@@ -44,6 +45,20 @@ test("getReferralRewardTargets respects configured campaign overrides", () => {
   assert.equal(overridden.signupXp, 52);
   assert.equal(overridden.conversionXp, 388);
   assert.equal(overridden.annualDirectTokenReward, 34);
+});
+
+test("getReferralRewardTargets can differentiate upstream platforms when enabled", () => {
+  const differentiated = getReferralRewardTargets({
+    subscriptionTier: "annual",
+    campaignSource: "taskon",
+    settings: {
+      ...defaultEconomySettings,
+      differentiateUpstreamCampaignSources: true,
+    },
+  });
+
+  assert.equal(differentiated.conversionXp, 370);
+  assert.equal(differentiated.annualDirectTokenReward, 35);
 });
 
 test("calculateReferralRewardState uses subscription tier and campaign source", () => {
@@ -63,16 +78,16 @@ test("calculateReferralRewardState uses subscription tier and campaign source", 
         id: "ref-2",
         refereeDisplayName: "Lyra",
         refereeSubscriptionTier: "annual",
-        refereeCampaignSource: "layer3",
+        refereeCampaignSource: "taskon",
         signupRewardXp: 40,
         conversionRewardXp: 150,
       },
     ],
   });
 
-  assert.equal(rewardState.updates[0]?.signupRewardXp, 45);
-  assert.equal(rewardState.updates[0]?.conversionRewardXp, 180);
-  assert.equal(rewardState.updates[1]?.conversionRewardXp, 370);
-  assert.equal(rewardState.updates[1]?.directTokenReward, 35);
+  assert.equal(rewardState.updates[0]?.signupRewardXp, 50);
+  assert.equal(rewardState.updates[0]?.conversionRewardXp, 170);
+  assert.equal(rewardState.updates[1]?.conversionRewardXp, 340);
+  assert.equal(rewardState.updates[1]?.directTokenReward, 30);
   assert.ok(rewardState.totalXp > 1000);
 });

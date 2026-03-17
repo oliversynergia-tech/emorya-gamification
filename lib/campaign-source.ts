@@ -18,13 +18,13 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
           "This lane emphasizes campaign completion, token readiness, and premium conversion instead of one-off participation.",
         accent: "Discovery-to-retention",
       };
-    case "layer3":
+    case "taskon":
       return {
-        label: "Layer3 entrant",
-        title: "Convert ecosystem learners into high-trust Emorya operators.",
+        label: "TaskOn entrant",
+        title: "Convert campaign participants into high-intent Emorya operators.",
         description:
-          "This lane should highlight deeper mission ladders, xPortal identity, and stronger premium/referral upside.",
-        accent: "Learning-to-loyalty",
+          "This lane should highlight bridge missions, xPortal identity, and stronger premium/referral upside when platform differentiation is enabled.",
+        accent: "Tasks-to-loyalty",
       };
     default:
       return {
@@ -59,12 +59,12 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
         ],
         cta: "Use premium to turn campaign discovery into retention and redemption velocity.",
       };
-    case "layer3":
+    case "taskon":
       return {
-        title: "Push learning into high-trust premium progression",
-        summary: "Layer3 users respond best when premium feels like access to deeper missions and stronger economics.",
+        title: "Push task momentum into high-trust premium progression",
+        summary: "TaskOn users respond best when premium feels like access to deeper missions and stronger economics.",
         hooks: [
-          "Monthly premium adds higher-yield mission tracks on top of the learning lane.",
+          "Monthly premium adds higher-yield mission tracks on top of the task-completion lane.",
           "Annual premium compounds XP, referral leverage, and direct-token upside for the most committed users.",
         ],
         cta: "Upgrade once you want deeper campaign ladders and higher reward density.",
@@ -125,18 +125,18 @@ export function getCampaignPremiumJourney(
         ],
         lanePressure: `Galxe is currently leaning on ${featuredTracks}, with ${premiumPressure} and ${weeklyShift} to keep discovery users returning.`,
       };
-    case "layer3":
+    case "taskon":
       return {
         recommendedTier: "annual" as const,
         nextAction: "Position premium as access to the deeper, higher-trust progression lane.",
         monthlyReason: "Monthly is still useful, but mostly as a proof step into higher-yield mission depth.",
-        annualReason: "Annual is the real fit for Layer3 because the strongest upside comes from long-horizon mission depth, referrals, and token moments.",
+        annualReason: "Annual is the real fit for TaskOn when platform differentiation is active, because the strongest upside comes from long-horizon mission depth, referrals, and token moments.",
         pathSteps: [
-          "Move the user from learning and wallet identity into deeper mission completion.",
+          "Move the user from task completion and wallet identity into deeper mission completion.",
           "Use Monthly only if they need a softer first commitment.",
           "Push Annual once trust, mission depth, and direct-reward upside are visible.",
         ],
-        lanePressure: `Layer3 is elevating ${featuredTracks} and using ${premiumPressure} with ${weeklyShift} to frame premium as the serious progression lane.`,
+        lanePressure: `TaskOn is elevating ${featuredTracks} and using ${premiumPressure} with ${weeklyShift} to frame premium as the serious progression lane.`,
       };
     default:
       return {
@@ -165,10 +165,10 @@ export function getCampaignFeaturedTracks(
     ["wallet", 1 + override.eligibilityPointsMultiplierBonus * 10 + override.questXpMultiplierBonus * 5],
     ["referral", 1 + (override.monthlyConversionBonusXp + override.annualConversionBonusXp) / 50],
     ["premium", 1 + override.premiumUpsellBonusMultiplier * 10],
-    ["ambassador", source === "layer3" ? 1.8 : 0.5],
-    ["creative", source === "layer3" ? 1.4 : 0.4],
+    ["ambassador", source === "taskon" ? 1.8 : 0.5],
+    ["creative", source === "taskon" ? 1.4 : 0.4],
     ["campaign", source && source !== "direct" ? 2 + override.leaderboardMomentumBonus * 10 : 0.5],
-    ["quiz", source === "layer3" ? 1.5 : 0.6],
+    ["quiz", source === "taskon" ? 1.5 : 0.6],
   ]);
 
   return Array.from(scores.entries())
