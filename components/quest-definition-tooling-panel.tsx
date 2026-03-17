@@ -73,7 +73,7 @@ export function QuestDefinitionToolingPanel() {
         </div>
         <div className="info-card">
           <span>Campaign support</span>
-          <strong>Zealy / Galxe / Layer3</strong>
+          <strong>Zealy / Galxe / TaskOn</strong>
         </div>
       </div>
       <div className="tooling-grid">

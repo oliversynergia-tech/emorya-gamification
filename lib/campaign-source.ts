@@ -13,17 +13,17 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
     case "galxe":
       return {
         label: "Galxe entrant",
-        title: "Move discovery users into recurring Emorya reward behavior.",
+        title: "Move discovery users into the Zealy bridge and then into recurring Emorya reward behavior.",
         description:
-          "This lane emphasizes campaign completion, token readiness, and premium conversion instead of one-off participation.",
+          "This source is usually routed through the Zealy bridge first, so the product should emphasize campaign completion, token readiness, and premium conversion instead of one-off participation.",
         accent: "Discovery-to-retention",
       };
     case "taskon":
       return {
         label: "TaskOn entrant",
-        title: "Convert campaign participants into high-intent Emorya operators.",
+        title: "Convert TaskOn participants into the Zealy bridge and then into high-intent Emorya operators.",
         description:
-          "This lane should highlight bridge missions, xPortal identity, and stronger premium/referral upside when platform differentiation is enabled.",
+          "This source is usually routed through the Zealy bridge first. Separate TaskOn-specific funnel behavior is available, but only when platform differentiation is enabled.",
         accent: "Tasks-to-loyalty",
       };
     default:
@@ -52,7 +52,7 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
     case "galxe":
       return {
         title: "Convert discovery into recurring reward behavior",
-        summary: "Galxe entrants need a clearer reason to stay after the first campaign touchpoint.",
+        summary: "Galxe entrants usually pass through the Zealy bridge, so premium should reinforce the jump from discovery into recurring reward behavior.",
         hooks: [
           "Monthly premium turns one-off discovery into recurring weekly reward accumulation.",
           "Annual premium makes referral conversions and claimed-to-settled payouts materially stronger.",
@@ -62,7 +62,7 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
     case "taskon":
       return {
         title: "Push task momentum into high-trust premium progression",
-        summary: "TaskOn users respond best when premium feels like access to deeper missions and stronger economics.",
+        summary: "TaskOn entrants usually pass through the Zealy bridge first, but can still be pushed into a higher-trust premium progression path.",
         hooks: [
           "Monthly premium adds higher-yield mission tracks on top of the task-completion lane.",
           "Annual premium compounds XP, referral leverage, and direct-token upside for the most committed users.",
@@ -123,7 +123,7 @@ export function getCampaignPremiumJourney(
           "Use Monthly to create recurring reward accumulation and retention.",
           "Promote Annual when referrals and redemption history start to matter.",
         ],
-        lanePressure: `Galxe is currently leaning on ${featuredTracks}, with ${premiumPressure} and ${weeklyShift} to keep discovery users returning.`,
+        lanePressure: `Galxe attribution is currently being translated into a Zealy-style bridge lane that pushes ${featuredTracks}, with ${premiumPressure} and ${weeklyShift} to keep discovery users returning.`,
       };
     case "taskon":
       return {
@@ -136,7 +136,7 @@ export function getCampaignPremiumJourney(
           "Use Monthly only if they need a softer first commitment.",
           "Push Annual once trust, mission depth, and direct-reward upside are visible.",
         ],
-        lanePressure: `TaskOn is elevating ${featuredTracks} and using ${premiumPressure} with ${weeklyShift} to frame premium as the serious progression lane.`,
+        lanePressure: `TaskOn attribution is currently being translated into a bridge lane that elevates ${featuredTracks} and uses ${premiumPressure} with ${weeklyShift} to frame premium as the serious progression lane.`,
       };
     default:
       return {

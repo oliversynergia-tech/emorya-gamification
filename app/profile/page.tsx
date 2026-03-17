@@ -51,7 +51,7 @@ export default async function ProfilePage() {
             <strong>{premiumOffer.title}</strong>
             <small>
               {data.user.campaignSource && data.user.campaignSource !== activeCampaignLane
-                ? `${premiumOffer.cta} Attribution stays on ${data.user.campaignSource}, but the live bridge runs through ${activeCampaignLane}.`
+                ? `${premiumOffer.cta} Attribution stays on ${data.user.campaignSource}, but the live experience is currently routed through ${activeCampaignLane}.`
                 : premiumOffer.cta}
             </small>
           </div>

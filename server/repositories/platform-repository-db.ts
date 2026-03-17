@@ -443,13 +443,13 @@ async function getUserSnapshot(
       id: `campaign-override-${progressState.campaignSource}`,
       tone: "info",
       title: `${activeCampaignLane} reward preset active`,
-      detail: `This lane adds +${campaignEconomy.questXpMultiplierBonus.toFixed(2)}x quest XP, ${(campaignEconomy.eligibilityPointsMultiplierBonus * 100).toFixed(0)}% extra eligibility-point growth, ${(campaignEconomy.tokenYieldMultiplierBonus * 100).toFixed(0)}% token-yield lift, ${campaignEconomy.minimumEligibilityPointsOffset} points on the redemption threshold, ${campaignEconomy.weeklyTargetXpOffset} XP on weekly target shaping, and ${(campaignEconomy.premiumUpsellBonusMultiplier * 100).toFixed(0)}% extra premium pressure.${attributionDetail}`,
+      detail: `The active experience lane adds +${campaignEconomy.questXpMultiplierBonus.toFixed(2)}x quest XP, ${(campaignEconomy.eligibilityPointsMultiplierBonus * 100).toFixed(0)}% extra eligibility-point growth, ${(campaignEconomy.tokenYieldMultiplierBonus * 100).toFixed(0)}% token-yield lift, ${campaignEconomy.minimumEligibilityPointsOffset} points on the redemption threshold, ${campaignEconomy.weeklyTargetXpOffset} XP on weekly target shaping, and ${(campaignEconomy.premiumUpsellBonusMultiplier * 100).toFixed(0)}% extra premium pressure.${attributionDetail}`,
     });
     tokenNotifications.push({
       id: `campaign-featured-${progressState.campaignSource}`,
       tone: "info",
       title: `${activeCampaignLane} featured tracks`,
-      detail: `This lane is currently pushing ${featuredTracks.join(", ")} higher in the funnel so onboarding pressure matches the active bridge path.${attributionDetail}`,
+      detail: `The active experience lane is currently pushing ${featuredTracks.join(", ")} higher in the funnel so onboarding pressure matches the live bridge path.${attributionDetail}`,
     });
   }
 

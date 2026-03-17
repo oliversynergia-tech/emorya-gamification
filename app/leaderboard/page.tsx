@@ -64,8 +64,8 @@ export default async function LeaderboardPage() {
             <small>
               {data.user.campaignSource
                 ? data.user.campaignSource === campaignPreset.source
-                  ? `${campaignPreset.source} entrants should see campaign bridge quests near the top of the board.`
-                  : `${data.user.campaignSource} traffic is currently being bridged through ${campaignPreset.source}, so that bridge lane’s campaign quests should rise first.`
+                  ? `${campaignPreset.source} entrants should see that lane’s campaign quests near the top of the board.`
+                  : `${data.user.campaignSource} traffic is currently attributed upstream, but the live competitive and quest pressure is being routed through the ${campaignPreset.source} bridge lane.`
                 : "Direct entrants see the default Starter and Daily Momentum pressure first."}
             </small>
           </div>
@@ -75,7 +75,7 @@ export default async function LeaderboardPage() {
               +{(campaignPreset.questXpBoost * 100).toFixed(0)}% XP / +{(campaignPreset.tokenYieldBoost * 100).toFixed(0)}% yield
             </strong>
             <small>
-              Weekly shaping {campaignPreset.weeklyTargetOffset} XP, premium pressure {campaignPreset.premiumUpsellMultiplier.toFixed(2)}x, featured tracks {campaignPreset.featuredTracks.join(", ")}.
+              Active lane {campaignPreset.source}, attribution {campaignPreset.attributionSource}, weekly shaping {campaignPreset.weeklyTargetOffset} XP, premium pressure {campaignPreset.premiumUpsellMultiplier.toFixed(2)}x, featured tracks {campaignPreset.featuredTracks.join(", ")}.
             </small>
           </div>
         </div>

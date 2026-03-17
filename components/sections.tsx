@@ -256,6 +256,11 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
               </div>
               <span className="badge badge--pink">Source aware</span>
             </div>
+            <p className="form-note">
+              {data.user.campaignSource === data.economy.campaignPreset.source
+                ? `This account is running the ${data.economy.campaignPreset.source} lane directly.`
+                : `Attribution is preserved as ${data.user.campaignSource}, but the live onboarding flow is currently being routed through ${data.economy.campaignPreset.source}.`}
+            </p>
             <div className="achievement-list">
               <article className="achievement-card">
                 <div>
@@ -676,6 +681,16 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
               {(campaignPreset.leaderboardMomentumMultiplier * 100 - 100).toFixed(0)}% board momentum
             </span>
           </article>
+          {campaignPreset.attributionSource !== campaignPreset.source ? (
+            <article className="achievement-card">
+              <div>
+                <strong>Attribution vs active lane</strong>
+                <p>
+                  Attribution remains {campaignPreset.attributionSource}, but premium framing is currently coming from the {campaignPreset.source} bridge lane.
+                </p>
+              </div>
+            </article>
+          ) : null}
           <article className="achievement-card achievement-card--unlocked">
             <div>
               <strong>Recommended premium sequence</strong>
@@ -745,7 +760,7 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
         <span className="badge">{activeQuests.length} active / {lockedPreviews.length} previewed</span>
       </div>
       <p className="form-note">
-        Featured funnel tracks for this lane: {data.economy.campaignPreset.featuredTracks.join(", ")}.
+        Featured funnel tracks for the active {data.economy.campaignPreset.source} lane: {data.economy.campaignPreset.featuredTracks.join(", ")}.
       </p>
       <div className="track-board">
         {groupedActiveTracks.map((group) => (
@@ -901,7 +916,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
               />
             </div>
             <small>
-              This acquisition lane is not just copy. It changes how aggressively premium, weekly milestones, and leaderboard pressure are framed.
+              The active experience lane is not just copy. It changes how aggressively premium, weekly milestones, and leaderboard pressure are framed while keeping original attribution intact.
             </small>
           </article>
         </div>
