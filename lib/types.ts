@@ -828,6 +828,13 @@ export type CampaignEconomyOverride = {
   leaderboardMomentumBonus: number;
 };
 
+export type CampaignPackBenchmarkConfig = {
+  walletLinkRateTarget: number;
+  rewardEligibilityRateTarget: number;
+  premiumConversionRateTarget: number;
+  averageWeeklyXpTarget: number;
+};
+
 export type EconomySettings = {
   id: string;
   payoutAsset: TokenAsset;
@@ -850,6 +857,7 @@ export type EconomySettings = {
   annualReferralDirectTokenAmount: number;
   differentiateUpstreamCampaignSources: boolean;
   campaignOverrides: Record<CampaignSource, CampaignEconomyOverride>;
+  campaignPackBenchmarks: Record<CampaignSource | "direct", CampaignPackBenchmarkConfig>;
   updatedAt: string;
 };
 

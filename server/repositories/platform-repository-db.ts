@@ -1615,7 +1615,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       pack.sourceBreakdown.slice().sort((left, right) => right.participantCount - left.participantCount)[0]?.activeLane ??
       pack.sources[0] ??
       "direct";
-    const benchmark = getCampaignPackBenchmark(dominantSource);
+    const benchmark = getCampaignPackBenchmark(economySettings, dominantSource);
     const score =
       (pack.walletLinkRate >= benchmark.walletLinkRateTarget ? 1 : 0) +
       (pack.rewardEligibilityRate >= benchmark.rewardEligibilityRateTarget ? 1 : 0) +

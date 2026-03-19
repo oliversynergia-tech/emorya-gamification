@@ -1,4 +1,4 @@
-import type { CampaignSource } from "@/lib/types";
+import type { CampaignPackBenchmarkConfig, CampaignSource, EconomySettings } from "@/lib/types";
 
 export type CampaignPackBenchmark = {
   activeLane: CampaignSource | "direct";
@@ -8,30 +8,26 @@ export type CampaignPackBenchmark = {
   averageWeeklyXpTarget: number;
 };
 
-const benchmarkMap: Record<CampaignSource | "direct", CampaignPackBenchmark> = {
+export const defaultCampaignPackBenchmarks: Record<CampaignSource | "direct", CampaignPackBenchmarkConfig> = {
   direct: {
-    activeLane: "direct",
     walletLinkRateTarget: 0.28,
     rewardEligibilityRateTarget: 0.18,
     premiumConversionRateTarget: 0.08,
     averageWeeklyXpTarget: 180,
   },
   zealy: {
-    activeLane: "zealy",
     walletLinkRateTarget: 0.35,
     rewardEligibilityRateTarget: 0.22,
     premiumConversionRateTarget: 0.1,
     averageWeeklyXpTarget: 220,
   },
   galxe: {
-    activeLane: "galxe",
     walletLinkRateTarget: 0.3,
     rewardEligibilityRateTarget: 0.18,
     premiumConversionRateTarget: 0.09,
     averageWeeklyXpTarget: 200,
   },
   taskon: {
-    activeLane: "taskon",
     walletLinkRateTarget: 0.32,
     rewardEligibilityRateTarget: 0.2,
     premiumConversionRateTarget: 0.1,
@@ -39,7 +35,15 @@ const benchmarkMap: Record<CampaignSource | "direct", CampaignPackBenchmark> = {
   },
 };
 
-export function getCampaignPackBenchmark(activeLane: CampaignSource | "direct") {
-  return benchmarkMap[activeLane] ?? benchmarkMap.direct;
-}
+export function getCampaignPackBenchmark(
+  settings: Pick<EconomySettings, "campaignPackBenchmarks">,
+  activeLane: CampaignSource | "direct",
+) {
+  const benchmarks = settings.campaignPackBenchmarks ?? defaultCampaignPackBenchmarks;
+  const selected = benchmarks[activeLane] ?? benchmarks.direct ?? defaultCampaignPackBenchmarks.direct;
 
+  return {
+    activeLane,
+    ...selected,
+  } satisfies CampaignPackBenchmark;
+}

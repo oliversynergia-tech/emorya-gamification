@@ -1,4 +1,5 @@
 import type { CampaignSource, EconomySettings, QuestTrack, SubscriptionTier, TokenAsset } from "./types.ts";
+import { defaultCampaignPackBenchmarks } from "./campaign-pack-benchmarks.ts";
 
 export const defaultEconomySettings: EconomySettings = {
   id: "default",
@@ -87,6 +88,7 @@ export const defaultEconomySettings: EconomySettings = {
       leaderboardMomentumBonus: 0.12,
     },
   },
+  campaignPackBenchmarks: defaultCampaignPackBenchmarks,
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -244,6 +246,9 @@ export function buildEconomySettingsSummary(previous: EconomySettings, next: Eco
   }
   if (JSON.stringify(previous.campaignOverrides) !== JSON.stringify(next.campaignOverrides)) {
     changes.push("campaign overrides updated");
+  }
+  if (JSON.stringify(previous.campaignPackBenchmarks) !== JSON.stringify(next.campaignPackBenchmarks)) {
+    changes.push("campaign pack benchmarks updated");
   }
 
   return changes.length > 0 ? changes.join(", ") : "Economy settings saved with no effective change.";

@@ -638,6 +638,32 @@ function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id"
     referralMonthlyConversionBaseXp: Math.max(input.referralMonthlyConversionBaseXp, 0),
     referralAnnualConversionBaseXp: Math.max(input.referralAnnualConversionBaseXp, 0),
     annualReferralDirectTokenAmount: Math.max(input.annualReferralDirectTokenAmount, 0),
+    campaignPackBenchmarks: {
+      direct: {
+        walletLinkRateTarget: Math.max(input.campaignPackBenchmarks?.direct?.walletLinkRateTarget ?? 0, 0),
+        rewardEligibilityRateTarget: Math.max(input.campaignPackBenchmarks?.direct?.rewardEligibilityRateTarget ?? 0, 0),
+        premiumConversionRateTarget: Math.max(input.campaignPackBenchmarks?.direct?.premiumConversionRateTarget ?? 0, 0),
+        averageWeeklyXpTarget: Math.max(input.campaignPackBenchmarks?.direct?.averageWeeklyXpTarget ?? 0, 0),
+      },
+      zealy: {
+        walletLinkRateTarget: Math.max(input.campaignPackBenchmarks?.zealy?.walletLinkRateTarget ?? 0, 0),
+        rewardEligibilityRateTarget: Math.max(input.campaignPackBenchmarks?.zealy?.rewardEligibilityRateTarget ?? 0, 0),
+        premiumConversionRateTarget: Math.max(input.campaignPackBenchmarks?.zealy?.premiumConversionRateTarget ?? 0, 0),
+        averageWeeklyXpTarget: Math.max(input.campaignPackBenchmarks?.zealy?.averageWeeklyXpTarget ?? 0, 0),
+      },
+      galxe: {
+        walletLinkRateTarget: Math.max(input.campaignPackBenchmarks?.galxe?.walletLinkRateTarget ?? 0, 0),
+        rewardEligibilityRateTarget: Math.max(input.campaignPackBenchmarks?.galxe?.rewardEligibilityRateTarget ?? 0, 0),
+        premiumConversionRateTarget: Math.max(input.campaignPackBenchmarks?.galxe?.premiumConversionRateTarget ?? 0, 0),
+        averageWeeklyXpTarget: Math.max(input.campaignPackBenchmarks?.galxe?.averageWeeklyXpTarget ?? 0, 0),
+      },
+      taskon: {
+        walletLinkRateTarget: Math.max(input.campaignPackBenchmarks?.taskon?.walletLinkRateTarget ?? 0, 0),
+        rewardEligibilityRateTarget: Math.max(input.campaignPackBenchmarks?.taskon?.rewardEligibilityRateTarget ?? 0, 0),
+        premiumConversionRateTarget: Math.max(input.campaignPackBenchmarks?.taskon?.premiumConversionRateTarget ?? 0, 0),
+        averageWeeklyXpTarget: Math.max(input.campaignPackBenchmarks?.taskon?.averageWeeklyXpTarget ?? 0, 0),
+      },
+    },
     campaignOverrides: {
       direct: {
         signupBonusXp: Math.max(input.campaignOverrides?.direct?.signupBonusXp ?? 0, 0),

@@ -132,6 +132,7 @@ export function EconomySettingsPanel({
           referralMonthlyConversionBaseXp: settings.referralMonthlyConversionBaseXp,
           referralAnnualConversionBaseXp: settings.referralAnnualConversionBaseXp,
           annualReferralDirectTokenAmount: settings.annualReferralDirectTokenAmount,
+          campaignPackBenchmarks: settings.campaignPackBenchmarks,
           campaignOverrides: settings.campaignOverrides,
         }),
       });
@@ -415,6 +416,109 @@ export function EconomySettingsPanel({
           </article>
         ))}
       </div>
+      <section className="panel panel--glass">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Campaign pack benchmarks</p>
+            <h3>Lane targets for live pack performance alerts</h3>
+          </div>
+        </div>
+        <div className="tooling-grid">
+          {(["direct", "zealy", "galxe", "taskon"] as CampaignOverrideKey[]).map((source) => (
+            <article key={`benchmark-${source}`} className="achievement-card">
+              <div>
+                <strong>{source}</strong>
+                <p>These thresholds drive the pack benchmark status and live pack alerts for this lane.</p>
+              </div>
+              <div className="profile-grid">
+                <label className="field">
+                  <span>Wallet link target</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignPackBenchmarks[source].walletLinkRateTarget}
+                    onChange={(event) =>
+                      setSettings((current) => ({
+                        ...current,
+                        campaignPackBenchmarks: {
+                          ...current.campaignPackBenchmarks,
+                          [source]: {
+                            ...current.campaignPackBenchmarks[source],
+                            walletLinkRateTarget: parseNumber(event.target.value),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Eligibility target</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignPackBenchmarks[source].rewardEligibilityRateTarget}
+                    onChange={(event) =>
+                      setSettings((current) => ({
+                        ...current,
+                        campaignPackBenchmarks: {
+                          ...current.campaignPackBenchmarks,
+                          [source]: {
+                            ...current.campaignPackBenchmarks[source],
+                            rewardEligibilityRateTarget: parseNumber(event.target.value),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Premium target</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignPackBenchmarks[source].premiumConversionRateTarget}
+                    onChange={(event) =>
+                      setSettings((current) => ({
+                        ...current,
+                        campaignPackBenchmarks: {
+                          ...current.campaignPackBenchmarks,
+                          [source]: {
+                            ...current.campaignPackBenchmarks[source],
+                            premiumConversionRateTarget: parseNumber(event.target.value),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Weekly XP target</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    value={settings.campaignPackBenchmarks[source].averageWeeklyXpTarget}
+                    onChange={(event) =>
+                      setSettings((current) => ({
+                        ...current,
+                        campaignPackBenchmarks: {
+                          ...current.campaignPackBenchmarks,
+                          [source]: {
+                            ...current.campaignPackBenchmarks[source],
+                            averageWeeklyXpTarget: parseNumber(event.target.value),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
       <section className="panel panel--glass">
         <div className="panel__header">
           <div>
