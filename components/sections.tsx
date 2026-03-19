@@ -1381,12 +1381,15 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
 
 export function AdminSection({ data }: { data: AdminOverviewData }) {
   return (
-    <section className="panel">
+    <section className="panel admin-command-center">
       <div className="panel__header">
         <div>
           <p className="eyebrow">Admin control surface</p>
-          <h3>First-pass operating view</h3>
+          <h3>Operating summary</h3>
         </div>
+        <p className="form-note">
+          Use this top layer to spot risk quickly, then drop into the grouped sections below for the actual operational work.
+        </p>
       </div>
       <div className="stats-row">
         {data.stats.map((stat) => (
@@ -1395,6 +1398,23 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
             <strong>{stat.value}</strong>
           </div>
         ))}
+      </div>
+      <div className="admin-focus-grid">
+        <article className="admin-focus-card">
+          <span>Watch first</span>
+          <strong>Queue health</strong>
+          <small>Backlog, stale items, and reviewer load should stay inside the SLA window.</small>
+        </article>
+        <article className="admin-focus-card">
+          <span>Watch next</span>
+          <strong>Campaign operations</strong>
+          <small>Bridge mode, pack readiness, and source quality determine whether the funnel is behaving as planned.</small>
+        </article>
+        <article className="admin-focus-card">
+          <span>Watch last</span>
+          <strong>Settlement analytics</strong>
+          <small>Payout throughput matters, but only after queue and campaign health are stable.</small>
+        </article>
       </div>
       <div className="admin-grid">
         <article className="admin-card">
@@ -1434,7 +1454,9 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
             ))}
           </div>
         ) : (
-          <p className="form-note">Queue age and backlog are currently inside the target moderation window.</p>
+          <p className="form-note">
+            Queue age and backlog are currently inside the target moderation window.
+          </p>
         )}
         <div className="info-grid">
           <div className="info-card">

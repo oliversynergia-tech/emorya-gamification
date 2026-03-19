@@ -436,6 +436,69 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+.admin-section-group {
+  display: grid;
+  gap: 20px;
+}
+
+.admin-section-group__header {
+  display: grid;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.admin-section-group__header h3 {
+  margin: 0;
+}
+
+.admin-command-center {
+  background:
+    radial-gradient(circle at top right, rgba(143, 93, 255, 0.14), transparent 0 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.038), rgba(255, 255, 255, 0.014)),
+    rgba(20, 10, 33, 0.94);
+}
+
+.admin-focus-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin: 18px 0;
+}
+
+.admin-focus-card {
+  padding: 18px;
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(223, 182, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+    rgba(17, 9, 28, 0.9);
+}
+
+.admin-focus-card span {
+  display: block;
+  color: var(--muted);
+  font-size: var(--text-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+
+.admin-focus-card strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.admin-focus-card small {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.admin-dual-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .stat-card,
 .metric-card,
 .info-card,
@@ -1222,6 +1285,7 @@ a {
   border-radius: var(--radius-soft);
   border: 1px solid rgba(223, 182, 255, 0.2);
   background: rgba(255, 255, 255, 0.03);
+  box-shadow: var(--shadow-soft);
 }
 
 .admin-alert-card strong {
@@ -1409,6 +1473,10 @@ a {
   .grid--funnel,
   .grid--leaderboard,
   .grid--profile {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dual-grid {
     grid-template-columns: 1fr;
   }
 

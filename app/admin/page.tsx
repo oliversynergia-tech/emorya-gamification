@@ -78,42 +78,96 @@ export default async function AdminPage() {
         </div>
       </section>
       <AdminSection data={data} />
-      <EconomySettingsPanel
-        initialSettings={data.economySettings}
-        initialAudit={data.economySettingsAudit}
-        canManage={hasSuperAdminAccess}
-      />
-      <RewardAssetsPanel initialAssets={data.rewardAssets} canManage={hasSuperAdminAccess} />
-      <RewardProgramsPanel
-        initialPrograms={data.rewardPrograms}
-        availableAssets={data.rewardAssets}
-        canManage={hasSuperAdminAccess}
-      />
-      <TokenSettlementPanel
-        initialQueue={data.tokenSettlementQueue}
-        analytics={data.settlementAnalytics}
-        payoutControls={data.economySettings}
-        canProcessAndSettle={hasSuperAdminAccess}
-      />
-      <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
-      <QuestDefinitionToolingPanel />
-      <QuestDefinitionManagementPanel
-        availableAssets={data.rewardAssets}
-        availablePrograms={data.rewardPrograms}
-        initialTemplates={data.questDefinitionTemplates ?? []}
-        differentiateUpstreamCampaignSources={data.economySettings.differentiateUpstreamCampaignSources}
-      />
-      <RoleManagementPanel
-        initialUsers={data.roleDirectory}
-        initialAdmins={data.adminDirectory}
-        canManageAdmins={hasSuperAdminAccess}
-      />
-      <ReviewQueuePanel
-        initialQueue={data.reviewQueue}
-        initialHistory={data.reviewHistory}
-        isAuthenticated={hasAdminAccess}
-        currentReviewerName={session.user.displayName}
-      />
+      <section className="admin-section-group">
+        <div className="admin-section-group__header">
+          <div>
+            <p className="eyebrow">Economy and payout operations</p>
+            <h3>Control reward rails, payout settings, and settlement flow</h3>
+          </div>
+          <p className="form-note">
+            These controls shape XP and token economics first, then determine how claimed rewards move through the payout pipeline.
+          </p>
+        </div>
+        <div className="admin-focus-grid">
+          <article className="admin-focus-card">
+            <span>Highest leverage</span>
+            <strong>Economy settings</strong>
+            <small>Use this first when campaign economics or payout mode changes.</small>
+          </article>
+          <article className="admin-focus-card">
+            <span>Operational risk</span>
+            <strong>Settlement queue</strong>
+            <small>Watch pending states, approvals, and receipt capture here.</small>
+          </article>
+          <article className="admin-focus-card">
+            <span>Infrastructure</span>
+            <strong>Reward assets and programs</strong>
+            <small>Keep the payout rails clean before changing live reward behavior.</small>
+          </article>
+        </div>
+        <EconomySettingsPanel
+          initialSettings={data.economySettings}
+          initialAudit={data.economySettingsAudit}
+          canManage={hasSuperAdminAccess}
+        />
+        <div className="admin-dual-grid">
+          <RewardAssetsPanel initialAssets={data.rewardAssets} canManage={hasSuperAdminAccess} />
+          <RewardProgramsPanel
+            initialPrograms={data.rewardPrograms}
+            availableAssets={data.rewardAssets}
+            canManage={hasSuperAdminAccess}
+          />
+        </div>
+        <TokenSettlementPanel
+          initialQueue={data.tokenSettlementQueue}
+          analytics={data.settlementAnalytics}
+          payoutControls={data.economySettings}
+          canProcessAndSettle={hasSuperAdminAccess}
+        />
+        <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
+      </section>
+
+      <section className="admin-section-group">
+        <div className="admin-section-group__header">
+          <div>
+            <p className="eyebrow">Campaign authoring</p>
+            <h3>Manage templates, packs, and live quest definitions</h3>
+          </div>
+          <p className="form-note">
+            Start with authoring guidance, then move into reusable templates, and only then publish or edit live quest definitions.
+          </p>
+        </div>
+        <QuestDefinitionToolingPanel />
+        <QuestDefinitionManagementPanel
+          availableAssets={data.rewardAssets}
+          availablePrograms={data.rewardPrograms}
+          initialTemplates={data.questDefinitionTemplates ?? []}
+          differentiateUpstreamCampaignSources={data.economySettings.differentiateUpstreamCampaignSources}
+        />
+      </section>
+
+      <section className="admin-section-group">
+        <div className="admin-section-group__header">
+          <div>
+            <p className="eyebrow">Access and moderation</p>
+            <h3>Review content, assign roles, and manage queue throughput</h3>
+          </div>
+          <p className="form-note">
+            Keep role changes rare and deliberate. The review queue should remain the main daily operating surface for admins.
+          </p>
+        </div>
+        <RoleManagementPanel
+          initialUsers={data.roleDirectory}
+          initialAdmins={data.adminDirectory}
+          canManageAdmins={hasSuperAdminAccess}
+        />
+        <ReviewQueuePanel
+          initialQueue={data.reviewQueue}
+          initialHistory={data.reviewHistory}
+          isAuthenticated={hasAdminAccess}
+          currentReviewerName={session.user.displayName}
+        />
+      </section>
     </SiteShell>
   );
 }
