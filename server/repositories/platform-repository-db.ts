@@ -167,6 +167,12 @@ type PackReferralPerformanceRow = QueryResultRow & {
   converted_count: string;
 };
 
+type PackAttributedReferralRow = QueryResultRow & {
+  pack_id: string;
+  invited_count: string;
+  converted_count: string;
+};
+
 type PackTrendRow = QueryResultRow & {
   pack_id: string;
   bucket_start: string;
@@ -1052,7 +1058,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
        ON qc.quest_id = q.id
      WHERE q.metadata ? 'campaignPackId'`,
   );
-  const [packFirstInteractionResult, packReferralPerformanceResult] = await Promise.all([
+  const [packFirstInteractionResult, packReferralPerformanceResult, packAttributedReferralResult] = await Promise.all([
     runQuery<PackFirstInteractionRow>(
       `SELECT q.metadata->>'campaignPackId' AS pack_id,
               qc.user_id::text AS user_id,
@@ -1078,6 +1084,30 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
        LEFT JOIN referrals r
          ON r.referrer_user_id = participants.user_id
        GROUP BY participants.pack_id`,
+    ),
+    runQuery<PackAttributedReferralRow>(
+      `SELECT first_touch.pack_id,
+              COUNT(r.id)::text AS invited_count,
+              COUNT(*) FILTER (
+                WHERE r.referee_subscribed = TRUE
+                  AND COALESCE(referee_user.subscription_started_at, r.created_at) >= first_touch.first_interaction_at
+              )::text AS converted_count
+       FROM (
+         SELECT q.metadata->>'campaignPackId' AS pack_id,
+                qc.user_id,
+                MIN(COALESCE(qc.completed_at, qc.created_at)) AS first_interaction_at
+         FROM quest_definitions q
+         INNER JOIN quest_completions qc
+           ON qc.quest_id = q.id
+         WHERE q.metadata ? 'campaignPackId'
+         GROUP BY q.metadata->>'campaignPackId', qc.user_id
+       ) first_touch
+       LEFT JOIN referrals r
+         ON r.referrer_user_id = first_touch.user_id
+        AND r.created_at >= first_touch.first_interaction_at
+       LEFT JOIN users referee_user
+         ON referee_user.id = r.referee_user_id
+       GROUP BY first_touch.pack_id`,
     ),
   ]);
   const packTrendResult = await runQuery<PackTrendRow>(
@@ -1126,6 +1156,21 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           referralInviteCount: invitedCount,
           referralConvertedCount: convertedCount,
           referralConversionRate: invitedCount > 0 ? convertedCount / invitedCount : 0,
+        },
+      ] as const;
+    }),
+  );
+  const packAttributedReferralMap = new Map(
+    packAttributedReferralResult.rows.map((row) => {
+      const invitedCount = Number(row.invited_count);
+      const convertedCount = Number(row.converted_count);
+
+      return [
+        row.pack_id,
+        {
+          postPackReferralInviteCount: invitedCount,
+          postPackReferralConvertedCount: convertedCount,
+          postPackReferralConversionRate: invitedCount > 0 ? convertedCount / invitedCount : 0,
         },
       ] as const;
     }),
@@ -1424,6 +1469,9 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         referralInviteCount: 0,
         referralConvertedCount: 0,
         referralConversionRate: 0,
+        postPackReferralInviteCount: 0,
+        postPackReferralConvertedCount: 0,
+        postPackReferralConversionRate: 0,
         retainedActiveCount: 0,
         retainedActivityRate: 0,
         averageWeeklyXp: 0,
@@ -1515,6 +1563,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       current.referralConvertedCount = referralPerformance.referralConvertedCount;
       current.referralConversionRate = referralPerformance.referralConversionRate;
     }
+    const attributedReferralPerformance = packAttributedReferralMap.get(packId);
+    if (attributedReferralPerformance) {
+      current.postPackReferralInviteCount = attributedReferralPerformance.postPackReferralInviteCount;
+      current.postPackReferralConvertedCount = attributedReferralPerformance.postPackReferralConvertedCount;
+      current.postPackReferralConversionRate = attributedReferralPerformance.postPackReferralConversionRate;
+    }
     current.weeklyTrend = packTrendMap.get(packId) ?? [];
     packAnalyticsMap.set(packId, current);
   }
@@ -1545,6 +1599,56 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
   const packAnalytics = Array.from(packAnalyticsMap.values()).sort(
     (left, right) => right.activeQuestCount - left.activeQuestCount || right.questCount - left.questCount,
   );
+  const partnerReporting = packAnalytics
+    .filter((entry) => entry.lifecycleState === "live" || entry.activeQuestCount > 0)
+    .map((entry) => ({
+      packId: entry.packId,
+      label: entry.label,
+      lifecycleState: entry.lifecycleState,
+      sources: entry.sources,
+      participantCount: entry.participantCount,
+      approvedCompletionCount: entry.approvedCompletionCount,
+      walletLinkRate: entry.walletLinkRate,
+      rewardEligibilityRate: entry.rewardEligibilityRate,
+      premiumConversionRate: entry.premiumConversionRate,
+      averageWeeklyXp: entry.averageWeeklyXp,
+    }))
+    .sort((left, right) => right.participantCount - left.participantCount || right.approvedCompletionCount - left.approvedCompletionCount);
+  const alerts: AdminOverviewData["campaignOperations"]["alerts"] = [];
+  for (const pack of packAnalytics) {
+    if (pack.lifecycleState !== "live" && pack.activeQuestCount === 0) {
+      continue;
+    }
+    const latestTrend = pack.weeklyTrend[pack.weeklyTrend.length - 1];
+    if (!latestTrend || latestTrend.completionCount === 0) {
+      alerts.push({
+        packId: pack.packId,
+        label: pack.label,
+        severity: "critical",
+        title: "Live pack has no recent completions",
+        detail: `${pack.label} has no completion volume in the latest tracked week. Check activation, routing, or pack visibility.`,
+      });
+      continue;
+    }
+    if (pack.walletLinkRate < 0.25) {
+      alerts.push({
+        packId: pack.packId,
+        label: pack.label,
+        severity: "warning",
+        title: "Wallet-link rate is soft",
+        detail: `${pack.label} is converting only ${Math.round(pack.walletLinkRate * 100)}% of participants into wallet-linked users.`,
+      });
+    }
+    if (pack.rewardEligibilityRate < 0.15) {
+      alerts.push({
+        packId: pack.packId,
+        label: pack.label,
+        severity: "warning",
+        title: "Reward-eligibility progression is weak",
+        detail: `${pack.label} is getting only ${Math.round(pack.rewardEligibilityRate * 100)}% of participants to reward eligibility.`,
+      });
+    }
+  }
   templateCounts.generatedPacks = packAnalytics.length;
   templateCounts.activeGeneratedPacks = packAnalytics.filter((entry) => entry.activeQuestCount > 0).length;
 
@@ -1578,6 +1682,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       templateCounts,
       sourceTemplateCounts,
       packAnalytics,
+      partnerReporting,
+      alerts,
       packReady:
         ["Zealy bridge quest", "Galxe feeder quest", "TaskOn feeder quest"].every((label) =>
           questDefinitionTemplates.some((template) => template.label === label && template.isActive),

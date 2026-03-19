@@ -34,6 +34,9 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
       "referral_invite_count",
       "referral_converted_count",
       "referral_conversion_rate",
+      "post_pack_referral_invite_count",
+      "post_pack_referral_converted_count",
+      "post_pack_referral_conversion_rate",
       "retained_activity_rate",
       "average_weekly_xp",
       "engaged_weekly_xp_rate",
@@ -70,6 +73,9 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
         entry.referralInviteCount,
         entry.referralConvertedCount,
         entry.referralConversionRate,
+        entry.postPackReferralInviteCount,
+        entry.postPackReferralConvertedCount,
+        entry.postPackReferralConversionRate,
         entry.retainedActivityRate,
         entry.averageWeeklyXp,
         entry.engagedWeeklyXpRate,
@@ -302,6 +308,11 @@ export function CampaignPackAnalyticsPanel({
                 {` `}
                 ({(pack.referralConversionRate * 100).toFixed(0)}%). Weekly quality: {(pack.retainedActivityRate * 100).toFixed(0)}%
                 active, {pack.averageWeeklyXp.toFixed(0)} avg XP, {(pack.engagedWeeklyXpRate * 100).toFixed(0)}% above 250 XP.
+              </p>
+              <p className="form-note">
+                Post-pack referrals: {pack.postPackReferralInviteCount} invited / {pack.postPackReferralConvertedCount} converted
+                {` `}
+                ({(pack.postPackReferralConversionRate * 100).toFixed(0)}%). This is the cleaner attribution view based on referrals created after first pack touch.
               </p>
               <p className="form-note">
                 Premium upgrades after first pack touch: {pack.premiumUpgradeCount}

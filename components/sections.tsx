@@ -1619,6 +1619,36 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
             </article>
           ))}
         </div>
+        {data.campaignOperations.alerts.length > 0 ? (
+          <div className="admin-alert-stack">
+            {data.campaignOperations.alerts.map((alert) => (
+              <article key={`${alert.packId}-${alert.title}`} className={`admin-alert-card admin-alert-card--${alert.severity}`}>
+                <div>
+                  <p className="eyebrow">{alert.label}</p>
+                  <strong>{alert.title}</strong>
+                </div>
+                <p>{alert.detail}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="form-note">Live campaign packs are currently staying inside the baseline pack-performance thresholds.</p>
+        )}
+        <div className="achievement-list">
+          {data.campaignOperations.partnerReporting.map((entry) => (
+            <article key={`partner-${entry.packId}`} className="achievement-card">
+              <div>
+                <strong>{entry.label}</strong>
+                <p>Partner snapshot for {entry.sources.join(", ")} with live-ready funnel metrics.</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{entry.lifecycleState}</span>
+                <span>{entry.participantCount} participants</span>
+                <span>{Math.round(entry.premiumConversionRate * 100)}% premium</span>
+              </div>
+            </article>
+          ))}
+        </div>
         <CampaignPackAnalyticsPanel packs={data.campaignOperations.packAnalytics} canManage={canManageCampaignPacks} />
       </div>
       <div className="panel panel--glass admin-analytics">

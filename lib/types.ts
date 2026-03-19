@@ -652,6 +652,9 @@ export type AdminOverviewData = {
       referralInviteCount: number;
       referralConvertedCount: number;
       referralConversionRate: number;
+      postPackReferralInviteCount: number;
+      postPackReferralConvertedCount: number;
+      postPackReferralConversionRate: number;
       retainedActiveCount: number;
       retainedActivityRate: number;
       averageWeeklyXp: number;
@@ -674,6 +677,25 @@ export type AdminOverviewData = {
       }>;
       createdAt: string;
       lastUpdatedAt: string;
+    }>;
+    partnerReporting: Array<{
+      packId: string;
+      label: string;
+      lifecycleState: "draft" | "ready" | "live";
+      sources: CampaignSource[];
+      participantCount: number;
+      approvedCompletionCount: number;
+      walletLinkRate: number;
+      rewardEligibilityRate: number;
+      premiumConversionRate: number;
+      averageWeeklyXp: number;
+    }>;
+    alerts: Array<{
+      packId: string;
+      label: string;
+      severity: "warning" | "critical";
+      title: string;
+      detail: string;
     }>;
     packReady: boolean;
     activeLaneMode: "bridged" | "separate";
