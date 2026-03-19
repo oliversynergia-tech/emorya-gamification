@@ -114,6 +114,11 @@ export function CampaignPackAnalyticsPanel({
               <p>
                 {pack.bridgeCount} bridge quests, {pack.feederCount} feeder quests, sources: {pack.sources.join(", ")}.
               </p>
+              <p className="form-note">
+                {pack.participantCount} participants, {pack.completionCount} completions, {pack.approvedCompletionCount} approved.
+                {` `}
+                Premium conversion: {(pack.premiumConversionRate * 100).toFixed(0)}% ({pack.premiumParticipantCount} premium / {pack.annualParticipantCount} annual).
+              </p>
             </div>
             <div className="achievement-card__side">
               <span>{pack.lifecycleState}</span>

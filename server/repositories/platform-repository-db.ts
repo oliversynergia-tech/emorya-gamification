@@ -921,7 +921,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackPerformance] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -953,6 +953,28 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     getTokenSettlementAnalytics(),
     listQuestDefinitionTemplatesForAdmin(),
     listQuestDefinitionsForAdmin(),
+    runQuery<{
+      pack_id: string;
+      completion_count: string;
+      approved_completion_count: string;
+      participant_count: string;
+      premium_participant_count: string;
+      annual_participant_count: string;
+    }>(
+      `SELECT q.metadata->>'campaignPackId' AS pack_id,
+              COUNT(qc.id)::text AS completion_count,
+              COUNT(*) FILTER (WHERE qc.status = 'approved')::text AS approved_completion_count,
+              COUNT(DISTINCT qc.user_id)::text AS participant_count,
+              COUNT(DISTINCT qc.user_id) FILTER (WHERE u.subscription_tier IN ('monthly', 'annual'))::text AS premium_participant_count,
+              COUNT(DISTINCT qc.user_id) FILTER (WHERE u.subscription_tier = 'annual')::text AS annual_participant_count
+       FROM quest_definitions q
+       LEFT JOIN quest_completions qc
+         ON qc.quest_id = q.id
+       LEFT JOIN users u
+         ON u.id = qc.user_id
+       WHERE q.metadata ? 'campaignPackId'
+       GROUP BY q.metadata->>'campaignPackId'`,
+    ),
   ]);
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -994,6 +1016,24 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     };
   });
   const packAnalyticsMap = new Map<string, AdminOverviewData["campaignOperations"]["packAnalytics"][number]>();
+  const packPerformanceMap = new Map(
+    campaignPackPerformance.rows.map((row) => {
+      const participantCount = Number(row.participant_count);
+      const premiumParticipantCount = Number(row.premium_participant_count);
+
+      return [
+        row.pack_id,
+        {
+          completionCount: Number(row.completion_count),
+          approvedCompletionCount: Number(row.approved_completion_count),
+          participantCount,
+          premiumParticipantCount,
+          annualParticipantCount: Number(row.annual_participant_count),
+          premiumConversionRate: participantCount > 0 ? premiumParticipantCount / participantCount : 0,
+        },
+      ] as const;
+    }),
+  );
   for (const quest of questDefinitionDirectory) {
     const packId = typeof quest.metadata?.campaignPackId === "string" ? quest.metadata.campaignPackId : null;
     if (!packId) {
@@ -1025,6 +1065,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         bridgeCount: 0,
         feederCount: 0,
         sources: [] as ("zealy" | "galxe" | "taskon" | "direct")[],
+        completionCount: 0,
+        approvedCompletionCount: 0,
+        participantCount: 0,
+        premiumParticipantCount: 0,
+        annualParticipantCount: 0,
+        premiumConversionRate: 0,
         createdAt: quest.createdAt,
         lastUpdatedAt: quest.updatedAt,
       };
@@ -1048,6 +1094,15 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     }
     current.createdAt = current.createdAt < quest.createdAt ? current.createdAt : quest.createdAt;
     current.lastUpdatedAt = current.lastUpdatedAt > quest.updatedAt ? current.lastUpdatedAt : quest.updatedAt;
+    const performance = packPerformanceMap.get(packId);
+    if (performance) {
+      current.completionCount = performance.completionCount;
+      current.approvedCompletionCount = performance.approvedCompletionCount;
+      current.participantCount = performance.participantCount;
+      current.premiumParticipantCount = performance.premiumParticipantCount;
+      current.annualParticipantCount = performance.annualParticipantCount;
+      current.premiumConversionRate = performance.premiumConversionRate;
+    }
     packAnalyticsMap.set(packId, current);
   }
   const packAnalytics = Array.from(packAnalyticsMap.values()).sort(

@@ -636,6 +636,12 @@ export type AdminOverviewData = {
       bridgeCount: number;
       feederCount: number;
       sources: CampaignSource[];
+      completionCount: number;
+      approvedCompletionCount: number;
+      participantCount: number;
+      premiumParticipantCount: number;
+      annualParticipantCount: number;
+      premiumConversionRate: number;
       createdAt: string;
       lastUpdatedAt: string;
     }>;
