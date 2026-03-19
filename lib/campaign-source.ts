@@ -9,6 +9,7 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
         description:
           "This lane should feel like a fast bridge from campaign XP to wallet identity, weekly progress, and referral momentum.",
         accent: "Quest-to-wallet",
+        mood: "bridge" as const,
       };
     case "galxe":
       return {
@@ -17,6 +18,7 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
         description:
           "This source is usually routed through the Zealy bridge first, so the product should emphasize campaign completion, token readiness, and premium conversion instead of one-off participation.",
         accent: "Discovery-to-retention",
+        mood: "feeder" as const,
       };
     case "taskon":
       return {
@@ -25,6 +27,7 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
         description:
           "This source is usually routed through the Zealy bridge first. Separate TaskOn-specific funnel behavior is available, but only when platform differentiation is enabled.",
         accent: "Tasks-to-loyalty",
+        mood: "feeder" as const,
       };
     default:
       return {
@@ -33,8 +36,55 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
         description:
           "This lane focuses on early gratification, wallet adoption, weekly progress, and referral-driven growth.",
         accent: "Direct-to-growth",
+        mood: "direct" as const,
       };
   }
+}
+
+export function getCampaignLaneVisualProfile(
+  source: UserSnapshot["campaignSource"],
+  activeLane: UserSnapshot["campaignSource"] | "direct",
+  attributionSource?: UserSnapshot["campaignSource"],
+) {
+  const isBridged = Boolean(attributionSource && attributionSource !== activeLane);
+
+  if (source === "zealy" || activeLane === "zealy") {
+    return {
+      themeClass: "lane-theme--bridge",
+      label: isBridged ? "Zealy bridge live" : "Zealy live",
+      emphasis: "Bridge users should feel momentum, wallet identity, and weekly progression pressure quickly.",
+      chips: ["Bridge lane", "Wallet-forward", "Retention ramp"],
+    };
+  }
+
+  if (source === "galxe") {
+    return {
+      themeClass: "lane-theme--feeder",
+      label: isBridged ? "Galxe feeder" : "Galxe live",
+      emphasis: isBridged
+        ? "Galxe is being preserved as attribution, but the live conversion pressure is intentionally routed through Zealy."
+        : "Galxe is running as its own live lane with discovery-to-retention pressure.",
+      chips: ["Discovery source", isBridged ? "Zealy bridge" : "Live lane", "Campaign entry"],
+    };
+  }
+
+  if (source === "taskon") {
+    return {
+      themeClass: "lane-theme--task",
+      label: isBridged ? "TaskOn feeder" : "TaskOn live",
+      emphasis: isBridged
+        ? "TaskOn users are being funneled through the Zealy bridge, but their task-completion intent is still preserved."
+        : "TaskOn is running as its own live lane with stronger mission-depth framing.",
+      chips: ["Task source", isBridged ? "Zealy bridge" : "Live lane", "High-intent"],
+    };
+  }
+
+  return {
+    themeClass: "lane-theme--direct",
+    label: "Direct lane",
+    emphasis: "Direct users should feel the core Emorya ladder first: starter momentum, premium lift, and reward readiness.",
+    chips: ["Direct entry", "Core ladder", "Premium ramp"],
+  };
 }
 
 export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) {

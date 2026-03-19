@@ -149,7 +149,7 @@ export function AuthClientPanel({
       {error ? <p className="status status--error">{error}</p> : null}
       {premiumOffer ? (
         <div className="achievement-list">
-          <article className="achievement-card">
+          <article className="achievement-card lane-summary-card">
             <div>
               <strong>{premiumOffer.title}</strong>
               <p>{premiumOffer.summary}</p>
@@ -173,6 +173,12 @@ export function AuthClientPanel({
                 </div>
                 <span className="badge badge--pink">{premiumJourney.recommendedTier}</span>
               </article>
+              <article className="achievement-card lane-pressure-card">
+                <div>
+                  <strong>Live lane pressure</strong>
+                  <p>{premiumJourney.lanePressure}</p>
+                </div>
+              </article>
               <article className="achievement-card">
                 <div>
                   <strong>Why monthly first</strong>
@@ -193,7 +199,6 @@ export function AuthClientPanel({
         Sign-up requires a password of at least 10 characters. Referral codes are optional, issue rewards to the inviter automatically, and feed into the monthly and annual premium reward ladder.
       </p>
       {premiumOffer ? <p className="form-note">{premiumOffer.cta}</p> : null}
-      {premiumJourney ? <p className="form-note">{premiumJourney.lanePressure}</p> : null}
     </section>
   );
 }

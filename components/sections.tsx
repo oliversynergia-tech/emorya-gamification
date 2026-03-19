@@ -1,4 +1,9 @@
-import { getCampaignPremiumJourney, getCampaignPremiumOffer, getCampaignSourceProfile } from "@/lib/campaign-source";
+import {
+  getCampaignLaneVisualProfile,
+  getCampaignPremiumJourney,
+  getCampaignPremiumOffer,
+  getCampaignSourceProfile,
+} from "@/lib/campaign-source";
 import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
@@ -113,15 +118,28 @@ function renderQuestCard(quest: Quest) {
 export function HeroSection({ data }: { data: DashboardData }) {
   const progress = getLevelProgress(data.user.totalXp);
   const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
+  const laneVisualProfile = getCampaignLaneVisualProfile(
+    data.user.campaignSource ?? data.economy.campaignPreset.source,
+    data.economy.campaignPreset.source,
+    data.user.campaignSource,
+  );
 
   return (
     <section className="hero grid">
-      <div className="panel panel--hero">
+      <div className={`panel panel--hero ${laneVisualProfile.themeClass}`}>
         <p className="eyebrow">{campaignProfile.label}</p>
         <h2>{campaignProfile.title}</h2>
         <p className="lede">
           {campaignProfile.description}
         </p>
+        <div className="lane-chip-row">
+          {laneVisualProfile.chips.map((chip) => (
+            <span key={chip} className="badge">
+              {chip}
+            </span>
+          ))}
+        </div>
+        <p className="form-note">{laneVisualProfile.emphasis}</p>
         <div className="hero__actions">
           <a className="button button--primary" href="/dashboard">
             Open dashboard
@@ -169,6 +187,11 @@ export function HeroSection({ data }: { data: DashboardData }) {
 export function DashboardSnapshot({ data }: { data: DashboardData }) {
   const progress = getLevelProgress(data.user.totalXp);
   const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
+  const laneVisualProfile = getCampaignLaneVisualProfile(
+    data.user.campaignSource ?? data.economy.campaignPreset.source,
+    data.economy.campaignPreset.source,
+    data.user.campaignSource,
+  );
   const unlockedAchievements = data.achievements.filter((achievement) => achievement.unlocked);
   const upcomingAchievements = data.achievements
     .filter((achievement) => !achievement.unlocked)
@@ -222,9 +245,18 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
           </div>
           <div className="info-card">
             <span>Campaign lane</span>
-            <strong>{campaignProfile.accent}</strong>
+            <strong>{laneVisualProfile.label}</strong>
           </div>
         </div>
+        <article className={`achievement-card lane-summary-card ${laneVisualProfile.themeClass}`}>
+          <div>
+            <strong>{laneVisualProfile.label}</strong>
+            <p>{laneVisualProfile.emphasis}</p>
+          </div>
+          <div className="achievement-card__side">
+            <span>{campaignProfile.accent}</span>
+          </div>
+        </article>
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>

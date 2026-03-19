@@ -1,7 +1,12 @@
 import { AuthClientPanel } from "@/components/auth-client-panel";
 import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
-import { getCampaignPremiumJourney, getCampaignPremiumOffer, getCampaignSourceProfile } from "@/lib/campaign-source";
+import {
+  getCampaignLaneVisualProfile,
+  getCampaignPremiumJourney,
+  getCampaignPremiumOffer,
+  getCampaignSourceProfile,
+} from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -12,6 +17,11 @@ export default async function AuthPage() {
   const data = await loadDashboardOverview(session?.user ?? null);
   const activeCampaignLane = data.economy.campaignPreset.source;
   const campaignProfile = getCampaignSourceProfile(activeCampaignLane);
+  const laneVisualProfile = getCampaignLaneVisualProfile(
+    data.user.campaignSource ?? activeCampaignLane,
+    activeCampaignLane,
+    data.user.campaignSource,
+  );
   const premiumOffer = getCampaignPremiumOffer(activeCampaignLane);
   const premiumJourney = getCampaignPremiumJourney(activeCampaignLane, {
     featuredTracks: data.economy.campaignPreset.featuredTracks,
@@ -22,12 +32,20 @@ export default async function AuthPage() {
   return (
     <SiteShell eyebrow="Account access" currentUser={session?.user ?? null}>
       <section className="page-hero page-hero--auth">
-        <div className="panel panel--hero panel--hero-compact">
+        <div className={`panel panel--hero panel--hero-compact ${laneVisualProfile.themeClass}`}>
           <p className="eyebrow">{campaignProfile.label}</p>
           <h2>{campaignProfile.title}</h2>
           <p className="lede">
             {campaignProfile.description}
           </p>
+          <div className="lane-chip-row">
+            {laneVisualProfile.chips.map((chip) => (
+              <span key={chip} className="badge">
+                {chip}
+              </span>
+            ))}
+          </div>
+          <p className="form-note">{laneVisualProfile.emphasis}</p>
           <div className="hero__actions">
             <a className="button button--primary" href="#auth-panel">
               Open auth form
@@ -56,8 +74,8 @@ export default async function AuthPage() {
             </small>
           </div>
           <div className="metric-card">
-            <span>Campaign lane</span>
-            <strong>{campaignProfile.accent}</strong>
+            <span>Active lane</span>
+            <strong>{laneVisualProfile.label}</strong>
             <small>
               {data.user.campaignSource
                 ? data.user.campaignSource === activeCampaignLane
@@ -110,6 +128,15 @@ export default async function AuthPage() {
             The funnel starts with XP, then opens token eligibility, then direct-token partner moments for the highest-value referral and premium outcomes.
           </p>
           <div className="achievement-list">
+            <article className={`achievement-card lane-summary-card ${laneVisualProfile.themeClass}`}>
+              <div>
+                <strong>{laneVisualProfile.label}</strong>
+                <p>{laneVisualProfile.emphasis}</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{campaignProfile.accent}</span>
+              </div>
+            </article>
             {premiumOffer.hooks.map((hook) => (
               <article key={hook} className="achievement-card">
                 <div>

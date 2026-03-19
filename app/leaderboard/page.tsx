@@ -1,6 +1,6 @@
 import { LeaderboardSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
-import { getCampaignSourceProfile } from "@/lib/campaign-source";
+import { getCampaignLaneVisualProfile, getCampaignSourceProfile } from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -10,6 +10,11 @@ export default async function LeaderboardPage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
   const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
+  const laneVisualProfile = getCampaignLaneVisualProfile(
+    data.user.campaignSource ?? data.economy.campaignPreset.source,
+    data.economy.campaignPreset.source,
+    data.user.campaignSource,
+  );
   const topEntry = data.leaderboard[0];
   const topReferralEntry = data.referralLeaderboard[0];
   const campaignPreset = data.economy.campaignPreset;
@@ -17,12 +22,20 @@ export default async function LeaderboardPage() {
   return (
     <SiteShell eyebrow="Competitive pressure" currentUser={session?.user ?? null}>
       <section className="page-hero page-hero--leaderboard">
-        <div className="panel panel--hero panel--hero-compact">
+        <div className={`panel panel--hero panel--hero-compact ${laneVisualProfile.themeClass}`}>
           <p className="eyebrow">{campaignProfile.label}</p>
           <h2>{campaignProfile.title}</h2>
           <p className="lede">
             {campaignProfile.description}
           </p>
+          <div className="lane-chip-row">
+            {laneVisualProfile.chips.map((chip) => (
+              <span key={chip} className="badge">
+                {chip}
+              </span>
+            ))}
+          </div>
+          <p className="form-note">{laneVisualProfile.emphasis}</p>
         </div>
         <div className="panel panel--stack page-aside">
           <div className="metric-card">
