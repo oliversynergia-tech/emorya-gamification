@@ -782,6 +782,88 @@ a {
   gap: 14px;
 }
 
+.economy-stack {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 18px;
+}
+
+.economy-stack--admin {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.economy-step-card {
+  padding: 18px;
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(223, 182, 255, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)),
+    rgba(18, 9, 30, 0.9);
+}
+
+.economy-step-card strong {
+  display: block;
+  margin: 10px 0 8px;
+}
+
+.economy-step-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.economy-step-card--core {
+  border-color: rgba(100, 224, 194, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(100, 224, 194, 0.1), transparent 0 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)),
+    rgba(17, 14, 29, 0.92);
+}
+
+.economy-step-card--bridge {
+  border-color: rgba(223, 182, 255, 0.18);
+}
+
+.economy-step-card--rail {
+  border-color: rgba(240, 214, 160, 0.24);
+  background:
+    radial-gradient(circle at top right, rgba(240, 214, 160, 0.09), transparent 0 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)),
+    rgba(19, 11, 28, 0.92);
+}
+
+.economy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: var(--text-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.economy-badge--core {
+  border-color: rgba(100, 224, 194, 0.26);
+  color: rgba(173, 255, 234, 0.96);
+  background: rgba(100, 224, 194, 0.1);
+}
+
+.economy-badge--bridge {
+  border-color: rgba(223, 182, 255, 0.24);
+  color: rgba(239, 220, 255, 0.96);
+  background: rgba(223, 182, 255, 0.08);
+}
+
+.economy-badge--rail {
+  border-color: rgba(240, 214, 160, 0.28);
+  color: rgba(255, 235, 194, 0.98);
+  background: rgba(240, 214, 160, 0.1);
+}
+
 .reward-ladder,
 .reward-visual-grid {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

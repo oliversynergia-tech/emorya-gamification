@@ -374,6 +374,32 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
             </div>
             <span className="badge badge--pink">{data.user.tokenProgram.eligibilityPoints} pts</span>
           </div>
+          <div className="economy-stack">
+            <article className="economy-step-card economy-step-card--core">
+              <div className="quest-card__meta">
+                <span className="economy-badge economy-badge--core">XP core</span>
+                <span>{data.user.totalXp.toLocaleString()} XP</span>
+              </div>
+              <strong>XP is the main progression currency.</strong>
+              <p>Levels, streaks, weekly bands, quest ordering, and referral momentum are all driven here first.</p>
+            </article>
+            <article className="economy-step-card economy-step-card--bridge">
+              <div className="quest-card__meta">
+                <span className="economy-badge economy-badge--bridge">Eligibility bridge</span>
+                <span>{data.user.tokenProgram.eligibilityPoints} pts</span>
+              </div>
+              <strong>Eligibility points convert XP momentum into reward readiness.</strong>
+              <p>xPortal linkage, trust, and recurring activity turn progression into redeemable reward state.</p>
+            </article>
+            <article className="economy-step-card economy-step-card--rail">
+              <div className="quest-card__meta">
+                <span className="economy-badge economy-badge--rail">Reward rail</span>
+                <span>{data.user.tokenProgram.asset}</span>
+              </div>
+              <strong>Tokens are configurable payout rails layered on top.</strong>
+              <p>Reward programs, partner assets, and direct payouts shape settlement without replacing XP as the core loop.</p>
+            </article>
+          </div>
           <div className="info-grid">
             <div className="info-card">
               <span>Projected redemption</span>
@@ -495,13 +521,16 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
           <div className="panel__header">
             <div>
               <p className="eyebrow">Reward economy</p>
-              <h3>How XP compounds into token-ready value</h3>
+              <h3>XP-first progression with configurable reward rails</h3>
             </div>
             <span className="badge badge--pink">{data.economy.payoutAsset}</span>
           </div>
+          <p className="form-note">
+            The product loop stays XP-first. Premium, referrals, partner assets, and direct payouts only accelerate or settle value after the progression layer is already doing the work.
+          </p>
           <div className="reward-ladder">
             <article className="reward-ladder__card">
-              <span>Weekly output</span>
+              <span>1. Earn XP</span>
               <strong>{data.user.weeklyProgress.xp} XP</strong>
               <small>{data.user.weeklyProgress.tierLabel} band this week.</small>
               <div className="reward-ladder__meter">
@@ -512,7 +541,7 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
               </div>
             </article>
             <article className="reward-ladder__card">
-              <span>Eligibility banked</span>
+              <span>2. Build eligibility</span>
               <strong>{data.user.tokenProgram.eligibilityPoints} pts</strong>
               <small>{data.user.tokenProgram.nextStep}</small>
               <div className="reward-ladder__meter">
@@ -528,10 +557,10 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
               </div>
             </article>
             <article className="reward-ladder__card">
-              <span>Referral spike</span>
+              <span>3. Add accelerators</span>
               <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} / +{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP</strong>
               <small>
-                Annual referral also projects{" "}
+                Premium and referral loops multiply the XP engine first. Annual referral also projects{" "}
                 {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward
                   ? `${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.amount} ${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.asset}`
                   : "direct token upside"}
@@ -539,9 +568,9 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
               </small>
             </article>
             <article className="reward-ladder__card">
-              <span>Premium lift</span>
+              <span>4. Settle through rails</span>
               <strong>{data.economy.xpMultipliers.monthly.toFixed(2)}x / {data.economy.xpMultipliers.annual.toFixed(2)}x XP</strong>
-              <small>{data.economy.tokenMultipliers.monthly.toFixed(2)}x / {data.economy.tokenMultipliers.annual.toFixed(2)}x token yield.</small>
+              <small>{data.economy.tokenMultipliers.monthly.toFixed(2)}x / {data.economy.tokenMultipliers.annual.toFixed(2)}x token yield across the active reward program and partner asset rails.</small>
             </article>
           </div>
         </div>
@@ -834,19 +863,19 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         </div>
         <div className="info-grid">
           <div className="info-card">
-            <span>Projected payout</span>
+            <span>Reward rail projection</span>
             <strong>{data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}</strong>
           </div>
           <div className="info-card">
-            <span>Monthly premium uplift</span>
+            <span>Monthly XP uplift</span>
             <strong>{data.economy.xpMultipliers.monthly.toFixed(2)}x XP</strong>
           </div>
           <div className="info-card">
-            <span>Annual premium uplift</span>
+            <span>Annual XP uplift</span>
             <strong>{data.economy.xpMultipliers.annual.toFixed(2)}x XP</strong>
           </div>
           <div className="info-card">
-            <span>Claimed / settled</span>
+            <span>Rail settlement</span>
             <strong>{data.user.tokenProgram.claimedBalance} / {data.user.tokenProgram.settledBalance}</strong>
           </div>
           <div className="info-card">
@@ -861,7 +890,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         <div className="reward-visual-grid">
           <article className="reward-visual-card">
             <div className="quest-card__meta">
-              <span>XP to reward flow</span>
+              <span>Progression core</span>
               <span>{data.user.tokenProgram.status}</span>
             </div>
             <strong>
@@ -874,11 +903,11 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
                 style={{ width: `${Math.min(data.user.weeklyProgress.progress * 100, 100)}%` }}
               />
             </div>
-            <small>Leaderboard pressure feeds weekly output, which feeds eligibility and redemption readiness.</small>
+            <small>Leaderboard pressure feeds weekly XP first. Reward readiness is a second-layer consequence of that core progression engine.</small>
           </article>
           <article className="reward-visual-card">
             <div className="quest-card__meta">
-              <span>Payout state</span>
+              <span>Reward rail state</span>
               <span>{data.user.tokenProgram.asset}</span>
             </div>
             <strong>{data.user.tokenProgram.claimedBalance} claimed / {data.user.tokenProgram.settledBalance} settled</strong>
@@ -916,7 +945,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           </article>
           <article className="reward-visual-card">
             <div className="quest-card__meta">
-              <span>{campaignPreset.source} preset</span>
+              <span>{campaignPreset.source} reward preset</span>
               <span>{campaignPreset.attributionSource}</span>
             </div>
             <strong>
@@ -935,8 +964,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           </article>
         </div>
         <p className="form-note">
-          Rankings do not just signal vanity. Higher weekly output compounds into redemption readiness, while premium tiers
-          widen both XP speed and token value.
+          Rankings do not just signal vanity. Higher weekly output strengthens the XP core, and the configured reward rails decide how that value gets expressed and settled.
         </p>
       </div>
       <div className="panel">
@@ -1513,6 +1541,32 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
               </div>
             </article>
           ))}
+        </div>
+      </div>
+      <div className="panel panel--glass admin-analytics">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Economy architecture</p>
+            <h3>Progression core vs reward rails</h3>
+          </div>
+        </div>
+        <div className="economy-stack economy-stack--admin">
+          <article className="economy-step-card economy-step-card--core">
+            <div className="quest-card__meta">
+              <span className="economy-badge economy-badge--core">Core</span>
+              <span>XP progression</span>
+            </div>
+            <strong>Levels, weekly pacing, quest ordering, and funnel pressure.</strong>
+            <p>XP remains the primary progression system across direct, Zealy bridge, and optional live source lanes.</p>
+          </article>
+          <article className="economy-step-card economy-step-card--rail">
+            <div className="quest-card__meta">
+              <span className="economy-badge economy-badge--rail">Rails</span>
+              <span>{data.campaignOperations.activeLaneMode === "bridged" ? "Bridge-ready" : "Split-lane ready"}</span>
+            </div>
+            <strong>Reward programs, partner assets, and payout operations.</strong>
+            <p>These change how value is redeemed, scheduled, and settled without replacing the XP-first progression layer.</p>
+          </article>
         </div>
       </div>
       <div className="panel panel--glass admin-analytics">

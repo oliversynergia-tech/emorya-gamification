@@ -98,12 +98,30 @@ export default async function LeaderboardPage() {
           <div className="panel__header">
             <div>
               <p className="eyebrow">Reward ladder</p>
-              <h3>Why climbing the board matters</h3>
+              <h3>Why climbing the board matters in an XP-first economy</h3>
             </div>
+          </div>
+          <div className="economy-stack">
+            <article className="economy-step-card economy-step-card--core">
+              <div className="quest-card__meta">
+                <span className="economy-badge economy-badge--core">XP core</span>
+                <span>{data.user.totalXp.toLocaleString()} XP</span>
+              </div>
+              <strong>The leaderboard is a progression ladder first.</strong>
+              <p>Rank, streaks, weekly output, and premium pressure all reinforce the XP engine before rewards settle anywhere else.</p>
+            </article>
+            <article className="economy-step-card economy-step-card--rail">
+              <div className="quest-card__meta">
+                <span className="economy-badge economy-badge--rail">Reward rail</span>
+                <span>{data.user.tokenProgram.asset}</span>
+              </div>
+              <strong>Tokens stay downstream from performance.</strong>
+              <p>Eligibility, partner assets, and payout workflow turn that XP momentum into configurable redemption and direct-reward outcomes.</p>
+            </article>
           </div>
           <div className="reward-ladder">
             <article className="reward-ladder__card">
-              <span>Weekly XP</span>
+              <span>1. Weekly XP</span>
               <strong>{data.user.weeklyProgress.xp} XP</strong>
               <small>{data.user.weeklyProgress.tierLabel} is the current output band.</small>
               <div className="reward-ladder__meter">
@@ -114,7 +132,7 @@ export default async function LeaderboardPage() {
               </div>
             </article>
             <article className="reward-ladder__card">
-              <span>Eligibility bank</span>
+              <span>2. Eligibility bank</span>
               <strong>{data.user.tokenProgram.eligibilityPoints} pts</strong>
               <small>{data.user.tokenProgram.status === "redeemable" ? "Redemption is unlocked." : data.user.tokenProgram.nextStep}</small>
               <div className="reward-ladder__meter">
@@ -132,7 +150,7 @@ export default async function LeaderboardPage() {
               </div>
             </article>
             <article className="reward-ladder__card">
-              <span>Premium lift</span>
+              <span>3. Premium lift</span>
               <strong>
                 {data.economy.xpMultipliers.monthly.toFixed(2)}x / {data.economy.xpMultipliers.annual.toFixed(2)}x XP
               </strong>
@@ -142,7 +160,7 @@ export default async function LeaderboardPage() {
               </small>
             </article>
             <article className="reward-ladder__card">
-              <span>Referral upside</span>
+              <span>4. Reward rail upside</span>
               <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} XP / +{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP</strong>
               <small>
                 Annual conversions also project{" "}
@@ -155,16 +173,16 @@ export default async function LeaderboardPage() {
           </div>
           <div className="reward-visual-grid">
             <article className="reward-visual-card">
-              <span>Projected payout</span>
+              <span>Configured reward rail</span>
               <strong>
                 {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
               </strong>
               <small>
-                XP drives position, eligibility points drive redemption readiness, and the payout rail determines when rewards settle.
+                XP drives position, eligibility points drive redemption readiness, and the configured rail determines how rewards settle.
               </small>
             </article>
             <article className="reward-visual-card">
-              <span>Claimed vs settled</span>
+              <span>Rail settlement</span>
               <strong>
                 {data.user.tokenProgram.claimedBalance} claimed / {data.user.tokenProgram.settledBalance} settled
               </strong>
@@ -206,7 +224,7 @@ export default async function LeaderboardPage() {
             </article>
           </div>
           <p className="form-note">
-            Leaderboard pressure is only one layer. The stronger loop is weekly XP, referral quality, and token-redemption readiness through the xPortal-linked reward path.
+            Leaderboard pressure is only one layer. The stronger loop is weekly XP, referral quality, and xPortal-linked reward readiness, with tokens acting as configurable payout rails rather than the main progression currency.
           </p>
         </section>
       </section>
