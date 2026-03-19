@@ -20,11 +20,12 @@ type SettlementAnalyticsInput = {
   compareEndDate?: string;
 };
 type TokenSettlementInput = {
-  action?: "approve" | "processing" | "settle";
+  action?: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
   receiptReference?: string;
   settlementNote?: string | null;
   automationReceiptReference?: string | null;
   automationSettlementNote?: string | null;
+  generateAutomationReceiptReference?: boolean;
 };
 
 function getErrorStatus(message: string) {
@@ -533,7 +534,7 @@ export async function handleTokenSettlementRequest(
     | {
         transitionPendingTokenRedemption: (input: {
           redemptionId: string;
-          action: "approve" | "processing" | "settle";
+          action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
           receiptReference: string;
           settlementNote?: string | null;
         }) => Promise<unknown>;
@@ -541,11 +542,12 @@ export async function handleTokenSettlementRequest(
           redemptionId: string;
           automationReceiptReference?: string | null;
           automationSettlementNote?: string | null;
+          generateAutomationReceiptReference?: boolean;
         }) => Promise<unknown>;
       }
     | ((input: {
         redemptionId: string;
-        action: "approve" | "processing" | "settle";
+        action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
         receiptReference: string;
         settlementNote?: string | null;
       }) => Promise<unknown>),
@@ -567,7 +569,9 @@ export async function handleTokenSettlementRequest(
   }
 
   const hasAutomationMetadata =
-    body.automationReceiptReference !== undefined || body.automationSettlementNote !== undefined;
+    body.automationReceiptReference !== undefined ||
+    body.automationSettlementNote !== undefined ||
+    body.generateAutomationReceiptReference === true;
 
   if (!body.action && !hasAutomationMetadata) {
     return {
@@ -578,10 +582,10 @@ export async function handleTokenSettlementRequest(
 
   const action = body.action;
 
-  if (action && !["approve", "processing", "settle"].includes(action)) {
+  if (action && !["approve", "processing", "settle", "hold", "fail", "requeue", "cancel"].includes(action)) {
     return {
       status: 400,
-      body: { ok: false, error: "action must be approve, processing, or settle." },
+      body: { ok: false, error: "action must be approve, processing, settle, hold, fail, requeue, or cancel." },
     };
   }
 
@@ -604,6 +608,7 @@ export async function handleTokenSettlementRequest(
           redemptionId,
           automationReceiptReference: body.automationReceiptReference,
           automationSettlementNote: body.automationSettlementNote,
+          generateAutomationReceiptReference: body.generateAutomationReceiptReference,
         });
     return {
       status: 200,

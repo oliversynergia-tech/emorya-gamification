@@ -19,7 +19,13 @@ export async function PATCH(request: Request, context: RouteContext) {
       redemptionId,
       body: {
         action:
-          body.action === "approve" || body.action === "processing" || body.action === "settle"
+          body.action === "approve" ||
+          body.action === "processing" ||
+          body.action === "settle" ||
+          body.action === "hold" ||
+          body.action === "fail" ||
+          body.action === "requeue" ||
+          body.action === "cancel"
             ? body.action
             : undefined,
         receiptReference: typeof body.receiptReference === "string" ? body.receiptReference : undefined,
@@ -28,6 +34,8 @@ export async function PATCH(request: Request, context: RouteContext) {
           typeof body.automationReceiptReference === "string" ? body.automationReceiptReference : undefined,
         automationSettlementNote:
           typeof body.automationSettlementNote === "string" ? body.automationSettlementNote : undefined,
+        generateAutomationReceiptReference:
+          typeof body.generateAutomationReceiptReference === "boolean" ? body.generateAutomationReceiptReference : undefined,
       },
     },
     {

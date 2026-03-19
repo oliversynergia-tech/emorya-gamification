@@ -44,7 +44,7 @@ export type AdminRouteActionServices = {
   }) => Promise<unknown>;
   transitionPendingTokenRedemption: (input: {
     redemptionId: string;
-    action: "approve" | "processing" | "settle";
+    action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
     receiptReference: string;
     settlementNote?: string | null;
   }) => Promise<unknown>;
@@ -52,6 +52,7 @@ export type AdminRouteActionServices = {
     redemptionId: string;
     automationReceiptReference?: string | null;
     automationSettlementNote?: string | null;
+    generateAutomationReceiptReference?: boolean;
   }) => Promise<unknown>;
 };
 
@@ -203,11 +204,12 @@ export async function runTokenSettlementRoute(
   }: {
     redemptionId: string;
     body: {
-      action?: "approve" | "processing" | "settle";
+      action?: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
       receiptReference?: string;
       settlementNote?: string | null;
       automationReceiptReference?: string | null;
       automationSettlementNote?: string | null;
+      generateAutomationReceiptReference?: boolean;
     };
   },
   services: Pick<

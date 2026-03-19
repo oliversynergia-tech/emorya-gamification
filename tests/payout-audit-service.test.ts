@@ -59,6 +59,16 @@ function createSettlement(overrides: Partial<TokenSettlementItem> = {}): TokenSe
     approvedByDisplayName: null,
     processingStartedAt: null,
     processingByDisplayName: null,
+    heldAt: null,
+    heldByDisplayName: null,
+    holdReason: null,
+    failedAt: null,
+    failedByDisplayName: null,
+    lastError: null,
+    cancelledAt: null,
+    cancelledByDisplayName: null,
+    cancellationReason: null,
+    retryCount: 0,
     settledAt: null,
     receiptReference: null,
     settlementNote: null,
@@ -79,6 +89,10 @@ function createDependencies(options?: {
   const auditCalls: Array<Record<string, unknown>> = [];
   const approveCalls: Array<Record<string, unknown>> = [];
   const processingCalls: Array<Record<string, unknown>> = [];
+  const holdCalls: Array<Record<string, unknown>> = [];
+  const failCalls: Array<Record<string, unknown>> = [];
+  const requeueCalls: Array<Record<string, unknown>> = [];
+  const cancelCalls: Array<Record<string, unknown>> = [];
   const settleCalls: Array<Record<string, unknown>> = [];
   const listCalls: number[] = [];
 
@@ -88,6 +102,10 @@ function createDependencies(options?: {
     auditCalls,
     approveCalls,
     processingCalls,
+    holdCalls,
+    failCalls,
+    requeueCalls,
+    cancelCalls,
     settleCalls,
     listCalls,
     dependencies: {
@@ -106,6 +124,22 @@ function createDependencies(options?: {
       markRedemptionProcessing: async (input: Record<string, unknown>) => {
         processingCalls.push(input);
         return options?.processingResult ?? true;
+      },
+      holdRedemption: async (input: Record<string, unknown>) => {
+        holdCalls.push(input);
+        return true;
+      },
+      failRedemption: async (input: Record<string, unknown>) => {
+        failCalls.push(input);
+        return true;
+      },
+      requeueRedemption: async (input: Record<string, unknown>) => {
+        requeueCalls.push(input);
+        return true;
+      },
+      cancelRedemption: async (input: Record<string, unknown>) => {
+        cancelCalls.push(input);
+        return true;
       },
       settleRedemption: async (input: Record<string, unknown>) => {
         settleCalls.push(input);
@@ -264,4 +298,68 @@ test("failed repository transition does not write an audit entry", async () => {
 
   assert.equal(harness.approveCalls.length, 1);
   assert.equal(harness.auditCalls.length, 0);
+});
+
+test("hold transition writes hold reason to audit entry", async () => {
+  const harness = createDependencies({
+    queue: [createSettlement({ workflowState: "processing" })],
+  });
+
+  await transitionPendingTokenRedemptionWithDependencies(
+    {
+      redemptionId: "redemption-1",
+      action: "hold",
+      receiptReference: "",
+      settlementNote: "waiting on partner confirmation",
+    },
+    harness.dependencies,
+  );
+
+  assert.deepEqual(harness.holdCalls[0], {
+    redemptionId: "redemption-1",
+    heldBy: "admin-1",
+    holdReason: "waiting on partner confirmation",
+  });
+  assert.deepEqual(harness.auditCalls[0], {
+    redemptionId: "redemption-1",
+    action: "hold",
+    changedBy: "admin-1",
+    previousWorkflowState: "processing",
+    nextWorkflowState: "held",
+    settlementNote: "waiting on partner confirmation",
+    metadata: {
+      source: "zealy",
+      asset: "EMR",
+    },
+  });
+});
+
+test("requeue transition resets failed payouts back to queued", async () => {
+  const harness = createDependencies({
+    queue: [createSettlement({ workflowState: "failed" })],
+  });
+
+  await transitionPendingTokenRedemptionWithDependencies(
+    {
+      redemptionId: "redemption-1",
+      action: "requeue",
+      receiptReference: "",
+    },
+    harness.dependencies,
+  );
+
+  assert.deepEqual(harness.requeueCalls[0], {
+    redemptionId: "redemption-1",
+  });
+  assert.deepEqual(harness.auditCalls[0], {
+    redemptionId: "redemption-1",
+    action: "requeue",
+    changedBy: "admin-1",
+    previousWorkflowState: "failed",
+    nextWorkflowState: "queued",
+    metadata: {
+      source: "zealy",
+      asset: "EMR",
+    },
+  });
 });

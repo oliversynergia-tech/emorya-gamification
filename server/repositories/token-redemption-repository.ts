@@ -22,6 +22,16 @@ type TokenSettlementRow = QueryResultRow & {
   approved_by_display_name: string | null;
   processing_started_at: string | null;
   processing_by_display_name: string | null;
+  held_at: string | null;
+  held_by_display_name: string | null;
+  hold_reason: string | null;
+  failed_at: string | null;
+  failed_by_display_name: string | null;
+  last_error: string | null;
+  cancelled_at: string | null;
+  cancelled_by_display_name: string | null;
+  cancellation_reason: string | null;
+  retry_count: number | string;
   settled_at: string | null;
   receipt_reference: string | null;
   settlement_note: string | null;
@@ -50,6 +60,16 @@ function mapTokenSettlement(row: TokenSettlementRow): TokenSettlementItem {
     approvedByDisplayName: row.approved_by_display_name,
     processingStartedAt: row.processing_started_at,
     processingByDisplayName: row.processing_by_display_name,
+    heldAt: row.held_at,
+    heldByDisplayName: row.held_by_display_name,
+    holdReason: row.hold_reason,
+    failedAt: row.failed_at,
+    failedByDisplayName: row.failed_by_display_name,
+    lastError: row.last_error,
+    cancelledAt: row.cancelled_at,
+    cancelledByDisplayName: row.cancelled_by_display_name,
+    cancellationReason: row.cancellation_reason,
+    retryCount: Number(row.retry_count),
     settledAt: row.settled_at,
     receiptReference: row.receipt_reference,
     settlementNote: row.settlement_note,
@@ -65,11 +85,16 @@ export async function listPendingTokenSettlements(limit = 20): Promise<TokenSett
             programs.name AS reward_program_name,
             redemptions.token_amount, redemptions.eligibility_points_spent,
             redemptions.status, redemptions.workflow_state, redemptions.source, redemptions.created_at,
-            redemptions.approved_at, redemptions.processing_started_at, redemptions.settled_at,
-            redemptions.receipt_reference, redemptions.settlement_note, redemptions.metadata,
+            redemptions.approved_at, redemptions.processing_started_at, redemptions.held_at,
+            redemptions.hold_reason, redemptions.failed_at, redemptions.last_error,
+            redemptions.cancelled_at, redemptions.cancellation_reason, redemptions.retry_count,
+            redemptions.settled_at, redemptions.receipt_reference, redemptions.settlement_note, redemptions.metadata,
             users.display_name AS user_display_name, users.email AS user_email,
             approved_by_users.display_name AS approved_by_display_name,
             processing_by_users.display_name AS processing_by_display_name,
+            held_by_users.display_name AS held_by_display_name,
+            failed_by_users.display_name AS failed_by_display_name,
+            cancelled_by_users.display_name AS cancelled_by_display_name,
             settled_by_users.display_name AS settled_by_display_name
      FROM token_redemptions redemptions
      INNER JOIN users ON users.id = redemptions.user_id
@@ -77,6 +102,9 @@ export async function listPendingTokenSettlements(limit = 20): Promise<TokenSett
      LEFT JOIN reward_programs programs ON programs.id = redemptions.reward_program_id
      LEFT JOIN users approved_by_users ON approved_by_users.id = redemptions.approved_by
      LEFT JOIN users processing_by_users ON processing_by_users.id = redemptions.processing_by
+     LEFT JOIN users held_by_users ON held_by_users.id = redemptions.held_by
+     LEFT JOIN users failed_by_users ON failed_by_users.id = redemptions.failed_by
+     LEFT JOIN users cancelled_by_users ON cancelled_by_users.id = redemptions.cancelled_by
      LEFT JOIN users settled_by_users ON settled_by_users.id = redemptions.settled_by
      WHERE redemptions.status = 'claimed'
      ORDER BY redemptions.created_at ASC
@@ -131,6 +159,117 @@ export async function markTokenRedemptionProcessing({
   return Boolean(result.rows[0]?.id);
 }
 
+export async function holdTokenRedemption({
+  redemptionId,
+  heldBy,
+  holdReason,
+}: {
+  redemptionId: string;
+  heldBy: string;
+  holdReason: string | null;
+}) {
+  const result = await runQuery<{ id: string }>(
+    `UPDATE token_redemptions
+     SET workflow_state = 'held',
+         held_at = NOW(),
+         held_by = $2,
+         hold_reason = $3,
+         updated_at = NOW()
+     WHERE id = $1
+       AND status = 'claimed'
+       AND workflow_state IN ('queued', 'approved', 'processing', 'failed')
+     RETURNING id`,
+    [redemptionId, heldBy, holdReason],
+  );
+
+  return Boolean(result.rows[0]?.id);
+}
+
+export async function failTokenRedemption({
+  redemptionId,
+  failedBy,
+  lastError,
+}: {
+  redemptionId: string;
+  failedBy: string;
+  lastError: string | null;
+}) {
+  const result = await runQuery<{ id: string }>(
+    `UPDATE token_redemptions
+     SET workflow_state = 'failed',
+         failed_at = NOW(),
+         failed_by = $2,
+         last_error = $3,
+         retry_count = retry_count + 1,
+         updated_at = NOW()
+     WHERE id = $1
+       AND status = 'claimed'
+       AND workflow_state IN ('approved', 'processing', 'held')
+     RETURNING id`,
+    [redemptionId, failedBy, lastError],
+  );
+
+  return Boolean(result.rows[0]?.id);
+}
+
+export async function requeueTokenRedemption({
+  redemptionId,
+}: {
+  redemptionId: string;
+}) {
+  const result = await runQuery<{ id: string }>(
+    `UPDATE token_redemptions
+     SET workflow_state = 'queued',
+         approved_at = NULL,
+         approved_by = NULL,
+         processing_started_at = NULL,
+         processing_by = NULL,
+         held_at = NULL,
+         held_by = NULL,
+         hold_reason = NULL,
+         failed_at = NULL,
+         failed_by = NULL,
+         last_error = NULL,
+         cancelled_at = NULL,
+         cancelled_by = NULL,
+         cancellation_reason = NULL,
+         updated_at = NOW()
+     WHERE id = $1
+       AND status = 'claimed'
+       AND workflow_state IN ('held', 'failed', 'cancelled')
+     RETURNING id`,
+    [redemptionId],
+  );
+
+  return Boolean(result.rows[0]?.id);
+}
+
+export async function cancelTokenRedemption({
+  redemptionId,
+  cancelledBy,
+  cancellationReason,
+}: {
+  redemptionId: string;
+  cancelledBy: string;
+  cancellationReason: string | null;
+}) {
+  const result = await runQuery<{ id: string }>(
+    `UPDATE token_redemptions
+     SET workflow_state = 'cancelled',
+         cancelled_at = NOW(),
+         cancelled_by = $2,
+         cancellation_reason = $3,
+         updated_at = NOW()
+     WHERE id = $1
+       AND status = 'claimed'
+       AND workflow_state <> 'settled'
+     RETURNING id`,
+    [redemptionId, cancelledBy, cancellationReason],
+  );
+
+  return Boolean(result.rows[0]?.id);
+}
+
 export async function settleTokenRedemption({
   redemptionId,
   settledBy,
@@ -167,10 +306,12 @@ export async function updateTokenRedemptionAutomationMetadata({
   redemptionId,
   automationReceiptReference,
   automationSettlementNote,
+  generatedBy,
 }: {
   redemptionId: string;
   automationReceiptReference?: string | null;
   automationSettlementNote?: string | null;
+  generatedBy?: string | null;
 }) {
   if (automationReceiptReference === undefined && automationSettlementNote === undefined) {
     return false;
@@ -189,6 +330,12 @@ export async function updateTokenRedemptionAutomationMetadata({
   if (automationSettlementNote !== undefined) {
     metadataExpression = `jsonb_set(${metadataExpression}, '{automationSettlementNote}', to_jsonb($${position}::text), true)`;
     values.push(automationSettlementNote);
+    position += 1;
+  }
+
+  if (generatedBy !== undefined) {
+    metadataExpression = `jsonb_set(${metadataExpression}, '{automationReceiptGeneratedBy}', to_jsonb($${position}::text), true)`;
+    values.push(generatedBy);
     position += 1;
   }
 
@@ -243,7 +390,7 @@ export async function createTokenRedemptionAudit({
   metadata,
 }: {
   redemptionId: string;
-  action: "approve" | "processing" | "settle";
+  action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
   changedBy: string;
   previousWorkflowState: TokenSettlementItem["workflowState"];
   nextWorkflowState: TokenSettlementItem["workflowState"];
@@ -341,7 +488,7 @@ type SettlementWorkflowRow = QueryResultRow & {
 type TokenRedemptionAuditRow = QueryResultRow & {
   id: string;
   redemption_id: string;
-  action: "approve" | "processing" | "settle";
+  action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
   previous_workflow_state: TokenSettlementItem["workflowState"];
   next_workflow_state: TokenSettlementItem["workflowState"];
   changed_by_display_name: string | null;

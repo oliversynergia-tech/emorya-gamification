@@ -288,13 +288,23 @@ export type UserSnapshot = {
       tokenAmount: number;
       eligibilityPointsSpent: number;
       status: "claimed" | "settled";
-      workflowState: "queued" | "approved" | "processing" | "settled";
+      workflowState: "queued" | "approved" | "processing" | "held" | "failed" | "cancelled" | "settled";
       source: string;
       createdAt: string;
       approvedAt: string | null;
       approvedByDisplayName: string | null;
       processingStartedAt: string | null;
       processingByDisplayName: string | null;
+      heldAt: string | null;
+      heldByDisplayName: string | null;
+      holdReason: string | null;
+      failedAt: string | null;
+      failedByDisplayName: string | null;
+      lastError: string | null;
+      cancelledAt: string | null;
+      cancelledByDisplayName: string | null;
+      cancellationReason: string | null;
+      retryCount: number;
       settledAt: string | null;
       receiptReference: string | null;
       settlementNote: string | null;
@@ -527,9 +537,9 @@ export type AdminOverviewData = {
   tokenSettlementAudit: Array<{
     id: string;
     redemptionId: string;
-    action: "approve" | "processing" | "settle";
-    previousWorkflowState: "queued" | "approved" | "processing" | "settled";
-    nextWorkflowState: "queued" | "approved" | "processing" | "settled";
+    action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
+    previousWorkflowState: "queued" | "approved" | "processing" | "held" | "failed" | "cancelled" | "settled";
+    nextWorkflowState: "queued" | "approved" | "processing" | "held" | "failed" | "cancelled" | "settled";
     changedByDisplayName: string | null;
     receiptReference: string | null;
     settlementNote: string | null;
@@ -558,7 +568,7 @@ export type AdminOverviewData = {
     directRewardSettledTokenAmount: number;
     redemptionVelocityPerDay: number;
     workflowBreakdown: Array<{
-      state: "queued" | "approved" | "processing" | "settled";
+      state: "queued" | "approved" | "processing" | "held" | "failed" | "cancelled" | "settled";
       count: number;
     }>;
     dailyThroughput: Array<{
@@ -968,12 +978,22 @@ export type TokenSettlementItem = {
   tokenAmount: number;
   eligibilityPointsSpent: number;
   source: string;
-  workflowState: "queued" | "approved" | "processing" | "settled";
+  workflowState: "queued" | "approved" | "processing" | "held" | "failed" | "cancelled" | "settled";
   createdAt: string;
   approvedAt: string | null;
   approvedByDisplayName: string | null;
   processingStartedAt: string | null;
   processingByDisplayName: string | null;
+  heldAt: string | null;
+  heldByDisplayName: string | null;
+  holdReason: string | null;
+  failedAt: string | null;
+  failedByDisplayName: string | null;
+  lastError: string | null;
+  cancelledAt: string | null;
+  cancelledByDisplayName: string | null;
+  cancellationReason: string | null;
+  retryCount: number;
   settledAt: string | null;
   receiptReference: string | null;
   settlementNote: string | null;

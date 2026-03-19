@@ -38,7 +38,7 @@ export function TokenSettlementPanel({
   const [customEndDate, setCustomEndDate] = useState("");
   const [customCompareStartDate, setCustomCompareStartDate] = useState("");
   const [customCompareEndDate, setCustomCompareEndDate] = useState("");
-  const [workflowFilter, setWorkflowFilter] = useState<"all" | "queued" | "approved" | "processing">("all");
+  const [workflowFilter, setWorkflowFilter] = useState<"all" | "queued" | "approved" | "processing" | "held" | "failed" | "cancelled">("all");
   const [sourceFilter, setSourceFilter] = useState<"all" | string>("all");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [analyticsPending, setAnalyticsPending] = useState(false);
@@ -89,6 +89,30 @@ export function TokenSettlementPanel({
       },
     ];
 
+    const exceptionalState =
+      entry.workflowState === "held"
+        ? {
+            label: "On hold",
+            detail: entry.heldAt
+              ? `${new Date(entry.heldAt).toLocaleString()}${entry.heldByDisplayName ? ` · ${entry.heldByDisplayName}` : ""}${entry.holdReason ? ` · ${entry.holdReason}` : ""}`
+              : "Temporarily paused",
+          }
+        : entry.workflowState === "failed"
+          ? {
+              label: "Failed",
+              detail: entry.failedAt
+                ? `${new Date(entry.failedAt).toLocaleString()}${entry.failedByDisplayName ? ` · ${entry.failedByDisplayName}` : ""}${entry.lastError ? ` · ${entry.lastError}` : ""}`
+                : "Automation or processing failed",
+            }
+          : entry.workflowState === "cancelled"
+            ? {
+                label: "Cancelled",
+                detail: entry.cancelledAt
+                  ? `${new Date(entry.cancelledAt).toLocaleString()}${entry.cancelledByDisplayName ? ` · ${entry.cancelledByDisplayName}` : ""}${entry.cancellationReason ? ` · ${entry.cancellationReason}` : ""}`
+                  : "Payout removed from the active flow",
+              }
+            : null;
+
     return (
       <div className="achievement-list">
         {steps.map((step) => (
@@ -100,6 +124,15 @@ export function TokenSettlementPanel({
             <span className={step.complete ? "badge badge--pink" : "badge"}>{step.complete ? "Done" : "Pending"}</span>
           </article>
         ))}
+        {exceptionalState ? (
+          <article className="achievement-card">
+            <div>
+              <strong>{exceptionalState.label}</strong>
+              <p>{exceptionalState.detail}</p>
+            </div>
+            <span className="badge">{entry.workflowState}</span>
+          </article>
+        ) : null}
       </div>
     );
   }
@@ -131,7 +164,10 @@ export function TokenSettlementPanel({
     URL.revokeObjectURL(url);
   }
 
-  async function transitionSettlement(action: "approve" | "processing" | "settle", redemptionId: string) {
+  async function transitionSettlement(
+    action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel",
+    redemptionId: string,
+  ) {
     const receiptReference = receiptDrafts[redemptionId]?.trim() ?? "";
     const settlementNote = noteDrafts[redemptionId]?.trim() ?? "";
 
@@ -222,6 +258,39 @@ export function TokenSettlementPanel({
 
       setQueue(result.queue);
       setMessage("Automation receipt metadata saved.");
+      router.refresh();
+    } catch {
+      setError("Unable to reach the token settlement service.");
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function generateAutomationReceipt(redemptionId: string) {
+    setPendingId(redemptionId);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/token-redemptions/${redemptionId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          generateAutomationReceiptReference: true,
+          automationSettlementNote: automationNoteDrafts[redemptionId]?.trim() ?? undefined,
+        }),
+      });
+      const result = (await response.json()) as TokenSettlementResponse;
+
+      if (!response.ok || !result.ok || !result.queue) {
+        setError(result.error ?? "Unable to generate automation receipt metadata.");
+        return;
+      }
+
+      setQueue(result.queue);
+      setMessage("Automation receipt reference generated.");
       router.refresh();
     } catch {
       setError("Unable to reach the token settlement service.");
@@ -362,6 +431,9 @@ export function TokenSettlementPanel({
             <option value="queued">Queued only</option>
             <option value="approved">Approved only</option>
             <option value="processing">Processing only</option>
+            <option value="held">Held only</option>
+            <option value="failed">Failed only</option>
+            <option value="cancelled">Cancelled only</option>
           </select>
         </label>
         <label className="field">
@@ -492,6 +564,7 @@ export function TokenSettlementPanel({
                 {entry.rewardProgramName ? <span>{entry.rewardProgramName}</span> : null}
                 {entry.approvedByDisplayName ? <span>approved by {entry.approvedByDisplayName}</span> : null}
                 {entry.processingByDisplayName ? <span>processing by {entry.processingByDisplayName}</span> : null}
+                {entry.retryCount > 0 ? <span>{entry.retryCount} retries</span> : null}
                 <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
               </div>
               <p className="form-note">
@@ -500,6 +573,9 @@ export function TokenSettlementPanel({
                 {typeof entry.metadata.campaignSource === "string" ? ` · ${entry.metadata.campaignSource}` : ""}
                 {entry.rewardAssetId ? ` · asset registry linked` : ""}
                 {entry.assetName ? ` · ${entry.assetName}` : ""}
+                {entry.holdReason ? ` · hold ${entry.holdReason}` : ""}
+                {entry.lastError ? ` · error ${entry.lastError}` : ""}
+                {entry.cancellationReason ? ` · cancelled ${entry.cancellationReason}` : ""}
                 {entry.settlementNote ? ` · ${entry.settlementNote}` : ""}
               </p>
               <div className="profile-grid">
@@ -552,7 +628,7 @@ export function TokenSettlementPanel({
               </div>
               {payoutControls.payoutMode === "automation_ready" ? (
                 <p className="form-note">
-                  Auto-settlement will only finish this payout after the automation receipt reference is saved here.
+                  Auto-settlement can use a saved automation receipt reference from this queue, or generate one automatically before settlement.
                 </p>
               ) : null}
               {renderWorkflowTimeline(entry)}
@@ -566,13 +642,21 @@ export function TokenSettlementPanel({
                   Save automation metadata
                 </button>
                 <button
+                  className="button button--secondary button--small"
+                  type="button"
+                  disabled={pendingId !== null}
+                  onClick={() => void generateAutomationReceipt(entry.id)}
+                >
+                  Generate auto receipt
+                </button>
+                <button
                   className="button button--primary button--small"
                   type="button"
                   disabled={
                     pendingId !== null ||
                     !payoutControls.settlementProcessingEnabled ||
+                    !["queued", "approved", "processing"].includes(entry.workflowState) ||
                     (((entry.workflowState === "approved" && payoutControls.payoutMode === "automation_ready") ||
-                      (entry.workflowState !== "queued" && entry.workflowState !== "settled") ||
                       (entry.workflowState === "queued" && payoutControls.payoutMode === "manual")) &&
                       !canProcessAndSettle)
                   }
@@ -580,9 +664,9 @@ export function TokenSettlementPanel({
                     transitionSettlement(
                       entry.workflowState === "queued" && payoutControls.payoutMode !== "manual"
                         ? "approve"
-                        : entry.workflowState === "approved" && payoutControls.payoutMode === "automation_ready"
-                          ? "processing"
-                          : "settle",
+                      : entry.workflowState === "approved" && payoutControls.payoutMode !== "manual"
+                        ? "processing"
+                        : "settle",
                       entry.id,
                     )
                   }
@@ -591,7 +675,7 @@ export function TokenSettlementPanel({
                     ? "Updating..."
                     : entry.workflowState === "queued" && payoutControls.payoutMode !== "manual"
                       ? "Approve payout"
-                      : entry.workflowState === "approved" && payoutControls.payoutMode === "automation_ready"
+                      : entry.workflowState === "approved" && payoutControls.payoutMode !== "manual"
                         ? "Mark processing"
                         : "Mark settled"}
                 </button>
@@ -603,6 +687,46 @@ export function TokenSettlementPanel({
                     onClick={() => transitionSettlement("settle", entry.id)}
                   >
                     Force settle
+                  </button>
+                ) : null}
+                {entry.workflowState !== "settled" && entry.workflowState !== "cancelled" ? (
+                  <button
+                    className="button button--secondary button--small"
+                    type="button"
+                    disabled={pendingId !== null}
+                    onClick={() => transitionSettlement("hold", entry.id)}
+                  >
+                    Hold
+                  </button>
+                ) : null}
+                {["approved", "processing", "held"].includes(entry.workflowState) ? (
+                  <button
+                    className="button button--secondary button--small"
+                    type="button"
+                    disabled={pendingId !== null || !canProcessAndSettle}
+                    onClick={() => transitionSettlement("fail", entry.id)}
+                  >
+                    Mark failed
+                  </button>
+                ) : null}
+                {["held", "failed", "cancelled"].includes(entry.workflowState) ? (
+                  <button
+                    className="button button--secondary button--small"
+                    type="button"
+                    disabled={pendingId !== null || !canProcessAndSettle}
+                    onClick={() => transitionSettlement("requeue", entry.id)}
+                  >
+                    Requeue
+                  </button>
+                ) : null}
+                {entry.workflowState !== "settled" && entry.workflowState !== "cancelled" ? (
+                  <button
+                    className="button button--secondary button--small"
+                    type="button"
+                    disabled={pendingId !== null || !canProcessAndSettle}
+                    onClick={() => transitionSettlement("cancel", entry.id)}
+                  >
+                    Cancel
                   </button>
                 ) : null}
                 <button

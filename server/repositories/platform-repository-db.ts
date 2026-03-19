@@ -157,13 +157,23 @@ type TokenRedemptionRow = QueryResultRow & {
   eligibility_points_spent: number | string;
   token_amount: number | string;
   status: "claimed" | "settled";
-  workflow_state: "queued" | "approved" | "processing" | "settled";
+  workflow_state: "queued" | "approved" | "processing" | "held" | "failed" | "cancelled" | "settled";
   source: string;
   created_at: string;
   approved_at: string | null;
   approved_by_display_name: string | null;
   processing_started_at: string | null;
   processing_by_display_name: string | null;
+  held_at: string | null;
+  held_by_display_name: string | null;
+  hold_reason: string | null;
+  failed_at: string | null;
+  failed_by_display_name: string | null;
+  last_error: string | null;
+  cancelled_at: string | null;
+  cancelled_by_display_name: string | null;
+  cancellation_reason: string | null;
+  retry_count: number | string;
   settled_at: string | null;
   receipt_reference: string | null;
   settlement_note: string | null;
@@ -309,6 +319,11 @@ async function getUserSnapshot(
               redemptions.status, redemptions.workflow_state, redemptions.source, redemptions.created_at,
               redemptions.approved_at, approved_by_users.display_name AS approved_by_display_name,
               redemptions.processing_started_at, processing_by_users.display_name AS processing_by_display_name,
+              redemptions.held_at, held_by_users.display_name AS held_by_display_name,
+              redemptions.hold_reason, redemptions.failed_at, failed_by_users.display_name AS failed_by_display_name,
+              redemptions.last_error, redemptions.cancelled_at,
+              cancelled_by_users.display_name AS cancelled_by_display_name, redemptions.cancellation_reason,
+              redemptions.retry_count,
               redemptions.settled_at,
               redemptions.receipt_reference, redemptions.settlement_note,
               settled_by_users.display_name AS settled_by_display_name
@@ -316,6 +331,9 @@ async function getUserSnapshot(
        LEFT JOIN reward_programs programs ON programs.id = redemptions.reward_program_id
        LEFT JOIN users approved_by_users ON approved_by_users.id = redemptions.approved_by
        LEFT JOIN users processing_by_users ON processing_by_users.id = redemptions.processing_by
+       LEFT JOIN users held_by_users ON held_by_users.id = redemptions.held_by
+       LEFT JOIN users failed_by_users ON failed_by_users.id = redemptions.failed_by
+       LEFT JOIN users cancelled_by_users ON cancelled_by_users.id = redemptions.cancelled_by
        LEFT JOIN users settled_by_users ON settled_by_users.id = redemptions.settled_by
        WHERE redemptions.user_id = $1
        ORDER BY redemptions.created_at DESC
@@ -394,6 +412,16 @@ async function getUserSnapshot(
     approvedByDisplayName: row.approved_by_display_name,
     processingStartedAt: row.processing_started_at,
     processingByDisplayName: row.processing_by_display_name,
+    heldAt: row.held_at,
+    heldByDisplayName: row.held_by_display_name,
+    holdReason: row.hold_reason,
+    failedAt: row.failed_at,
+    failedByDisplayName: row.failed_by_display_name,
+    lastError: row.last_error,
+    cancelledAt: row.cancelled_at,
+    cancelledByDisplayName: row.cancelled_by_display_name,
+    cancellationReason: row.cancellation_reason,
+    retryCount: Number(row.retry_count ?? 0),
     settledAt: row.settled_at,
     receiptReference: row.receipt_reference,
     settlementNote: row.settlement_note,
@@ -422,6 +450,8 @@ async function getUserSnapshot(
   const latestClaimedRedemption = redemptionHistory.find((entry) => entry.status === "claimed");
   const latestApprovedRedemption = redemptionHistory.find((entry) => entry.workflowState === "approved");
   const latestProcessingRedemption = redemptionHistory.find((entry) => entry.workflowState === "processing");
+  const latestHeldRedemption = redemptionHistory.find((entry) => entry.workflowState === "held");
+  const latestFailedRedemption = redemptionHistory.find((entry) => entry.workflowState === "failed");
   const latestSettledRedemption = redemptionHistory.find((entry) => entry.status === "settled");
 
   if (latestClaimedRedemption) {
@@ -448,6 +478,24 @@ async function getUserSnapshot(
       tone: "info",
       title: "Payout in processing",
       detail: `${latestProcessingRedemption.tokenAmount} ${latestProcessingRedemption.asset} is currently in processing${latestProcessingRedemption.processingByDisplayName ? ` with ${latestProcessingRedemption.processingByDisplayName}` : ""}.`,
+    });
+  }
+
+  if (latestHeldRedemption) {
+    tokenNotifications.push({
+      id: `held-${latestHeldRedemption.id}`,
+      tone: "warning",
+      title: "Payout on hold",
+      detail: `${latestHeldRedemption.tokenAmount} ${latestHeldRedemption.asset} is paused${latestHeldRedemption.holdReason ? `: ${latestHeldRedemption.holdReason}` : "."}`,
+    });
+  }
+
+  if (latestFailedRedemption) {
+    tokenNotifications.push({
+      id: `failed-${latestFailedRedemption.id}`,
+      tone: "warning",
+      title: "Payout needs attention",
+      detail: `${latestFailedRedemption.tokenAmount} ${latestFailedRedemption.asset} hit a payout error${latestFailedRedemption.lastError ? `: ${latestFailedRedemption.lastError}` : "."}`,
     });
   }
 

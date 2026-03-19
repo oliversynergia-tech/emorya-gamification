@@ -229,7 +229,7 @@ test("runTokenSettlementRoute forwards settlement payload", async () => {
     transitionPendingTokenRedemption: mock.fn(
       async (input: {
         redemptionId: string;
-        action: "approve" | "processing" | "settle";
+        action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
         receiptReference: string;
         settlementNote?: string | null;
       }) => {
@@ -274,10 +274,12 @@ test("runTokenSettlementRoute forwards automation metadata updates without an ac
         redemptionId: string;
         automationReceiptReference?: string | null;
         automationSettlementNote?: string | null;
+        generateAutomationReceiptReference?: boolean;
       }) => {
         assert.equal(input.redemptionId, "redemption-2");
         assert.equal(input.automationReceiptReference, "AUTO-SETTLED-2");
         assert.equal(input.automationSettlementNote, "Settled by worker");
+        assert.equal(input.generateAutomationReceiptReference, undefined);
         return [];
       },
     ),
@@ -289,6 +291,42 @@ test("runTokenSettlementRoute forwards automation metadata updates without an ac
       body: {
         automationReceiptReference: "AUTO-SETTLED-2",
         automationSettlementNote: "Settled by worker",
+      },
+    },
+    services,
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    queue: [],
+  });
+});
+
+test("runTokenSettlementRoute forwards generated automation receipt requests", async () => {
+  const services = {
+    transitionPendingTokenRedemption: mock.fn(async () => {
+      throw new Error("should not be called");
+    }),
+    saveTokenRedemptionAutomationMetadata: mock.fn(
+      async (input: {
+        redemptionId: string;
+        automationReceiptReference?: string | null;
+        automationSettlementNote?: string | null;
+        generateAutomationReceiptReference?: boolean;
+      }) => {
+        assert.equal(input.redemptionId, "redemption-3");
+        assert.equal(input.generateAutomationReceiptReference, true);
+        return [];
+      },
+    ),
+  };
+
+  const result = await runTokenSettlementRoute(
+    {
+      redemptionId: "redemption-3",
+      body: {
+        generateAutomationReceiptReference: true,
       },
     },
     services,

@@ -8,6 +8,10 @@ type TransitionPendingTokenRedemptionDependencies = {
   listPendingSettlements: (limit?: number) => Promise<TokenSettlementItem[]>;
   approveRedemption: (input: { redemptionId: string; approvedBy: string }) => Promise<boolean>;
   markRedemptionProcessing: (input: { redemptionId: string; processingBy: string }) => Promise<boolean>;
+  holdRedemption: (input: { redemptionId: string; heldBy: string; holdReason: string | null }) => Promise<boolean>;
+  failRedemption: (input: { redemptionId: string; failedBy: string; lastError: string | null }) => Promise<boolean>;
+  requeueRedemption: (input: { redemptionId: string }) => Promise<boolean>;
+  cancelRedemption: (input: { redemptionId: string; cancelledBy: string; cancellationReason: string | null }) => Promise<boolean>;
   settleRedemption: (input: {
     redemptionId: string;
     settledBy: string;
@@ -16,7 +20,7 @@ type TransitionPendingTokenRedemptionDependencies = {
   }) => Promise<boolean>;
   createAuditEntry: (input: {
     redemptionId: string;
-    action: "approve" | "processing" | "settle";
+    action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
     changedBy: string;
     previousWorkflowState: TokenSettlementItem["workflowState"];
     nextWorkflowState: TokenSettlementItem["workflowState"];
@@ -34,7 +38,7 @@ export async function transitionPendingTokenRedemptionWithDependencies(
     settlementNote,
   }: {
     redemptionId: string;
-    action: "approve" | "processing" | "settle";
+    action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
     receiptReference: string;
     settlementNote?: string | null;
   },
@@ -54,6 +58,8 @@ export async function transitionPendingTokenRedemptionWithDependencies(
   }
 
   if (action === "approve") {
+    await dependencies.assertAdmin(currentUser);
+  } else if (action === "hold") {
     await dependencies.assertAdmin(currentUser);
   } else {
     await dependencies.assertSuperAdmin(currentUser);
@@ -113,6 +119,101 @@ export async function transitionPendingTokenRedemptionWithDependencies(
       changedBy: currentUser.id,
       previousWorkflowState: existingEntry.workflowState,
       nextWorkflowState: "processing",
+      metadata: {
+        source: existingEntry.source,
+        asset: existingEntry.asset,
+      },
+    });
+  } else if (action === "hold") {
+    const normalizedSettlementNote = settlementNote?.trim() ? settlementNote.trim() : null;
+
+    const held = await dependencies.holdRedemption({
+      redemptionId,
+      heldBy: currentUser.id,
+      holdReason: normalizedSettlementNote,
+    });
+
+    if (!held) {
+      throw new Error("Token redemption cannot be placed on hold from its current workflow state.");
+    }
+
+    await dependencies.createAuditEntry({
+      redemptionId,
+      action,
+      changedBy: currentUser.id,
+      previousWorkflowState: existingEntry.workflowState,
+      nextWorkflowState: "held",
+      settlementNote: normalizedSettlementNote,
+      metadata: {
+        source: existingEntry.source,
+        asset: existingEntry.asset,
+      },
+    });
+  } else if (action === "fail") {
+    const normalizedSettlementNote = settlementNote?.trim() ? settlementNote.trim() : null;
+
+    const failed = await dependencies.failRedemption({
+      redemptionId,
+      failedBy: currentUser.id,
+      lastError: normalizedSettlementNote,
+    });
+
+    if (!failed) {
+      throw new Error("Token redemption cannot be marked failed from its current workflow state.");
+    }
+
+    await dependencies.createAuditEntry({
+      redemptionId,
+      action,
+      changedBy: currentUser.id,
+      previousWorkflowState: existingEntry.workflowState,
+      nextWorkflowState: "failed",
+      settlementNote: normalizedSettlementNote,
+      metadata: {
+        source: existingEntry.source,
+        asset: existingEntry.asset,
+      },
+    });
+  } else if (action === "requeue") {
+    const requeued = await dependencies.requeueRedemption({
+      redemptionId,
+    });
+
+    if (!requeued) {
+      throw new Error("Token redemption cannot be requeued from its current workflow state.");
+    }
+
+    await dependencies.createAuditEntry({
+      redemptionId,
+      action,
+      changedBy: currentUser.id,
+      previousWorkflowState: existingEntry.workflowState,
+      nextWorkflowState: "queued",
+      metadata: {
+        source: existingEntry.source,
+        asset: existingEntry.asset,
+      },
+    });
+  } else if (action === "cancel") {
+    const normalizedSettlementNote = settlementNote?.trim() ? settlementNote.trim() : null;
+
+    const cancelled = await dependencies.cancelRedemption({
+      redemptionId,
+      cancelledBy: currentUser.id,
+      cancellationReason: normalizedSettlementNote,
+    });
+
+    if (!cancelled) {
+      throw new Error("Token redemption cannot be cancelled from its current workflow state.");
+    }
+
+    await dependencies.createAuditEntry({
+      redemptionId,
+      action,
+      changedBy: currentUser.id,
+      previousWorkflowState: existingEntry.workflowState,
+      nextWorkflowState: "cancelled",
+      settlementNote: normalizedSettlementNote,
       metadata: {
         source: existingEntry.source,
         asset: existingEntry.asset,

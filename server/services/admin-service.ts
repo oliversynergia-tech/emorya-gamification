@@ -42,10 +42,14 @@ import {
 } from "@/server/repositories/quest-template-admin-repository";
 import {
   approveTokenRedemption,
+  cancelTokenRedemption,
   createTokenRedemptionAudit,
+  failTokenRedemption,
   getTokenSettlementAnalytics,
+  holdTokenRedemption,
   listPendingTokenSettlements,
   markTokenRedemptionProcessing,
+  requeueTokenRedemption,
   settleTokenRedemption,
   updateTokenRedemptionAutomationMetadata,
 } from "@/server/repositories/token-redemption-repository";
@@ -491,7 +495,7 @@ export async function transitionPendingTokenRedemption({
   settlementNote,
 }: {
   redemptionId: string;
-  action: "approve" | "processing" | "settle";
+  action: "approve" | "processing" | "settle" | "hold" | "fail" | "requeue" | "cancel";
   receiptReference: string;
   settlementNote?: string | null;
 }) {
@@ -508,27 +512,44 @@ export async function transitionPendingTokenRedemption({
     listPendingSettlements: listPendingTokenSettlements,
     approveRedemption: approveTokenRedemption,
     markRedemptionProcessing: markTokenRedemptionProcessing,
+    holdRedemption: holdTokenRedemption,
+    failRedemption: failTokenRedemption,
+    requeueRedemption: requeueTokenRedemption,
+    cancelRedemption: cancelTokenRedemption,
     settleRedemption: settleTokenRedemption,
     createAuditEntry: createTokenRedemptionAudit,
   });
+}
+
+function buildAutomationReceiptReference(redemptionId: string) {
+  const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  return `AUTO-${dateTag}-${redemptionId.slice(0, 8).toUpperCase()}`;
 }
 
 export async function saveTokenRedemptionAutomationMetadata({
   redemptionId,
   automationReceiptReference,
   automationSettlementNote,
+  generateAutomationReceiptReference,
 }: {
   redemptionId: string;
   automationReceiptReference?: string | null;
   automationSettlementNote?: string | null;
+  generateAutomationReceiptReference?: boolean;
 }) {
   const currentUser = await getAuthenticatedUser();
   await assertAdminUser(currentUser);
 
+  const resolvedReceiptReference =
+    generateAutomationReceiptReference && !automationReceiptReference?.trim()
+      ? buildAutomationReceiptReference(redemptionId)
+      : automationReceiptReference;
+
   const updated = await updateTokenRedemptionAutomationMetadata({
     redemptionId,
-    automationReceiptReference,
+    automationReceiptReference: resolvedReceiptReference,
     automationSettlementNote,
+    generatedBy: currentUser?.id ?? null,
   });
 
   if (!updated) {
