@@ -745,6 +745,13 @@ a {
   gap: 6px;
 }
 
+.reward-state-bars span {
+  color: var(--muted);
+  font-size: var(--text-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .quest-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -807,6 +814,67 @@ a {
 
 .receipt-detail {
   margin-top: 18px;
+}
+
+.reward-summary-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin: 16px 0 18px;
+}
+
+.reward-summary-card {
+  min-height: 120px;
+  justify-content: flex-start;
+}
+
+.reward-summary-card strong {
+  line-height: 1.05;
+}
+
+.reward-receipt-card,
+.reward-history-card,
+.reward-notification-card {
+  align-items: flex-start;
+}
+
+.reward-receipt-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.reward-timeline {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.reward-timeline__step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(223, 182, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.012)),
+    rgba(18, 9, 30, 0.88);
+}
+
+.reward-timeline__step--complete {
+  border-color: rgba(223, 182, 255, 0.2);
+}
+
+.reward-timeline__step--active {
+  border-color: rgba(240, 80, 158, 0.3);
+  box-shadow: 0 0 0 1px rgba(240, 80, 158, 0.1), var(--shadow-soft);
+  background:
+    radial-gradient(circle at top right, rgba(240, 80, 158, 0.08), transparent 0 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)),
+    rgba(19, 10, 32, 0.92);
 }
 
 .referral-campaign-card {

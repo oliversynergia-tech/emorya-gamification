@@ -88,27 +88,109 @@ export default async function LeaderboardPage() {
               <h3>Why climbing the board matters</h3>
             </div>
           </div>
-          <div className="info-grid">
-            <div className="info-card">
-              <span>Weekly tier</span>
-              <strong>{data.user.weeklyProgress.tierLabel}</strong>
-            </div>
-            <div className="info-card">
-              <span>Eligibility points</span>
-              <strong>{data.user.tokenProgram.eligibilityPoints}</strong>
-            </div>
-            <div className="info-card">
-              <span>Monthly referral upside</span>
-              <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} XP</strong>
-            </div>
-            <div className="info-card">
-              <span>Annual referral upside</span>
-              <strong>{data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.amount} {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.asset}</strong>
-            </div>
-            <div className="info-card">
+          <div className="reward-ladder">
+            <article className="reward-ladder__card">
+              <span>Weekly XP</span>
+              <strong>{data.user.weeklyProgress.xp} XP</strong>
+              <small>{data.user.weeklyProgress.tierLabel} is the current output band.</small>
+              <div className="reward-ladder__meter">
+                <div
+                  className="reward-ladder__fill"
+                  style={{ width: `${Math.min(data.user.weeklyProgress.progress * 100, 100)}%` }}
+                />
+              </div>
+            </article>
+            <article className="reward-ladder__card">
+              <span>Eligibility bank</span>
+              <strong>{data.user.tokenProgram.eligibilityPoints} pts</strong>
+              <small>{data.user.tokenProgram.status === "redeemable" ? "Redemption is unlocked." : data.user.tokenProgram.nextStep}</small>
+              <div className="reward-ladder__meter">
+                <div
+                  className="reward-ladder__fill reward-ladder__fill--gold"
+                  style={{
+                    width: `${Math.min(
+                      (data.user.tokenProgram.eligibilityPoints /
+                        Math.max(data.user.tokenProgram.nextRedemptionPoints ?? data.user.tokenProgram.minimumPoints, 1)) *
+                        100,
+                      100,
+                    )}%`,
+                  }}
+                />
+              </div>
+            </article>
+            <article className="reward-ladder__card">
+              <span>Premium lift</span>
+              <strong>
+                {data.economy.xpMultipliers.monthly.toFixed(2)}x / {data.economy.xpMultipliers.annual.toFixed(2)}x XP
+              </strong>
+              <small>
+                Token yield also scales to {data.economy.tokenMultipliers.monthly.toFixed(2)}x /{" "}
+                {data.economy.tokenMultipliers.annual.toFixed(2)}x.
+              </small>
+            </article>
+            <article className="reward-ladder__card">
+              <span>Referral upside</span>
+              <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} XP / +{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP</strong>
+              <small>
+                Annual conversions also project{" "}
+                {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward
+                  ? `${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.amount} ${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.asset}`
+                  : "direct token upside"}
+                .
+              </small>
+            </article>
+          </div>
+          <div className="reward-visual-grid">
+            <article className="reward-visual-card">
+              <span>Projected payout</span>
+              <strong>
+                {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
+              </strong>
+              <small>
+                XP drives position, eligibility points drive redemption readiness, and the payout rail determines when rewards settle.
+              </small>
+            </article>
+            <article className="reward-visual-card">
               <span>Claimed vs settled</span>
-              <strong>{data.user.tokenProgram.claimedBalance} / {data.user.tokenProgram.settledBalance}</strong>
-            </div>
+              <strong>
+                {data.user.tokenProgram.claimedBalance} claimed / {data.user.tokenProgram.settledBalance} settled
+              </strong>
+              <div className="reward-state-bars">
+                <div>
+                  <span>Claimed</span>
+                  <div className="reward-state-bars__track">
+                    <div
+                      className="reward-state-bars__fill"
+                      style={{
+                        width: `${Math.min(
+                          (data.user.tokenProgram.claimedBalance /
+                            Math.max(data.user.tokenProgram.claimedBalance + data.user.tokenProgram.settledBalance, 1)) *
+                            100,
+                          100,
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <span>Settled</span>
+                  <div className="reward-state-bars__track">
+                    <div
+                      className="reward-state-bars__fill reward-state-bars__fill--gold"
+                      style={{
+                        width: `${Math.min(
+                          (data.user.tokenProgram.settledBalance /
+                            Math.max(data.user.tokenProgram.claimedBalance + data.user.tokenProgram.settledBalance, 1)) *
+                            100,
+                          100,
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <small>Claimed means reserved. Settled means payout completed.</small>
+            </article>
           </div>
           <p className="form-note">
             Leaderboard pressure is only one layer. The stronger loop is weekly XP, referral quality, and token-redemption readiness through the xPortal-linked reward path.

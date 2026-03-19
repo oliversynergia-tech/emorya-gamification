@@ -4,6 +4,21 @@ import { useMemo, useState } from "react";
 
 import type { DashboardData } from "@/lib/types";
 
+function getWorkflowTone(
+  state: DashboardData["user"]["tokenProgram"]["redemptionHistory"][number]["workflowState"],
+) {
+  switch (state) {
+    case "settled":
+      return "success";
+    case "processing":
+      return "warning";
+    case "approved":
+      return "info";
+    default:
+      return "default";
+  }
+}
+
 function downloadReceipt(entry: DashboardData["user"]["tokenProgram"]["redemptionHistory"][number]) {
   const lines = [
     "Emorya Reward Receipt",
@@ -76,9 +91,22 @@ export function TokenReceiptHistoryPanel({
     ];
 
     return (
-      <div className="achievement-list">
+      <div className="reward-timeline">
         {steps.map((step) => (
-          <article key={`${entry.id}-${step.label}`} className="achievement-card">
+          <article
+            key={`${entry.id}-${step.label}`}
+            className={`reward-timeline__step ${step.complete ? "reward-timeline__step--complete" : ""} ${
+              step.label === "Settled" && entry.workflowState === "settled"
+                ? "reward-timeline__step--active"
+                : step.label === "Processing" && entry.workflowState === "processing"
+                  ? "reward-timeline__step--active"
+                  : step.label === "Approved" && entry.workflowState === "approved"
+                    ? "reward-timeline__step--active"
+                    : step.label === "Claimed" && entry.workflowState === "queued"
+                      ? "reward-timeline__step--active"
+                      : ""
+            }`}
+          >
             <div>
               <strong>{step.label}</strong>
               <p>{step.detail}</p>
@@ -101,8 +129,16 @@ export function TokenReceiptHistoryPanel({
       </div>
       {selectedEntry ? (
         <div className="receipt-detail">
-          <article className="achievement-card achievement-card--unlocked">
+          <article className="achievement-card achievement-card--unlocked reward-receipt-card">
             <div>
+              <div className="reward-receipt-card__meta">
+                <span className={`badge ${getWorkflowTone(selectedEntry.workflowState) === "success" ? "badge--pink" : ""}`}>
+                  {selectedEntry.workflowState}
+                </span>
+                <span className="badge">{selectedEntry.asset}</span>
+                {selectedEntry.rewardProgramName ? <span className="badge">{selectedEntry.rewardProgramName}</span> : null}
+                <span className="badge">{selectedEntry.source}</span>
+              </div>
               <strong>{selectedEntry.status === "settled" ? "Selected settled payout" : "Selected claimed payout"}</strong>
               <p>
                 {selectedEntry.tokenAmount} {selectedEntry.asset} from {selectedEntry.source}.
@@ -110,7 +146,7 @@ export function TokenReceiptHistoryPanel({
                 {selectedEntry.receiptReference ? ` Receipt ${selectedEntry.receiptReference}.` : ""}
               </p>
               {selectedEntry.settlementNote ? <p>{selectedEntry.settlementNote}</p> : null}
-              <p>Workflow state: {selectedEntry.workflowState}</p>
+              <p>Workflow state: {selectedEntry.workflowState.replaceAll("_", " ")}.</p>
             </div>
             <div className="achievement-card__side">
               <span>{new Date(selectedEntry.createdAt).toLocaleDateString()}</span>
@@ -120,36 +156,42 @@ export function TokenReceiptHistoryPanel({
               </button>
             </div>
           </article>
-          <div className="info-grid">
-            <div className="info-card">
-              <span>Reward program</span>
-              <strong>{selectedEntry.rewardProgramName ?? "Unassigned"}</strong>
+          <div className="reward-summary-grid">
+            <div className="info-card reward-summary-card">
+              <span>Payout amount</span>
+              <strong>
+                {selectedEntry.tokenAmount} {selectedEntry.asset}
+              </strong>
             </div>
-            <div className="info-card">
-              <span>Source</span>
-              <strong>{selectedEntry.source}</strong>
-            </div>
-            <div className="info-card">
+            <div className="info-card reward-summary-card">
               <span>Eligibility spent</span>
               <strong>{selectedEntry.eligibilityPointsSpent} pts</strong>
             </div>
-            <div className="info-card">
-              <span>Workflow state</span>
-              <strong>{selectedEntry.workflowState}</strong>
+            <div className="info-card reward-summary-card">
+              <span>Payout state</span>
+              <strong>{selectedEntry.workflowState.replaceAll("_", " ")}</strong>
             </div>
-            <div className="info-card">
+            <div className="info-card reward-summary-card">
+              <span>Reward program</span>
+              <strong>{selectedEntry.rewardProgramName ?? "Unassigned"}</strong>
+            </div>
+            <div className="info-card reward-summary-card">
+              <span>Source</span>
+              <strong>{selectedEntry.source}</strong>
+            </div>
+            <div className="info-card reward-summary-card">
               <span>Approved by</span>
               <strong>{selectedEntry.approvedByDisplayName ?? "Pending"}</strong>
             </div>
-            <div className="info-card">
+            <div className="info-card reward-summary-card">
               <span>Processing by</span>
               <strong>{selectedEntry.processingByDisplayName ?? "Pending"}</strong>
             </div>
-            <div className="info-card">
+            <div className="info-card reward-summary-card">
               <span>Settled by</span>
               <strong>{selectedEntry.settledByDisplayName ?? "Pending"}</strong>
             </div>
-            <div className="info-card">
+            <div className="info-card reward-summary-card">
               <span>Receipt reference</span>
               <strong>{selectedEntry.receiptReference ?? "Not issued"}</strong>
             </div>
@@ -159,7 +201,7 @@ export function TokenReceiptHistoryPanel({
             {history.map((entry) => (
               <article
                 key={entry.id}
-                className={`achievement-card ${selectedEntry.id === entry.id ? "achievement-card--unlocked" : ""}`}
+                className={`achievement-card reward-history-card ${selectedEntry.id === entry.id ? "achievement-card--unlocked" : ""}`}
               >
                 <div>
                   <strong>
@@ -178,6 +220,7 @@ export function TokenReceiptHistoryPanel({
                   </p>
                 </div>
                 <div className="achievement-card__side">
+                  <span className="badge">{entry.workflowState}</span>
                   <span>{entry.receiptReference ?? "No receipt yet"}</span>
                   <span>{entry.eligibilityPointsSpent} pts</span>
                   <button
