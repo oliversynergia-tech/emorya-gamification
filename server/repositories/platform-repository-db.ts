@@ -1077,6 +1077,10 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     string,
     {
       walletLinkedParticipantCount: number;
+      firstTouchToWalletLinkCount: number;
+      firstTouchToWalletLinkDaysTotal: number;
+      walletToPremiumCount: number;
+      walletToPremiumDaysTotal: number;
       starterPathCompleteCount: number;
       rewardEligibleCount: number;
       retainedActiveCount: number;
@@ -1224,6 +1228,10 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       }
       const current = packProgressMap.get(participant.pack_id) ?? {
         walletLinkedParticipantCount: 0,
+        firstTouchToWalletLinkCount: 0,
+        firstTouchToWalletLinkDaysTotal: 0,
+        walletToPremiumCount: 0,
+        walletToPremiumDaysTotal: 0,
         starterPathCompleteCount: 0,
         rewardEligibleCount: 0,
         retainedActiveCount: 0,
@@ -1250,14 +1258,29 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       }
       const sourceUser = progressUserMap.get(participant.user_id);
       const firstInteractionAt = packFirstInteractionMap.get(`${participant.pack_id}:${participant.user_id}`);
+      const earliestWalletLink = walletMap.get(participant.user_id) ?? null;
+      if (
+        earliestWalletLink &&
+        firstInteractionAt &&
+        new Date(earliestWalletLink).getTime() >= new Date(firstInteractionAt).getTime()
+      ) {
+        current.firstTouchToWalletLinkCount += 1;
+        current.firstTouchToWalletLinkDaysTotal +=
+          (new Date(earliestWalletLink).getTime() - new Date(firstInteractionAt).getTime()) / 86400000;
+      }
       if (
         sourceUser?.subscription_started_at &&
-        firstInteractionAt &&
-        new Date(sourceUser.subscription_started_at).getTime() >= new Date(firstInteractionAt).getTime()
+        earliestWalletLink &&
+        new Date(sourceUser.subscription_started_at).getTime() >= new Date(earliestWalletLink).getTime()
       ) {
-        current.premiumUpgradeCount += 1;
-        current.premiumUpgradeDaysTotal +=
-          (new Date(sourceUser.subscription_started_at).getTime() - new Date(firstInteractionAt).getTime()) / 86400000;
+        current.walletToPremiumCount += 1;
+        current.walletToPremiumDaysTotal +=
+          (new Date(sourceUser.subscription_started_at).getTime() - new Date(earliestWalletLink).getTime()) / 86400000;
+        if (firstInteractionAt && new Date(sourceUser.subscription_started_at).getTime() >= new Date(firstInteractionAt).getTime()) {
+          current.premiumUpgradeCount += 1;
+          current.premiumUpgradeDaysTotal +=
+            (new Date(sourceUser.subscription_started_at).getTime() - new Date(firstInteractionAt).getTime()) / 86400000;
+        }
       }
       packProgressMap.set(participant.pack_id, current);
     }
@@ -1356,6 +1379,10 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         participantCount: 0,
         walletLinkedParticipantCount: 0,
         walletLinkRate: 0,
+        firstTouchToWalletLinkCount: 0,
+        averageFirstTouchToWalletLinkDays: null,
+        walletToPremiumCount: 0,
+        averageWalletToPremiumDays: null,
         starterPathCompleteCount: 0,
         starterPathCompletionRate: 0,
         rewardEligibleCount: 0,
@@ -1412,6 +1439,16 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       current.rewardEligibleCount = progress.rewardEligibleCount;
       current.walletLinkRate =
         current.participantCount > 0 ? progress.walletLinkedParticipantCount / current.participantCount : 0;
+      current.firstTouchToWalletLinkCount = progress.firstTouchToWalletLinkCount;
+      current.averageFirstTouchToWalletLinkDays =
+        progress.firstTouchToWalletLinkCount > 0
+          ? progress.firstTouchToWalletLinkDaysTotal / progress.firstTouchToWalletLinkCount
+          : null;
+      current.walletToPremiumCount = progress.walletToPremiumCount;
+      current.averageWalletToPremiumDays =
+        progress.walletToPremiumCount > 0
+          ? progress.walletToPremiumDaysTotal / progress.walletToPremiumCount
+          : null;
       current.starterPathCompletionRate =
         current.participantCount > 0 ? progress.starterPathCompleteCount / current.participantCount : 0;
       current.rewardEligibilityRate =

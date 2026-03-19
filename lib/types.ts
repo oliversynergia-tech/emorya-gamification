@@ -641,6 +641,10 @@ export type AdminOverviewData = {
       participantCount: number;
       walletLinkedParticipantCount: number;
       walletLinkRate: number;
+      firstTouchToWalletLinkCount: number;
+      averageFirstTouchToWalletLinkDays: number | null;
+      walletToPremiumCount: number;
+      averageWalletToPremiumDays: number | null;
       starterPathCompleteCount: number;
       starterPathCompletionRate: number;
       rewardEligibleCount: number;
