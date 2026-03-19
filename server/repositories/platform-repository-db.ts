@@ -119,6 +119,7 @@ type PackProgressUserRow = QueryResultRow & {
   total_xp: number;
   current_streak: number;
   subscription_tier: SubscriptionTier;
+  subscription_started_at: string | null;
   attribution_source: string | null;
 };
 
@@ -151,6 +152,18 @@ type PackCompletedQuestRow = QueryResultRow & {
   verification_type: VerificationType;
   required_level: number;
   is_premium_preview: boolean;
+};
+
+type PackFirstInteractionRow = QueryResultRow & {
+  pack_id: string;
+  user_id: string;
+  first_interaction_at: string;
+};
+
+type PackReferralPerformanceRow = QueryResultRow & {
+  pack_id: string;
+  invited_count: string;
+  converted_count: string;
 };
 
 type QuestRow = QueryResultRow & {
@@ -1031,6 +1044,34 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
        ON qc.quest_id = q.id
      WHERE q.metadata ? 'campaignPackId'`,
   );
+  const [packFirstInteractionResult, packReferralPerformanceResult] = await Promise.all([
+    runQuery<PackFirstInteractionRow>(
+      `SELECT q.metadata->>'campaignPackId' AS pack_id,
+              qc.user_id::text AS user_id,
+              MIN(COALESCE(qc.completed_at, qc.created_at))::text AS first_interaction_at
+       FROM quest_definitions q
+       INNER JOIN quest_completions qc
+         ON qc.quest_id = q.id
+       WHERE q.metadata ? 'campaignPackId'
+       GROUP BY q.metadata->>'campaignPackId', qc.user_id`,
+    ),
+    runQuery<PackReferralPerformanceRow>(
+      `SELECT participants.pack_id,
+              COUNT(r.id)::text AS invited_count,
+              COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE)::text AS converted_count
+       FROM (
+         SELECT DISTINCT q.metadata->>'campaignPackId' AS pack_id,
+                         qc.user_id
+         FROM quest_definitions q
+         INNER JOIN quest_completions qc
+           ON qc.quest_id = q.id
+         WHERE q.metadata ? 'campaignPackId'
+       ) participants
+       LEFT JOIN referrals r
+         ON r.referrer_user_id = participants.user_id
+       GROUP BY participants.pack_id`,
+    ),
+  ]);
   const participantIds = Array.from(new Set(packParticipantsResult.rows.map((row) => row.user_id)));
   const packProgressMap = new Map<
     string,
@@ -1038,13 +1079,36 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       walletLinkedParticipantCount: number;
       starterPathCompleteCount: number;
       rewardEligibleCount: number;
+      retainedActiveCount: number;
+      weeklyXpTotal: number;
+      engagedWeeklyXpCount: number;
+      premiumUpgradeCount: number;
+      premiumUpgradeDaysTotal: number;
     }
   >();
+  const packFirstInteractionMap = new Map(
+    packFirstInteractionResult.rows.map((row) => [`${row.pack_id}:${row.user_id}`, row.first_interaction_at] as const),
+  );
+  const packReferralMap = new Map(
+    packReferralPerformanceResult.rows.map((row) => {
+      const invitedCount = Number(row.invited_count);
+      const convertedCount = Number(row.converted_count);
+
+      return [
+        row.pack_id,
+        {
+          referralInviteCount: invitedCount,
+          referralConvertedCount: convertedCount,
+          referralConversionRate: invitedCount > 0 ? convertedCount / invitedCount : 0,
+        },
+      ] as const;
+    }),
+  );
 
   if (participantIds.length > 0) {
     const [progressUsers, packWallets, packSocials, packReferrals, packWeeklyXp, packCompletedQuests] = await Promise.all([
       runQuery<PackProgressUserRow>(
-        `SELECT id, level, total_xp, current_streak, subscription_tier, attribution_source
+        `SELECT id, level, total_xp, current_streak, subscription_tier, subscription_started_at, attribution_source
          FROM users
          WHERE id = ANY($1::uuid[])`,
         [participantIds],
@@ -1113,6 +1177,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     }
     const referralMap = new Map(packReferrals.rows.map((row) => [row.user_id, row] as const));
     const weeklyXpMap = new Map(packWeeklyXp.rows.map((row) => [row.user_id, Number(row.weekly_xp)] as const));
+    const progressUserMap = new Map(progressUsers.rows.map((user) => [user.id, user] as const));
     const completedQuestMap = new Map<string, PackCompletedQuestRow[]>();
     for (const row of packCompletedQuests.rows) {
       const current = completedQuestMap.get(row.user_id) ?? [];
@@ -1161,6 +1226,11 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         walletLinkedParticipantCount: 0,
         starterPathCompleteCount: 0,
         rewardEligibleCount: 0,
+        retainedActiveCount: 0,
+        weeklyXpTotal: 0,
+        engagedWeeklyXpCount: 0,
+        premiumUpgradeCount: 0,
+        premiumUpgradeDaysTotal: 0,
       };
       if (progress.walletLinked) {
         current.walletLinkedParticipantCount += 1;
@@ -1170,6 +1240,24 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       }
       if (progress.rewardEligible) {
         current.rewardEligibleCount += 1;
+      }
+      if (progress.weeklyXp > 0) {
+        current.retainedActiveCount += 1;
+      }
+      current.weeklyXpTotal += progress.weeklyXp;
+      if (progress.weeklyXp >= 250) {
+        current.engagedWeeklyXpCount += 1;
+      }
+      const sourceUser = progressUserMap.get(participant.user_id);
+      const firstInteractionAt = packFirstInteractionMap.get(`${participant.pack_id}:${participant.user_id}`);
+      if (
+        sourceUser?.subscription_started_at &&
+        firstInteractionAt &&
+        new Date(sourceUser.subscription_started_at).getTime() >= new Date(firstInteractionAt).getTime()
+      ) {
+        current.premiumUpgradeCount += 1;
+        current.premiumUpgradeDaysTotal +=
+          (new Date(sourceUser.subscription_started_at).getTime() - new Date(firstInteractionAt).getTime()) / 86400000;
       }
       packProgressMap.set(participant.pack_id, current);
     }
@@ -1272,9 +1360,19 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         starterPathCompletionRate: 0,
         rewardEligibleCount: 0,
         rewardEligibilityRate: 0,
+        referralInviteCount: 0,
+        referralConvertedCount: 0,
+        referralConversionRate: 0,
+        retainedActiveCount: 0,
+        retainedActivityRate: 0,
+        averageWeeklyXp: 0,
+        engagedWeeklyXpCount: 0,
+        engagedWeeklyXpRate: 0,
         premiumParticipantCount: 0,
         annualParticipantCount: 0,
         premiumConversionRate: 0,
+        premiumUpgradeCount: 0,
+        averagePremiumUpgradeDays: null,
         createdAt: quest.createdAt,
         lastUpdatedAt: quest.updatedAt,
       };
@@ -1318,6 +1416,23 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         current.participantCount > 0 ? progress.starterPathCompleteCount / current.participantCount : 0;
       current.rewardEligibilityRate =
         current.participantCount > 0 ? progress.rewardEligibleCount / current.participantCount : 0;
+      current.retainedActiveCount = progress.retainedActiveCount;
+      current.retainedActivityRate =
+        current.participantCount > 0 ? progress.retainedActiveCount / current.participantCount : 0;
+      current.averageWeeklyXp =
+        current.participantCount > 0 ? progress.weeklyXpTotal / current.participantCount : 0;
+      current.engagedWeeklyXpCount = progress.engagedWeeklyXpCount;
+      current.engagedWeeklyXpRate =
+        current.participantCount > 0 ? progress.engagedWeeklyXpCount / current.participantCount : 0;
+      current.premiumUpgradeCount = progress.premiumUpgradeCount;
+      current.averagePremiumUpgradeDays =
+        progress.premiumUpgradeCount > 0 ? progress.premiumUpgradeDaysTotal / progress.premiumUpgradeCount : null;
+    }
+    const referralPerformance = packReferralMap.get(packId);
+    if (referralPerformance) {
+      current.referralInviteCount = referralPerformance.referralInviteCount;
+      current.referralConvertedCount = referralPerformance.referralConvertedCount;
+      current.referralConversionRate = referralPerformance.referralConversionRate;
     }
     packAnalyticsMap.set(packId, current);
   }

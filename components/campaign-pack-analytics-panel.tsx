@@ -126,6 +126,19 @@ export function CampaignPackAnalyticsPanel({
                 {` `}
                 {(pack.rewardEligibilityRate * 100).toFixed(0)}% ({pack.rewardEligibleCount}).
               </p>
+              <p className="form-note">
+                Referrals: {pack.referralInviteCount} invited / {pack.referralConvertedCount} converted
+                {` `}
+                ({(pack.referralConversionRate * 100).toFixed(0)}%). Weekly quality: {(pack.retainedActivityRate * 100).toFixed(0)}%
+                active, {pack.averageWeeklyXp.toFixed(0)} avg XP, {(pack.engagedWeeklyXpRate * 100).toFixed(0)}% above 250 XP.
+              </p>
+              <p className="form-note">
+                Premium upgrades after first pack touch: {pack.premiumUpgradeCount}
+                {pack.averagePremiumUpgradeDays !== null
+                  ? `, averaging ${pack.averagePremiumUpgradeDays.toFixed(1)} days`
+                  : ", no observed premium upgrades yet"}
+                .
+              </p>
             </div>
             <div className="achievement-card__side">
               <span>{pack.lifecycleState}</span>
