@@ -28,6 +28,7 @@ export function SiteShell({
     <div className="shell">
       <div className="shell__glow shell__glow--left" />
       <div className="shell__glow shell__glow--right" />
+      <div className="shell__mesh" />
       <header className="topbar">
         <div className="brand-block">
           <Link href="/" className="brand-link" aria-label="Emorya home">

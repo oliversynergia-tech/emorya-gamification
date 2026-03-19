@@ -52,6 +52,7 @@
   --shadow-soft: 0 18px 50px rgba(3, 1, 10, 0.26);
   --shadow-card: 0 14px 34px rgba(5, 2, 12, 0.22);
   --shadow-button: 0 14px 28px rgba(5, 2, 12, 0.18);
+  --section-max: 1200px;
 }
 
 * {
@@ -117,6 +118,19 @@ a {
   padding: 0 24px 80px;
 }
 
+.shell__mesh {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.3;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at 50% 28%, black 24%, transparent 78%);
+}
+
 .shell__glow {
   position: absolute;
   inset: auto;
@@ -165,13 +179,17 @@ a {
   justify-content: space-between;
   gap: var(--space-5);
   align-items: center;
-  max-width: 1200px;
+  max-width: var(--section-max);
   margin: 0 auto var(--space-6);
-  padding: 18px 0;
+  padding: 18px 18px 16px;
   min-height: 88px;
-  background: rgba(13, 6, 22, 0.76);
+  background:
+    linear-gradient(180deg, rgba(27, 13, 42, 0.92), rgba(12, 6, 21, 0.82)),
+    rgba(13, 6, 22, 0.76);
   backdrop-filter: blur(18px) saturate(130%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 0;
+  border-radius: 0 0 28px 28px;
   box-shadow: 0 14px 34px rgba(5, 2, 12, 0.16);
 }
 
@@ -276,11 +294,19 @@ a {
   transform: translateY(-1px);
 }
 
+.nav__link:hover {
+  color: var(--text);
+  border-color: rgba(223, 182, 255, 0.24);
+  background:
+    linear-gradient(180deg, rgba(223, 182, 255, 0.09), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
 .content {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-  max-width: 1200px;
+  max-width: var(--section-max);
   margin: 0 auto;
 }
 
@@ -297,6 +323,7 @@ a {
   display: grid;
   grid-template-columns: 1.35fr 0.8fr;
   gap: 24px;
+  align-items: stretch;
 }
 
 .hero,
@@ -330,10 +357,15 @@ a {
 .panel {
   padding: var(--space-5);
   border-radius: var(--radius-panel);
+  overflow: hidden;
 }
 
 .panel--hero {
   min-height: 420px;
+  background:
+    radial-gradient(circle at top right, rgba(240, 80, 158, 0.1), transparent 0 28%),
+    radial-gradient(circle at left center, rgba(143, 93, 255, 0.12), transparent 0 32%),
+    var(--surface);
 }
 
 .panel--hero-compact {
@@ -346,12 +378,29 @@ a {
   gap: 16px;
 }
 
+.page-aside {
+  position: relative;
+}
+
+.page-aside::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(223, 182, 255, 0.36), transparent);
+}
+
 .panel__header {
   display: flex;
   justify-content: space-between;
   gap: var(--space-3);
   align-items: flex-start;
   margin-bottom: var(--space-4);
+}
+
+.panel__header > div {
+  display: grid;
+  gap: 6px;
 }
 
 .panel h2,
@@ -512,6 +561,36 @@ a {
   box-shadow: var(--shadow-card);
 }
 
+.stat-card,
+.metric-card,
+.info-card,
+.tier-card,
+.admin-card,
+.reward-ladder__card,
+.reward-visual-card,
+.achievement-card,
+.quest-card,
+.leaderboard__row,
+.connection-row {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.metric-card:hover,
+.info-card:hover,
+.reward-ladder__card:hover,
+.reward-visual-card:hover,
+.achievement-card:hover,
+.quest-card:hover,
+.leaderboard__row:hover {
+  transform: translateY(-2px);
+  border-color: rgba(223, 182, 255, 0.22);
+  box-shadow: 0 18px 42px rgba(5, 2, 12, 0.26);
+}
+
 .stat-card span,
 .metric-card span,
 .info-card span {
@@ -536,6 +615,20 @@ a {
   line-height: 1;
 }
 
+.metric-card {
+  position: relative;
+}
+
+.metric-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(240, 80, 158, 0.8), rgba(143, 93, 255, 0.85));
+  opacity: 0.72;
+}
+
 .page-hero--auth .panel--hero,
 .page-hero--profile .panel--hero {
   background:
@@ -553,6 +646,40 @@ a {
   background:
     radial-gradient(circle at top right, rgba(143, 93, 255, 0.18), transparent 0 28%),
     linear-gradient(180deg, rgba(52, 25, 85, 0.52), rgba(16, 8, 28, 0.95));
+}
+
+.badge {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.button--primary {
+  box-shadow: 0 16px 34px rgba(240, 80, 158, 0.18);
+}
+
+.button--secondary {
+  box-shadow: 0 12px 28px rgba(143, 93, 255, 0.12);
+}
+
+.lane-chip-row .badge {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.014)),
+    rgba(255, 255, 255, 0.025);
+}
+
+.page-hero + .grid,
+.grid + .grid {
+  position: relative;
+}
+
+.page-hero + .grid::before,
+.grid + .grid::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(223, 182, 255, 0.22), transparent);
 }
 
 .lane-theme--direct {
