@@ -639,6 +639,12 @@ export type AdminOverviewData = {
       completionCount: number;
       approvedCompletionCount: number;
       participantCount: number;
+      walletLinkedParticipantCount: number;
+      walletLinkRate: number;
+      starterPathCompleteCount: number;
+      starterPathCompletionRate: number;
+      rewardEligibleCount: number;
+      rewardEligibilityRate: number;
       premiumParticipantCount: number;
       annualParticipantCount: number;
       premiumConversionRate: number;

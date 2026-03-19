@@ -88,6 +88,7 @@ import {
 } from "@/server/services/referral-rules";
 import { syncReferralRewardsForReferrer } from "@/server/services/referral-service";
 import { getUserProgressState } from "@/server/services/user-progress-state";
+import { deriveUserProgressState } from "@/server/services/user-progress-state";
 import { resolveUserJourneyState } from "@/server/services/user-journey-state";
 import type { UserProgressState, UserJourneyState } from "@/lib/types";
 
@@ -105,6 +106,51 @@ type UserRow = QueryResultRow & {
 type SocialConnectionRow = QueryResultRow & {
   platform: SupportedSocialPlatform;
   verified: boolean;
+};
+
+type PackParticipantRow = QueryResultRow & {
+  pack_id: string;
+  user_id: string;
+};
+
+type PackProgressUserRow = QueryResultRow & {
+  id: string;
+  level: number;
+  total_xp: number;
+  current_streak: number;
+  subscription_tier: SubscriptionTier;
+  attribution_source: string | null;
+};
+
+type PackWalletRow = QueryResultRow & {
+  user_id: string;
+  created_at: string;
+};
+
+type PackSocialRow = QueryResultRow & {
+  user_id: string;
+  platform: SupportedSocialPlatform;
+};
+
+type PackReferralCountsRow = QueryResultRow & {
+  user_id: string;
+  successful_referrals: string;
+  monthly_premium_referrals: string;
+  annual_premium_referrals: string;
+};
+
+type PackWeeklyXpRow = QueryResultRow & {
+  user_id: string;
+  weekly_xp: string;
+};
+
+type PackCompletedQuestRow = QueryResultRow & {
+  user_id: string;
+  slug: string;
+  category: Quest["category"];
+  verification_type: VerificationType;
+  required_level: number;
+  is_premium_preview: boolean;
 };
 
 type QuestRow = QueryResultRow & {
@@ -977,6 +1023,158 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     ),
   ]);
 
+  const packParticipantsResult = await runQuery<PackParticipantRow>(
+    `SELECT DISTINCT q.metadata->>'campaignPackId' AS pack_id,
+                     qc.user_id::text AS user_id
+     FROM quest_definitions q
+     INNER JOIN quest_completions qc
+       ON qc.quest_id = q.id
+     WHERE q.metadata ? 'campaignPackId'`,
+  );
+  const participantIds = Array.from(new Set(packParticipantsResult.rows.map((row) => row.user_id)));
+  const packProgressMap = new Map<
+    string,
+    {
+      walletLinkedParticipantCount: number;
+      starterPathCompleteCount: number;
+      rewardEligibleCount: number;
+    }
+  >();
+
+  if (participantIds.length > 0) {
+    const [progressUsers, packWallets, packSocials, packReferrals, packWeeklyXp, packCompletedQuests] = await Promise.all([
+      runQuery<PackProgressUserRow>(
+        `SELECT id, level, total_xp, current_streak, subscription_tier, attribution_source
+         FROM users
+         WHERE id = ANY($1::uuid[])`,
+        [participantIds],
+      ),
+      runQuery<PackWalletRow>(
+        `SELECT DISTINCT ON (user_id)
+                user_id::text AS user_id,
+                created_at
+         FROM user_identities
+         WHERE user_id = ANY($1::uuid[])
+           AND provider = 'multiversx'
+           AND status = 'active'
+         ORDER BY user_id, created_at ASC`,
+        [participantIds],
+      ),
+      runQuery<PackSocialRow>(
+        `SELECT user_id::text AS user_id, platform
+         FROM social_connections
+         WHERE user_id = ANY($1::uuid[])
+           AND verified = TRUE
+         ORDER BY user_id, platform ASC`,
+        [participantIds],
+      ),
+      runQuery<PackReferralCountsRow>(
+        `SELECT referrals.referrer_user_id::text AS user_id,
+                COUNT(*)::text AS successful_referrals,
+                COUNT(*) FILTER (WHERE referrals.referee_subscribed = TRUE AND referee_user.subscription_tier = 'monthly')::text AS monthly_premium_referrals,
+                COUNT(*) FILTER (WHERE referrals.referee_subscribed = TRUE AND referee_user.subscription_tier = 'annual')::text AS annual_premium_referrals
+         FROM referrals
+         INNER JOIN users referee_user ON referee_user.id = referrals.referee_user_id
+         WHERE referrals.referrer_user_id = ANY($1::uuid[])
+         GROUP BY referrals.referrer_user_id`,
+        [participantIds],
+      ),
+      runQuery<PackWeeklyXpRow>(
+        `SELECT user_id::text AS user_id,
+                COALESCE(SUM(xp_earned), 0)::text AS weekly_xp
+         FROM activity_log
+         WHERE user_id = ANY($1::uuid[])
+           AND created_at >= NOW() - INTERVAL '7 days'
+         GROUP BY user_id`,
+        [participantIds],
+      ),
+      runQuery<PackCompletedQuestRow>(
+        `SELECT qc.user_id::text AS user_id,
+                q.slug,
+                q.category,
+                q.verification_type,
+                q.required_level,
+                q.is_premium_preview
+         FROM quest_completions qc
+         INNER JOIN quest_definitions q ON q.id = qc.quest_id
+         WHERE qc.user_id = ANY($1::uuid[])
+           AND qc.status = 'approved'
+         ORDER BY qc.user_id, qc.completed_at ASC NULLS LAST, qc.created_at ASC`,
+        [participantIds],
+      ),
+    ]);
+
+    const walletMap = new Map(packWallets.rows.map((row) => [row.user_id, row.created_at] as const));
+    const socialsMap = new Map<string, SupportedSocialPlatform[]>();
+    for (const row of packSocials.rows) {
+      const current = socialsMap.get(row.user_id) ?? [];
+      current.push(row.platform);
+      socialsMap.set(row.user_id, current);
+    }
+    const referralMap = new Map(packReferrals.rows.map((row) => [row.user_id, row] as const));
+    const weeklyXpMap = new Map(packWeeklyXp.rows.map((row) => [row.user_id, Number(row.weekly_xp)] as const));
+    const completedQuestMap = new Map<string, PackCompletedQuestRow[]>();
+    for (const row of packCompletedQuests.rows) {
+      const current = completedQuestMap.get(row.user_id) ?? [];
+      current.push(row);
+      completedQuestMap.set(row.user_id, current);
+    }
+    const userProgressMap = new Map<string, UserProgressState>();
+    for (const user of progressUsers.rows) {
+      const earliestWalletLink = walletMap.get(user.id) ?? null;
+      const walletAgeDays = earliestWalletLink
+        ? Math.max(Math.floor((Date.now() - new Date(earliestWalletLink).getTime()) / 86400000), 0)
+        : 0;
+      userProgressMap.set(
+        user.id,
+        deriveUserProgressState({
+          userId: user.id,
+          level: user.level,
+          totalXp: user.total_xp,
+          currentStreak: user.current_streak,
+          weeklyXp: weeklyXpMap.get(user.id) ?? 0,
+          walletLinked: Boolean(earliestWalletLink),
+          walletAgeDays,
+          subscriptionTier: user.subscription_tier,
+          connectedSocials: socialsMap.get(user.id) ?? [],
+          successfulReferralCount: Number(referralMap.get(user.id)?.successful_referrals ?? 0),
+          monthlyPremiumReferralCount: Number(referralMap.get(user.id)?.monthly_premium_referrals ?? 0),
+          annualPremiumReferralCount: Number(referralMap.get(user.id)?.annual_premium_referrals ?? 0),
+          approvedQuests: (completedQuestMap.get(user.id) ?? []).map((quest) => ({
+            slug: quest.slug,
+            category: quest.category,
+            verificationType: quest.verification_type,
+            requiredLevel: quest.required_level,
+            isPremiumPreview: quest.is_premium_preview,
+          })),
+          campaignSource: user.attribution_source,
+        }),
+      );
+    }
+
+    for (const participant of packParticipantsResult.rows) {
+      const progress = userProgressMap.get(participant.user_id);
+      if (!progress) {
+        continue;
+      }
+      const current = packProgressMap.get(participant.pack_id) ?? {
+        walletLinkedParticipantCount: 0,
+        starterPathCompleteCount: 0,
+        rewardEligibleCount: 0,
+      };
+      if (progress.walletLinked) {
+        current.walletLinkedParticipantCount += 1;
+      }
+      if (progress.starterPathComplete) {
+        current.starterPathCompleteCount += 1;
+      }
+      if (progress.rewardEligible) {
+        current.rewardEligibleCount += 1;
+      }
+      packProgressMap.set(participant.pack_id, current);
+    }
+  }
+
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
   const annualCount = usersByTier.rows.find((row) => row.subscription_tier === "annual")?.count ?? "0";
   const queueMetrics = buildQueueMetrics(reviewQueue);
@@ -1068,6 +1266,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         completionCount: 0,
         approvedCompletionCount: 0,
         participantCount: 0,
+        walletLinkedParticipantCount: 0,
+        walletLinkRate: 0,
+        starterPathCompleteCount: 0,
+        starterPathCompletionRate: 0,
+        rewardEligibleCount: 0,
+        rewardEligibilityRate: 0,
         premiumParticipantCount: 0,
         annualParticipantCount: 0,
         premiumConversionRate: 0,
@@ -1102,6 +1306,18 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       current.premiumParticipantCount = performance.premiumParticipantCount;
       current.annualParticipantCount = performance.annualParticipantCount;
       current.premiumConversionRate = performance.premiumConversionRate;
+    }
+    const progress = packProgressMap.get(packId);
+    if (progress) {
+      current.walletLinkedParticipantCount = progress.walletLinkedParticipantCount;
+      current.starterPathCompleteCount = progress.starterPathCompleteCount;
+      current.rewardEligibleCount = progress.rewardEligibleCount;
+      current.walletLinkRate =
+        current.participantCount > 0 ? progress.walletLinkedParticipantCount / current.participantCount : 0;
+      current.starterPathCompletionRate =
+        current.participantCount > 0 ? progress.starterPathCompleteCount / current.participantCount : 0;
+      current.rewardEligibilityRate =
+        current.participantCount > 0 ? progress.rewardEligibleCount / current.participantCount : 0;
     }
     packAnalyticsMap.set(packId, current);
   }
