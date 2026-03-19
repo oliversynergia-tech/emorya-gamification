@@ -11,6 +11,7 @@ import {
   getXpTierMultiplier,
   resolveCampaignExperienceSource,
 } from "@/lib/economy-settings";
+import { getCampaignPackBenchmark } from "@/lib/campaign-pack-benchmarks";
 import { getCampaignFeaturedTracks } from "@/lib/campaign-source";
 import {
   getModerationAlertChannelConfig,
@@ -62,6 +63,10 @@ import {
   syncModerationNotificationHistory,
 } from "@/server/repositories/moderation-notification-repository";
 import {
+  listRecentCampaignPackNotificationDeliveries,
+  syncCampaignPackNotificationHistory,
+} from "@/server/repositories/campaign-pack-notification-repository";
+import {
   getPendingReviewQueue,
   getRecentReviewHistory,
   getReviewBreakdownByVerificationType,
@@ -82,6 +87,7 @@ import {
 import { listQuestDefinitionTemplatesForAdmin } from "@/server/repositories/quest-template-admin-repository";
 import { buildDashboardQuestBoard } from "@/server/services/build-dashboard-quest-board";
 import { buildModerationNotifications } from "@/server/services/moderation-notifications";
+import { buildCampaignPackNotifications } from "@/server/services/campaign-pack-notifications";
 import { syncAchievementProgressForUser } from "@/server/services/progression-service";
 import {
   getReferralRewardTargets,
@@ -1492,6 +1498,14 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           participantCount: number;
           completionCount: number;
         }>,
+        benchmark: {
+          activeLane: "direct" as const,
+          walletLinkRateTarget: 0,
+          rewardEligibilityRateTarget: 0,
+          premiumConversionRateTarget: 0,
+          averageWeeklyXpTarget: 0,
+          status: "on_track" as const,
+        },
         createdAt: quest.createdAt,
         lastUpdatedAt: quest.updatedAt,
       };
@@ -1596,6 +1610,22 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       });
     }
   }
+  for (const pack of packAnalyticsMap.values()) {
+    const dominantSource =
+      pack.sourceBreakdown.slice().sort((left, right) => right.participantCount - left.participantCount)[0]?.activeLane ??
+      pack.sources[0] ??
+      "direct";
+    const benchmark = getCampaignPackBenchmark(dominantSource);
+    const score =
+      (pack.walletLinkRate >= benchmark.walletLinkRateTarget ? 1 : 0) +
+      (pack.rewardEligibilityRate >= benchmark.rewardEligibilityRateTarget ? 1 : 0) +
+      (pack.premiumConversionRate >= benchmark.premiumConversionRateTarget ? 1 : 0) +
+      (pack.averageWeeklyXp >= benchmark.averageWeeklyXpTarget ? 1 : 0);
+    pack.benchmark = {
+      ...benchmark,
+      status: score >= 4 ? "on_track" : score >= 2 ? "mixed" : "off_track",
+    };
+  }
   const packAnalytics = Array.from(packAnalyticsMap.values()).sort(
     (left, right) => right.activeQuestCount - left.activeQuestCount || right.questCount - left.questCount,
   );
@@ -1606,6 +1636,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       label: entry.label,
       lifecycleState: entry.lifecycleState,
       sources: entry.sources,
+      benchmarkLane: entry.benchmark.activeLane,
+      benchmarkStatus: entry.benchmark.status,
       participantCount: entry.participantCount,
       approvedCompletionCount: entry.approvedCompletionCount,
       walletLinkRate: entry.walletLinkRate,
@@ -1630,25 +1662,31 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       });
       continue;
     }
-    if (pack.walletLinkRate < 0.25) {
+    if (pack.walletLinkRate < pack.benchmark.walletLinkRateTarget) {
       alerts.push({
         packId: pack.packId,
         label: pack.label,
         severity: "warning",
         title: "Wallet-link rate is soft",
-        detail: `${pack.label} is converting only ${Math.round(pack.walletLinkRate * 100)}% of participants into wallet-linked users.`,
+        detail: `${pack.label} is converting ${Math.round(pack.walletLinkRate * 100)}% of participants into wallet-linked users against a ${Math.round(pack.benchmark.walletLinkRateTarget * 100)}% target for the ${pack.benchmark.activeLane} lane.`,
       });
     }
-    if (pack.rewardEligibilityRate < 0.15) {
+    if (pack.rewardEligibilityRate < pack.benchmark.rewardEligibilityRateTarget) {
       alerts.push({
         packId: pack.packId,
         label: pack.label,
         severity: "warning",
         title: "Reward-eligibility progression is weak",
-        detail: `${pack.label} is getting only ${Math.round(pack.rewardEligibilityRate * 100)}% of participants to reward eligibility.`,
+        detail: `${pack.label} is getting ${Math.round(pack.rewardEligibilityRate * 100)}% of participants to reward eligibility against a ${Math.round(pack.benchmark.rewardEligibilityRateTarget * 100)}% target for the ${pack.benchmark.activeLane} lane.`,
       });
     }
   }
+  const campaignPackNotifications = buildCampaignPackNotifications({
+    alerts,
+    channels: getModerationAlertChannelConfig(),
+  });
+  await syncCampaignPackNotificationHistory(campaignPackNotifications);
+  const campaignPackNotificationHistory = await listRecentCampaignPackNotificationDeliveries();
   templateCounts.generatedPacks = packAnalytics.length;
   templateCounts.activeGeneratedPacks = packAnalytics.filter((entry) => entry.activeQuestCount > 0).length;
 
@@ -1684,6 +1722,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       packAnalytics,
       partnerReporting,
       alerts,
+      notifications: campaignPackNotifications,
+      notificationHistory: campaignPackNotificationHistory,
       packReady:
         ["Zealy bridge quest", "Galxe feeder quest", "TaskOn feeder quest"].every((label) =>
           questDefinitionTemplates.some((template) => template.label === label && template.isActive),

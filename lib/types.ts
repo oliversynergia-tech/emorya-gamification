@@ -675,6 +675,14 @@ export type AdminOverviewData = {
         participantCount: number;
         completionCount: number;
       }>;
+      benchmark: {
+        activeLane: CampaignSource | "direct";
+        walletLinkRateTarget: number;
+        rewardEligibilityRateTarget: number;
+        premiumConversionRateTarget: number;
+        averageWeeklyXpTarget: number;
+        status: "on_track" | "mixed" | "off_track";
+      };
       createdAt: string;
       lastUpdatedAt: string;
     }>;
@@ -683,6 +691,8 @@ export type AdminOverviewData = {
       label: string;
       lifecycleState: "draft" | "ready" | "live";
       sources: CampaignSource[];
+      benchmarkLane: CampaignSource | "direct";
+      benchmarkStatus: "on_track" | "mixed" | "off_track";
       participantCount: number;
       approvedCompletionCount: number;
       walletLinkRate: number;
@@ -696,6 +706,23 @@ export type AdminOverviewData = {
       severity: "warning" | "critical";
       title: string;
       detail: string;
+    }>;
+    notifications: Array<{
+      channel: "inbox" | "webhook" | "email" | "slack" | "discord";
+      enabled: boolean;
+      status: "idle" | "armed";
+      destination: string;
+      title: string;
+      detail: string;
+    }>;
+    notificationHistory: Array<{
+      id: string;
+      channel: "inbox" | "webhook" | "email" | "slack" | "discord";
+      eventStatus: "armed" | "sent";
+      destination: string;
+      title: string;
+      detail: string;
+      createdAt: string;
     }>;
     packReady: boolean;
     activeLaneMode: "bridged" | "separate";

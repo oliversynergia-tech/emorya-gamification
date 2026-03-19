@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { AdminOverviewData, CampaignSource } from "@/lib/types";
 
 type PackAnalyticsItem = AdminOverviewData["campaignOperations"]["packAnalytics"][number];
+type PartnerReportItem = AdminOverviewData["campaignOperations"]["partnerReporting"][number];
 
 function exportPackAnalytics(entries: PackAnalyticsItem[]) {
   const lines = [
@@ -94,11 +95,103 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
   URL.revokeObjectURL(url);
 }
 
+function exportPartnerReporting(entries: PartnerReportItem[]) {
+  const lines = [
+    [
+      "pack_id",
+      "label",
+      "lifecycle_state",
+      "sources",
+      "benchmark_lane",
+      "benchmark_status",
+      "participant_count",
+      "approved_completion_count",
+      "wallet_link_rate",
+      "reward_eligibility_rate",
+      "premium_conversion_rate",
+      "average_weekly_xp",
+    ].join(","),
+    ...entries.map((entry) =>
+      [
+        entry.packId,
+        JSON.stringify(entry.label),
+        entry.lifecycleState,
+        JSON.stringify(entry.sources.join("|")),
+        entry.benchmarkLane,
+        entry.benchmarkStatus,
+        entry.participantCount,
+        entry.approvedCompletionCount,
+        entry.walletLinkRate,
+        entry.rewardEligibilityRate,
+        entry.premiumConversionRate,
+        entry.averageWeeklyXp,
+      ].join(","),
+    ),
+  ].join("\n");
+
+  const blob = new Blob([lines], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "emorya-partner-pack-report.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function printPartnerReport(entries: PartnerReportItem[]) {
+  const popup = window.open("", "_blank", "noopener,noreferrer,width=1100,height=900");
+  if (!popup) {
+    return;
+  }
+
+  const cards = entries.map((entry) => `
+    <article style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 16px;background:#fffaf1;">
+      <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Partner Snapshot</p>
+      <h2 style="margin:0 0 8px;font-size:22px;color:#20170a;">${entry.label}</h2>
+      <p style="margin:0 0 12px;color:#5e5035;">Sources: ${entry.sources.join(", ")}. Benchmark lane: ${entry.benchmarkLane}. Status: ${entry.benchmarkStatus}.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
+        <div><strong>${entry.participantCount}</strong><div>Participants</div></div>
+        <div><strong>${entry.approvedCompletionCount}</strong><div>Approved completions</div></div>
+        <div><strong>${Math.round(entry.walletLinkRate * 100)}%</strong><div>Wallet link rate</div></div>
+        <div><strong>${Math.round(entry.rewardEligibilityRate * 100)}%</strong><div>Reward eligibility</div></div>
+        <div><strong>${Math.round(entry.premiumConversionRate * 100)}%</strong><div>Premium conversion</div></div>
+        <div><strong>${entry.averageWeeklyXp.toFixed(0)}</strong><div>Average weekly XP</div></div>
+      </div>
+    </article>
+  `).join("");
+
+  popup.document.write(`
+    <html>
+      <head>
+        <title>Emorya Partner Pack Report</title>
+        <style>
+          body { font-family: Georgia, serif; background:#f5efe2; color:#20170a; margin:32px; }
+          h1 { margin:0 0 8px; }
+          p { line-height:1.5; }
+        </style>
+      </head>
+      <body>
+        <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Emorya Gamification</p>
+        <h1>Partner Campaign Pack Report</h1>
+        <p>This export is optimized for partner sharing and PDF save/export from the browser print dialog.</p>
+        ${cards}
+      </body>
+    </html>
+  `);
+  popup.document.close();
+  popup.focus();
+  popup.print();
+}
+
 export function CampaignPackAnalyticsPanel({
   packs,
+  partnerReports,
   canManage = false,
 }: {
   packs: PackAnalyticsItem[];
+  partnerReports: PartnerReportItem[];
   canManage?: boolean;
 }) {
   const router = useRouter();
@@ -232,6 +325,12 @@ export function CampaignPackAnalyticsPanel({
         <button className="button button--secondary" type="button" onClick={() => exportPackAnalytics(filteredPacks)}>
           Export CSV
         </button>
+        <button className="button button--secondary" type="button" onClick={() => exportPartnerReporting(partnerReports)}>
+          Export partner CSV
+        </button>
+        <button className="button button--secondary" type="button" onClick={() => printPartnerReport(partnerReports)}>
+          Print partner PDF
+        </button>
       </div>
       {error ? <p className="status status--error">{error}</p> : null}
       {comparisonBasePack ? (
@@ -313,6 +412,13 @@ export function CampaignPackAnalyticsPanel({
                 Post-pack referrals: {pack.postPackReferralInviteCount} invited / {pack.postPackReferralConvertedCount} converted
                 {` `}
                 ({(pack.postPackReferralConversionRate * 100).toFixed(0)}%). This is the cleaner attribution view based on referrals created after first pack touch.
+              </p>
+              <p className="form-note">
+                Benchmark lane: {pack.benchmark.activeLane}. Targets: {Math.round(pack.benchmark.walletLinkRateTarget * 100)}% wallet,
+                {` `}
+                {Math.round(pack.benchmark.rewardEligibilityRateTarget * 100)}% eligibility, {Math.round(pack.benchmark.premiumConversionRateTarget * 100)}% premium,
+                {` `}
+                {pack.benchmark.averageWeeklyXpTarget} weekly XP. Status: {pack.benchmark.status}.
               </p>
               <p className="form-note">
                 Premium upgrades after first pack touch: {pack.premiumUpgradeCount}

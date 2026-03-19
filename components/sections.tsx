@@ -1639,17 +1639,52 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
             <article key={`partner-${entry.packId}`} className="achievement-card">
               <div>
                 <strong>{entry.label}</strong>
-                <p>Partner snapshot for {entry.sources.join(", ")} with live-ready funnel metrics.</p>
+                <p>Partner snapshot for {entry.sources.join(", ")} with live-ready funnel metrics and {entry.benchmarkLane} benchmarks.</p>
               </div>
               <div className="achievement-card__side">
                 <span>{entry.lifecycleState}</span>
+                <span>{entry.benchmarkStatus}</span>
                 <span>{entry.participantCount} participants</span>
                 <span>{Math.round(entry.premiumConversionRate * 100)}% premium</span>
               </div>
             </article>
           ))}
         </div>
-        <CampaignPackAnalyticsPanel packs={data.campaignOperations.packAnalytics} canManage={canManageCampaignPacks} />
+        <div className="achievement-list">
+          {data.campaignOperations.notifications.map((notification) => (
+            <article key={`${notification.channel}-${notification.destination}-campaign`} className="achievement-card">
+              <div>
+                <strong>{notification.title}</strong>
+                <p>{notification.detail}</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{notification.channel}</span>
+                <span>{notification.status}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+        {data.campaignOperations.notificationHistory.length > 0 ? (
+          <div className="achievement-list">
+            {data.campaignOperations.notificationHistory.map((entry) => (
+              <article key={`campaign-history-${entry.id}`} className="achievement-card">
+                <div>
+                  <strong>{entry.title}</strong>
+                  <p>{entry.detail}</p>
+                </div>
+                <div className="achievement-card__side">
+                  <span>{entry.channel}</span>
+                  <span>{entry.eventStatus}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : null}
+        <CampaignPackAnalyticsPanel
+          packs={data.campaignOperations.packAnalytics}
+          partnerReports={data.campaignOperations.partnerReporting}
+          canManage={canManageCampaignPacks}
+        />
       </div>
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
