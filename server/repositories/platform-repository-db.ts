@@ -1007,11 +1007,19 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         : "direct";
     const kind =
       typeof quest.metadata?.campaignTemplateKind === "string" ? quest.metadata.campaignTemplateKind : null;
+    const lifecycleState =
+      typeof quest.metadata?.campaignPackState === "string" &&
+      ["draft", "ready", "live"].includes(quest.metadata.campaignPackState)
+        ? (quest.metadata.campaignPackState as "draft" | "ready" | "live")
+        : quest.isActive
+          ? "live"
+          : "draft";
     const current =
       packAnalyticsMap.get(packId) ??
       {
         packId,
         label: packLabel,
+        lifecycleState,
         questCount: 0,
         activeQuestCount: 0,
         bridgeCount: 0,
@@ -1020,6 +1028,11 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         createdAt: quest.createdAt,
         lastUpdatedAt: quest.updatedAt,
       };
+    current.lifecycleState = lifecycleState === "live" || current.lifecycleState === "live"
+      ? "live"
+      : lifecycleState === "ready" || current.lifecycleState === "ready"
+        ? "ready"
+        : "draft";
     current.questCount += 1;
     if (quest.isActive) {
       current.activeQuestCount += 1;

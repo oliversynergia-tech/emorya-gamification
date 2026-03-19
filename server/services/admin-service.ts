@@ -32,6 +32,7 @@ import {
   createQuestDefinitionForAdmin,
   deleteQuestDefinitionForAdmin,
   listQuestDefinitionsForAdmin,
+  updateCampaignPackLifecycleForAdmin,
   updateQuestDefinitionForAdmin,
 } from "@/server/repositories/quest-definition-admin-repository";
 import {
@@ -306,13 +307,14 @@ export async function createCampaignPack({
       requiredLevel: template.form.requiredLevel,
       xpReward: template.form.xpReward,
       isPremiumPreview: template.form.isPremiumPreview,
-      isActive: template.form.isActive,
+      isActive: false,
       metadata: {
         ...template.metadata,
         campaignPackId: packId,
         campaignPackLabel: trimmedLabel,
         campaignPackCreatedAt: packCreatedAt,
         campaignPackTemplateLabel: template.label,
+        campaignPackState: "draft",
       },
     });
   }
@@ -323,6 +325,35 @@ export async function createCampaignPack({
       packId,
       label: trimmedLabel,
       createdCount: selectedTemplates.length,
+    },
+  };
+}
+
+export async function updateCampaignPackLifecycle({
+  packId,
+  lifecycleState,
+}: {
+  packId: string;
+  lifecycleState: "draft" | "ready" | "live";
+}) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  const updatedCount = await updateCampaignPackLifecycleForAdmin({
+    packId,
+    lifecycleState,
+  });
+
+  if (!updatedCount) {
+    throw new Error("Campaign pack not found.");
+  }
+
+  return {
+    quests: await listQuestDefinitionsForAdmin(),
+    packSummary: {
+      packId,
+      lifecycleState,
+      updatedCount,
     },
   };
 }

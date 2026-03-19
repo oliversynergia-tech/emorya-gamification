@@ -485,6 +485,11 @@ type SettlementWorkflowRow = QueryResultRow & {
   count: number | string;
 };
 
+type SettlementFailureReasonRow = QueryResultRow & {
+  reason: string | null;
+  count: number | string;
+};
+
 type TokenRedemptionAuditRow = QueryResultRow & {
   id: string;
   redemption_id: string;
@@ -550,7 +555,7 @@ export async function getTokenSettlementAnalytics(input?: {
     Math.round((compareRangeEndExclusive.getTime() - compareRangeStart.getTime()) / (24 * 60 * 60 * 1000)),
     1,
   );
-  const [summaryResult, throughputResult, byAssetResult, byProgramResult, workflowResult] = await Promise.all([
+  const [summaryResult, throughputResult, byAssetResult, byProgramResult, workflowResult, failureReasonResult] = await Promise.all([
     runQuery<SettlementAnalyticsRow>(
       `WITH pending AS (
        SELECT
@@ -649,6 +654,15 @@ export async function getTokenSettlementAnalytics(input?: {
        GROUP BY workflow_state
        ORDER BY workflow_state ASC`,
     ),
+    runQuery<SettlementFailureReasonRow>(
+      `SELECT COALESCE(NULLIF(last_error, ''), 'Unknown failure') AS reason, COUNT(*)::int AS count
+       FROM token_redemptions
+       WHERE workflow_state = 'failed'
+         AND status = 'claimed'
+       GROUP BY COALESCE(NULLIF(last_error, ''), 'Unknown failure')
+       ORDER BY COUNT(*) DESC, reason ASC
+       LIMIT 5`,
+    ),
   ]);
 
   const row = summaryResult.rows[0];
@@ -685,6 +699,16 @@ export async function getTokenSettlementAnalytics(input?: {
     redemptionVelocityPerDay: currentVelocity,
     workflowBreakdown: workflowResult.rows.map((entry) => ({
       state: entry.workflow_state,
+      count: Number(entry.count),
+    })),
+    exceptionBreakdown: workflowResult.rows
+      .filter((entry) => entry.workflow_state === "held" || entry.workflow_state === "failed" || entry.workflow_state === "cancelled")
+      .map((entry) => ({
+        state: entry.workflow_state as "held" | "failed" | "cancelled",
+        count: Number(entry.count),
+      })),
+    topFailureReasons: failureReasonResult.rows.map((entry) => ({
+      reason: entry.reason ?? "Unknown failure",
       count: Number(entry.count),
     })),
     dailyThroughput: throughputResult.rows.map((entry) => ({

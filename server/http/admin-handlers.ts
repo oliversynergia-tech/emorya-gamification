@@ -183,6 +183,47 @@ export async function handleCampaignPackCreateRequest(
   }
 }
 
+export async function handleCampaignPackLifecycleRequest(
+  body: { packId?: string; lifecycleState?: "draft" | "ready" | "live" },
+  updateCampaignPackLifecycle: (input: {
+    packId: string;
+    lifecycleState: "draft" | "ready" | "live";
+  }) => Promise<unknown>,
+) {
+  if (!body.packId || !body.packId.trim()) {
+    return {
+      status: 400,
+      body: { ok: false, error: "packId is required." },
+    };
+  }
+
+  if (!body.lifecycleState || !["draft", "ready", "live"].includes(body.lifecycleState)) {
+    return {
+      status: 400,
+      body: { ok: false, error: "lifecycleState must be draft, ready, or live." },
+    };
+  }
+
+  try {
+    const result = await updateCampaignPackLifecycle({
+      packId: body.packId.trim(),
+      lifecycleState: body.lifecycleState,
+    });
+
+    return {
+      status: 200,
+      body: { ok: true, ...((result as Record<string, unknown>) ?? {}) },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to update campaign pack lifecycle.";
+
+    return {
+      status: message.includes("not found") ? 404 : getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
 export async function handleQuestDefinitionUpdateRequest(
   {
     questId,

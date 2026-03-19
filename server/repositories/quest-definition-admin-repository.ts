@@ -142,3 +142,25 @@ export async function deleteQuestDefinitionForAdmin(questId: string) {
 
   return Boolean(result.rows[0]?.id);
 }
+
+export async function updateCampaignPackLifecycleForAdmin({
+  packId,
+  lifecycleState,
+}: {
+  packId: string;
+  lifecycleState: "draft" | "ready" | "live";
+}) {
+  const nextActive = lifecycleState === "live";
+
+  const result = await runQuery<{ id: string }>(
+    `UPDATE quest_definitions
+     SET is_active = $2,
+         metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{campaignPackState}', to_jsonb($3::text), true),
+         updated_at = NOW()
+     WHERE metadata ->> 'campaignPackId' = $1
+     RETURNING id`,
+    [packId, nextActive, lifecycleState],
+  );
+
+  return result.rows.length;
+}

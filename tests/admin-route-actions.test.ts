@@ -3,6 +3,7 @@ import test, { mock } from "node:test";
 
 import {
   runCampaignPackCreateRoute,
+  runCampaignPackLifecycleRoute,
   runEconomySettingsRoute,
   runEconomySettingsUpdateRoute,
   runQuestDefinitionCreateRoute,
@@ -71,6 +72,31 @@ test("runCampaignPackCreateRoute forwards the pack label", async () => {
     ok: true,
     quests: [{ id: "quest-pack-1" }],
     packSummary: { packId: "pack-1", label: "March Bridge Pack", createdCount: 3 },
+  });
+});
+
+test("runCampaignPackLifecycleRoute forwards lifecycle updates", async () => {
+  const services = {
+    updateCampaignPackLifecycle: mock.fn(async (input: { packId: string; lifecycleState: "draft" | "ready" | "live" }) => {
+      assert.equal(input.packId, "pack-1");
+      assert.equal(input.lifecycleState, "live");
+      return {
+        quests: [{ id: "quest-pack-1" }],
+        packSummary: { packId: "pack-1", lifecycleState: "live", updatedCount: 3 },
+      };
+    }),
+  };
+
+  const result = await runCampaignPackLifecycleRoute(
+    { packId: "pack-1", lifecycleState: "live" },
+    services,
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    quests: [{ id: "quest-pack-1" }],
+    packSummary: { packId: "pack-1", lifecycleState: "live", updatedCount: 3 },
   });
 });
 

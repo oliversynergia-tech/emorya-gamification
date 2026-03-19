@@ -571,6 +571,14 @@ export type AdminOverviewData = {
       state: "queued" | "approved" | "processing" | "held" | "failed" | "cancelled" | "settled";
       count: number;
     }>;
+    exceptionBreakdown: Array<{
+      state: "held" | "failed" | "cancelled";
+      count: number;
+    }>;
+    topFailureReasons: Array<{
+      reason: string;
+      count: number;
+    }>;
     dailyThroughput: Array<{
       label: string;
       settledCount: number;
@@ -622,6 +630,7 @@ export type AdminOverviewData = {
     packAnalytics: Array<{
       packId: string;
       label: string;
+      lifecycleState: "draft" | "ready" | "live";
       questCount: number;
       activeQuestCount: number;
       bridgeCount: number;

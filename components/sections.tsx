@@ -1407,7 +1407,7 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
   );
 }
 
-export function AdminSection({ data }: { data: AdminOverviewData }) {
+export function AdminSection({ data, canManageCampaignPacks = false }: { data: AdminOverviewData; canManageCampaignPacks?: boolean }) {
   return (
     <section className="panel admin-command-center">
       <div className="panel__header">
@@ -1619,7 +1619,7 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
             </article>
           ))}
         </div>
-        <CampaignPackAnalyticsPanel packs={data.campaignOperations.packAnalytics} />
+        <CampaignPackAnalyticsPanel packs={data.campaignOperations.packAnalytics} canManage={canManageCampaignPacks} />
       </div>
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
@@ -1659,6 +1659,28 @@ export function AdminSection({ data }: { data: AdminOverviewData }) {
           </div>
         </div>
         <div className="achievement-list">
+          {data.settlementAnalytics.exceptionBreakdown.map((entry) => (
+            <article key={`exception-${entry.state}`} className="achievement-card">
+              <div>
+                <strong>{entry.state}</strong>
+                <p>Exception-state payouts currently sitting outside the normal happy path.</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{entry.count} items</span>
+              </div>
+            </article>
+          ))}
+          {data.settlementAnalytics.topFailureReasons.map((entry) => (
+            <article key={`failure-${entry.reason}`} className="achievement-card">
+              <div>
+                <strong>Failure reason</strong>
+                <p>{entry.reason}</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{entry.count} payouts</span>
+              </div>
+            </article>
+          ))}
           <article className="achievement-card">
             <div>
               <strong>{data.settlementAnalytics.periodLabel}</strong>

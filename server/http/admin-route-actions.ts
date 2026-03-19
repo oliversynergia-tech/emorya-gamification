@@ -1,5 +1,6 @@
 import {
   handleCampaignPackCreateRequest,
+  handleCampaignPackLifecycleRequest,
   handleEconomySettingsRequest,
   handleEconomySettingsUpdateRequest,
   handleQuestDefinitionCreateRequest,
@@ -22,6 +23,10 @@ export type AdminRouteActionServices = {
   getQuestDefinitionDirectory: () => Promise<unknown>;
   createQuestDefinition: (input: Record<string, unknown>) => Promise<unknown>;
   createCampaignPack: (input: { label: string }) => Promise<unknown>;
+  updateCampaignPackLifecycle: (input: {
+    packId: string;
+    lifecycleState: "draft" | "ready" | "live";
+  }) => Promise<unknown>;
   updateQuestDefinition: (questId: string, input: Record<string, unknown>) => Promise<unknown>;
   deleteQuestDefinition: (questId: string) => Promise<unknown>;
   getQuestDefinitionTemplateDirectory: () => Promise<unknown>;
@@ -74,6 +79,13 @@ export async function runCampaignPackCreateRoute(
   services: Pick<AdminRouteActionServices, "createCampaignPack">,
 ) {
   return handleCampaignPackCreateRequest(body, services.createCampaignPack);
+}
+
+export async function runCampaignPackLifecycleRoute(
+  body: { packId?: string; lifecycleState?: "draft" | "ready" | "live" },
+  services: Pick<AdminRouteActionServices, "updateCampaignPackLifecycle">,
+) {
+  return handleCampaignPackLifecycleRequest(body, services.updateCampaignPackLifecycle);
 }
 
 export async function runQuestDefinitionUpdateRoute(

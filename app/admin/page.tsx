@@ -77,7 +77,7 @@ export default async function AdminPage() {
           ))}
         </div>
       </section>
-      <AdminSection data={data} />
+      <AdminSection data={data} canManageCampaignPacks={hasAdminAccess} />
       <section className="admin-section-group">
         <div className="admin-section-group__header">
           <div>
