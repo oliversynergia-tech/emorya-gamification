@@ -662,6 +662,16 @@ export type AdminOverviewData = {
       premiumConversionRate: number;
       premiumUpgradeCount: number;
       averagePremiumUpgradeDays: number | null;
+      sourceBreakdown: Array<{
+        attributionSource: CampaignSource;
+        activeLane: CampaignSource;
+        participantCount: number;
+      }>;
+      weeklyTrend: Array<{
+        bucketStart: string;
+        participantCount: number;
+        completionCount: number;
+      }>;
       createdAt: string;
       lastUpdatedAt: string;
     }>;

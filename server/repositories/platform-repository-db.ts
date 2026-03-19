@@ -33,6 +33,7 @@ import type {
   ActivityItem,
   AdminOverviewData,
   AuthUser,
+  CampaignSource,
   DashboardData,
   EconomySettings,
   LeaderboardEntry,
@@ -164,6 +165,13 @@ type PackReferralPerformanceRow = QueryResultRow & {
   pack_id: string;
   invited_count: string;
   converted_count: string;
+};
+
+type PackTrendRow = QueryResultRow & {
+  pack_id: string;
+  bucket_start: string;
+  participant_count: string;
+  completion_count: string;
 };
 
 type QuestRow = QueryResultRow & {
@@ -1072,7 +1080,21 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
        GROUP BY participants.pack_id`,
     ),
   ]);
+  const packTrendResult = await runQuery<PackTrendRow>(
+    `SELECT q.metadata->>'campaignPackId' AS pack_id,
+            DATE_TRUNC('week', COALESCE(qc.completed_at, qc.created_at))::date::text AS bucket_start,
+            COUNT(DISTINCT qc.user_id)::text AS participant_count,
+            COUNT(qc.id)::text AS completion_count
+     FROM quest_definitions q
+     INNER JOIN quest_completions qc
+       ON qc.quest_id = q.id
+     WHERE q.metadata ? 'campaignPackId'
+       AND COALESCE(qc.completed_at, qc.created_at) >= NOW() - INTERVAL '28 days'
+     GROUP BY q.metadata->>'campaignPackId', DATE_TRUNC('week', COALESCE(qc.completed_at, qc.created_at))::date
+     ORDER BY bucket_start ASC`,
+  );
   const participantIds = Array.from(new Set(packParticipantsResult.rows.map((row) => row.user_id)));
+  const userProgressMapGlobal = new Map<string, UserProgressState>();
   const packProgressMap = new Map<
     string,
     {
@@ -1108,6 +1130,19 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       ] as const;
     }),
   );
+  const packTrendMap = new Map<
+    string,
+    AdminOverviewData["campaignOperations"]["packAnalytics"][number]["weeklyTrend"]
+  >();
+  for (const row of packTrendResult.rows) {
+    const current = packTrendMap.get(row.pack_id) ?? [];
+    current.push({
+      bucketStart: row.bucket_start,
+      participantCount: Number(row.participant_count),
+      completionCount: Number(row.completion_count),
+    });
+    packTrendMap.set(row.pack_id, current);
+  }
 
   if (participantIds.length > 0) {
     const [progressUsers, packWallets, packSocials, packReferrals, packWeeklyXp, packCompletedQuests] = await Promise.all([
@@ -1188,13 +1223,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       current.push(row);
       completedQuestMap.set(row.user_id, current);
     }
-    const userProgressMap = new Map<string, UserProgressState>();
     for (const user of progressUsers.rows) {
       const earliestWalletLink = walletMap.get(user.id) ?? null;
       const walletAgeDays = earliestWalletLink
         ? Math.max(Math.floor((Date.now() - new Date(earliestWalletLink).getTime()) / 86400000), 0)
         : 0;
-      userProgressMap.set(
+      userProgressMapGlobal.set(
         user.id,
         deriveUserProgressState({
           userId: user.id,
@@ -1222,7 +1256,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     }
 
     for (const participant of packParticipantsResult.rows) {
-      const progress = userProgressMap.get(participant.user_id);
+      const progress = userProgressMapGlobal.get(participant.user_id);
       if (!progress) {
         continue;
       }
@@ -1400,6 +1434,16 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         premiumConversionRate: 0,
         premiumUpgradeCount: 0,
         averagePremiumUpgradeDays: null,
+        sourceBreakdown: [] as Array<{
+          attributionSource: "direct" | "zealy" | "galxe" | "taskon";
+          activeLane: "direct" | "zealy" | "galxe" | "taskon";
+          participantCount: number;
+        }>,
+        weeklyTrend: [] as Array<{
+          bucketStart: string;
+          participantCount: number;
+          completionCount: number;
+        }>,
         createdAt: quest.createdAt,
         lastUpdatedAt: quest.updatedAt,
       };
@@ -1471,7 +1515,32 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       current.referralConvertedCount = referralPerformance.referralConvertedCount;
       current.referralConversionRate = referralPerformance.referralConversionRate;
     }
+    current.weeklyTrend = packTrendMap.get(packId) ?? [];
     packAnalyticsMap.set(packId, current);
+  }
+  for (const participant of packParticipantsResult.rows) {
+    const progress = userProgressMapGlobal.get(participant.user_id);
+    if (!progress) {
+      continue;
+    }
+    const current = packAnalyticsMap.get(participant.pack_id);
+    if (!current) {
+      continue;
+    }
+    const attributionSource = progress.campaignSource ?? "direct";
+    const activeLane = resolveCampaignExperienceSource(economySettings, attributionSource) as CampaignSource;
+    const breakdownEntry = current.sourceBreakdown.find(
+      (entry) => entry.attributionSource === attributionSource && entry.activeLane === activeLane,
+    );
+    if (breakdownEntry) {
+      breakdownEntry.participantCount += 1;
+    } else {
+      current.sourceBreakdown.push({
+        attributionSource,
+        activeLane,
+        participantCount: 1,
+      });
+    }
   }
   const packAnalytics = Array.from(packAnalyticsMap.values()).sort(
     (left, right) => right.activeQuestCount - left.activeQuestCount || right.questCount - left.questCount,

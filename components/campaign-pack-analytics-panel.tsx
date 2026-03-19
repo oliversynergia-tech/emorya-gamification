@@ -29,6 +29,8 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
       "average_wallet_to_premium_days",
       "premium_upgrade_count",
       "average_premium_upgrade_days",
+      "source_breakdown",
+      "weekly_trend",
       "referral_invite_count",
       "referral_converted_count",
       "referral_conversion_rate",
@@ -57,6 +59,14 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
         entry.averageWalletToPremiumDays ?? "",
         entry.premiumUpgradeCount,
         entry.averagePremiumUpgradeDays ?? "",
+        JSON.stringify(
+          entry.sourceBreakdown.map((item) => ({
+            attributionSource: item.attributionSource,
+            activeLane: item.activeLane,
+            participantCount: item.participantCount,
+          })),
+        ),
+        JSON.stringify(entry.weeklyTrend),
         entry.referralInviteCount,
         entry.referralConvertedCount,
         entry.referralConversionRate,
@@ -298,6 +308,26 @@ export function CampaignPackAnalyticsPanel({
                 {pack.averagePremiumUpgradeDays !== null
                   ? `, averaging ${pack.averagePremiumUpgradeDays.toFixed(1)} days`
                   : ", no observed premium upgrades yet"}
+                .
+              </p>
+              <p className="form-note">
+                Source mix:
+                {` `}
+                {pack.sourceBreakdown.length > 0
+                  ? pack.sourceBreakdown
+                    .map((entry) => `${entry.attributionSource} -> ${entry.activeLane}: ${entry.participantCount}`)
+                    .join(", ")
+                  : "no participant source mix recorded yet"}
+                .
+              </p>
+              <p className="form-note">
+                4-week trend:
+                {` `}
+                {pack.weeklyTrend.length > 0
+                  ? pack.weeklyTrend
+                    .map((entry) => `${entry.bucketStart}: ${entry.participantCount} users / ${entry.completionCount} completions`)
+                    .join(" | ")
+                  : "no recent trend data yet"}
                 .
               </p>
             </div>
