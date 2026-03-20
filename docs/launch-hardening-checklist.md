@@ -26,6 +26,14 @@ Use this checklist before treating the current app as a real production launch c
 - [ ] snapshot ownership is clear:
   - hosted cron / scheduler
   - or manual ops fallback
+- [ ] campaign-pack report ownership is clear:
+  - hosted scheduler
+  - external scheduler
+  - or intentionally disabled
+- [ ] payout automation ownership is clear:
+  - hosted scheduler
+  - external scheduler
+  - or intentionally manual/review-only
 
 ## 4. Payout Automation
 
@@ -69,6 +77,10 @@ Use this checklist before treating the current app as a real production launch c
 - [ ] admin loads without missing critical data.
 - [ ] leaderboard, profile, and dashboard all load against the target database.
 
+Use the step-by-step runbook here:
+
+- [`docs/production-smoke-test-runbook.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/production-smoke-test-runbook.md)
+
 ## 9. Current Known Manual Items
 
 At the time of this checklist, these are the main items that still need explicit production attention rather than more code:
@@ -78,7 +90,12 @@ At the time of this checklist, these are the main items that still need explicit
 - [ ] confirm scheduler ownership for:
   - leaderboard snapshots
   - campaign-pack reports
+  - payout automation
 - [ ] set production values for wallet-connect and payout automation envs before enabling those paths
+
+Track current readiness here:
+
+- [`docs/launch-status.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/launch-status.md)
 
 ## Definition Of Ready
 

@@ -14,6 +14,8 @@ const hostedOperationsDoc = readFileSync(resolve(rootDir, "docs/hosted-operation
 const previewAndDeployDoc = readFileSync(resolve(rootDir, "docs/preview-and-deploy.md"), "utf8");
 const releaseProcedureDoc = readFileSync(resolve(rootDir, "docs/release-procedure.md"), "utf8");
 const launchHardeningChecklistDoc = readFileSync(resolve(rootDir, "docs/launch-hardening-checklist.md"), "utf8");
+const launchStatusDoc = readFileSync(resolve(rootDir, "docs/launch-status.md"), "utf8");
+const productionSmokeTestRunbookDoc = readFileSync(resolve(rootDir, "docs/production-smoke-test-runbook.md"), "utf8");
 
 test("hosted operations docs reference the supported ops scripts", () => {
   const requiredScripts = [
@@ -67,6 +69,12 @@ test("launch hardening checklist is referenced from deploy docs", () => {
   assert.match(hostedOperationsDoc, /launch-hardening-checklist\.md/);
   assert.match(previewAndDeployDoc, /launch-hardening-checklist\.md/);
   assert.match(releaseProcedureDoc, /launch-hardening-checklist\.md/);
+  assert.match(hostedOperationsDoc, /launch-status\.md/);
+  assert.match(previewAndDeployDoc, /launch-status\.md/);
+  assert.match(releaseProcedureDoc, /launch-status\.md/);
+  assert.match(hostedOperationsDoc, /production-smoke-test-runbook\.md/);
+  assert.match(previewAndDeployDoc, /production-smoke-test-runbook\.md/);
+  assert.match(releaseProcedureDoc, /production-smoke-test-runbook\.md/);
 });
 
 test("launch hardening checklist includes current production readiness items", () => {
@@ -78,5 +86,31 @@ test("launch hardening checklist includes current production readiness items", (
     "ops:release:gate",
   ]) {
     assert.match(launchHardeningChecklistDoc, new RegExp(text.replace(/[:.]/g, "\\$&")));
+  }
+});
+
+test("launch status doc tracks current hardening blockers and ownership", () => {
+  for (const text of [
+    "APP_URL",
+    "CRON_SNAPSHOTS_ENABLED",
+    "AUTOMATION_ACTOR_USER_ID",
+    "leaderboard snapshots",
+    "campaign-pack reports",
+    "payout automation",
+  ]) {
+    assert.match(launchStatusDoc, new RegExp(text.replace(/[-:.]/g, "\\$&")));
+  }
+});
+
+test("production smoke test runbook covers core launch paths", () => {
+  for (const text of [
+    "sign in",
+    "wallet-link",
+    "quest flow",
+    "leaderboard",
+    "profile",
+    "admin",
+  ]) {
+    assert.match(productionSmokeTestRunbookDoc.toLowerCase(), new RegExp(text.replace(/[-:.]/g, "\\$&")));
   }
 });
