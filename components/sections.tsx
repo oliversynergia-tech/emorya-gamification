@@ -380,7 +380,7 @@ export function DashboardSnapshot({
                       {pack.rewardFocus}
                     </p>
                     <p className="form-note">
-                      <span className={`badge ${pack.milestone.tone === "success" ? "badge--pink" : ""}`}>{pack.milestone.label}</span>
+                      <span className={`badge ${pack.milestone.tone === "success" ? "badge--pink" : ""}`}>{pack.badgeLabel}</span>
                     </p>
                     <div className="xp-meter campaign-pack-meter">
                       <div className="xp-meter__meta">
@@ -428,6 +428,14 @@ export function DashboardSnapshot({
                     </div>
                     <p className="form-note">{pack.nextAction}</p>
                     <p className="form-note">{pack.sequenceReason}</p>
+                    <p className="form-note">{pack.leaderboardCallout}</p>
+                    <p className="form-note">{pack.weeklyGoal.label}</p>
+                    {pack.urgency ? <p className="form-note">Mission window: {pack.urgency}</p> : null}
+                    {pack.directRewardSummary ? (
+                      <p className="form-note">
+                        Direct reward path: {pack.directRewardSummary.amount} {pack.directRewardSummary.asset} is attached to this mission route.
+                      </p>
+                    ) : null}
                     <p className="form-note">{pack.benchmarkNote}</p>
                     {pack.premiumNudge ? <p className="form-note">{pack.premiumNudge}</p> : null}
                     <div className="hero__actions">
@@ -588,6 +596,11 @@ export function DashboardSnapshot({
           <p className="form-note">
             Active lane focus: {data.economy.campaignPreset.featuredTracks.join(", ")}. Weekly thresholds are being shaped by {data.economy.campaignPreset.weeklyTargetOffset} XP for this source.
           </p>
+          {data.campaignPacks[0] ? (
+            <p className="form-note">
+              Active mission goal: {data.campaignPacks[0].weeklyGoal.targetXp} XP this week. {data.campaignPacks[0].weeklyGoal.label}
+            </p>
+          ) : null}
         </div>
         <div className="panel panel--glass">
           <div className="panel__header">
@@ -827,6 +840,16 @@ export function DashboardSnapshot({
             <span className="badge badge--pink">Prestige</span>
           </div>
           <div className="achievement-grid">
+            {data.campaignPacks.map((pack) => (
+              <article key={`pack-badge-${pack.packId}`} className="achievement-card achievement-card--unlocked">
+                <div className="quest-card__meta">
+                  <span>Campaign badge</span>
+                  <span>{pack.badgeLabel}</span>
+                </div>
+                <strong>{pack.label}</strong>
+                <p>{pack.milestone.label}. {pack.sequenceReason}</p>
+              </article>
+            ))}
             {unlockedAchievements.slice(0, 2).map((achievement) => (
               <article key={achievement.id} className="achievement-card achievement-card--unlocked">
                 <div className="quest-card__meta">
@@ -1083,6 +1106,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
   const topReferralEntry = data.referralLeaderboard[0];
   const annualDirectReward = data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward;
   const campaignPreset = data.economy.campaignPreset;
+  const rankPressurePack = data.campaignPacks[0] ?? null;
 
   return (
     <section className="grid grid--leaderboard">
@@ -1262,6 +1286,20 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             </div>
           ))}
         </div>
+        {rankPressurePack ? (
+          <div className="achievement-list">
+            <article className="achievement-card">
+              <div>
+                <strong>{rankPressurePack.label} is shaping rank pressure</strong>
+                <p>{rankPressurePack.leaderboardCallout}</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{rankPressurePack.weeklyGoal.targetXp} XP pace</span>
+                <span>{rankPressurePack.milestone.label}</span>
+              </div>
+            </article>
+          </div>
+        ) : null}
       </div>
       <TokenReceiptHistoryPanel
         history={data.user.tokenProgram.redemptionHistory}

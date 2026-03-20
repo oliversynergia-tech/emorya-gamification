@@ -404,6 +404,18 @@ export type DashboardData = {
     nextAction: string;
     sequenceReason: string;
     rewardFocus: string;
+    badgeLabel: string;
+    leaderboardCallout: string;
+    weeklyGoal: {
+      targetXp: number;
+      shortfallXp: number;
+      label: string;
+    };
+    urgency: string | null;
+    directRewardSummary: {
+      asset: TokenAsset;
+      amount: number;
+    } | null;
     benchmarkNote: string;
     premiumNudge: string | null;
     milestone: {

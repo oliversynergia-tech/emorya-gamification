@@ -972,6 +972,30 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
   }));
 }
 
+function dataUserWeeklyTarget(nextThreshold: number | null, currentThreshold: number) {
+  if (typeof nextThreshold === "number") {
+    return nextThreshold;
+  }
+
+  return currentThreshold;
+}
+
+function packBadgeLabel(templateKind: "bridge" | "feeder" | "mixed" | null, milestoneLabel: string) {
+  if (milestoneLabel === "Pack complete") {
+    return "Mission cleared";
+  }
+
+  if (templateKind === "bridge") {
+    return "Bridge mission";
+  }
+
+  if (templateKind === "feeder") {
+    return "Feeder mission";
+  }
+
+  return "Campaign mission";
+}
+
 async function getUserCampaignPackJourneys({
   userId,
   user,
@@ -1077,6 +1101,27 @@ async function getUserCampaignPackJourneys({
     const nextQuestId = nextQuest?.questId ?? null;
     const nextQuestActionable = nextQuest?.actionable ?? false;
     const benchmark = getCampaignPackBenchmark(economySettings, experienceLane);
+    const firstTimebox = rows.find((row) => typeof row.metadata?.timebox === "string")?.metadata?.timebox;
+    const directRewardMetadata = rows
+      .map((row) => {
+        const rewardConfig = typeof row.metadata?.rewardConfig === "object" && row.metadata.rewardConfig ? row.metadata.rewardConfig as Record<string, unknown> : null;
+        const directReward =
+          rewardConfig && typeof rewardConfig.directTokenReward === "object" && rewardConfig.directTokenReward
+            ? rewardConfig.directTokenReward as Record<string, unknown>
+            : typeof row.metadata?.directTokenReward === "object" && row.metadata.directTokenReward
+              ? row.metadata.directTokenReward as Record<string, unknown>
+              : null;
+
+        if (!directReward || typeof directReward.amount !== "number") {
+          return null;
+        }
+
+        return {
+          asset: typeof directReward.asset === "string" ? directReward.asset.toUpperCase() : economySettings.payoutAsset,
+          amount: directReward.amount,
+        };
+      })
+      .find(Boolean) ?? null;
 
     let milestone: DashboardData["campaignPacks"][number]["milestone"] = {
       label: "Pack is ready to start",
@@ -1125,6 +1170,8 @@ async function getUserCampaignPackJourneys({
       user.tier === "free" && premiumTrackPressure && completedQuestCount >= Math.ceil(rows.length / 2)
         ? `${firstRow.pack_label ?? "This pack"} is moving into a premium-heavy phase. Monthly or Annual will increase XP yield and unlock stronger follow-on missions.`
         : null;
+    const weeklyGoalTarget = Math.max(dataUserWeeklyTarget(user.weeklyProgress.nextThreshold, user.weeklyProgress.currentThreshold) + Math.max(economySettings.campaignOverrides[experienceLane]?.weeklyTargetXpOffset ?? 0, 0), user.weeklyProgress.currentThreshold);
+    const weeklyGoalShortfall = Math.max(weeklyGoalTarget - user.weeklyProgress.xp, 0);
 
     const rewardFocus =
       firstRow.template_kind === "feeder"
@@ -1155,6 +1202,15 @@ async function getUserCampaignPackJourneys({
       nextAction,
       sequenceReason,
       rewardFocus,
+      badgeLabel: packBadgeLabel(firstRow.template_kind, milestone.label),
+      leaderboardCallout: `${experienceLane} currently adds ${(getCampaignLeaderboardMomentumMultiplier(economySettings, attributionSource === "direct" ? null : attributionSource) * 100 - 100).toFixed(0)}% leaderboard momentum, so this pack is helping shape your rank pressure now.`,
+      weeklyGoal: {
+        targetXp: weeklyGoalTarget,
+        shortfallXp: weeklyGoalShortfall,
+        label: weeklyGoalShortfall > 0 ? `${weeklyGoalShortfall} XP to hit this mission's short-term pace` : "Weekly mission pace is already on track",
+      },
+      urgency: typeof firstTimebox === "string" ? firstTimebox : null,
+      directRewardSummary: directRewardMetadata,
       benchmarkNote: `This lane is benchmarked toward ${(benchmark.walletLinkRateTarget * 100).toFixed(0)}% wallet link, ${(benchmark.rewardEligibilityRateTarget * 100).toFixed(0)}% reward eligibility, and ${(benchmark.premiumConversionRateTarget * 100).toFixed(0)}% premium conversion.`,
       premiumNudge,
       milestone,
@@ -1192,6 +1248,11 @@ async function getUserCampaignPackJourneys({
       nextAction: pack.nextAction,
       sequenceReason: pack.sequenceReason,
       rewardFocus: pack.rewardFocus,
+      badgeLabel: pack.badgeLabel,
+      leaderboardCallout: pack.leaderboardCallout,
+      weeklyGoal: pack.weeklyGoal,
+      urgency: pack.urgency,
+      directRewardSummary: pack.directRewardSummary,
       benchmarkNote: pack.benchmarkNote,
       premiumNudge: pack.premiumNudge,
       milestone: pack.milestone,
