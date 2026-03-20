@@ -325,6 +325,9 @@ export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, ac
           <div>
             <strong>{activeMissionLabel} has moved past the wallet gate</strong>
             <p>Your active mission should now refresh with the next progression step instead of the wallet-link prompt.</p>
+            <p className="mission-cue mission-cue--ready">
+              <strong>Exact quest ready</strong> Your mission path should now reopen at the next actionable step.
+            </p>
           </div>
           <div className="achievement-card__side">
             <a

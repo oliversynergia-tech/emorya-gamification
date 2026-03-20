@@ -576,6 +576,11 @@ function printPartnerReport(
     })
     .filter((entry): entry is string => Boolean(entry))
     .join(" · ");
+  const operatorOutcomeMixSummary = [
+    `${entries.filter((entry) => entry.completionTrendDelta > 0).length} improving`,
+    `${entries.filter((entry) => entry.completionTrendDelta === 0).length} steady`,
+    `${entries.filter((entry) => entry.completionTrendDelta < 0).length} slipping`,
+  ].join(" · ");
   const benchmarkChangeSummary = entries
     .filter((entry) => entry.benchmarkOverrideHistorySummary)
     .slice(0, 4)
@@ -645,6 +650,7 @@ function printPartnerReport(
           <p style="margin:0 0 8px;color:#5e5035;">Lifecycle mix: ${lifecycleCompositionSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Benchmark by pack kind: ${benchmarkKindSummary || "No benchmark-by-kind mix available"}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Pack-kind movement: ${benchmarkKindTrendSummary || "No pack-kind movement available"}</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Operator outcome mix: ${operatorOutcomeMixSummary}</p>
           <p style="margin:0;color:#5e5035;">Alert pressure: ${alertPressureSummary}</p>
         </section>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
@@ -877,6 +883,15 @@ export function CampaignPackAnalyticsPanel({
         })
         .filter((entry): entry is string => Boolean(entry))
         .join(" · "),
+    [filteredPacks],
+  );
+  const filteredOperatorOutcomeMixSummary = useMemo(
+    () =>
+      [
+        `${filteredPacks.filter((pack) => pack.operatorOutcome.trend.completionDelta > 0).length} improving`,
+        `${filteredPacks.filter((pack) => pack.operatorOutcome.trend.completionDelta === 0).length} steady`,
+        `${filteredPacks.filter((pack) => pack.operatorOutcome.trend.completionDelta < 0).length} slipping`,
+      ].join(" · "),
     [filteredPacks],
   );
 
@@ -1184,6 +1199,19 @@ export function CampaignPackAnalyticsPanel({
             <div className="achievement-card__side">
               <span>{filteredBenchmarkKindSummary}</span>
               {filteredBenchmarkKindTrendSummary ? <span>{filteredBenchmarkKindTrendSummary}</span> : null}
+            </div>
+          </article>
+        </div>
+      ) : null}
+      {filteredPacks.length > 0 ? (
+        <div className="achievement-list">
+          <article className="achievement-card achievement-card--progress">
+            <div>
+              <strong>Operator outcome mix</strong>
+              <p>Fast read on whether the filtered packs are currently improving, holding flat, or slipping on completion momentum.</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{filteredOperatorOutcomeMixSummary}</span>
             </div>
           </article>
         </div>

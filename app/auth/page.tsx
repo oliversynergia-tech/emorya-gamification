@@ -194,6 +194,13 @@ export default async function AuthPage() {
             <p className="form-note">
               This pack is still reward-eligible. A return move worth roughly {returnPack.weeklyGoal.shortfallXp} XP closes the current weekly pace gap and keeps the mission lane warm.
             </p>
+            <p className={`mission-cue mission-cue--${returnPack.nextQuestActionable ? "ready" : "planning"}`}>
+              <strong>{returnPack.nextQuestActionable ? "Exact quest ready" : "Review mission path"}</strong>
+              {` `}
+              {returnPack.nextQuestActionable && returnPack.nextQuestTitle
+                ? `${returnPack.nextQuestTitle} is ready as the strongest next comeback move.`
+                : "Open the mission path first to see which comeback step is most useful now."}
+            </p>
             <div className="hero__actions">
               <MissionLink
                 className="button button--primary"
@@ -202,6 +209,7 @@ export default async function AuthPage() {
                 eventType="auth_return_cta"
                 ctaLabel={returnPack.ctaLabel}
                 ctaVariant={returnPack.ctaVariant}
+                missionView="active"
               >
                 {returnPack.ctaLabel}
               </MissionLink>
@@ -212,6 +220,7 @@ export default async function AuthPage() {
                 eventType="auth_dashboard_return_cta"
                 ctaLabel="Return to dashboard mission"
                 ctaVariant="return_path"
+                missionView="active"
               >
                 Return to dashboard mission
               </MissionLink>
@@ -228,7 +237,7 @@ export default async function AuthPage() {
           />
         </div>
         {session ? (
-          <WalletLinkPanel walletAddresses={session.walletAddresses} />
+          <WalletLinkPanel walletAddresses={session.walletAddresses} activeMissionView="active" />
         ) : (
           <section className="panel auth-panel panel--glass">
             <div className="panel__header">
