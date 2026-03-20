@@ -382,6 +382,29 @@ export type DashboardData = {
       featuredTracks: string[];
     };
   };
+  campaignPacks: Array<{
+    packId: string;
+    label: string;
+    lifecycleState: "draft" | "ready" | "live";
+    attributionSource: CampaignSource | "direct";
+    activeLane: CampaignSource | "direct";
+    kind: "bridge" | "feeder" | "mixed";
+    totalQuestCount: number;
+    completedQuestCount: number;
+    inProgressQuestCount: number;
+    rejectedQuestCount: number;
+    openQuestCount: number;
+    featuredTracks: QuestTrack[];
+    nextQuestTitle: string | null;
+    nextAction: string;
+    rewardFocus: string;
+    benchmarkNote: string;
+    questStatuses: Array<{
+      questId: string;
+      title: string;
+      status: "available" | "in-progress" | "completed" | "rejected";
+    }>;
+  }>;
   quests: Quest[];
   achievements: Achievement[];
   leaderboard: LeaderboardEntry[];

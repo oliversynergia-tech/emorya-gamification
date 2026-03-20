@@ -39,6 +39,7 @@ import type {
   EconomySettings,
   LeaderboardEntry,
   Quest,
+  QuestTrack,
   SubscriptionTier,
   TokenAsset,
   UserSnapshot,
@@ -207,6 +208,23 @@ type QuestRow = QueryResultRow & {
   required_tier: SubscriptionTier;
   is_premium_preview: boolean;
   recurrence: "one-time" | "daily" | "weekly";
+  metadata: Record<string, unknown>;
+  completion_status: "pending" | "approved" | "rejected" | null;
+};
+
+type CampaignPackJourneyRow = QueryResultRow & {
+  pack_id: string;
+  pack_label: string | null;
+  pack_state: "draft" | "ready" | "live" | null;
+  attribution_source: CampaignSource | "direct" | null;
+  experience_lane: CampaignSource | "direct" | null;
+  template_kind: "bridge" | "feeder" | "mixed" | null;
+  quest_id: string;
+  quest_title: string;
+  quest_slug: string;
+  category: Quest["category"];
+  verification_type: VerificationType;
+  is_premium_preview: boolean;
   metadata: Record<string, unknown>;
   completion_status: "pending" | "approved" | "rejected" | null;
 };
@@ -939,6 +957,168 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
   }));
 }
 
+async function getUserCampaignPackJourneys({
+  userId,
+  user,
+  userProgressState,
+  economySettings,
+}: {
+  userId: string;
+  user: UserSnapshot;
+  userProgressState: UserProgressState;
+  economySettings: EconomySettings;
+}): Promise<DashboardData["campaignPacks"]> {
+  const result = await runQuery<CampaignPackJourneyRow>(
+    `SELECT q.metadata->>'campaignPackId' AS pack_id,
+            q.metadata->>'campaignPackLabel' AS pack_label,
+            q.metadata->>'campaignPackState' AS pack_state,
+            q.metadata->>'campaignAttributionSource' AS attribution_source,
+            q.metadata->>'campaignExperienceLane' AS experience_lane,
+            q.metadata->>'campaignTemplateKind' AS template_kind,
+            q.id AS quest_id,
+            q.title AS quest_title,
+            q.slug AS quest_slug,
+            q.category,
+            q.verification_type,
+            q.is_premium_preview,
+            q.metadata,
+            qc.status AS completion_status
+     FROM quest_definitions q
+     LEFT JOIN LATERAL (
+       SELECT status
+       FROM quest_completions
+       WHERE user_id = $1
+         AND quest_id = q.id
+       ORDER BY created_at DESC
+       LIMIT 1
+     ) qc ON TRUE
+     WHERE q.is_active = TRUE
+       AND q.metadata ? 'campaignPackId'
+     ORDER BY q.metadata->>'campaignPackId', q.required_level ASC, q.xp_reward DESC, q.title ASC`,
+    [userId],
+  );
+
+  if (result.rows.length === 0) {
+    return [];
+  }
+
+  const activeLane = resolveCampaignExperienceSource(economySettings, user.campaignSource);
+  const groups = new Map<string, CampaignPackJourneyRow[]>();
+
+  for (const row of result.rows) {
+    const packRows = groups.get(row.pack_id) ?? [];
+    packRows.push(row);
+    groups.set(row.pack_id, packRows);
+  }
+
+  const packs = Array.from(groups.entries()).map(([packId, rows]) => {
+    const firstRow = rows[0];
+    const attributionSource = (firstRow.attribution_source ?? "direct") as CampaignSource | "direct";
+    const experienceLane = (firstRow.experience_lane ?? attributionSource ?? "direct") as CampaignSource | "direct";
+    const featuredTracks = Array.from(
+      new Set(
+        rows.map((row) =>
+          inferQuestTrack({
+            slug: row.quest_slug,
+            category: row.category,
+            verificationType: row.verification_type,
+            isPremiumPreview: row.is_premium_preview,
+            metadata: row.metadata,
+          }),
+        ),
+      ),
+    ).slice(0, 3) as QuestTrack[];
+    const questStatuses = rows.map((row) => {
+      let status: "available" | "in-progress" | "completed" | "rejected" = "available";
+      if (row.completion_status === "approved") {
+        status = "completed";
+      } else if (row.completion_status === "pending") {
+        status = "in-progress";
+      } else if (row.completion_status === "rejected") {
+        status = "rejected";
+      }
+
+      return {
+        questId: row.quest_id,
+        title: row.quest_title,
+        status,
+      };
+    });
+    const completedQuestCount = questStatuses.filter((quest) => quest.status === "completed").length;
+    const inProgressQuestCount = questStatuses.filter((quest) => quest.status === "in-progress").length;
+    const rejectedQuestCount = questStatuses.filter((quest) => quest.status === "rejected").length;
+    const openQuestCount = questStatuses.filter((quest) => quest.status === "available").length;
+    const nextQuestTitle = questStatuses.find((quest) => quest.status !== "completed")?.title ?? null;
+    const benchmark = getCampaignPackBenchmark(economySettings, experienceLane);
+
+    let nextAction = `Complete ${nextQuestTitle ?? "the next campaign quest"} to keep your pack momentum moving.`;
+    if (!userProgressState.walletLinked) {
+      nextAction = "Connect xPortal to move this campaign path into the full reward and payout flow.";
+    } else if (!userProgressState.starterPathComplete) {
+      nextAction = "Finish your Starter Path so this campaign interest becomes an Emorya-native habit loop.";
+    } else if (!user.rewardEligibility.eligible) {
+      nextAction = `Stay on the progression path: ${user.rewardEligibility.nextRequirement ?? "keep building XP and trust"}.`;
+    } else if (openQuestCount === 0 && inProgressQuestCount === 0) {
+      nextAction = "This pack is complete. Keep weekly XP and referrals active so the reward rail stays valuable.";
+    }
+
+    const rewardFocus =
+      attributionSource === experienceLane
+        ? `${experienceLane} is driving this mission directly. XP builds the core loop, then ${economySettings.payoutAsset} settles the reward rail.`
+        : `${attributionSource} attribution is preserved, but this mission is currently flowing through the ${experienceLane} bridge into Emorya progression and ${economySettings.payoutAsset} rewards.`;
+
+    return {
+      packId,
+      label: firstRow.pack_label ?? "Campaign pack",
+      lifecycleState: firstRow.pack_state ?? "draft",
+      attributionSource,
+      activeLane: experienceLane,
+      kind: (firstRow.template_kind ?? "mixed") as "bridge" | "feeder" | "mixed",
+      totalQuestCount: rows.length,
+      completedQuestCount,
+      inProgressQuestCount,
+      rejectedQuestCount,
+      openQuestCount,
+      featuredTracks,
+      nextQuestTitle,
+      nextAction,
+      rewardFocus,
+      benchmarkNote: `This lane is benchmarked toward ${(benchmark.walletLinkRateTarget * 100).toFixed(0)}% wallet link, ${(benchmark.rewardEligibilityRateTarget * 100).toFixed(0)}% reward eligibility, and ${(benchmark.premiumConversionRateTarget * 100).toFixed(0)}% premium conversion.`,
+      questStatuses,
+      sortScore:
+        (experienceLane === activeLane ? 5 : 0) +
+        (attributionSource === (user.campaignSource ?? "direct") ? 3 : 0) +
+        (firstRow.pack_state === "live" ? 2 : 0) +
+        completedQuestCount / Math.max(rows.length, 1),
+    };
+  });
+
+  return packs
+    .sort((left, right) => {
+      return right.sortScore - left.sortScore || right.totalQuestCount - left.totalQuestCount || left.label.localeCompare(right.label);
+    })
+    .slice(0, 2)
+    .map((pack) => ({
+      packId: pack.packId,
+      label: pack.label,
+      lifecycleState: pack.lifecycleState,
+      attributionSource: pack.attributionSource,
+      activeLane: pack.activeLane,
+      kind: pack.kind,
+      totalQuestCount: pack.totalQuestCount,
+      completedQuestCount: pack.completedQuestCount,
+      inProgressQuestCount: pack.inProgressQuestCount,
+      rejectedQuestCount: pack.rejectedQuestCount,
+      openQuestCount: pack.openQuestCount,
+      featuredTracks: pack.featuredTracks,
+      nextQuestTitle: pack.nextQuestTitle,
+      nextAction: pack.nextAction,
+      rewardFocus: pack.rewardFocus,
+      benchmarkNote: pack.benchmarkNote,
+      questStatuses: pack.questStatuses,
+    }));
+}
+
 export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Promise<DashboardData> {
   const userId = await resolveDashboardUserId(currentUser);
 
@@ -970,6 +1150,12 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     getReferralLeaderboard(),
     getActivityFeed(),
   ]);
+  const campaignPacks = await getUserCampaignPackJourneys({
+    userId,
+    user,
+    userProgressState,
+    economySettings,
+  });
   const campaignEconomy = getCampaignEconomyOverride(economySettings, user.campaignSource);
   const activeCampaignLane = resolveCampaignExperienceSource(economySettings, user.campaignSource);
   const featuredTracks = getCampaignFeaturedTracks(activeCampaignLane, campaignEconomy);
@@ -992,6 +1178,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
         featuredTracks,
       },
     },
+    campaignPacks,
     quests,
     achievements,
     leaderboard,

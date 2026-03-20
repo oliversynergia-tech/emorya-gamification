@@ -70,6 +70,19 @@ function getTrackDescription(track: QuestTrack) {
   }
 }
 
+function getCampaignSourceLabel(source: "direct" | "zealy" | "galxe" | "taskon") {
+  switch (source) {
+    case "zealy":
+      return "Zealy";
+    case "galxe":
+      return "Galxe";
+    case "taskon":
+      return "TaskOn";
+    default:
+      return "Direct";
+  }
+}
+
 function renderQuestCard(quest: Quest) {
   return (
     <article
@@ -322,6 +335,57 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                   {data.user.rewardEligibility.eligible ? "Live" : "Pending"}
                 </span>
               </article>
+            </div>
+          </div>
+        ) : null}
+        {data.campaignPacks.length > 0 ? (
+          <div className="panel panel--glass">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Active campaign mission</p>
+                <h3>Your live pack progress</h3>
+              </div>
+              <span className="badge badge--pink">{data.campaignPacks.length} active</span>
+            </div>
+            <div className="achievement-list">
+              {data.campaignPacks.map((pack) => (
+                <article key={pack.packId} className="achievement-card">
+                  <div>
+                    <strong>{pack.label}</strong>
+                    <p>
+                      {pack.kind === "feeder"
+                        ? `${getCampaignSourceLabel(pack.attributionSource)} feeder flowing into ${getCampaignSourceLabel(pack.activeLane)}.`
+                        : pack.kind === "bridge"
+                          ? `${getCampaignSourceLabel(pack.activeLane)} bridge mission.`
+                          : `${getCampaignSourceLabel(pack.attributionSource)} mission pack.`}{" "}
+                      {pack.rewardFocus}
+                    </p>
+                    <p className="form-note">{pack.nextAction}</p>
+                    <p className="form-note">{pack.benchmarkNote}</p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>
+                      {pack.completedQuestCount}/{pack.totalQuestCount} complete
+                    </span>
+                    <span>{pack.inProgressQuestCount} in progress</span>
+                    <span>{pack.openQuestCount} open</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="info-grid">
+              {data.campaignPacks.map((pack) => (
+                <div key={`${pack.packId}-summary`} className="info-card">
+                  <span>{pack.label}</span>
+                  <strong>{pack.nextQuestTitle ?? "Pack complete"}</strong>
+                  <small>
+                    Tracks:{" "}
+                    {pack.featuredTracks.length > 0
+                      ? pack.featuredTracks.map((track) => getTrackLabel(track)).join(", ")
+                      : "Campaign"}
+                  </small>
+                </div>
+              ))}
             </div>
           </div>
         ) : null}
