@@ -3900,6 +3900,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           .slice(0, 2)
           .map((auditEntry) => `${auditEntry.createdAt.slice(0, 10)}: ${auditEntry.detail}`)
           .join(" | ") || null,
+      lifecycleHistorySummary:
+        campaignPackAudit
+          .filter((auditEntry) => auditEntry.packId === entry.packId && auditEntry.action === "update_lifecycle")
+          .slice(0, 2)
+          .map((auditEntry) => `${auditEntry.createdAt.slice(0, 10)}: ${auditEntry.detail}`)
+          .join(" | ") || null,
       recommendationHistorySnapshot: entry.missionCtaSummary.recommendationHistory
         .slice(0, 2)
         .map((historyEntry) => `${historyEntry.action.replaceAll("_", " ")}: ${historyEntry.detail}`),

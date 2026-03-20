@@ -1066,6 +1066,7 @@ export type AdminOverviewData = {
       lifecyclePhaseSummary: string;
       benchmarkOverrideImpactSummary: string;
       benchmarkOverrideHistorySummary: string | null;
+      lifecycleHistorySummary: string | null;
       recommendationHistorySnapshot: string[];
     }>;
     alerts: Array<{

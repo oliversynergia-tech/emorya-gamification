@@ -254,9 +254,21 @@ function getDashboardPriorityAction(data: DashboardData) {
       followupLabel: "What changes after this",
       followupValue: returnPack.unlockRewardPreview,
       followupCtaLabel:
-        returnPack.blockageState === "weekly_pace" || returnPack.blockageState === "ready"
-          ? "Review what opens next"
-          : "See the gated path",
+        returnPack.blockageState === "weekly_pace"
+          ? returnPack.returnWindow === "today"
+            ? "Plan today's recovery"
+            : "Plan this week's recovery"
+          : returnPack.blockageState === "ready"
+            ? "Review what opens next"
+            : returnPack.blockageState === "wallet_connection"
+              ? "See the wallet gate"
+              : returnPack.blockageState === "starter_path"
+                ? "See the starter gate"
+                : returnPack.blockageState === "trust"
+                  ? "See the trust gate"
+                  : returnPack.blockageState === "premium_phase"
+                    ? "Review premium gate"
+                    : "See the gated path",
       followupHref: "/profile#mission-recap",
       followupCtaVariant:
         returnPack.blockageState === "weekly_pace" || returnPack.blockageState === "ready"

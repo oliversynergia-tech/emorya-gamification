@@ -61,6 +61,10 @@ function getKindFilterLabel(kindFilter: "all" | "bridge" | "feeder" | "mixed") {
   return `${kindFilter} only`;
 }
 
+function slugifyForFilename(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "all";
+}
+
 function exportPackAnalytics(entries: PackAnalyticsItem[]) {
   const lines = [
     [
@@ -204,6 +208,7 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
       "operator_outcome_detail",
       "lifecycle_phase_summary",
       "benchmark_override_impact_summary",
+      "lifecycle_history_summary",
       "recommendation_history_snapshot",
     ].join(","),
     ...entries.map((entry) =>
@@ -227,6 +232,7 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
         JSON.stringify(entry.operatorOutcomeDetail),
         JSON.stringify(entry.lifecyclePhaseSummary),
         JSON.stringify(entry.benchmarkOverrideImpactSummary),
+        JSON.stringify(entry.lifecycleHistorySummary ?? ""),
         JSON.stringify(entry.recommendationHistorySnapshot),
       ].join(","),
     ),
@@ -297,7 +303,7 @@ function exportReminderComparison(
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "emorya-pack-reminder-comparison.csv";
+  link.download = `emorya-pack-reminder-comparison-${slugifyForFilename(getReminderExportModeLabel(mode))}-${slugifyForFilename(getSourceFilterLabel(filters.source))}-${slugifyForFilename(getStatusFilterLabel(filters.status))}-${slugifyForFilename(getKindFilterLabel(filters.kind))}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -320,6 +326,7 @@ function printPartnerReport(entries: PartnerReportItem[]) {
       <p style="margin:0 0 12px;color:#5e5035;">${entry.lifecyclePhaseSummary}</p>
       <p style="margin:0 0 12px;color:#5e5035;">${entry.benchmarkOverrideImpactSummary}</p>
       ${entry.benchmarkOverrideHistorySummary ? `<p style="margin:0 0 12px;color:#5e5035;">Benchmark change history: ${entry.benchmarkOverrideHistorySummary}</p>` : ""}
+      ${entry.lifecycleHistorySummary ? `<p style="margin:0 0 12px;color:#5e5035;">Lifecycle history: ${entry.lifecycleHistorySummary}</p>` : ""}
       ${entry.recommendationHistorySnapshot.length > 0 ? `<p style="margin:0 0 12px;color:#5e5035;">Recent operator shifts: ${entry.recommendationHistorySnapshot.join(" | ")}</p>` : ""}
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
         <div><strong>${entry.participantCount}</strong><div>Participants</div></div>
@@ -756,6 +763,21 @@ export function CampaignPackAnalyticsPanel({
               <div className="achievement-card__side">
                 <span>{Math.round(averageHandledRate * 100)}% avg reminder handled</span>
                 <span>
+                  {matching.length > 0
+                    ? (
+                        matching.reduce(
+                          (sum, pack) =>
+                            sum +
+                            (pack.participantCount > 0 ? pack.missionCtaSummary.uniqueUsers / pack.participantCount : 0),
+                          0,
+                        ) /
+                        matching.length *
+                        100
+                      ).toFixed(0)
+                    : "0"}
+                  % avg CTA reach
+                </span>
+                <span>
                   {Math.round(
                     (matching.reduce((sum, pack) => sum + pack.walletLinkRate, 0) / matching.length) * 100,
                   )}% avg wallet link
@@ -1017,6 +1039,11 @@ export function CampaignPackAnalyticsPanel({
               {partnerReports.find((entry) => entry.packId === pack.packId)?.benchmarkOverrideHistorySummary ? (
                 <p className="form-note">
                   Benchmark change history: {partnerReports.find((entry) => entry.packId === pack.packId)?.benchmarkOverrideHistorySummary}
+                </p>
+              ) : null}
+              {partnerReports.find((entry) => entry.packId === pack.packId)?.lifecycleHistorySummary ? (
+                <p className="form-note">
+                  Lifecycle history: {partnerReports.find((entry) => entry.packId === pack.packId)?.lifecycleHistorySummary}
                 </p>
               ) : null}
               {partnerReports.find((entry) => entry.packId === pack.packId)?.recommendationHistorySnapshot.length ? (

@@ -18,6 +18,7 @@ export function MissionPackDetailPanel({
 }) {
   const initialPackId = activePacks[0]?.packId ?? packHistory[0]?.packId ?? "none";
   const [selectedPackId, setSelectedPackId] = useState(initialPackId);
+  const [showLadderDetails, setShowLadderDetails] = useState(false);
   const selectedActivePack = useMemo(
     () => activePacks.find((pack) => pack.packId === selectedPackId) ?? null,
     [activePacks, selectedPackId],
@@ -161,17 +162,22 @@ export function MissionPackDetailPanel({
                   </div>
                   <div className="achievement-card__side">
                     <span>{remainingQuestProgression.length} steps left</span>
+                    <button className="button button--secondary button--small" type="button" onClick={() => setShowLadderDetails((current) => !current)}>
+                      {showLadderDetails ? "Collapse ladder" : "Expand ladder"}
+                    </button>
                   </div>
                 </article>
-                {Array.from(dependencyGroups.entries()).map(([label, items]) => (
-                  <article key={`${selectedActivePack.packId}-group-${label}`} className="achievement-card mission-ladder-group">
-                    <div>
-                      <strong>{label}</strong>
-                      <p>{items.length} remaining step{items.length === 1 ? "" : "s"} in this dependency cluster.</p>
-                      <p className="form-note">{items.map((item) => item.title).join(" -> ")}</p>
-                    </div>
-                  </article>
-                ))}
+                {showLadderDetails
+                  ? Array.from(dependencyGroups.entries()).map(([label, items]) => (
+                      <article key={`${selectedActivePack.packId}-group-${label}`} className="achievement-card mission-ladder-group">
+                        <div>
+                          <strong>{label}</strong>
+                          <p>{items.length} remaining step{items.length === 1 ? "" : "s"} in this dependency cluster.</p>
+                          <p className="form-note">{items.map((item) => item.title).join(" -> ")}</p>
+                        </div>
+                      </article>
+                    ))
+                  : null}
                 {selectedActivePack.questStatuses.map((quest) => (
                   <article key={quest.questId} className="achievement-card">
                     <div>
