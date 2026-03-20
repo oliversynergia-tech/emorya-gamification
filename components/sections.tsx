@@ -1716,6 +1716,24 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
               </div>
             </article>
           ))}
+          {data.settlementAnalytics.exceptionTrend.map((entry) => (
+            <article key={`exception-trend-${entry.state}`} className="achievement-card">
+              <div>
+                <strong>{entry.state} trend</strong>
+                <p>
+                  {data.settlementAnalytics.periodLabel} versus {data.settlementAnalytics.comparePeriodLabel}.
+                </p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{entry.currentCount} current</span>
+                <span>{entry.previousCount} previous</span>
+                <span>
+                  {entry.delta > 0 ? "+" : ""}
+                  {entry.delta} delta
+                </span>
+              </div>
+            </article>
+          ))}
           {data.settlementAnalytics.topFailureReasons.map((entry) => (
             <article key={`failure-${entry.reason}`} className="achievement-card">
               <div>

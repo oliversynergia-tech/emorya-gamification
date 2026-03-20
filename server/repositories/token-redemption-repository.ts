@@ -490,6 +490,12 @@ type SettlementFailureReasonRow = QueryResultRow & {
   count: number | string;
 };
 
+type SettlementExceptionTrendRow = QueryResultRow & {
+  state: "held" | "failed" | "cancelled";
+  current_count: number | string;
+  previous_count: number | string;
+};
+
 type TokenRedemptionAuditRow = QueryResultRow & {
   id: string;
   redemption_id: string;
@@ -555,7 +561,7 @@ export async function getTokenSettlementAnalytics(input?: {
     Math.round((compareRangeEndExclusive.getTime() - compareRangeStart.getTime()) / (24 * 60 * 60 * 1000)),
     1,
   );
-  const [summaryResult, throughputResult, byAssetResult, byProgramResult, workflowResult, failureReasonResult] = await Promise.all([
+  const [summaryResult, throughputResult, byAssetResult, byProgramResult, workflowResult, failureReasonResult, exceptionTrendResult] = await Promise.all([
     runQuery<SettlementAnalyticsRow>(
       `WITH pending AS (
        SELECT
@@ -663,6 +669,28 @@ export async function getTokenSettlementAnalytics(input?: {
        ORDER BY COUNT(*) DESC, reason ASC
        LIMIT 5`,
     ),
+    runQuery<SettlementExceptionTrendRow>(
+      `WITH exception_events AS (
+         SELECT 'held'::text AS state, held_at AS state_at
+         FROM token_redemptions
+         WHERE held_at IS NOT NULL
+         UNION ALL
+         SELECT 'failed'::text AS state, failed_at AS state_at
+         FROM token_redemptions
+         WHERE failed_at IS NOT NULL
+         UNION ALL
+         SELECT 'cancelled'::text AS state, cancelled_at AS state_at
+         FROM token_redemptions
+         WHERE cancelled_at IS NOT NULL
+       )
+       SELECT state,
+              COUNT(*) FILTER (WHERE state_at >= $1::timestamptz AND state_at < $2::timestamptz)::int AS current_count,
+              COUNT(*) FILTER (WHERE state_at >= $3::timestamptz AND state_at < $4::timestamptz)::int AS previous_count
+       FROM exception_events
+       GROUP BY state
+       ORDER BY state ASC`,
+      [currentRangeStart, currentRangeEndExclusive, compareRangeStart, compareRangeEndExclusive],
+    ),
   ]);
 
   const row = summaryResult.rows[0];
@@ -707,6 +735,12 @@ export async function getTokenSettlementAnalytics(input?: {
         state: entry.workflow_state as "held" | "failed" | "cancelled",
         count: Number(entry.count),
       })),
+    exceptionTrend: exceptionTrendResult.rows.map((entry) => ({
+      state: entry.state,
+      currentCount: Number(entry.current_count),
+      previousCount: Number(entry.previous_count),
+      delta: Number(entry.current_count) - Number(entry.previous_count),
+    })),
     topFailureReasons: failureReasonResult.rows.map((entry) => ({
       reason: entry.reason ?? "Unknown failure",
       count: Number(entry.count),

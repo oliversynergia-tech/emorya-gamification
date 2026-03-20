@@ -575,6 +575,12 @@ export type AdminOverviewData = {
       state: "held" | "failed" | "cancelled";
       count: number;
     }>;
+    exceptionTrend: Array<{
+      state: "held" | "failed" | "cancelled";
+      currentCount: number;
+      previousCount: number;
+      delta: number;
+    }>;
     topFailureReasons: Array<{
       reason: string;
       count: number;
