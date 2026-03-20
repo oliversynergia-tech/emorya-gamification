@@ -41,7 +41,9 @@ type EconomySettingsRow = QueryResultRow & {
     walletLinkRateTarget?: number;
     rewardEligibilityRateTarget?: number;
     premiumConversionRateTarget?: number;
+    retainedActivityRateTarget?: number;
     averageWeeklyXpTarget?: number;
+    zeroCompletionWeekThreshold?: number;
   }>;
   campaign_overrides: Record<string, {
     signupBonusXp?: number;

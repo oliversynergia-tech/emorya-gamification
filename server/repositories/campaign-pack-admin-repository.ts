@@ -12,7 +12,9 @@ type CampaignPackBenchmarkOverrideRow = QueryResultRow & {
   wallet_link_rate_target: number | string;
   reward_eligibility_rate_target: number | string;
   premium_conversion_rate_target: number | string;
+  retained_activity_rate_target: number | string;
   average_weekly_xp_target: number | string;
+  zero_completion_week_threshold: number | string;
   reason: string | null;
   updated_at: string;
   updated_by_display_name: string | null;
@@ -25,7 +27,9 @@ function mapBenchmarkOverride(row: CampaignPackBenchmarkOverrideRow): CampaignPa
     walletLinkRateTarget: Number(row.wallet_link_rate_target),
     rewardEligibilityRateTarget: Number(row.reward_eligibility_rate_target),
     premiumConversionRateTarget: Number(row.premium_conversion_rate_target),
+    retainedActivityRateTarget: Number(row.retained_activity_rate_target),
     averageWeeklyXpTarget: Number(row.average_weekly_xp_target),
+    zeroCompletionWeekThreshold: Number(row.zero_completion_week_threshold),
     reason: row.reason,
     updatedAt: row.updated_at,
     updatedByDisplayName: row.updated_by_display_name,
@@ -40,7 +44,9 @@ export async function listCampaignPackBenchmarkOverrides() {
             pack_override.wallet_link_rate_target,
             pack_override.reward_eligibility_rate_target,
             pack_override.premium_conversion_rate_target,
+            pack_override.retained_activity_rate_target,
             pack_override.average_weekly_xp_target,
+            pack_override.zero_completion_week_threshold,
             pack_override.reason,
             pack_override.updated_at,
             updater.display_name AS updated_by_display_name
@@ -60,7 +66,9 @@ export async function getCampaignPackBenchmarkOverrideByPackId(packId: string) {
             pack_override.wallet_link_rate_target,
             pack_override.reward_eligibility_rate_target,
             pack_override.premium_conversion_rate_target,
+            pack_override.retained_activity_rate_target,
             pack_override.average_weekly_xp_target,
+            pack_override.zero_completion_week_threshold,
             pack_override.reason,
             pack_override.updated_at,
             updater.display_name AS updated_by_display_name
@@ -87,7 +95,9 @@ export async function upsertCampaignPackBenchmarkOverride({
     walletLinkRateTarget: number;
     rewardEligibilityRateTarget: number;
     premiumConversionRateTarget: number;
+    retainedActivityRateTarget: number;
     averageWeeklyXpTarget: number;
+    zeroCompletionWeekThreshold: number;
   };
   reason?: string | null;
   updatedBy: string;
@@ -100,19 +110,23 @@ export async function upsertCampaignPackBenchmarkOverride({
        wallet_link_rate_target,
        reward_eligibility_rate_target,
        premium_conversion_rate_target,
+       retained_activity_rate_target,
        average_weekly_xp_target,
+       zero_completion_week_threshold,
        reason,
        created_by,
        updated_by
      ) VALUES (
-       $1, $2, $3, $4, $5, $6, $7, $8, $9, $9
+       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11
      )
      ON CONFLICT (pack_id) DO UPDATE SET
        label = EXCLUDED.label,
        wallet_link_rate_target = EXCLUDED.wallet_link_rate_target,
        reward_eligibility_rate_target = EXCLUDED.reward_eligibility_rate_target,
        premium_conversion_rate_target = EXCLUDED.premium_conversion_rate_target,
+       retained_activity_rate_target = EXCLUDED.retained_activity_rate_target,
        average_weekly_xp_target = EXCLUDED.average_weekly_xp_target,
+       zero_completion_week_threshold = EXCLUDED.zero_completion_week_threshold,
        reason = EXCLUDED.reason,
        updated_by = EXCLUDED.updated_by,
        updated_at = NOW()`,
@@ -123,7 +137,9 @@ export async function upsertCampaignPackBenchmarkOverride({
       benchmark.walletLinkRateTarget,
       benchmark.rewardEligibilityRateTarget,
       benchmark.premiumConversionRateTarget,
+      benchmark.retainedActivityRateTarget,
       benchmark.averageWeeklyXpTarget,
+      benchmark.zeroCompletionWeekThreshold,
       reason?.trim() || null,
       updatedBy,
     ],

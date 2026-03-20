@@ -231,6 +231,47 @@ export async function getCampaignPackAlertSuppressionAnalytics() {
      GROUP BY 1
      ORDER BY COUNT(*) DESC, 1 ASC`,
   );
+  const recentActivityResult = await runQuery<{
+    bucket_start: string;
+    suppression_count: number | string;
+    cleared_count: number | string;
+    acknowledged_count: number | string;
+  }>(
+    `WITH suppression_events AS (
+       SELECT DATE_TRUNC('week', created_at)::date AS bucket_start,
+              COUNT(*)::int AS suppression_count,
+              0::int AS cleared_count,
+              0::int AS acknowledged_count
+       FROM campaign_pack_alert_suppressions
+       WHERE created_at >= NOW() - INTERVAL '28 days'
+       GROUP BY 1
+       UNION ALL
+       SELECT DATE_TRUNC('week', cleared_at)::date AS bucket_start,
+              0::int AS suppression_count,
+              COUNT(*)::int AS cleared_count,
+              0::int AS acknowledged_count
+       FROM campaign_pack_alert_suppressions
+       WHERE cleared_at IS NOT NULL
+         AND cleared_at >= NOW() - INTERVAL '28 days'
+       GROUP BY 1
+       UNION ALL
+       SELECT DATE_TRUNC('week', acknowledged_at)::date AS bucket_start,
+              0::int AS suppression_count,
+              0::int AS cleared_count,
+              COUNT(*)::int AS acknowledged_count
+       FROM campaign_pack_alert_deliveries
+       WHERE acknowledged_at IS NOT NULL
+         AND acknowledged_at >= NOW() - INTERVAL '28 days'
+       GROUP BY 1
+     )
+     SELECT bucket_start::text,
+            SUM(suppression_count)::int AS suppression_count,
+            SUM(cleared_count)::int AS cleared_count,
+            SUM(acknowledged_count)::int AS acknowledged_count
+     FROM suppression_events
+     GROUP BY 1
+     ORDER BY 1 ASC`,
+  );
 
   return {
     activeCount: byDurationResult.rows.reduce((sum, row) => sum + Number(row.count), 0),
@@ -241,6 +282,12 @@ export async function getCampaignPackAlertSuppressionAnalytics() {
     activeByReason: byReasonResult.rows.map((row) => ({
       reason: row.reason ?? "No reason given",
       count: Number(row.count),
+    })),
+    recentActivity: recentActivityResult.rows.map((row) => ({
+      bucketStart: row.bucket_start,
+      suppressionCount: Number(row.suppression_count),
+      clearedCount: Number(row.cleared_count),
+      acknowledgedCount: Number(row.acknowledged_count),
     })),
   };
 }

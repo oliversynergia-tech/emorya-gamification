@@ -132,6 +132,19 @@ export function CampaignPackAlertPanel({
             </div>
           </article>
         ))}
+        {suppressionAnalytics.recentActivity.map((entry) => (
+          <article key={entry.bucketStart} className="achievement-card">
+            <div>
+              <strong>Week of {entry.bucketStart}</strong>
+              <p>Suppression and acknowledgement movement over time.</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{entry.suppressionCount} suppressed</span>
+              <span>{entry.clearedCount} cleared</span>
+              <span>{entry.acknowledgedCount} acknowledged</span>
+            </div>
+          </article>
+        ))}
       </div>
       <div className="achievement-list">
         {suppressions.map((suppression) => (

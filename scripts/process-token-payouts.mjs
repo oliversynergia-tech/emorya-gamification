@@ -11,6 +11,7 @@ const actorUserId = process.env.AUTOMATION_ACTOR_USER_ID?.trim() || null;
 const dryRun = process.argv.includes("--dry-run");
 const batchSizeArg = process.argv.find((arg) => arg.startsWith("--batch-size="));
 const batchSize = Math.min(Math.max(Number(batchSizeArg?.split("=")[1] ?? 50), 1), 250);
+const maxRetries = Math.min(Math.max(Number(process.env.PAYOUT_AUTOMATION_MAX_RETRIES ?? 3), 1), 10);
 
 function buildAutomationReceiptReference(row) {
   const sourceTag = String(row.source ?? "reward").replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "").toUpperCase();
@@ -60,6 +61,7 @@ await withClient(async (client) => {
     settled: 0,
     generated: 0,
     failed: 0,
+    escalated: 0,
     skipped: 0,
   };
 
@@ -201,35 +203,65 @@ await withClient(async (client) => {
         }
       }
     } catch (error) {
-      summary.failed += 1;
+      const nextRetryCount = Number(row.retry_count ?? 0) + 1;
+      const shouldEscalate = nextRetryCount >= maxRetries;
+      if (shouldEscalate) {
+        summary.escalated += 1;
+      } else {
+        summary.failed += 1;
+      }
       const errorMessage = error instanceof Error ? error.message : "Unknown automation error.";
       if (!dryRun) {
-        await client.query(
-          `UPDATE token_redemptions
-           SET workflow_state = 'failed',
-               failed_at = NOW(),
-               failed_by = $2,
-               last_error = $3,
-               retry_count = COALESCE(retry_count, 0) + 1,
-               updated_at = NOW()
-           WHERE id = $1`,
-          [row.id, actorUserId, errorMessage],
-        );
+        if (shouldEscalate) {
+          const holdReason = `Automation failed ${nextRetryCount} times and now requires operator review: ${errorMessage}`;
+          await client.query(
+            `UPDATE token_redemptions
+             SET workflow_state = 'held',
+                 held_at = NOW(),
+                 held_by = $2,
+                 hold_reason = $3,
+                 last_error = $4,
+                 retry_count = COALESCE(retry_count, 0) + 1,
+                 metadata = jsonb_set(
+                   jsonb_set(COALESCE(metadata, '{}'::jsonb), '{automationEscalatedAt}', to_jsonb(NOW()::text), true),
+                   '{automationEscalationReason}',
+                   to_jsonb($3::text),
+                   true
+                 ),
+                 updated_at = NOW()
+             WHERE id = $1`,
+            [row.id, actorUserId, holdReason, errorMessage],
+          );
+        } else {
+          await client.query(
+            `UPDATE token_redemptions
+             SET workflow_state = 'failed',
+                 failed_at = NOW(),
+                 failed_by = $2,
+                 last_error = $3,
+                 retry_count = COALESCE(retry_count, 0) + 1,
+                 updated_at = NOW()
+             WHERE id = $1`,
+            [row.id, actorUserId, errorMessage],
+          );
+        }
         await client.query(
           `INSERT INTO token_redemption_audit (
              id, redemption_id, action, changed_by, previous_workflow_state, next_workflow_state, settlement_note, metadata
-           ) VALUES ($1, $2, 'fail', $3, $4, 'failed', $5, $6::jsonb)`,
+           ) VALUES ($1, $2, 'fail', $3, $4, $5, $6, $7::jsonb)`,
           [
             randomUUID(),
             row.id,
             actorUserId,
             currentState,
-            errorMessage,
+            shouldEscalate ? "held" : "failed",
+            shouldEscalate ? `Automation escalated to hold after ${nextRetryCount} retries. ${errorMessage}` : errorMessage,
             JSON.stringify({
               source: row.source,
               asset: row.asset,
               automated: true,
-              retryCount: Number(row.retry_count ?? 0) + 1,
+              retryCount: nextRetryCount,
+              escalated: shouldEscalate,
             }),
           ],
         );
@@ -238,6 +270,6 @@ await withClient(async (client) => {
   }
 
   console.log(
-    `${dryRun ? "Dry run" : "Processed"} automated payouts: ${summary.approved} approved, ${summary.processing} moved to processing, ${summary.generated} receipt references generated, ${summary.settled} settled, ${summary.failed} failed, ${summary.skipped} skipped.`,
+    `${dryRun ? "Dry run" : "Processed"} automated payouts: ${summary.approved} approved, ${summary.processing} moved to processing, ${summary.generated} receipt references generated, ${summary.settled} settled, ${summary.failed} failed, ${summary.escalated} escalated to hold, ${summary.skipped} skipped.`,
   );
 });

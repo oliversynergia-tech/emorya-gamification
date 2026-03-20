@@ -409,7 +409,9 @@ export async function saveCampaignPackBenchmarkOverride({
     walletLinkRateTarget: number;
     rewardEligibilityRateTarget: number;
     premiumConversionRateTarget: number;
+    retainedActivityRateTarget: number;
     averageWeeklyXpTarget: number;
+    zeroCompletionWeekThreshold: number;
   };
   reason?: string | null;
 }) {
@@ -430,7 +432,9 @@ export async function saveCampaignPackBenchmarkOverride({
       walletLinkRateTarget: Math.max(benchmark.walletLinkRateTarget, 0),
       rewardEligibilityRateTarget: Math.max(benchmark.rewardEligibilityRateTarget, 0),
       premiumConversionRateTarget: Math.max(benchmark.premiumConversionRateTarget, 0),
+      retainedActivityRateTarget: Math.max(benchmark.retainedActivityRateTarget, 0),
       averageWeeklyXpTarget: Math.max(Math.round(benchmark.averageWeeklyXpTarget), 0),
+      zeroCompletionWeekThreshold: Math.max(Math.round(benchmark.zeroCompletionWeekThreshold), 1),
     },
     reason,
     updatedBy: currentUser.id,
@@ -650,7 +654,7 @@ export async function suppressCampaignPackAlert({
   reason?: string | null;
 }) {
   const currentUser = await getAuthenticatedUser();
-  await assertAdminUser(currentUser);
+  await assertSuperAdminUser(currentUser);
 
   if (!currentUser) {
     throw new Error("You must be signed in to access admin controls.");
@@ -880,25 +884,33 @@ function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id"
         walletLinkRateTarget: Math.max(input.campaignPackBenchmarks?.direct?.walletLinkRateTarget ?? 0, 0),
         rewardEligibilityRateTarget: Math.max(input.campaignPackBenchmarks?.direct?.rewardEligibilityRateTarget ?? 0, 0),
         premiumConversionRateTarget: Math.max(input.campaignPackBenchmarks?.direct?.premiumConversionRateTarget ?? 0, 0),
+        retainedActivityRateTarget: Math.max(input.campaignPackBenchmarks?.direct?.retainedActivityRateTarget ?? 0, 0),
         averageWeeklyXpTarget: Math.max(input.campaignPackBenchmarks?.direct?.averageWeeklyXpTarget ?? 0, 0),
+        zeroCompletionWeekThreshold: Math.max(Math.round(input.campaignPackBenchmarks?.direct?.zeroCompletionWeekThreshold ?? 1), 1),
       },
       zealy: {
         walletLinkRateTarget: Math.max(input.campaignPackBenchmarks?.zealy?.walletLinkRateTarget ?? 0, 0),
         rewardEligibilityRateTarget: Math.max(input.campaignPackBenchmarks?.zealy?.rewardEligibilityRateTarget ?? 0, 0),
         premiumConversionRateTarget: Math.max(input.campaignPackBenchmarks?.zealy?.premiumConversionRateTarget ?? 0, 0),
+        retainedActivityRateTarget: Math.max(input.campaignPackBenchmarks?.zealy?.retainedActivityRateTarget ?? 0, 0),
         averageWeeklyXpTarget: Math.max(input.campaignPackBenchmarks?.zealy?.averageWeeklyXpTarget ?? 0, 0),
+        zeroCompletionWeekThreshold: Math.max(Math.round(input.campaignPackBenchmarks?.zealy?.zeroCompletionWeekThreshold ?? 1), 1),
       },
       galxe: {
         walletLinkRateTarget: Math.max(input.campaignPackBenchmarks?.galxe?.walletLinkRateTarget ?? 0, 0),
         rewardEligibilityRateTarget: Math.max(input.campaignPackBenchmarks?.galxe?.rewardEligibilityRateTarget ?? 0, 0),
         premiumConversionRateTarget: Math.max(input.campaignPackBenchmarks?.galxe?.premiumConversionRateTarget ?? 0, 0),
+        retainedActivityRateTarget: Math.max(input.campaignPackBenchmarks?.galxe?.retainedActivityRateTarget ?? 0, 0),
         averageWeeklyXpTarget: Math.max(input.campaignPackBenchmarks?.galxe?.averageWeeklyXpTarget ?? 0, 0),
+        zeroCompletionWeekThreshold: Math.max(Math.round(input.campaignPackBenchmarks?.galxe?.zeroCompletionWeekThreshold ?? 1), 1),
       },
       taskon: {
         walletLinkRateTarget: Math.max(input.campaignPackBenchmarks?.taskon?.walletLinkRateTarget ?? 0, 0),
         rewardEligibilityRateTarget: Math.max(input.campaignPackBenchmarks?.taskon?.rewardEligibilityRateTarget ?? 0, 0),
         premiumConversionRateTarget: Math.max(input.campaignPackBenchmarks?.taskon?.premiumConversionRateTarget ?? 0, 0),
+        retainedActivityRateTarget: Math.max(input.campaignPackBenchmarks?.taskon?.retainedActivityRateTarget ?? 0, 0),
         averageWeeklyXpTarget: Math.max(input.campaignPackBenchmarks?.taskon?.averageWeeklyXpTarget ?? 0, 0),
+        zeroCompletionWeekThreshold: Math.max(Math.round(input.campaignPackBenchmarks?.taskon?.zeroCompletionWeekThreshold ?? 1), 1),
       },
     },
     campaignOverrides: {

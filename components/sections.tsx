@@ -12,7 +12,6 @@ import { CampaignPackAnalyticsPanel } from "@/components/campaign-pack-analytics
 import { CampaignPackAlertPanel } from "@/components/campaign-pack-alert-panel";
 import { CampaignPackAuditPanel } from "@/components/campaign-pack-audit-panel";
 import { CampaignPackNotificationHistoryPanel } from "@/components/campaign-pack-notification-history-panel";
-import { PayoutAuditTrailPanel } from "@/components/payout-audit-trail-panel";
 import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
 import { SourceLaneReportPanel } from "@/components/source-lane-report-panel";
 import { TokenReceiptHistoryPanel } from "@/components/token-receipt-history-panel";
@@ -69,18 +68,6 @@ function getTrackDescription(track: QuestTrack) {
     default:
       return "Progression-aligned quests grouped by the user journey.";
   }
-}
-
-function formatCompactHours(hours: number) {
-  if (hours >= 24) {
-    return `${(hours / 24).toFixed(1)}d`;
-  }
-
-  if (hours >= 1) {
-    return `${hours.toFixed(1)}h`;
-  }
-
-  return `${Math.round(hours * 60)}m`;
 }
 
 function renderQuestCard(quest: Quest) {
@@ -1416,10 +1403,10 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
       <div className="panel__header">
         <div>
           <p className="eyebrow">Admin control surface</p>
-          <h3>Operating summary</h3>
+          <h3>Campaign and moderation summary</h3>
         </div>
         <p className="form-note">
-          Use this top layer to spot risk quickly, then drop into the grouped sections below for the actual operational work.
+          Use this top layer to spot campaign and moderation risk quickly. Payout operations now live in their own dedicated deck below.
         </p>
       </div>
       <div className="stats-row">
@@ -1443,8 +1430,8 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
         </article>
         <article className="admin-focus-card">
           <span>Watch last</span>
-          <strong>Settlement analytics</strong>
-          <small>Payout throughput matters, but only after queue and campaign health are stable.</small>
+          <strong>Payout deck</strong>
+          <small>Use the separate payout section for queue state, retries, exceptions, and settlement decisions.</small>
         </article>
       </div>
       <div className="admin-grid">
@@ -1634,12 +1621,16 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
               <div>
                 <strong>{entry.label}</strong>
                 <p>Partner snapshot for {entry.sources.join(", ")} with live-ready funnel metrics and {entry.benchmarkLane} benchmarks.</p>
+                <small>
+                  {entry.partnerSummaryHeadline} {entry.partnerSummaryDetail}
+                </small>
               </div>
               <div className="achievement-card__side">
                 <span>{entry.lifecycleState}</span>
                 <span>{entry.benchmarkStatus}</span>
                 <span>{entry.participantCount} participants</span>
                 <span>{Math.round(entry.premiumConversionRate * 100)}% premium</span>
+                <span>{Math.round(entry.likelyPackCausedPremiumConversionRate * 100)}% likely caused</span>
               </div>
             </article>
           ))}
@@ -1666,151 +1657,10 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
         <CampaignPackAnalyticsPanel
           packs={data.campaignOperations.packAnalytics}
           partnerReports={data.campaignOperations.partnerReporting}
+          auditEntries={data.campaignOperations.audit}
           canManage={canManageCampaignPacks}
         />
       </div>
-      <div className="panel panel--glass admin-analytics">
-        <div className="panel__header">
-          <div>
-            <p className="eyebrow">Settlement analytics</p>
-            <h3>Throughput, pending age, and direct-reward flow</h3>
-          </div>
-          <span className="badge badge--pink">{data.settlementAnalytics.pendingCount} pending</span>
-        </div>
-        <p className="form-note">
-          Current period: {data.settlementAnalytics.periodLabel}. Compared against {data.settlementAnalytics.comparePeriodLabel}.
-        </p>
-        <div className="info-grid">
-          <div className="info-card">
-            <span>Pending payouts</span>
-            <strong>{data.settlementAnalytics.pendingCount}</strong>
-          </div>
-          <div className="info-card">
-            <span>Pending volume</span>
-            <strong>{data.settlementAnalytics.pendingTokenAmount.toFixed(2)}</strong>
-          </div>
-          <div className="info-card">
-            <span>Oldest pending age</span>
-            <strong>{formatCompactHours(data.settlementAnalytics.oldestPendingHours)}</strong>
-          </div>
-          <div className="info-card">
-            <span>Avg settlement time</span>
-            <strong>{formatCompactHours(data.settlementAnalytics.averageSettlementHours)}</strong>
-          </div>
-          <div className="info-card">
-            <span>Period throughput</span>
-            <strong>{data.settlementAnalytics.settledLast7DaysCount}</strong>
-          </div>
-          <div className="info-card">
-            <span>Velocity / day</span>
-            <strong>{data.settlementAnalytics.redemptionVelocityPerDay.toFixed(2)}</strong>
-          </div>
-        </div>
-        <div className="achievement-list">
-          {data.settlementAnalytics.exceptionBreakdown.map((entry) => (
-            <article key={`exception-${entry.state}`} className="achievement-card">
-              <div>
-                <strong>{entry.state}</strong>
-                <p>Exception-state payouts currently sitting outside the normal happy path.</p>
-              </div>
-              <div className="achievement-card__side">
-                <span>{entry.count} items</span>
-              </div>
-            </article>
-          ))}
-          {data.settlementAnalytics.exceptionTrend.map((entry) => (
-            <article key={`exception-trend-${entry.state}`} className="achievement-card">
-              <div>
-                <strong>{entry.state} trend</strong>
-                <p>
-                  {data.settlementAnalytics.periodLabel} versus {data.settlementAnalytics.comparePeriodLabel}.
-                </p>
-              </div>
-              <div className="achievement-card__side">
-                <span>{entry.currentCount} current</span>
-                <span>{entry.previousCount} previous</span>
-                <span>
-                  {entry.delta > 0 ? "+" : ""}
-                  {entry.delta} delta
-                </span>
-              </div>
-            </article>
-          ))}
-          {data.settlementAnalytics.topFailureReasons.map((entry) => (
-            <article key={`failure-${entry.reason}`} className="achievement-card">
-              <div>
-                <strong>Failure reason</strong>
-                <p>{entry.reason}</p>
-              </div>
-              <div className="achievement-card__side">
-                <span>{entry.count} payouts</span>
-              </div>
-            </article>
-          ))}
-          <article className="achievement-card">
-            <div>
-              <strong>{data.settlementAnalytics.periodLabel}</strong>
-              <p>Total settled volume across standard redemptions and direct payouts.</p>
-            </div>
-            <div className="achievement-card__side">
-              <span>{data.settlementAnalytics.settledLast7DaysCount} payouts</span>
-              <span>{data.settlementAnalytics.settledLast7DaysTokenAmount.toFixed(2)} tokens</span>
-            </div>
-          </article>
-          <article className="achievement-card">
-            <div>
-              <strong>Annual referral direct rewards</strong>
-              <p>Tracks the direct-token lane separately from general XP conversion redemptions.</p>
-            </div>
-            <div className="achievement-card__side">
-              <span>{data.settlementAnalytics.directRewardPendingCount} pending</span>
-              <span>{data.settlementAnalytics.directRewardSettledCount} settled</span>
-              <span>{data.settlementAnalytics.directRewardSettledTokenAmount.toFixed(2)} tokens</span>
-            </div>
-          </article>
-          {data.settlementAnalytics.byAsset.map((asset) => (
-            <article key={asset.asset} className="achievement-card">
-              <div>
-                <strong>{asset.asset} settlement mix</strong>
-                <p>Shows pending versus settled flow for this token across all current programs.</p>
-              </div>
-              <div className="achievement-card__side">
-                <span>{asset.pendingCount} pending</span>
-                <span>{asset.settledCount} settled</span>
-                <span>{asset.totalTokenAmount.toFixed(2)} tokens</span>
-              </div>
-            </article>
-          ))}
-          {data.settlementAnalytics.byProgram.slice(0, 4).map((program) => (
-            <article key={`${program.rewardProgramName}-${program.asset}`} className="achievement-card">
-              <div>
-                <strong>{program.rewardProgramName}</strong>
-                <p>{program.asset} payout rail across pending and settled receipts.</p>
-              </div>
-              <div className="achievement-card__side">
-                <span>{program.pendingCount} pending</span>
-                <span>{program.settledCount} settled</span>
-                <span>{program.totalTokenAmount.toFixed(2)} tokens</span>
-              </div>
-            </article>
-          ))}
-        </div>
-        <div className="achievement-list">
-          {data.settlementAnalytics.dailyThroughput.map((day) => (
-            <article key={day.label} className="achievement-card">
-              <div>
-                <strong>{day.label}</strong>
-                <p>Daily settlement throughput over the last seven days.</p>
-              </div>
-              <div className="achievement-card__side">
-                <span>{day.settledCount} settled</span>
-                <span>{day.settledTokenAmount.toFixed(2)} tokens</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-      <PayoutAuditTrailPanel entries={data.tokenSettlementAudit} />
       <div className="panel panel--glass admin-analytics">
         <div className="panel__header">
           <div>

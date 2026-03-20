@@ -32,6 +32,7 @@ type TokenSettlementRow = QueryResultRow & {
   cancelled_by_display_name: string | null;
   cancellation_reason: string | null;
   retry_count: number | string;
+  updated_at: string;
   settled_at: string | null;
   receipt_reference: string | null;
   settlement_note: string | null;
@@ -70,6 +71,7 @@ function mapTokenSettlement(row: TokenSettlementRow): TokenSettlementItem {
     cancelledByDisplayName: row.cancelled_by_display_name,
     cancellationReason: row.cancellation_reason,
     retryCount: Number(row.retry_count),
+    updatedAt: row.updated_at,
     settledAt: row.settled_at,
     receiptReference: row.receipt_reference,
     settlementNote: row.settlement_note,
@@ -87,7 +89,7 @@ export async function listPendingTokenSettlements(limit = 20): Promise<TokenSett
             redemptions.status, redemptions.workflow_state, redemptions.source, redemptions.created_at,
             redemptions.approved_at, redemptions.processing_started_at, redemptions.held_at,
             redemptions.hold_reason, redemptions.failed_at, redemptions.last_error,
-            redemptions.cancelled_at, redemptions.cancellation_reason, redemptions.retry_count,
+            redemptions.cancelled_at, redemptions.cancellation_reason, redemptions.retry_count, redemptions.updated_at,
             redemptions.settled_at, redemptions.receipt_reference, redemptions.settlement_note, redemptions.metadata,
             users.display_name AS user_display_name, users.email AS user_email,
             approved_by_users.display_name AS approved_by_display_name,

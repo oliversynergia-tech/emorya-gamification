@@ -41,6 +41,41 @@ const approvedRanges = {
   annualReferralDirectTokenAmount: { min: 0, max: 500 },
 };
 
+const defaultCampaignPackBenchmarks = {
+  direct: {
+    walletLinkRateTarget: 0.28,
+    rewardEligibilityRateTarget: 0.18,
+    premiumConversionRateTarget: 0.08,
+    retainedActivityRateTarget: 0.32,
+    averageWeeklyXpTarget: 180,
+    zeroCompletionWeekThreshold: 1,
+  },
+  zealy: {
+    walletLinkRateTarget: 0.35,
+    rewardEligibilityRateTarget: 0.22,
+    premiumConversionRateTarget: 0.1,
+    retainedActivityRateTarget: 0.42,
+    averageWeeklyXpTarget: 220,
+    zeroCompletionWeekThreshold: 1,
+  },
+  galxe: {
+    walletLinkRateTarget: 0.3,
+    rewardEligibilityRateTarget: 0.18,
+    premiumConversionRateTarget: 0.09,
+    retainedActivityRateTarget: 0.35,
+    averageWeeklyXpTarget: 200,
+    zeroCompletionWeekThreshold: 1,
+  },
+  taskon: {
+    walletLinkRateTarget: 0.32,
+    rewardEligibilityRateTarget: 0.2,
+    premiumConversionRateTarget: 0.1,
+    retainedActivityRateTarget: 0.38,
+    averageWeeklyXpTarget: 210,
+    zeroCompletionWeekThreshold: 1,
+  },
+};
+
 function isNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -80,7 +115,7 @@ await withClient(async (client) => {
            direct_annual_referral_enabled, differentiate_upstream_campaign_sources, minimum_eligibility_points,
            points_per_token, xp_multiplier_free, xp_multiplier_monthly, xp_multiplier_annual,
            token_multiplier_free, token_multiplier_monthly, token_multiplier_annual,
-           annual_referral_direct_token_amount, campaign_alert_channels, campaign_overrides
+           annual_referral_direct_token_amount, campaign_alert_channels, campaign_overrides, campaign_pack_benchmarks
     FROM economy_settings
     WHERE is_active = TRUE
     ORDER BY updated_at DESC
@@ -176,6 +211,14 @@ await withClient(async (client) => {
       errors.push("automation_ready payout mode requires redemption_enabled to stay true.");
     }
 
+    if (payoutMode === "automation_ready" && !process.env.AUTOMATION_ACTOR_USER_ID) {
+      errors.push("AUTOMATION_ACTOR_USER_ID is required while payout_mode is automation_ready.");
+    }
+
+    if (process.env.CAMPAIGN_PACK_REPORTS_ENABLED === "true" && !process.env.CAMPAIGN_PACK_REPORT_OUTPUT_DIR) {
+      errors.push("CAMPAIGN_PACK_REPORT_OUTPUT_DIR is required while scheduled campaign pack reports are enabled.");
+    }
+
     if (typeof economy.differentiate_upstream_campaign_sources !== "boolean") {
       errors.push("economy_settings.differentiate_upstream_campaign_sources must be a boolean.");
     }
@@ -246,9 +289,28 @@ await withClient(async (client) => {
 
     const campaignOverrides = economy.campaign_overrides ?? {};
     const campaignAlertChannels = economy.campaign_alert_channels ?? {};
+    const campaignPackBenchmarks = economy.campaign_pack_benchmarks ?? {};
 
     for (const source of requiredCampaignSources) {
       validateOverrideObject(source, campaignOverrides[source], errors);
+
+      const benchmark =
+        campaignPackBenchmarks[source] && typeof campaignPackBenchmarks[source] === "object" && !Array.isArray(campaignPackBenchmarks[source])
+          ? { ...defaultCampaignPackBenchmarks[source], ...campaignPackBenchmarks[source] }
+          : defaultCampaignPackBenchmarks[source];
+
+      for (const key of [
+        "walletLinkRateTarget",
+        "rewardEligibilityRateTarget",
+        "premiumConversionRateTarget",
+        "retainedActivityRateTarget",
+        "averageWeeklyXpTarget",
+        "zeroCompletionWeekThreshold",
+      ]) {
+        if (!isNumber(benchmark[key])) {
+          errors.push(`campaign_pack_benchmarks.${source}.${key} must be a number.`);
+        }
+      }
     }
 
     if (typeof campaignAlertChannels.inboxEnabled !== "boolean") {
@@ -283,7 +345,7 @@ await withClient(async (client) => {
   const migrationResult = await client.query(
     `SELECT filename
      FROM schema_migrations
-     WHERE filename IN ('013_add_token_redemption_settlement_details.sql', '014_add_campaign_overrides_and_referral_direct_rewards.sql', '016_add_reward_assets_and_programs.sql', '017_add_payout_operation_controls.sql', '018_add_quest_definition_templates.sql', '019_expand_campaign_override_funnel_presets.sql', '020_add_token_redemption_workflow_states.sql', '021_add_upstream_campaign_differentiation.sql', '022_add_bridge_and_feeder_templates.sql', '024_expand_payout_exception_workflow.sql', '027_add_campaign_alert_channels_to_economy.sql', '028_add_campaign_pack_alert_ack_and_suppressions.sql', '029_add_campaign_pack_benchmark_overrides.sql', '030_add_campaign_pack_audit.sql')
+     WHERE filename IN ('013_add_token_redemption_settlement_details.sql', '014_add_campaign_overrides_and_referral_direct_rewards.sql', '016_add_reward_assets_and_programs.sql', '017_add_payout_operation_controls.sql', '018_add_quest_definition_templates.sql', '019_expand_campaign_override_funnel_presets.sql', '020_add_token_redemption_workflow_states.sql', '021_add_upstream_campaign_differentiation.sql', '022_add_bridge_and_feeder_templates.sql', '024_expand_payout_exception_workflow.sql', '027_add_campaign_alert_channels_to_economy.sql', '028_add_campaign_pack_alert_ack_and_suppressions.sql', '029_add_campaign_pack_benchmark_overrides.sql', '030_add_campaign_pack_audit.sql', '031_expand_campaign_pack_benchmark_overrides.sql')
      ORDER BY filename ASC`,
   );
   const appliedMigrations = new Set(migrationResult.rows.map((row) => String(row.filename)));
@@ -303,6 +365,7 @@ await withClient(async (client) => {
     "028_add_campaign_pack_alert_ack_and_suppressions.sql",
     "029_add_campaign_pack_benchmark_overrides.sql",
     "030_add_campaign_pack_audit.sql",
+    "031_expand_campaign_pack_benchmark_overrides.sql",
   ]) {
     if (!appliedMigrations.has(filename)) {
       errors.push(`Required migration not applied: ${filename}`);
@@ -314,17 +377,24 @@ await withClient(async (client) => {
             wallet_link_rate_target,
             reward_eligibility_rate_target,
             premium_conversion_rate_target,
-            average_weekly_xp_target
+            retained_activity_rate_target,
+            average_weekly_xp_target,
+            zero_completion_week_threshold
      FROM campaign_pack_benchmark_overrides`,
   );
   for (const row of benchmarkOverrideResult.rows) {
     const walletTarget = Number(row.wallet_link_rate_target);
     const eligibilityTarget = Number(row.reward_eligibility_rate_target);
     const premiumTarget = Number(row.premium_conversion_rate_target);
+    const retainedTarget = Number(row.retained_activity_rate_target);
     const weeklyXpTarget = Number(row.average_weekly_xp_target);
+    const zeroCompletionWeekThreshold = Number(row.zero_completion_week_threshold);
 
-    if (![walletTarget, eligibilityTarget, premiumTarget, weeklyXpTarget].every((value) => Number.isFinite(value) && value >= 0)) {
+    if (![walletTarget, eligibilityTarget, premiumTarget, retainedTarget, weeklyXpTarget].every((value) => Number.isFinite(value) && value >= 0)) {
       errors.push(`Campaign pack benchmark override "${row.pack_id}" contains non-numeric or negative threshold values.`);
+    }
+    if (!Number.isFinite(zeroCompletionWeekThreshold) || zeroCompletionWeekThreshold < 1) {
+      errors.push(`Campaign pack benchmark override "${row.pack_id}" must keep zero_completion_week_threshold at 1 or above.`);
     }
   }
 

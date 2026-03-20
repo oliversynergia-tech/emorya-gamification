@@ -1157,6 +1157,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       engagedWeeklyXpCount: number;
       premiumUpgradeCount: number;
       premiumUpgradeDaysTotal: number;
+      likelyPackCausedPremiumCount: number;
     }
   >();
   const packFirstInteractionMap = new Map(
@@ -1335,6 +1336,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         engagedWeeklyXpCount: 0,
         premiumUpgradeCount: 0,
         premiumUpgradeDaysTotal: 0,
+        likelyPackCausedPremiumCount: 0,
       };
       if (progress.walletLinked) {
         current.walletLinkedParticipantCount += 1;
@@ -1376,6 +1378,11 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           current.premiumUpgradeCount += 1;
           current.premiumUpgradeDaysTotal +=
             (new Date(sourceUser.subscription_started_at).getTime() - new Date(firstInteractionAt).getTime()) / 86400000;
+          if (
+            (new Date(sourceUser.subscription_started_at).getTime() - new Date(firstInteractionAt).getTime()) / 86400000 <= 14
+          ) {
+            current.likelyPackCausedPremiumCount += 1;
+          }
         }
       }
       packProgressMap.set(participant.pack_id, current);
@@ -1489,6 +1496,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         postPackReferralInviteCount: 0,
         postPackReferralConvertedCount: 0,
         postPackReferralConversionRate: 0,
+        likelyPackCausedPremiumCount: 0,
+        likelyPackCausedPremiumConversionRate: 0,
         retainedActiveCount: 0,
         retainedActivityRate: 0,
         averageWeeklyXp: 0,
@@ -1514,7 +1523,9 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           walletLinkRateTarget: 0,
           rewardEligibilityRateTarget: 0,
           premiumConversionRateTarget: 0,
+          retainedActivityRateTarget: 0,
           averageWeeklyXpTarget: 0,
+          zeroCompletionWeekThreshold: 1,
           isOverridden: false,
           overrideReason: null,
           status: "on_track" as const,
@@ -1581,6 +1592,9 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       current.engagedWeeklyXpRate =
         current.participantCount > 0 ? progress.engagedWeeklyXpCount / current.participantCount : 0;
       current.premiumUpgradeCount = progress.premiumUpgradeCount;
+      current.likelyPackCausedPremiumCount = progress.likelyPackCausedPremiumCount;
+      current.likelyPackCausedPremiumConversionRate =
+        current.participantCount > 0 ? progress.likelyPackCausedPremiumCount / current.participantCount : 0;
       current.averagePremiumUpgradeDays =
         progress.premiumUpgradeCount > 0 ? progress.premiumUpgradeDaysTotal / progress.premiumUpgradeCount : null;
     }
@@ -1637,12 +1651,13 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       (pack.walletLinkRate >= benchmark.walletLinkRateTarget ? 1 : 0) +
       (pack.rewardEligibilityRate >= benchmark.rewardEligibilityRateTarget ? 1 : 0) +
       (pack.premiumConversionRate >= benchmark.premiumConversionRateTarget ? 1 : 0) +
+      (pack.retainedActivityRate >= benchmark.retainedActivityRateTarget ? 1 : 0) +
       (pack.averageWeeklyXp >= benchmark.averageWeeklyXpTarget ? 1 : 0);
     pack.benchmark = {
       ...benchmark,
       isOverridden: Boolean(benchmarkOverride),
       overrideReason: benchmarkOverride?.reason ?? null,
-      status: score >= 4 ? "on_track" : score >= 2 ? "mixed" : "off_track",
+      status: score >= 5 ? "on_track" : score >= 3 ? "mixed" : "off_track",
     };
   }
   const packAnalytics = Array.from(packAnalyticsMap.values()).sort(
@@ -1662,7 +1677,16 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       walletLinkRate: entry.walletLinkRate,
       rewardEligibilityRate: entry.rewardEligibilityRate,
       premiumConversionRate: entry.premiumConversionRate,
+      likelyPackCausedPremiumConversionRate: entry.likelyPackCausedPremiumConversionRate,
       averageWeeklyXp: entry.averageWeeklyXp,
+      partnerSummaryHeadline:
+        entry.benchmark.status === "on_track"
+          ? "Pack is meeting the current lane benchmarks."
+          : entry.benchmark.status === "mixed"
+            ? "Pack is moving users, but one or more funnel stages need attention."
+            : "Pack is under the current lane benchmarks and needs intervention.",
+      partnerSummaryDetail:
+        `${Math.round(entry.walletLinkRate * 100)}% wallet linked, ${Math.round(entry.rewardEligibilityRate * 100)}% reward eligible, ${Math.round(entry.premiumConversionRate * 100)}% premium conversion, and ${Math.round(entry.likelyPackCausedPremiumConversionRate * 100)}% likely pack-caused premium within 14 days.`,
     }))
     .sort((left, right) => right.participantCount - left.participantCount || right.approvedCompletionCount - left.approvedCompletionCount);
   const alerts: AdminOverviewData["campaignOperations"]["alerts"] = [];
@@ -1670,14 +1694,24 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     if (pack.lifecycleState !== "live" && pack.activeQuestCount === 0) {
       continue;
     }
+    let trailingZeroCompletionWeeks = 0;
+    for (const trendEntry of pack.weeklyTrend.slice().reverse()) {
+      if (trendEntry.completionCount > 0) {
+        break;
+      }
+      trailingZeroCompletionWeeks += 1;
+    }
     const latestTrend = pack.weeklyTrend[pack.weeklyTrend.length - 1];
-    if (!latestTrend || latestTrend.completionCount === 0) {
+    if (
+      !latestTrend ||
+      trailingZeroCompletionWeeks >= pack.benchmark.zeroCompletionWeekThreshold
+    ) {
       alerts.push({
         packId: pack.packId,
         label: pack.label,
         severity: "critical",
         title: "Live pack has no recent completions",
-        detail: `${pack.label} has no completion volume in the latest tracked week. Check activation, routing, or pack visibility.`,
+        detail: `${pack.label} has missed completion volume for ${Math.max(trailingZeroCompletionWeeks, 1)} tracked week(s). Check activation, routing, or pack visibility.`,
       });
       continue;
     }
@@ -1697,6 +1731,24 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         severity: "warning",
         title: "Reward-eligibility progression is weak",
         detail: `${pack.label} is getting ${Math.round(pack.rewardEligibilityRate * 100)}% of participants to reward eligibility against a ${Math.round(pack.benchmark.rewardEligibilityRateTarget * 100)}% target for the ${pack.benchmark.activeLane} lane.`,
+      });
+    }
+    if (pack.premiumConversionRate < pack.benchmark.premiumConversionRateTarget) {
+      alerts.push({
+        packId: pack.packId,
+        label: pack.label,
+        severity: "warning",
+        title: "Premium conversion is below target",
+        detail: `${pack.label} is converting ${Math.round(pack.premiumConversionRate * 100)}% of participants into premium against a ${Math.round(pack.benchmark.premiumConversionRateTarget * 100)}% target for the ${pack.benchmark.activeLane} lane.`,
+      });
+    }
+    if (pack.retainedActivityRate < pack.benchmark.retainedActivityRateTarget) {
+      alerts.push({
+        packId: pack.packId,
+        label: pack.label,
+        severity: "warning",
+        title: "Retained activity is below target",
+        detail: `${pack.label} is holding ${Math.round(pack.retainedActivityRate * 100)}% of participants active week-over-week against a ${Math.round(pack.benchmark.retainedActivityRateTarget * 100)}% target for the ${pack.benchmark.activeLane} lane.`,
       });
     }
   }

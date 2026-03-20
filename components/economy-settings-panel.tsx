@@ -534,6 +534,48 @@ export function EconomySettingsPanel({
                     }
                   />
                 </label>
+                <label className="field">
+                  <span>Retained activity target</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    step="0.01"
+                    value={settings.campaignPackBenchmarks[source].retainedActivityRateTarget}
+                    onChange={(event) =>
+                      setSettings((current) => ({
+                        ...current,
+                        campaignPackBenchmarks: {
+                          ...current.campaignPackBenchmarks,
+                          [source]: {
+                            ...current.campaignPackBenchmarks[source],
+                            retainedActivityRateTarget: parseNumber(event.target.value),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Zero-completion week trigger</span>
+                  <input
+                    disabled={!canManage || pending}
+                    type="number"
+                    min="1"
+                    value={settings.campaignPackBenchmarks[source].zeroCompletionWeekThreshold}
+                    onChange={(event) =>
+                      setSettings((current) => ({
+                        ...current,
+                        campaignPackBenchmarks: {
+                          ...current.campaignPackBenchmarks,
+                          [source]: {
+                            ...current.campaignPackBenchmarks[source],
+                            zeroCompletionWeekThreshold: Math.max(parseNumber(event.target.value), 1),
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </label>
               </div>
             </article>
           ))}

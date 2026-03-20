@@ -120,7 +120,9 @@ try {
       walletLinkRateTarget: 0,
       rewardEligibilityRateTarget: 0,
       premiumConversionRateTarget: 0,
+      retainedActivityRateTarget: 0,
       averageWeeklyXpTarget: 0,
+      zeroCompletionWeekThreshold: 1,
     };
     const walletLinkRate = participantCount > 0 ? Number(row.wallet_linked_count ?? 0) / participantCount : 0;
     const premiumConversionRate = participantCount > 0 ? Number(row.premium_count ?? 0) / participantCount : 0;
@@ -143,6 +145,14 @@ try {
       walletLinkRate,
       premiumConversionRate,
       averageWeeklyXp,
+      partnerSummaryHeadline:
+        benchmarkStatus === "on_track"
+          ? "Pack is meeting the current lane benchmarks."
+          : benchmarkStatus === "mixed"
+            ? "Pack is moving users, but one or more funnel stages need attention."
+            : "Pack is under the current lane benchmarks and needs intervention.",
+      partnerSummaryDetail:
+        `${Math.round(walletLinkRate * 100)}% wallet linked, ${Math.round(premiumConversionRate * 100)}% premium conversion, and ${Math.round(averageWeeklyXp)} average weekly XP against the ${benchmarkLane} benchmark lane.`,
     };
   });
 
@@ -159,6 +169,8 @@ try {
       "wallet_link_rate",
       "premium_conversion_rate",
       "average_weekly_xp",
+      "partner_summary_headline",
+      "partner_summary_detail",
     ].join(","),
     ...rows.map((row) =>
       [
@@ -173,6 +185,8 @@ try {
         row.walletLinkRate,
         row.premiumConversionRate,
         row.averageWeeklyXp,
+        JSON.stringify(row.partnerSummaryHeadline),
+        JSON.stringify(row.partnerSummaryDetail),
       ].join(","),
     ),
   ].join("\n");
@@ -182,6 +196,7 @@ try {
       <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Partner Snapshot</p>
       <h2 style="margin:0 0 8px;font-size:22px;color:#20170a;">${row.label}</h2>
       <p style="margin:0 0 12px;color:#5e5035;">Sources: ${row.sources.join(", ")}. Benchmark lane: ${row.benchmarkLane}. Status: ${row.benchmarkStatus}.</p>
+      <p style="margin:0 0 12px;color:#5e5035;"><strong>${row.partnerSummaryHeadline}</strong><br/>${row.partnerSummaryDetail}</p>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
         <div><strong>${row.participantCount}</strong><div>Participants</div></div>
         <div><strong>${row.approvedCompletionCount}</strong><div>Approved completions</div></div>

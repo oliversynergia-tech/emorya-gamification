@@ -661,6 +661,8 @@ export type AdminOverviewData = {
       postPackReferralInviteCount: number;
       postPackReferralConvertedCount: number;
       postPackReferralConversionRate: number;
+      likelyPackCausedPremiumCount: number;
+      likelyPackCausedPremiumConversionRate: number;
       retainedActiveCount: number;
       retainedActivityRate: number;
       averageWeeklyXp: number;
@@ -686,7 +688,9 @@ export type AdminOverviewData = {
         walletLinkRateTarget: number;
         rewardEligibilityRateTarget: number;
         premiumConversionRateTarget: number;
+        retainedActivityRateTarget: number;
         averageWeeklyXpTarget: number;
+        zeroCompletionWeekThreshold: number;
         isOverridden: boolean;
         overrideReason: string | null;
         status: "on_track" | "mixed" | "off_track";
@@ -706,7 +710,10 @@ export type AdminOverviewData = {
       walletLinkRate: number;
       rewardEligibilityRate: number;
       premiumConversionRate: number;
+      likelyPackCausedPremiumConversionRate: number;
       averageWeeklyXp: number;
+      partnerSummaryHeadline: string;
+      partnerSummaryDetail: string;
     }>;
     alerts: Array<{
       packId: string;
@@ -755,6 +762,12 @@ export type AdminOverviewData = {
       activeByReason: Array<{
         reason: string;
         count: number;
+      }>;
+      recentActivity: Array<{
+        bucketStart: string;
+        suppressionCount: number;
+        clearedCount: number;
+        acknowledgedCount: number;
       }>;
     };
     audit: Array<{
@@ -888,7 +901,9 @@ export type CampaignPackBenchmarkConfig = {
   walletLinkRateTarget: number;
   rewardEligibilityRateTarget: number;
   premiumConversionRateTarget: number;
+  retainedActivityRateTarget: number;
   averageWeeklyXpTarget: number;
+  zeroCompletionWeekThreshold: number;
 };
 
 export type CampaignPackBenchmarkOverride = CampaignPackBenchmarkConfig & {
@@ -1161,6 +1176,7 @@ export type TokenSettlementItem = {
   cancelledByDisplayName: string | null;
   cancellationReason: string | null;
   retryCount: number;
+  updatedAt: string;
   settledAt: string | null;
   receiptReference: string | null;
   settlementNote: string | null;

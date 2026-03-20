@@ -1,6 +1,7 @@
 import { EconomySettingsPanel } from "@/components/economy-settings-panel";
 import { ModerationNotificationHistoryPanel } from "@/components/moderation-notification-history-panel";
 import { PayoutOperationsDashboard } from "@/components/payout-operations-dashboard";
+import { PayoutAuditTrailPanel } from "@/components/payout-audit-trail-panel";
 import { QuestDefinitionManagementPanel } from "@/components/quest-definition-management-panel";
 import { QuestDefinitionToolingPanel } from "@/components/quest-definition-tooling-panel";
 import { RewardAssetsPanel } from "@/components/reward-assets-panel";
@@ -10,7 +11,7 @@ import { RoleManagementPanel } from "@/components/role-management-panel";
 import { ReviewQueuePanel } from "@/components/review-queue-panel";
 import { SiteShell } from "@/components/site-shell";
 import { TokenSettlementPanel } from "@/components/token-settlement-panel";
-import { isAdminUser, isSuperAdminUser } from "@/server/auth/admin";
+import { getTokenRedemptionPermissions, isAdminUser, isSuperAdminUser } from "@/server/auth/admin";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadAdminOverview } from "@/server/services/platform-overview";
 
@@ -20,6 +21,7 @@ export default async function AdminPage() {
   const session = await resolveCurrentSession();
   const hasAdminAccess = await isAdminUser(session?.user);
   const hasSuperAdminAccess = await isSuperAdminUser(session?.user);
+  const payoutPermissions = await getTokenRedemptionPermissions(session?.user);
 
   if (!session || !hasAdminAccess) {
     return (
@@ -78,15 +80,31 @@ export default async function AdminPage() {
           ))}
         </div>
       </section>
+      <section className="panel panel--glass">
+        <div className="review-bulk-actions">
+          <a className="button button--secondary button--small" href="#payout-ops">
+            Jump to payout ops
+          </a>
+          <a className="button button--secondary button--small" href="#campaign-ops">
+            Jump to campaign ops
+          </a>
+          <a className="button button--secondary button--small" href="#access-ops">
+            Jump to access and moderation
+          </a>
+        </div>
+        <p className="form-note">
+          The admin shell is now split into three working decks so campaign decisions and payout operations stop competing for the same attention.
+        </p>
+      </section>
       <AdminSection data={data} canManageCampaignPacks={hasAdminAccess} />
-      <section className="admin-section-group">
+      <section className="admin-section-group" id="payout-ops">
         <div className="admin-section-group__header">
           <div>
-            <p className="eyebrow">Economy and payout operations</p>
-            <h3>Control reward rails, payout settings, and settlement flow</h3>
+            <p className="eyebrow">Payout operations deck</p>
+            <h3>Control reward rails, queue health, and settlement decisions</h3>
           </div>
           <p className="form-note">
-            These controls shape XP and token economics first, then determine how claimed rewards move through the payout pipeline.
+            This surface is now dedicated to payout risk and reward-rail operations, separate from campaign authoring and funnel performance.
           </p>
         </div>
         <div className="admin-focus-grid">
@@ -127,19 +145,20 @@ export default async function AdminPage() {
           initialQueue={data.tokenSettlementQueue}
           analytics={data.settlementAnalytics}
           payoutControls={data.economySettings}
-          canProcessAndSettle={hasSuperAdminAccess}
+          permissions={payoutPermissions}
         />
+        <PayoutAuditTrailPanel entries={data.tokenSettlementAudit} />
         <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
       </section>
 
-      <section className="admin-section-group">
+      <section className="admin-section-group" id="campaign-ops">
         <div className="admin-section-group__header">
           <div>
-            <p className="eyebrow">Campaign authoring</p>
-            <h3>Manage templates, packs, and live quest definitions</h3>
+            <p className="eyebrow">Campaign operations deck</p>
+            <h3>Manage templates, packs, live quest definitions, and funnel behavior</h3>
           </div>
           <p className="form-note">
-            Start with authoring guidance, then move into reusable templates, and only then publish or edit live quest definitions.
+            This surface is dedicated to bridge mode, pack lifecycle, template authoring, and campaign performance rather than payout handling.
           </p>
         </div>
         <QuestDefinitionToolingPanel />
@@ -151,7 +170,7 @@ export default async function AdminPage() {
         />
       </section>
 
-      <section className="admin-section-group">
+      <section className="admin-section-group" id="access-ops">
         <div className="admin-section-group__header">
           <div>
             <p className="eyebrow">Access and moderation</p>

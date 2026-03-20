@@ -88,6 +88,8 @@ For recurring partner reports in production:
 - schedule `npm run ops:campaign-packs:report -- --output-dir /persistent/reports/campaign-packs`
 - or schedule `npm run ops:campaign-packs:report:scheduled` with env-backed output config
 - keep the output directory on persistent storage, not ephemeral build storage
+- set `AUTOMATION_ACTOR_USER_ID` before enabling `automation_ready` payout mode
+- set `PAYOUT_AUTOMATION_MAX_RETRIES` to the retry ceiling you want before automation escalates payouts onto hold
 
 ## Shareable preview workflow
 
@@ -110,7 +112,9 @@ Before a real hosted deployment, make sure:
 - database migrations have been applied before traffic is switched
 - seed data is only used in non-production environments
 - `APP_URL` matches the deployed domain
+- `APP_URL` uses `https://`
 - `SESSION_SECRET` is long and unique
+- `CRON_SNAPSHOTS_ENABLED` is `true` if the hosted environment is responsible for snapshots
 - snapshot commands are either run manually or scheduled somewhere
 - at least one admin user has a row in `user_roles`
 - moderation alert thresholds and at least one delivery route are configured if the admin queue is expected to be monitored in production

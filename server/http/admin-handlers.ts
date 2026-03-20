@@ -232,7 +232,9 @@ export async function handleCampaignPackBenchmarkOverrideRequest(
       walletLinkRateTarget?: number;
       rewardEligibilityRateTarget?: number;
       premiumConversionRateTarget?: number;
+      retainedActivityRateTarget?: number;
       averageWeeklyXpTarget?: number;
+      zeroCompletionWeekThreshold?: number;
     };
     reason?: string | null;
   },
@@ -243,7 +245,9 @@ export async function handleCampaignPackBenchmarkOverrideRequest(
       walletLinkRateTarget: number;
       rewardEligibilityRateTarget: number;
       premiumConversionRateTarget: number;
+      retainedActivityRateTarget: number;
       averageWeeklyXpTarget: number;
+      zeroCompletionWeekThreshold: number;
     };
     reason?: string | null;
   }) => Promise<unknown>,
@@ -254,7 +258,9 @@ export async function handleCampaignPackBenchmarkOverrideRequest(
     typeof body.benchmark?.walletLinkRateTarget !== "number" ||
     typeof body.benchmark?.rewardEligibilityRateTarget !== "number" ||
     typeof body.benchmark?.premiumConversionRateTarget !== "number" ||
-    typeof body.benchmark?.averageWeeklyXpTarget !== "number"
+    typeof body.benchmark?.retainedActivityRateTarget !== "number" ||
+    typeof body.benchmark?.averageWeeklyXpTarget !== "number" ||
+    typeof body.benchmark?.zeroCompletionWeekThreshold !== "number"
   ) {
     return {
       status: 400,
@@ -270,7 +276,9 @@ export async function handleCampaignPackBenchmarkOverrideRequest(
         walletLinkRateTarget: body.benchmark.walletLinkRateTarget,
         rewardEligibilityRateTarget: body.benchmark.rewardEligibilityRateTarget,
         premiumConversionRateTarget: body.benchmark.premiumConversionRateTarget,
+        retainedActivityRateTarget: body.benchmark.retainedActivityRateTarget,
         averageWeeklyXpTarget: body.benchmark.averageWeeklyXpTarget,
+        zeroCompletionWeekThreshold: body.benchmark.zeroCompletionWeekThreshold,
       },
       reason: body.reason,
     });

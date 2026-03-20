@@ -28,6 +28,22 @@ export async function isSuperAdminUser(user: Pick<AuthUser, "id"> | null | undef
   return userHasRole(user.id, "super_admin");
 }
 
+export async function getTokenRedemptionPermissions(user: Pick<AuthUser, "id"> | null | undefined) {
+  const isAdmin = await isAdminUser(user);
+  const isSuperAdmin = await isSuperAdminUser(user);
+
+  return {
+    canApprove: isAdmin,
+    canHold: isAdmin,
+    canRequeue: isAdmin,
+    canFail: isSuperAdmin,
+    canCancel: isSuperAdmin,
+    canProcess: isSuperAdmin,
+    canSettle: isSuperAdmin,
+    canManageAutomationMetadata: isSuperAdmin,
+  };
+}
+
 export async function assertAdminUser(user: AuthUser | null | undefined): Promise<void> {
   if (!user) {
     throw new Error("You must be signed in to access admin controls.");

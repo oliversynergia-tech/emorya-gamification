@@ -11,7 +11,9 @@ type BenchmarkDraft = {
   walletLinkRateTarget: number;
   rewardEligibilityRateTarget: number;
   premiumConversionRateTarget: number;
+  retainedActivityRateTarget: number;
   averageWeeklyXpTarget: number;
+  zeroCompletionWeekThreshold: number;
   reason: string;
 };
 
@@ -45,6 +47,7 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
       "post_pack_referral_invite_count",
       "post_pack_referral_converted_count",
       "post_pack_referral_conversion_rate",
+      "likely_pack_caused_premium_conversion_rate",
       "retained_activity_rate",
       "average_weekly_xp",
       "engaged_weekly_xp_rate",
@@ -88,6 +91,7 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
         entry.postPackReferralInviteCount,
         entry.postPackReferralConvertedCount,
         entry.postPackReferralConversionRate,
+        entry.likelyPackCausedPremiumConversionRate,
         entry.retainedActivityRate,
         entry.averageWeeklyXp,
         entry.engagedWeeklyXpRate,
@@ -124,7 +128,10 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
       "wallet_link_rate",
       "reward_eligibility_rate",
       "premium_conversion_rate",
+      "likely_pack_caused_premium_conversion_rate",
       "average_weekly_xp",
+      "partner_summary_headline",
+      "partner_summary_detail",
     ].join(","),
     ...entries.map((entry) =>
       [
@@ -139,7 +146,10 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
         entry.walletLinkRate,
         entry.rewardEligibilityRate,
         entry.premiumConversionRate,
+        entry.likelyPackCausedPremiumConversionRate,
         entry.averageWeeklyXp,
+        JSON.stringify(entry.partnerSummaryHeadline),
+        JSON.stringify(entry.partnerSummaryDetail),
       ].join(","),
     ),
   ].join("\n");
@@ -166,12 +176,14 @@ function printPartnerReport(entries: PartnerReportItem[]) {
       <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Partner Snapshot</p>
       <h2 style="margin:0 0 8px;font-size:22px;color:#20170a;">${entry.label}</h2>
       <p style="margin:0 0 12px;color:#5e5035;">Sources: ${entry.sources.join(", ")}. Benchmark lane: ${entry.benchmarkLane}. Status: ${entry.benchmarkStatus}.</p>
+      <p style="margin:0 0 12px;color:#5e5035;"><strong>${entry.partnerSummaryHeadline}</strong><br/>${entry.partnerSummaryDetail}</p>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
         <div><strong>${entry.participantCount}</strong><div>Participants</div></div>
         <div><strong>${entry.approvedCompletionCount}</strong><div>Approved completions</div></div>
         <div><strong>${Math.round(entry.walletLinkRate * 100)}%</strong><div>Wallet link rate</div></div>
         <div><strong>${Math.round(entry.rewardEligibilityRate * 100)}%</strong><div>Reward eligibility</div></div>
         <div><strong>${Math.round(entry.premiumConversionRate * 100)}%</strong><div>Premium conversion</div></div>
+        <div><strong>${Math.round(entry.likelyPackCausedPremiumConversionRate * 100)}%</strong><div>Likely pack-caused premium</div></div>
         <div><strong>${entry.averageWeeklyXp.toFixed(0)}</strong><div>Average weekly XP</div></div>
       </div>
     </article>
@@ -203,10 +215,12 @@ function printPartnerReport(entries: PartnerReportItem[]) {
 export function CampaignPackAnalyticsPanel({
   packs,
   partnerReports,
+  auditEntries,
   canManage = false,
 }: {
   packs: PackAnalyticsItem[];
   partnerReports: PartnerReportItem[];
+  auditEntries: AdminOverviewData["campaignOperations"]["audit"];
   canManage?: boolean;
 }) {
   const router = useRouter();
@@ -225,7 +239,9 @@ export function CampaignPackAnalyticsPanel({
         walletLinkRateTarget: pack.benchmark.walletLinkRateTarget,
         rewardEligibilityRateTarget: pack.benchmark.rewardEligibilityRateTarget,
         premiumConversionRateTarget: pack.benchmark.premiumConversionRateTarget,
+        retainedActivityRateTarget: pack.benchmark.retainedActivityRateTarget,
         averageWeeklyXpTarget: pack.benchmark.averageWeeklyXpTarget,
+        zeroCompletionWeekThreshold: pack.benchmark.zeroCompletionWeekThreshold,
         reason: pack.benchmark.overrideReason ?? "",
       }
     );
@@ -239,7 +255,9 @@ export function CampaignPackAnalyticsPanel({
           walletLinkRateTarget: pack.benchmark.walletLinkRateTarget,
           rewardEligibilityRateTarget: pack.benchmark.rewardEligibilityRateTarget,
           premiumConversionRateTarget: pack.benchmark.premiumConversionRateTarget,
+          retainedActivityRateTarget: pack.benchmark.retainedActivityRateTarget,
           averageWeeklyXpTarget: pack.benchmark.averageWeeklyXpTarget,
+          zeroCompletionWeekThreshold: pack.benchmark.zeroCompletionWeekThreshold,
           reason: pack.benchmark.overrideReason ?? "",
         }),
         ...next,
@@ -344,7 +362,9 @@ export function CampaignPackAnalyticsPanel({
             walletLinkRateTarget: draft.walletLinkRateTarget,
             rewardEligibilityRateTarget: draft.rewardEligibilityRateTarget,
             premiumConversionRateTarget: draft.premiumConversionRateTarget,
+            retainedActivityRateTarget: draft.retainedActivityRateTarget,
             averageWeeklyXpTarget: draft.averageWeeklyXpTarget,
+            zeroCompletionWeekThreshold: draft.zeroCompletionWeekThreshold,
           },
           reason: draft.reason,
         }),
@@ -524,14 +544,41 @@ export function CampaignPackAnalyticsPanel({
                 ({(pack.postPackReferralConversionRate * 100).toFixed(0)}%). This is the cleaner attribution view based on referrals created after first pack touch.
               </p>
               <p className="form-note">
+                Likely pack-caused premium: {pack.likelyPackCausedPremiumCount} users
+                {` `}
+                ({(pack.likelyPackCausedPremiumConversionRate * 100).toFixed(0)}%). This is the stricter attribution view for upgrades that happened within two weeks of first pack touch.
+              </p>
+              <p className="form-note">
                 Benchmark lane: {pack.benchmark.activeLane}. Targets: {Math.round(pack.benchmark.walletLinkRateTarget * 100)}% wallet,
                 {` `}
                 {Math.round(pack.benchmark.rewardEligibilityRateTarget * 100)}% eligibility, {Math.round(pack.benchmark.premiumConversionRateTarget * 100)}% premium,
                 {` `}
-                {pack.benchmark.averageWeeklyXpTarget} weekly XP. Status: {pack.benchmark.status}
+                {Math.round(pack.benchmark.retainedActivityRateTarget * 100)}% retained activity, {pack.benchmark.averageWeeklyXpTarget} weekly XP, {pack.benchmark.zeroCompletionWeekThreshold} zero-completion week trigger. Status: {pack.benchmark.status}
                 {pack.benchmark.isOverridden ? " · custom pack override active" : " · lane default"}
                 {pack.benchmark.overrideReason ? ` · ${pack.benchmark.overrideReason}` : ""}.
               </p>
+              <p className="form-note">
+                Partner-safe summary: <strong>{partnerReports.find((entry) => entry.packId === pack.packId)?.partnerSummaryHeadline ?? "Summary pending"}</strong>
+                {` `}
+                {partnerReports.find((entry) => entry.packId === pack.packId)?.partnerSummaryDetail ?? ""}
+              </p>
+              <div className="achievement-list">
+                {auditEntries
+                  .filter((entry) => entry.packId === pack.packId && (entry.action === "save_benchmark_override" || entry.action === "clear_benchmark_override"))
+                  .slice(0, 3)
+                  .map((entry) => (
+                    <article key={entry.id} className="achievement-card">
+                      <div>
+                        <strong>{entry.action === "save_benchmark_override" ? "Threshold override saved" : "Threshold override cleared"}</strong>
+                        <p>{entry.detail}</p>
+                      </div>
+                      <div className="achievement-card__side">
+                        <span>{entry.changedByDisplayName ?? "Unknown admin"}</span>
+                        <span>{new Date(entry.createdAt).toLocaleString()}</span>
+                      </div>
+                    </article>
+                  ))}
+              </div>
               <p className="form-note">
                 Premium upgrades after first pack touch: {pack.premiumUpgradeCount}
                 {pack.averagePremiumUpgradeDays !== null
@@ -643,6 +690,31 @@ export function CampaignPackAnalyticsPanel({
                     value={getBenchmarkDraft(pack).averageWeeklyXpTarget}
                     onChange={(event) =>
                       updateBenchmarkDraft(pack, { averageWeeklyXpTarget: Number(event.target.value) })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Retained activity target</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={getBenchmarkDraft(pack).retainedActivityRateTarget}
+                    onChange={(event) =>
+                      updateBenchmarkDraft(pack, { retainedActivityRateTarget: Number(event.target.value) })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Zero-completion week trigger</span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={getBenchmarkDraft(pack).zeroCompletionWeekThreshold}
+                    onChange={(event) =>
+                      updateBenchmarkDraft(pack, { zeroCompletionWeekThreshold: Number(event.target.value) })
                     }
                   />
                 </label>

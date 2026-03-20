@@ -36,9 +36,17 @@ export async function PUT(request: Request, context: RouteContext) {
                 typeof (body.benchmark as Record<string, unknown>).premiumConversionRateTarget === "number"
                   ? ((body.benchmark as Record<string, unknown>).premiumConversionRateTarget as number)
                   : undefined,
+              retainedActivityRateTarget:
+                typeof (body.benchmark as Record<string, unknown>).retainedActivityRateTarget === "number"
+                  ? ((body.benchmark as Record<string, unknown>).retainedActivityRateTarget as number)
+                  : undefined,
               averageWeeklyXpTarget:
                 typeof (body.benchmark as Record<string, unknown>).averageWeeklyXpTarget === "number"
                   ? ((body.benchmark as Record<string, unknown>).averageWeeklyXpTarget as number)
+                  : undefined,
+              zeroCompletionWeekThreshold:
+                typeof (body.benchmark as Record<string, unknown>).zeroCompletionWeekThreshold === "number"
+                  ? ((body.benchmark as Record<string, unknown>).zeroCompletionWeekThreshold as number)
                   : undefined,
             }
           : undefined,

@@ -21,12 +21,21 @@ export function TokenSettlementPanel({
   initialQueue,
   analytics,
   payoutControls,
-  canProcessAndSettle,
+  permissions,
 }: {
   initialQueue: AdminOverviewData["tokenSettlementQueue"];
   analytics: AdminOverviewData["settlementAnalytics"];
   payoutControls: AdminOverviewData["economySettings"];
-  canProcessAndSettle: boolean;
+  permissions: {
+    canApprove: boolean;
+    canHold: boolean;
+    canRequeue: boolean;
+    canFail: boolean;
+    canCancel: boolean;
+    canProcess: boolean;
+    canSettle: boolean;
+    canManageAutomationMetadata: boolean;
+  };
 }) {
   const router = useRouter();
   const [queue, setQueue] = useState(initialQueue);
@@ -40,6 +49,9 @@ export function TokenSettlementPanel({
   const [customCompareEndDate, setCustomCompareEndDate] = useState("");
   const [workflowFilter, setWorkflowFilter] = useState<"all" | "queued" | "approved" | "processing" | "held" | "failed" | "cancelled">("all");
   const [sourceFilter, setSourceFilter] = useState<"all" | string>("all");
+  const [assetFilter, setAssetFilter] = useState<"all" | string>("all");
+  const [programFilter, setProgramFilter] = useState<"all" | string>("all");
+  const [updatedSinceDays, setUpdatedSinceDays] = useState<"all" | "1" | "7" | "30" | "90">("all");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [analyticsPending, setAnalyticsPending] = useState(false);
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, string>>({});
@@ -51,6 +63,8 @@ export function TokenSettlementPanel({
   const annualReferralQueue = queue.filter((entry) => entry.source === "annual-referral-direct");
   const standardQueue = queue.filter((entry) => entry.source !== "annual-referral-direct");
   const queueSources = Array.from(new Set(queue.map((entry) => entry.source))).sort();
+  const queueAssets = Array.from(new Set(queue.map((entry) => entry.asset))).sort();
+  const queuePrograms = Array.from(new Set(queue.map((entry) => entry.rewardProgramName).filter(Boolean) as string[])).sort();
   const filteredQueue = [...annualReferralQueue, ...standardQueue].filter((entry) => {
     if (workflowFilter !== "all" && entry.workflowState !== workflowFilter) {
       return false;
@@ -58,6 +72,21 @@ export function TokenSettlementPanel({
 
     if (sourceFilter !== "all" && entry.source !== sourceFilter) {
       return false;
+    }
+
+    if (assetFilter !== "all" && entry.asset !== assetFilter) {
+      return false;
+    }
+
+    if (programFilter !== "all" && (entry.rewardProgramName ?? "unassigned") !== programFilter) {
+      return false;
+    }
+
+    if (updatedSinceDays !== "all") {
+      const cutoff = Date.now() - Number(updatedSinceDays) * 86400000;
+      if (new Date(entry.updatedAt).getTime() < cutoff) {
+        return false;
+      }
     }
 
     return true;
@@ -181,8 +210,17 @@ export function TokenSettlementPanel({
       return;
     }
 
-    if ((action === "processing" || action === "settle") && !canProcessAndSettle) {
-      setError("Only super admins can move payouts into processing or settle them.");
+    const actionAllowed =
+      (action === "approve" && permissions.canApprove) ||
+      (action === "hold" && permissions.canHold) ||
+      (action === "requeue" && permissions.canRequeue) ||
+      (action === "fail" && permissions.canFail) ||
+      (action === "cancel" && permissions.canCancel) ||
+      (action === "processing" && permissions.canProcess) ||
+      (action === "settle" && permissions.canSettle);
+
+    if (!actionAllowed) {
+      setError("Your current admin role does not allow that payout transition.");
       return;
     }
 
@@ -226,6 +264,11 @@ export function TokenSettlementPanel({
   }
 
   async function saveAutomationMetadata(redemptionId: string) {
+    if (!permissions.canManageAutomationMetadata) {
+      setError("Only super admins can manage automation receipt metadata.");
+      return;
+    }
+
     const automationReceiptReference = automationReceiptDrafts[redemptionId]?.trim() ?? "";
     const automationSettlementNote = automationNoteDrafts[redemptionId]?.trim() ?? "";
 
@@ -267,6 +310,11 @@ export function TokenSettlementPanel({
   }
 
   async function generateAutomationReceipt(redemptionId: string) {
+    if (!permissions.canManageAutomationMetadata) {
+      setError("Only super admins can generate automation receipt metadata.");
+      return;
+    }
+
     setPendingId(redemptionId);
     setMessage(null);
     setError(null);
@@ -297,6 +345,80 @@ export function TokenSettlementPanel({
     } finally {
       setPendingId(null);
     }
+  }
+
+  function exportFilteredQueue() {
+    const lines = [
+      [
+        "id",
+        "user",
+        "email",
+        "asset",
+        "program",
+        "source",
+        "workflow_state",
+        "token_amount",
+        "eligibility_points_spent",
+        "retry_count",
+        "created_at",
+        "updated_at",
+        "receipt_reference",
+        "settlement_note",
+        "last_error",
+      ].join(","),
+      ...filteredQueue.map((entry) =>
+        [
+          entry.id,
+          JSON.stringify(entry.userDisplayName),
+          JSON.stringify(entry.userEmail ?? ""),
+          entry.asset,
+          JSON.stringify(entry.rewardProgramName ?? "unassigned"),
+          entry.source,
+          entry.workflowState,
+          entry.tokenAmount,
+          entry.eligibilityPointsSpent,
+          entry.retryCount,
+          entry.createdAt,
+          entry.updatedAt,
+          JSON.stringify(entry.receiptReference ?? ""),
+          JSON.stringify(entry.settlementNote ?? ""),
+          JSON.stringify(entry.lastError ?? ""),
+        ].join(","),
+      ),
+    ].join("\n");
+
+    const blob = new Blob([lines], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "emorya-payout-exceptions.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function getPrimaryAction(entry: AdminOverviewData["tokenSettlementQueue"][number]) {
+    if (entry.workflowState === "queued" && payoutControls.payoutMode !== "manual") {
+      return "approve" as const;
+    }
+
+    if (entry.workflowState === "approved" && payoutControls.payoutMode !== "manual") {
+      return "processing" as const;
+    }
+
+    return "settle" as const;
+  }
+
+  function canRunPrimaryAction(action: ReturnType<typeof getPrimaryAction>) {
+    if (action === "approve") {
+      return permissions.canApprove;
+    }
+    if (action === "processing") {
+      return permissions.canProcess;
+    }
+
+    return permissions.canSettle;
   }
 
   async function updateWindow(nextWindow: string, nextCompareWindow = compareWindow) {
@@ -386,7 +508,7 @@ export function TokenSettlementPanel({
         <strong>{payoutControls.directRewardQueueEnabled ? "enabled" : "disabled"}</strong>
       </p>
       <p className="form-note">
-        Approval can be handled by admins. Processing and settlement require <strong>super admin</strong> access.
+        Approval, holds, and requeues can be handled by admins. Fails, cancels, processing, settlement, and automation metadata require <strong>super admin</strong> access.
       </p>
       <p className="form-note">
         In <strong>automation_ready</strong> mode, auto-settlement only completes after each payout stores
@@ -447,6 +569,42 @@ export function TokenSettlementPanel({
             ))}
           </select>
         </label>
+        <label className="field">
+          <span>Asset</span>
+          <select value={assetFilter} onChange={(event) => setAssetFilter(event.target.value)}>
+            <option value="all">All assets</option>
+            {queueAssets.map((asset) => (
+              <option key={asset} value={asset}>
+                {asset}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field">
+          <span>Program</span>
+          <select value={programFilter} onChange={(event) => setProgramFilter(event.target.value)}>
+            <option value="all">All programs</option>
+            <option value="unassigned">Unassigned</option>
+            {queuePrograms.map((program) => (
+              <option key={program} value={program}>
+                {program}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field">
+          <span>Updated within</span>
+          <select value={updatedSinceDays} onChange={(event) => setUpdatedSinceDays(event.target.value as typeof updatedSinceDays)}>
+            <option value="all">Any time</option>
+            <option value="1">1 day</option>
+            <option value="7">7 days</option>
+            <option value="30">30 days</option>
+            <option value="90">90 days</option>
+          </select>
+        </label>
+        <button className="button button--secondary" type="button" onClick={exportFilteredQueue}>
+          Export filtered queue
+        </button>
       </div>
       {rangeMode === "custom" ? (
         <div className="profile-grid">
@@ -532,11 +690,12 @@ export function TokenSettlementPanel({
           <article className="achievement-card">
             <div>
               <strong>Payout workflow permissions</strong>
-              <p>Queued payouts can be approved by admins, but only super admins can move them into processing or settle with receipts.</p>
+              <p>Permissions are now split more deliberately so review actions stay with admins while irreversible payout actions stay with super admins.</p>
             </div>
             <div className="achievement-card__side">
               <span>Approve: admin</span>
-              <span>Process / settle: super_admin</span>
+              <span>Hold / requeue: admin</span>
+              <span>Fail / cancel / process / settle: super_admin</span>
             </div>
           </article>
         </div>
@@ -545,9 +704,14 @@ export function TokenSettlementPanel({
         {queue.length === 0 ? (
           <p className="form-note">No claimed redemptions are waiting for settlement.</p>
         ) : filteredQueue.length === 0 ? (
-          <p className="form-note">No payouts match the current workflow and source filters.</p>
+          <p className="form-note">No payouts match the current workflow, source, asset, program, and date filters.</p>
         ) : (
           filteredQueue.map((entry) => (
+            (() => {
+              const primaryAction = getPrimaryAction(entry);
+              const canRunAction = canRunPrimaryAction(primaryAction);
+
+              return (
             <article key={entry.id} className="review-history__item">
               <div className="quest-card__meta">
                 <span>{entry.userDisplayName}</span>
@@ -636,7 +800,7 @@ export function TokenSettlementPanel({
                 <button
                   className="button button--secondary button--small"
                   type="button"
-                  disabled={pendingId !== null}
+                  disabled={pendingId !== null || !permissions.canManageAutomationMetadata}
                   onClick={() => void saveAutomationMetadata(entry.id)}
                 >
                   Save automation metadata
@@ -644,7 +808,7 @@ export function TokenSettlementPanel({
                 <button
                   className="button button--secondary button--small"
                   type="button"
-                  disabled={pendingId !== null}
+                  disabled={pendingId !== null || !permissions.canManageAutomationMetadata}
                   onClick={() => void generateAutomationReceipt(entry.id)}
                 >
                   Generate auto receipt
@@ -656,26 +820,15 @@ export function TokenSettlementPanel({
                     pendingId !== null ||
                     !payoutControls.settlementProcessingEnabled ||
                     !["queued", "approved", "processing"].includes(entry.workflowState) ||
-                    (((entry.workflowState === "approved" && payoutControls.payoutMode === "automation_ready") ||
-                      (entry.workflowState === "queued" && payoutControls.payoutMode === "manual")) &&
-                      !canProcessAndSettle)
+                    !canRunAction
                   }
-                  onClick={() =>
-                    transitionSettlement(
-                      entry.workflowState === "queued" && payoutControls.payoutMode !== "manual"
-                        ? "approve"
-                      : entry.workflowState === "approved" && payoutControls.payoutMode !== "manual"
-                        ? "processing"
-                        : "settle",
-                      entry.id,
-                    )
-                  }
+                  onClick={() => transitionSettlement(primaryAction, entry.id)}
                 >
                   {pendingId === entry.id
                     ? "Updating..."
-                    : entry.workflowState === "queued" && payoutControls.payoutMode !== "manual"
+                    : primaryAction === "approve"
                       ? "Approve payout"
-                      : entry.workflowState === "approved" && payoutControls.payoutMode !== "manual"
+                      : primaryAction === "processing"
                         ? "Mark processing"
                         : "Mark settled"}
                 </button>
@@ -683,7 +836,7 @@ export function TokenSettlementPanel({
                   <button
                     className="button button--secondary button--small"
                     type="button"
-                    disabled={pendingId !== null || !payoutControls.settlementProcessingEnabled || !canProcessAndSettle}
+                    disabled={pendingId !== null || !payoutControls.settlementProcessingEnabled || !permissions.canSettle}
                     onClick={() => transitionSettlement("settle", entry.id)}
                   >
                     Force settle
@@ -693,7 +846,7 @@ export function TokenSettlementPanel({
                   <button
                     className="button button--secondary button--small"
                     type="button"
-                    disabled={pendingId !== null}
+                    disabled={pendingId !== null || !permissions.canHold}
                     onClick={() => transitionSettlement("hold", entry.id)}
                   >
                     Hold
@@ -703,7 +856,7 @@ export function TokenSettlementPanel({
                   <button
                     className="button button--secondary button--small"
                     type="button"
-                    disabled={pendingId !== null || !canProcessAndSettle}
+                    disabled={pendingId !== null || !permissions.canFail}
                     onClick={() => transitionSettlement("fail", entry.id)}
                   >
                     Mark failed
@@ -713,7 +866,7 @@ export function TokenSettlementPanel({
                   <button
                     className="button button--secondary button--small"
                     type="button"
-                    disabled={pendingId !== null || !canProcessAndSettle}
+                    disabled={pendingId !== null || !permissions.canRequeue}
                     onClick={() => transitionSettlement("requeue", entry.id)}
                   >
                     Requeue
@@ -723,7 +876,7 @@ export function TokenSettlementPanel({
                   <button
                     className="button button--secondary button--small"
                     type="button"
-                    disabled={pendingId !== null || !canProcessAndSettle}
+                    disabled={pendingId !== null || !permissions.canCancel}
                     onClick={() => transitionSettlement("cancel", entry.id)}
                   >
                     Cancel
@@ -739,6 +892,8 @@ export function TokenSettlementPanel({
                 </button>
               </div>
             </article>
+              );
+            })()
           ))
         )}
       </div>

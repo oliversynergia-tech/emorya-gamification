@@ -57,9 +57,7 @@ export async function transitionPendingTokenRedemptionWithDependencies(
     throw new Error("Settlement processing is currently disabled in payout controls.");
   }
 
-  if (action === "approve") {
-    await dependencies.assertAdmin(currentUser);
-  } else if (action === "hold") {
+  if (action === "approve" || action === "hold" || action === "requeue") {
     await dependencies.assertAdmin(currentUser);
   } else {
     await dependencies.assertSuperAdmin(currentUser);

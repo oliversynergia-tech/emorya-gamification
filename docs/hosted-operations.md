@@ -142,6 +142,8 @@ Recommended env for the wrapper:
 ```env
 CAMPAIGN_PACK_REPORTS_ENABLED=true
 CAMPAIGN_PACK_REPORT_OUTPUT_DIR=/persistent/reports/campaign-packs
+AUTOMATION_ACTOR_USER_ID=<user-id-with-super-admin-access>
+PAYOUT_AUTOMATION_MAX_RETRIES=3
 ```
 
 If GitHub Actions is part of the ops setup, the repo also includes a weekly workflow:
@@ -149,3 +151,12 @@ If GitHub Actions is part of the ops setup, the repo also includes a weekly work
 - [`.github/workflows/campaign-pack-reports.yml`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/.github/workflows/campaign-pack-reports.yml)
 
 That path expects `DATABASE_URL` and optional `DATABASE_SSL` as repository secrets and uploads the generated reports as workflow artifacts.
+
+## Launch hardening notes
+
+Before switching production traffic:
+
+- set `APP_URL` to the final `https://` domain
+- set `CRON_SNAPSHOTS_ENABLED=true` if the hosted environment is responsible for leaderboard history
+- set `AUTOMATION_ACTOR_USER_ID` before enabling `automation_ready` payout mode
+- keep `CAMPAIGN_PACK_REPORT_OUTPUT_DIR` on persistent storage if scheduled report generation is enabled

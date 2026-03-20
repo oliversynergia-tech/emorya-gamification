@@ -182,7 +182,9 @@ test("runCampaignPackBenchmarkOverrideRoute forwards benchmark overrides", async
         walletLinkRateTarget: number;
         rewardEligibilityRateTarget: number;
         premiumConversionRateTarget: number;
+        retainedActivityRateTarget: number;
         averageWeeklyXpTarget: number;
+        zeroCompletionWeekThreshold: number;
       };
       reason?: string | null;
     }) => {
@@ -202,7 +204,9 @@ test("runCampaignPackBenchmarkOverrideRoute forwards benchmark overrides", async
         walletLinkRateTarget: 0.42,
         rewardEligibilityRateTarget: 0.31,
         premiumConversionRateTarget: 0.14,
+        retainedActivityRateTarget: 0.48,
         averageWeeklyXpTarget: 260,
+        zeroCompletionWeekThreshold: 2,
       },
       reason: "Flagship pack",
     },

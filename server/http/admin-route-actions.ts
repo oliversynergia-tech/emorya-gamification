@@ -39,7 +39,9 @@ export type AdminRouteActionServices = {
       walletLinkRateTarget: number;
       rewardEligibilityRateTarget: number;
       premiumConversionRateTarget: number;
+      retainedActivityRateTarget: number;
       averageWeeklyXpTarget: number;
+      zeroCompletionWeekThreshold: number;
     };
     reason?: string | null;
   }) => Promise<unknown>;
@@ -122,7 +124,9 @@ export async function runCampaignPackBenchmarkOverrideRoute(
       walletLinkRateTarget?: number;
       rewardEligibilityRateTarget?: number;
       premiumConversionRateTarget?: number;
+      retainedActivityRateTarget?: number;
       averageWeeklyXpTarget?: number;
+      zeroCompletionWeekThreshold?: number;
     };
     reason?: string | null;
   },
