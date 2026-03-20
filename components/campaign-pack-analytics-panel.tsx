@@ -228,6 +228,7 @@ export function CampaignPackAnalyticsPanel({
   const [sourceFilter, setSourceFilter] = useState<"all" | CampaignSource>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [comparisonPackId, setComparisonPackId] = useState<string>("all");
+  const [historyFilter, setHistoryFilter] = useState<"all" | "lifecycle" | "benchmark" | "alerts">("all");
   const [pendingPackId, setPendingPackId] = useState<string | null>(null);
   const [benchmarkPendingPackId, setBenchmarkPendingPackId] = useState<string | null>(null);
   const [benchmarkDrafts, setBenchmarkDrafts] = useState<Record<string, BenchmarkDraft>>({});
@@ -560,6 +561,8 @@ export function CampaignPackAnalyticsPanel({
                   <div>
                     <strong>{pack.missionCtaSummary.recommendedBadge}</strong>
                     <p>{pack.missionCtaSummary.recommendedReason}</p>
+                    <p className="form-note">{pack.operatorNextMove.title}</p>
+                    <p className="form-note">{pack.operatorNextMove.detail}</p>
                   </div>
                   <div className="achievement-card__side">
                     <span>{pack.missionCtaSummary.recommendedVariant}</span>
@@ -569,9 +572,37 @@ export function CampaignPackAnalyticsPanel({
               <p className="form-note">
                 Reminder effectiveness: {pack.reminderEffectiveness.handledCount} handled, {pack.reminderEffectiveness.snoozedCount} snoozed, {Math.round(pack.reminderEffectiveness.handledRate * 100)}% handled rate.
               </p>
+              <p className="form-note">
+                Reminder trend: current {pack.reminderEffectiveness.trend.currentCount} vs previous {pack.reminderEffectiveness.trend.previousCount}. Delta {pack.reminderEffectiveness.trend.delta >= 0 ? "+" : ""}
+                {pack.reminderEffectiveness.trend.delta}.
+              </p>
+              <div className="review-actions">
+                <button className={`button ${historyFilter === "all" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setHistoryFilter("all")}>
+                  All history
+                </button>
+                <button className={`button ${historyFilter === "lifecycle" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setHistoryFilter("lifecycle")}>
+                  Lifecycle
+                </button>
+                <button className={`button ${historyFilter === "benchmark" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setHistoryFilter("benchmark")}>
+                  Benchmarks
+                </button>
+                <button className={`button ${historyFilter === "alerts" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setHistoryFilter("alerts")}>
+                  Alerts
+                </button>
+              </div>
               {pack.missionCtaSummary.recommendationHistory.length > 0 ? (
                 <div className="achievement-list">
-                  {pack.missionCtaSummary.recommendationHistory.map((entry) => (
+                  {pack.missionCtaSummary.recommendationHistory
+                    .filter((entry) =>
+                      historyFilter === "all"
+                        ? true
+                        : historyFilter === "lifecycle"
+                          ? entry.action === "update_lifecycle"
+                          : historyFilter === "benchmark"
+                            ? entry.action === "save_benchmark_override" || entry.action === "clear_benchmark_override"
+                            : entry.action === "suppress_alert" || entry.action === "clear_alert_suppression",
+                    )
+                    .map((entry) => (
                     <article key={`${pack.packId}-recommendation-history-${entry.createdAt}-${entry.action}`} className="achievement-card">
                       <div>
                         <strong>{entry.action.replaceAll("_", " ")}</strong>

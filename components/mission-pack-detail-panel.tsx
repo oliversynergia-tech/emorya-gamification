@@ -130,6 +130,7 @@ export function MissionPackDetailPanel({
                         {quest.track} track. {quest.rewardLabel}
                       </p>
                       <p className="form-note">{quest.gateLabel}</p>
+                      <p className="form-note">{quest.dependencyDetail}</p>
                       <p className="form-note">
                         {quest.cadence} cadence. {quest.verificationType} verification.
                       </p>

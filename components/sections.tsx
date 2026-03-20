@@ -2305,6 +2305,8 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
                 <div>
                   <strong>{pack.label}</strong>
                   <p>{pack.missionCtaSummary.recommendedReason}</p>
+                  <p className="form-note">{pack.operatorNextMove.title}</p>
+                  <p className="form-note">{pack.operatorNextMove.detail}</p>
                   <p className="form-note">
                     Reminder effectiveness: {pack.reminderEffectiveness.handledCount} handled, {pack.reminderEffectiveness.snoozedCount} snoozed.
                   </p>

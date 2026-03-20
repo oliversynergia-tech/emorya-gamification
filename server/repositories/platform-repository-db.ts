@@ -1619,6 +1619,107 @@ function getQuestGateLabel({
   return "Helps build trust, eligibility, and progression pressure";
 }
 
+function getQuestDependencyDetail({
+  track,
+  verificationType,
+  isPremiumPreview,
+  hasDirectReward,
+  blockageState,
+}: {
+  track: QuestTrack;
+  verificationType: VerificationType;
+  isPremiumPreview: boolean;
+  hasDirectReward: boolean;
+  blockageState: DashboardData["campaignPacks"][number]["blockageState"];
+}) {
+  if (verificationType === "wallet-check" || track === "wallet") {
+    return "Clearing this step is the most direct route into wallet-enabled mission progression.";
+  }
+
+  if (blockageState === "starter_path" || track === "starter") {
+    return "This step removes starter-path friction so later quests can matter more.";
+  }
+
+  if (blockageState === "level") {
+    return "This step mainly helps close the level gap before the next gate opens.";
+  }
+
+  if (blockageState === "trust") {
+    return "This step builds the verified activity and trust signals the pack is still missing.";
+  }
+
+  if (isPremiumPreview || track === "premium") {
+    return "This step matters most once the pack is ready to lean into the premium phase.";
+  }
+
+  if (hasDirectReward) {
+    return "This step keeps the direct reward rail intact so payout value is still reachable.";
+  }
+
+  if (track === "daily" || track === "campaign") {
+    return "This step is strongest as a momentum recovery move inside the current pack window.";
+  }
+
+  return "This step strengthens the pack's general eligibility and progression path.";
+}
+
+function getPackOperatorNextMove({
+  blockageState,
+  reminderHandledRate,
+  topCtaVariant,
+  returnWindow,
+}: {
+  blockageState: DashboardData["campaignPacks"][number]["blockageState"];
+  reminderHandledRate: number;
+  topCtaVariant: string | null;
+  returnWindow: DashboardData["campaignPacks"][number]["returnWindow"];
+}) {
+  if (blockageState === "wallet_connection") {
+    return {
+      title: "Push wallet-first guidance",
+      detail: "Wallet connection is still the real gate, so keep the operator focus on wallet-first CTA pressure.",
+    };
+  }
+
+  if (blockageState === "starter_path") {
+    return {
+      title: "Simplify the starter-path message",
+      detail: "Starter-path friction is still dominant here, so clearer onboarding guidance should help more than stronger reward copy.",
+    };
+  }
+
+  if (blockageState === "trust" || blockageState === "level") {
+    return {
+      title: "Lean on eligibility-building copy",
+      detail: "This pack still needs level/trust movement, so operators should emphasize verified progress over payout excitement.",
+    };
+  }
+
+  if (blockageState === "premium_phase") {
+    return {
+      title: "Test premium-phase conversion prompts",
+      detail: "This pack has reached the premium step, so operators should reinforce the upgrade move rather than generic progression.",
+    };
+  }
+
+  if (blockageState === "weekly_pace") {
+    return {
+      title: returnWindow === "today" ? "Trigger same-day recovery nudges" : "Push return-this-week recovery",
+      detail:
+        reminderHandledRate < 0.4
+          ? "Reminder handling is still soft, so operators should tighten the recovery copy before increasing pressure."
+          : "Reminder handling is decent, so the next move is keeping recovery pressure consistent until pace improves.",
+    };
+  }
+
+  return {
+    title: "Keep the current CTA path steady",
+    detail: topCtaVariant
+      ? `Current signals are relatively healthy, so keep leaning on ${topCtaVariant} while monitoring for blocker drift.`
+      : "Current signals are relatively healthy, so keep progression messaging steady while monitoring for blocker drift.",
+  };
+}
+
 function getRecommendedPackCta(
   state: DashboardData["campaignPacks"][number]["blockageState"],
   returnWindow: DashboardData["campaignPacks"][number]["returnWindow"] | "wait_for_unlock",
@@ -2070,6 +2171,20 @@ async function getUserCampaignPackJourneys({
           verificationType: row.verification_type,
           isPremiumPreview: row.is_premium_preview,
           hasDirectReward: Boolean(directReward && typeof directReward.amount === "number"),
+        }),
+        dependencyDetail: getQuestDependencyDetail({
+          track,
+          verificationType: row.verification_type,
+          isPremiumPreview: row.is_premium_preview,
+          hasDirectReward: Boolean(directReward && typeof directReward.amount === "number"),
+          blockageState:
+            !userProgressState.walletLinked
+              ? "wallet_connection"
+              : !userProgressState.starterPathComplete
+                ? "starter_path"
+                : !user.rewardEligibility.eligible
+                  ? "trust"
+                  : "ready",
         }),
         rewardTimingLabel:
           directReward && typeof directReward.amount === "number"
@@ -3295,6 +3410,15 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           snoozedCount: 0,
           totalCount: 0,
           handledRate: 0,
+          trend: {
+            currentCount: 0,
+            previousCount: 0,
+            delta: 0,
+          },
+        },
+        operatorNextMove: {
+          title: "Keep monitoring this pack",
+          detail: "Pack-specific operator guidance will appear once reminder and CTA signals accumulate.",
         },
       };
     current.lifecycleState = lifecycleState === "live" || current.lifecycleState === "live"
@@ -3587,6 +3711,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
               ? "this_week"
               : "wait_for_unlock";
       const recommendedCta = getRecommendedPackCta(recommendationState, recommendationWindow);
+      const reminderHandledRate = pack.reminderEffectiveness.handledRate;
       pack.missionCtaSummary = {
         topCtaLabel: ctaSummary.topCtaLabel,
         topCtaVariant: ctaSummary.topCtaVariant,
@@ -3615,6 +3740,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         variantBreakdown: ctaSummary.variantBreakdown.sort((left, right) => right.clickCount - left.clickCount),
         variantComparison: ctaSummary.variantComparison.sort((left, right) => right.approvedUserRate - left.approvedUserRate),
       };
+      pack.operatorNextMove = getPackOperatorNextMove({
+        blockageState: recommendationState,
+        reminderHandledRate,
+        topCtaVariant: ctaSummary.topCtaVariant,
+        returnWindow: recommendationWindow,
+      });
     }
   }
   const packAnalytics = Array.from(packAnalyticsMap.values()).sort(
@@ -4059,10 +4190,17 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     }
     reminderVariantScheduleMap.set(scheduleKey, scheduleEntry);
     pack.reminderEffectiveness.totalCount += 1;
+    const createdAt = new Date(row.created_at).getTime();
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     if (row.notification_status === "handled") {
       pack.reminderEffectiveness.handledCount += 1;
     } else if (row.notification_status === "snoozed") {
       pack.reminderEffectiveness.snoozedCount += 1;
+    }
+    if (createdAt >= sevenDaysAgo) {
+      pack.reminderEffectiveness.trend.currentCount += 1;
+    } else {
+      pack.reminderEffectiveness.trend.previousCount += 1;
     }
   }
   for (const pack of packAnalyticsLookup.values()) {
@@ -4070,6 +4208,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       pack.reminderEffectiveness.totalCount > 0
         ? pack.reminderEffectiveness.handledCount / pack.reminderEffectiveness.totalCount
         : 0;
+    pack.reminderEffectiveness.trend.delta =
+      pack.reminderEffectiveness.trend.currentCount - pack.reminderEffectiveness.trend.previousCount;
   }
   const reminderScheduleSummary: AdminOverviewData["campaignOperations"]["reminderScheduleSummary"] = Array.from(
     reminderScheduleSummaryMap.entries(),

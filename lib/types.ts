@@ -466,6 +466,7 @@ export type DashboardData = {
       status: "available" | "in-progress" | "completed" | "rejected";
       actionable: boolean;
       gateLabel: string;
+      dependencyDetail: string;
       nextHint: string;
       rewardLabel: string;
       rewardTimingLabel: string;
@@ -1020,6 +1021,15 @@ export type AdminOverviewData = {
         snoozedCount: number;
         totalCount: number;
         handledRate: number;
+        trend: {
+          currentCount: number;
+          previousCount: number;
+          delta: number;
+        };
+      };
+      operatorNextMove: {
+        title: string;
+        detail: string;
       };
     }>;
     partnerReporting: Array<{
