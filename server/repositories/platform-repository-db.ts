@@ -967,7 +967,10 @@ async function getUserCampaignPackJourneys({
   user: UserSnapshot;
   userProgressState: UserProgressState;
   economySettings: EconomySettings;
-}): Promise<DashboardData["campaignPacks"]> {
+}): Promise<{
+  campaignPacks: DashboardData["campaignPacks"];
+  campaignNotifications: DashboardData["campaignNotifications"];
+}> {
   const result = await runQuery<CampaignPackJourneyRow>(
     `SELECT q.metadata->>'campaignPackId' AS pack_id,
             q.metadata->>'campaignPackLabel' AS pack_label,
@@ -999,7 +1002,10 @@ async function getUserCampaignPackJourneys({
   );
 
   if (result.rows.length === 0) {
-    return [];
+    return {
+      campaignPacks: [],
+      campaignNotifications: [],
+    };
   }
 
   const activeLane = resolveCampaignExperienceSource(economySettings, user.campaignSource);
@@ -1042,14 +1048,44 @@ async function getUserCampaignPackJourneys({
         questId: row.quest_id,
         title: row.quest_title,
         status,
+        actionable: ["quiz", "manual-review", "link-visit", "wallet-check"].includes(row.verification_type),
       };
     });
     const completedQuestCount = questStatuses.filter((quest) => quest.status === "completed").length;
     const inProgressQuestCount = questStatuses.filter((quest) => quest.status === "in-progress").length;
     const rejectedQuestCount = questStatuses.filter((quest) => quest.status === "rejected").length;
     const openQuestCount = questStatuses.filter((quest) => quest.status === "available").length;
-    const nextQuestTitle = questStatuses.find((quest) => quest.status !== "completed")?.title ?? null;
+    const nextQuest = questStatuses.find((quest) => quest.status !== "completed") ?? null;
+    const nextQuestTitle = nextQuest?.title ?? null;
+    const nextQuestId = nextQuest?.questId ?? null;
+    const nextQuestActionable = nextQuest?.actionable ?? false;
     const benchmark = getCampaignPackBenchmark(economySettings, experienceLane);
+
+    let milestone: DashboardData["campaignPacks"][number]["milestone"] = {
+      label: "Pack is ready to start",
+      tone: "info",
+    };
+    if (completedQuestCount >= rows.length && rows.length > 0) {
+      milestone = {
+        label: "Pack complete",
+        tone: "success",
+      };
+    } else if (completedQuestCount >= Math.ceil(rows.length / 2) && rows.length > 1) {
+      milestone = {
+        label: "Halfway complete",
+        tone: "success",
+      };
+    } else if (completedQuestCount > 0) {
+      milestone = {
+        label: "First mission cleared",
+        tone: "success",
+      };
+    } else if (rejectedQuestCount > 0) {
+      milestone = {
+        label: "Review needed on one mission",
+        tone: "warning",
+      };
+    }
 
     let nextAction = `Complete ${nextQuestTitle ?? "the next campaign quest"} to keep your pack momentum moving.`;
     if (!userProgressState.walletLinked) {
@@ -1063,9 +1099,13 @@ async function getUserCampaignPackJourneys({
     }
 
     const rewardFocus =
-      attributionSource === experienceLane
-        ? `${experienceLane} is driving this mission directly. XP builds the core loop, then ${economySettings.payoutAsset} settles the reward rail.`
-        : `${attributionSource} attribution is preserved, but this mission is currently flowing through the ${experienceLane} bridge into Emorya progression and ${economySettings.payoutAsset} rewards.`;
+      firstRow.template_kind === "feeder"
+        ? `${attributionSource} is acting as the feeder source here. The short-term win is reaching the ${experienceLane} bridge cleanly, then letting XP and wallet progress unlock the deeper ${economySettings.payoutAsset} rail.`
+        : firstRow.template_kind === "bridge"
+          ? `${experienceLane} is the live bridge lane for this mission. XP momentum, starter-path completion, and wallet trust are what turn this into reward-bearing progress.`
+          : attributionSource === experienceLane
+            ? `${experienceLane} is driving this mission directly. XP builds the core loop, then ${economySettings.payoutAsset} settles the reward rail.`
+            : `${attributionSource} attribution is preserved, but this mission is currently flowing through the ${experienceLane} bridge into Emorya progression and ${economySettings.payoutAsset} rewards.`;
 
     return {
       packId,
@@ -1080,10 +1120,14 @@ async function getUserCampaignPackJourneys({
       rejectedQuestCount,
       openQuestCount,
       featuredTracks,
+      nextQuestId,
       nextQuestTitle,
+      nextQuestActionable,
+      ctaLabel: nextQuestId ? (nextQuestActionable ? "Open next mission" : "View next mission") : "Review pack",
       nextAction,
       rewardFocus,
       benchmarkNote: `This lane is benchmarked toward ${(benchmark.walletLinkRateTarget * 100).toFixed(0)}% wallet link, ${(benchmark.rewardEligibilityRateTarget * 100).toFixed(0)}% reward eligibility, and ${(benchmark.premiumConversionRateTarget * 100).toFixed(0)}% premium conversion.`,
+      milestone,
       questStatuses,
       sortScore:
         (experienceLane === activeLane ? 5 : 0) +
@@ -1093,7 +1137,7 @@ async function getUserCampaignPackJourneys({
     };
   });
 
-  return packs
+  const campaignPacks = packs
     .sort((left, right) => {
       return right.sortScore - left.sortScore || right.totalQuestCount - left.totalQuestCount || left.label.localeCompare(right.label);
     })
@@ -1111,12 +1155,40 @@ async function getUserCampaignPackJourneys({
       rejectedQuestCount: pack.rejectedQuestCount,
       openQuestCount: pack.openQuestCount,
       featuredTracks: pack.featuredTracks,
+      nextQuestId: pack.nextQuestId,
       nextQuestTitle: pack.nextQuestTitle,
+      nextQuestActionable: pack.nextQuestActionable,
+      ctaLabel: pack.ctaLabel,
       nextAction: pack.nextAction,
       rewardFocus: pack.rewardFocus,
       benchmarkNote: pack.benchmarkNote,
+      milestone: pack.milestone,
       questStatuses: pack.questStatuses,
     }));
+
+  const campaignNotifications = campaignPacks
+    .filter((pack) => pack.lifecycleState === "live" || pack.milestone.tone === "success")
+    .slice(0, 4)
+    .map((pack) => ({
+      id: `pack-${pack.packId}-${pack.lifecycleState}-${pack.milestone.label}`,
+      tone: pack.lifecycleState === "live" ? "info" : pack.milestone.tone,
+      title:
+        pack.lifecycleState === "live"
+          ? `${pack.label} is now live in your lane`
+          : `${pack.label}: ${pack.milestone.label}`,
+      detail:
+        pack.lifecycleState === "live"
+          ? `${pack.kind === "feeder" ? `${pack.attributionSource} is feeding into ${pack.activeLane}` : `${pack.activeLane} is active`} and this pack is ready for user progression now.`
+          : `${pack.completedQuestCount}/${pack.totalQuestCount} missions are complete. ${pack.nextAction}`,
+      packId: pack.packId,
+      ctaLabel: pack.ctaLabel,
+      ctaQuestId: pack.nextQuestId,
+    }));
+
+  return {
+    campaignPacks,
+    campaignNotifications,
+  };
 }
 
 export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Promise<DashboardData> {
@@ -1150,7 +1222,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     getReferralLeaderboard(),
     getActivityFeed(),
   ]);
-  const campaignPacks = await getUserCampaignPackJourneys({
+  const { campaignPacks, campaignNotifications } = await getUserCampaignPackJourneys({
     userId,
     user,
     userProgressState,
@@ -1179,6 +1251,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
       },
     },
     campaignPacks,
+    campaignNotifications,
     quests,
     achievements,
     leaderboard,

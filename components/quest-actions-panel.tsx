@@ -11,11 +11,13 @@ export function QuestActionsPanel({
   quests,
   isAuthenticated,
   walletAddresses = [],
+  highlightedQuestId = null,
   onQuestResult,
 }: {
   quests: Quest[];
   isAuthenticated: boolean;
   walletAddresses?: string[];
+  highlightedQuestId?: string | null;
   onQuestResult?: (result: {
     questId: string;
     outcome: "approved" | "pending" | "rejected";
@@ -139,7 +141,7 @@ export function QuestActionsPanel({
   }
 
   return (
-    <section className="panel">
+    <section className="panel" id="quest-actions">
       <div className="panel__header">
         <div>
           <p className="eyebrow">Quest actions</p>
@@ -155,7 +157,11 @@ export function QuestActionsPanel({
           const pending = pendingQuestId === quest.id;
 
           return (
-            <article key={quest.id} className={`quest-action-card quest-card--state-${quest.status}`}>
+            <article
+              key={quest.id}
+              id={`quest-action-${quest.id}`}
+              className={`quest-action-card quest-card--state-${quest.status} ${highlightedQuestId === quest.id ? "quest-action-card--highlighted" : ""}`}
+            >
               <div className="quest-card__meta">
                 <span>{quest.verificationType}</span>
                 <span>{getQuestStatusLabel(quest.status)}</span>

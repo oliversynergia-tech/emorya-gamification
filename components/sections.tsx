@@ -360,8 +360,25 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                           : `${getCampaignSourceLabel(pack.attributionSource)} mission pack.`}{" "}
                       {pack.rewardFocus}
                     </p>
+                    <p className="form-note">
+                      <span className={`badge ${pack.milestone.tone === "success" ? "badge--pink" : ""}`}>{pack.milestone.label}</span>
+                    </p>
                     <p className="form-note">{pack.nextAction}</p>
                     <p className="form-note">{pack.benchmarkNote}</p>
+                    <div className="hero__actions">
+                      <a
+                        className="button button--secondary"
+                        href={
+                          pack.nextQuestId
+                            ? pack.nextQuestActionable
+                              ? `#quest-action-${pack.nextQuestId}`
+                              : "#quest-board"
+                            : "#quest-board"
+                        }
+                      >
+                        {pack.ctaLabel}
+                      </a>
+                    </div>
                   </div>
                   <div className="achievement-card__side">
                     <span>
@@ -385,6 +402,42 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                       : "Campaign"}
                   </small>
                 </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {data.campaignNotifications.length > 0 ? (
+          <div className="panel panel--glass">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Campaign notifications</p>
+                <h3>Live pack updates</h3>
+              </div>
+              <span className="badge">{data.campaignNotifications.length} live</span>
+            </div>
+            <div className="achievement-list">
+              {data.campaignNotifications.map((notification) => (
+                <article key={notification.id} className="achievement-card">
+                  <div>
+                    <strong>{notification.title}</strong>
+                    <p>{notification.detail}</p>
+                    {notification.ctaLabel ? (
+                      <div className="hero__actions">
+                        <a
+                          className="button button--secondary"
+                          href={notification.ctaQuestId ? `#quest-action-${notification.ctaQuestId}` : "#quest-board"}
+                        >
+                          {notification.ctaLabel}
+                        </a>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="achievement-card__side">
+                    <span className={`badge ${notification.tone === "success" ? "badge--pink" : ""}`}>
+                      {notification.tone}
+                    </span>
+                  </div>
+                </article>
               ))}
             </div>
           </div>
@@ -848,7 +901,7 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
     .filter((group) => group.quests.length > 0);
 
   return (
-    <section className="panel">
+    <section className="panel" id="quest-board">
       <div className="panel__header">
         <div>
           <p className="eyebrow">Quest board</p>

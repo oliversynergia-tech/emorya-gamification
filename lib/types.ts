@@ -395,15 +395,32 @@ export type DashboardData = {
     rejectedQuestCount: number;
     openQuestCount: number;
     featuredTracks: QuestTrack[];
+    nextQuestId: string | null;
     nextQuestTitle: string | null;
+    nextQuestActionable: boolean;
+    ctaLabel: string;
     nextAction: string;
     rewardFocus: string;
     benchmarkNote: string;
+    milestone: {
+      label: string;
+      tone: "info" | "success" | "warning";
+    };
     questStatuses: Array<{
       questId: string;
       title: string;
       status: "available" | "in-progress" | "completed" | "rejected";
+      actionable: boolean;
     }>;
+  }>;
+  campaignNotifications: Array<{
+    id: string;
+    tone: "info" | "success" | "warning";
+    title: string;
+    detail: string;
+    packId: string;
+    ctaLabel?: string;
+    ctaQuestId?: string | null;
   }>;
   quests: Quest[];
   achievements: Achievement[];
