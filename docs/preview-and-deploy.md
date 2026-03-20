@@ -86,6 +86,7 @@ For campaign-pack alert routing in production:
 For recurring partner reports in production:
 
 - schedule `npm run ops:campaign-packs:report -- --output-dir /persistent/reports/campaign-packs`
+- or schedule `npm run ops:campaign-packs:report:scheduled` with env-backed output config
 - keep the output directory on persistent storage, not ephemeral build storage
 
 ## Shareable preview workflow

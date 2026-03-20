@@ -23,6 +23,7 @@
     "ops:db:snapshot:scheduled": "node scripts/ops.mjs snapshot-scheduled",
     "dev:campaign-packs:report": "node scripts/export-campaign-pack-report.mjs",
     "ops:campaign-packs:report": "node scripts/export-campaign-pack-report.mjs",
+    "ops:campaign-packs:report:scheduled": "node scripts/run-scheduled-campaign-pack-report.mjs",
     "ops:payouts:process": "node scripts/process-token-payouts.mjs",
     "ops:env:check": "node scripts/env-check.mjs",
     "ops:release:state-check": "node scripts/release-state-check.mjs",

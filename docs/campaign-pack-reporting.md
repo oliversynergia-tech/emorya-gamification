@@ -6,6 +6,7 @@ Use the partner report export script when you want a scheduled or ops-driven sna
 
 - `npm run dev:campaign-packs:report`
 - `npm run ops:campaign-packs:report`
+- `npm run ops:campaign-packs:report:scheduled`
 
 Optional output directory:
 
@@ -54,3 +55,18 @@ Suggested weekly cadence:
 
 - Monday morning for partner snapshots
 - additional mid-week run for active launch windows if needed
+
+## Scheduled wrapper
+
+If you want one stable job-runner command, use:
+
+```bash
+npm run ops:campaign-packs:report:scheduled
+```
+
+It reads:
+
+- `CAMPAIGN_PACK_REPORTS_ENABLED`
+- `CAMPAIGN_PACK_REPORT_OUTPUT_DIR`
+
+So hosted ops can schedule one command and manage the output path in env/config instead of editing the cron line each time.

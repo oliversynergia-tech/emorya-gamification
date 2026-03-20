@@ -123,6 +123,7 @@ Recommended setup:
 For recurring partner reporting in hosted environments, schedule:
 
 - `npm run ops:campaign-packs:report -- --output-dir /persistent/reports/campaign-packs`
+- or the env-driven wrapper: `npm run ops:campaign-packs:report:scheduled`
 
 Suggested cadence:
 
@@ -135,3 +136,10 @@ The command writes:
 - `campaign-pack-report-YYYY-MM-DD.html`
 
 The HTML output is print-friendly and can be saved to PDF from a browser when needed.
+
+Recommended env for the wrapper:
+
+```env
+CAMPAIGN_PACK_REPORTS_ENABLED=true
+CAMPAIGN_PACK_REPORT_OUTPUT_DIR=/persistent/reports/campaign-packs
+```

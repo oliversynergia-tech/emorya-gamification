@@ -9,6 +9,7 @@ import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionTier } from "@/lib/types";
 import { CampaignPackAnalyticsPanel } from "@/components/campaign-pack-analytics-panel";
+import { CampaignPackNotificationHistoryPanel } from "@/components/campaign-pack-notification-history-panel";
 import { PayoutAuditTrailPanel } from "@/components/payout-audit-trail-panel";
 import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
 import { SourceLaneReportPanel } from "@/components/source-lane-report-panel";
@@ -1664,22 +1665,7 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
             </article>
           ))}
         </div>
-        {data.campaignOperations.notificationHistory.length > 0 ? (
-          <div className="achievement-list">
-            {data.campaignOperations.notificationHistory.map((entry) => (
-              <article key={`campaign-history-${entry.id}`} className="achievement-card">
-                <div>
-                  <strong>{entry.title}</strong>
-                  <p>{entry.detail}</p>
-                </div>
-                <div className="achievement-card__side">
-                  <span>{entry.channel}</span>
-                  <span>{entry.eventStatus}</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : null}
+        <CampaignPackNotificationHistoryPanel entries={data.campaignOperations.notificationHistory} />
         <CampaignPackAnalyticsPanel
           packs={data.campaignOperations.packAnalytics}
           partnerReports={data.campaignOperations.partnerReporting}
