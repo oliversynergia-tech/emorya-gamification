@@ -16,7 +16,14 @@ export function MissionPackDetailPanel({
   title?: string;
   eyebrow?: string;
 }) {
-  const initialPackId = activePacks[0]?.packId ?? packHistory[0]?.packId ?? "none";
+  const initialPackId =
+    (() => {
+      if (typeof window === "undefined") {
+        return activePacks[0]?.packId ?? packHistory[0]?.packId ?? "none";
+      }
+      const stored = window.localStorage.getItem("emorya-mission-selected-pack");
+      return stored ?? activePacks[0]?.packId ?? packHistory[0]?.packId ?? "none";
+    })();
   const [selectedPackId, setSelectedPackId] = useState(initialPackId);
   const [expandedLadders, setExpandedLadders] = useState<Record<string, boolean>>(() => {
     if (typeof window === "undefined") {
@@ -40,6 +47,13 @@ export function MissionPackDetailPanel({
     }
     window.localStorage.setItem("emorya-mission-ladder-state", JSON.stringify(expandedLadders));
   }, [expandedLadders]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem("emorya-mission-selected-pack", selectedPackId);
+  }, [selectedPackId]);
   const selectedActivePack = useMemo(
     () => activePacks.find((pack) => pack.packId === selectedPackId) ?? null,
     [activePacks, selectedPackId],

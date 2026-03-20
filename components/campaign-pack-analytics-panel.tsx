@@ -336,7 +336,15 @@ function exportReminderComparison(
   URL.revokeObjectURL(url);
 }
 
-function printPartnerReport(entries: PartnerReportItem[]) {
+function printPartnerReport(
+  entries: PartnerReportItem[],
+  filters: {
+    search: string;
+    source: "all" | CampaignSource;
+    status: "all" | "active" | "inactive";
+    kind: "all" | "bridge" | "feeder" | "mixed";
+  },
+) {
   const popup = window.open("", "_blank", "noopener,noreferrer,width=1100,height=900");
   if (!popup) {
     return;
@@ -346,6 +354,11 @@ function printPartnerReport(entries: PartnerReportItem[]) {
     .filter((entry) => entry.lifecycleHistorySummary)
     .slice(0, 4)
     .map((entry) => `${entry.label}: ${entry.lifecycleHistorySummary}`)
+    .join(" | ");
+  const recommendationOverview = entries
+    .filter((entry) => entry.recommendationHistorySnapshot.length > 0)
+    .slice(0, 4)
+    .map((entry) => `${entry.label}: ${entry.recommendationHistorySnapshot.join(" | ")}`)
     .join(" | ");
   const benchmarkSummary = [
     `${entries.filter((entry) => entry.benchmarkStatus === "on_track").length} on track`,
@@ -393,6 +406,11 @@ function printPartnerReport(entries: PartnerReportItem[]) {
         <h1>Partner Campaign Pack Report</h1>
         <p>This export is optimized for partner sharing and PDF save/export from the browser print dialog.</p>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
+          <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Export scope</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Search: ${filters.search.trim() || "No search filter"}</p>
+          <p style="margin:0;color:#5e5035;">Source: ${getSourceFilterLabel(filters.source)} · Status: ${getStatusFilterLabel(filters.status)} · Kind: ${getKindFilterLabel(filters.kind)}</p>
+        </section>
+        <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
           <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Campaign status</p>
           <p style="margin:0 0 8px;color:#5e5035;">Benchmark status: ${benchmarkSummary}</p>
           <p style="margin:0;color:#5e5035;">Alert pressure: ${alertPressureSummary}</p>
@@ -402,6 +420,14 @@ function printPartnerReport(entries: PartnerReportItem[]) {
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
                 <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Lifecycle highlights</p>
                 <p style="margin:0;color:#5e5035;">${lifecycleOverview}</p>
+              </section>`
+            : ""
+        }
+        ${
+          recommendationOverview
+            ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Recommendation shifts</p>
+                <p style="margin:0;color:#5e5035;">${recommendationOverview}</p>
               </section>`
             : ""
         }
@@ -779,7 +805,18 @@ export function CampaignPackAnalyticsPanel({
         >
           Export partner CSV
         </button>
-        <button className="button button--secondary" type="button" onClick={() => printPartnerReport(filteredPartnerReports)}>
+        <button
+          className="button button--secondary"
+          type="button"
+          onClick={() =>
+            printPartnerReport(filteredPartnerReports, {
+              search,
+              source: sourceFilter,
+              status: statusFilter,
+              kind: kindFilter,
+            })
+          }
+        >
           Print partner PDF
         </button>
       </div>
@@ -854,6 +891,10 @@ export function CampaignPackAnalyticsPanel({
               }, new Map<string, number>())
               .entries(),
           ).sort((left, right) => right[1] - left[1])[0];
+          const averageWalletLinkRate =
+            matching.reduce((sum, pack) => sum + pack.walletLinkRate, 0) / matching.length;
+          const averageRewardEligibilityRate =
+            matching.reduce((sum, pack) => sum + pack.rewardEligibilityRate, 0) / matching.length;
           return (
             <article key={`lifecycle-compare-${lifecycleState}`} className="achievement-card">
               <div>
@@ -878,14 +919,10 @@ export function CampaignPackAnalyticsPanel({
                   % avg CTA reach
                 </span>
                 <span>
-                  {Math.round(
-                    (matching.reduce((sum, pack) => sum + pack.walletLinkRate, 0) / matching.length) * 100,
-                  )}% avg wallet link
+                  {Math.round(averageWalletLinkRate * 100)}% avg wallet link
                 </span>
                 <span>
-                  {Math.round(
-                    (matching.reduce((sum, pack) => sum + pack.rewardEligibilityRate, 0) / matching.length) * 100,
-                  )}% avg eligible
+                  {Math.round(averageRewardEligibilityRate * 100)}% avg eligible
                 </span>
                 <span>
                   {Math.round(
@@ -894,6 +931,18 @@ export function CampaignPackAnalyticsPanel({
                 </span>
                 <span>top CTA {topVariantByPhase?.[0] ?? "n/a"}</span>
                 <span>{Math.round(averageCtaApprovalEfficiency * 100)}% CTA approval efficiency</span>
+                {comparisonBasePack ? (
+                  <span>
+                    wallet delta {averageWalletLinkRate - comparisonBasePack.walletLinkRate >= 0 ? "+" : ""}
+                    {Math.round((averageWalletLinkRate - comparisonBasePack.walletLinkRate) * 100)} pts
+                  </span>
+                ) : null}
+                {comparisonBasePack ? (
+                  <span>
+                    eligible delta {averageRewardEligibilityRate - comparisonBasePack.rewardEligibilityRate >= 0 ? "+" : ""}
+                    {Math.round((averageRewardEligibilityRate - comparisonBasePack.rewardEligibilityRate) * 100)} pts
+                  </span>
+                ) : null}
                 <span>avg completion delta {averageCompletionDelta >= 0 ? "+" : ""}{averageCompletionDelta.toFixed(1)}</span>
               </div>
             </article>

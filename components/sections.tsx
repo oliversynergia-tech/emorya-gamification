@@ -90,8 +90,22 @@ function getCampaignSourceLabel(source: "direct" | "zealy" | "galxe" | "taskon")
 }
 
 function getDashboardPriorityAction(data: DashboardData) {
+  const getFollowupLabelForHref = (href: string, fallback: string) => {
+    if (href.includes("wallet-link-panel")) {
+      return "Go to wallet";
+    }
+    if (href.includes("quest-board")) {
+      return "Open mission board";
+    }
+    if (href === "/profile") {
+      return "Review premium path";
+    }
+    return fallback;
+  };
+
   const walletGatePack = data.campaignPacks.find((pack) => pack.ctaVariant === "wallet_gate");
   if (walletGatePack) {
+    const followupHref = "/profile#wallet-link-panel";
     return {
       eyebrow: "Top action",
       title: "Link your wallet to unlock the mission path",
@@ -111,8 +125,8 @@ function getDashboardPriorityAction(data: DashboardData) {
       secondaryMetricValue: walletGatePack.weeklyGoal.label,
       followupLabel: "What changes after this",
       followupValue: walletGatePack.unlockRewardPreview,
-      followupCtaLabel: "Review what opens next",
-      followupHref: "/profile#wallet-link-panel",
+      followupCtaLabel: getFollowupLabelForHref(followupHref, "Review what opens next"),
+      followupHref,
       followupCtaVariant: "priority_followup_review",
       followupIntentLabel: "Immediate progress context",
     };
@@ -122,6 +136,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     (pack) => pack.ctaVariant === "free_to_monthly" || pack.ctaVariant === "monthly_to_annual",
   );
   if (premiumPack) {
+    const followupHref = "/profile";
     return {
       eyebrow: "Top action",
       title: "This mission has reached a premium-heavy phase",
@@ -141,8 +156,8 @@ function getDashboardPriorityAction(data: DashboardData) {
       secondaryMetricValue: premiumPack.weeklyGoal.label,
       followupLabel: "What changes after this",
       followupValue: premiumPack.unlockRewardPreview,
-      followupCtaLabel: "Review premium path",
-      followupHref: "/profile",
+      followupCtaLabel: getFollowupLabelForHref(followupHref, "Review premium path"),
+      followupHref,
       followupCtaVariant: "priority_followup_review",
       followupIntentLabel: "Planning move",
     };
@@ -224,6 +239,20 @@ function getDashboardPriorityAction(data: DashboardData) {
       returnPack.urgency
         ? { label: "Urgency", value: returnPack.urgency }
         : { label: "Mission pace", value: returnPack.weeklyGoal.label };
+    const followupHref =
+      returnPack.blockageState === "weekly_pace"
+        ? "/dashboard#quest-board"
+        : returnPack.blockageState === "ready"
+          ? "/dashboard#quest-board"
+          : returnPack.blockageState === "wallet_connection"
+            ? "/profile#wallet-link-panel"
+            : returnPack.blockageState === "starter_path"
+              ? "/dashboard#quest-board"
+              : returnPack.blockageState === "trust"
+                ? "/dashboard#quest-board"
+                : returnPack.blockageState === "premium_phase"
+                  ? "/profile"
+                  : "/profile#mission-recap";
     return {
       eyebrow,
       title,
@@ -253,7 +282,8 @@ function getDashboardPriorityAction(data: DashboardData) {
       secondaryMetricValue: secondaryMetric.value,
       followupLabel: "What changes after this",
       followupValue: returnPack.unlockRewardPreview,
-      followupCtaLabel:
+      followupCtaLabel: getFollowupLabelForHref(
+        followupHref,
         returnPack.blockageState === "weekly_pace"
           ? returnPack.returnWindow === "today"
             ? "Plan today's recovery"
@@ -266,23 +296,11 @@ function getDashboardPriorityAction(data: DashboardData) {
                 ? "See the starter gate"
                 : returnPack.blockageState === "trust"
                   ? "See the trust gate"
-                : returnPack.blockageState === "premium_phase"
-                  ? "Review premium gate"
-                  : "See the gated path",
-      followupHref:
-        returnPack.blockageState === "weekly_pace"
-          ? "/dashboard#quest-board"
-          : returnPack.blockageState === "ready"
-            ? "/dashboard#quest-board"
-            : returnPack.blockageState === "wallet_connection"
-              ? "/profile#wallet-link-panel"
-              : returnPack.blockageState === "starter_path"
-                ? "/dashboard#quest-board"
-                : returnPack.blockageState === "trust"
-                  ? "/dashboard#quest-board"
-              : returnPack.blockageState === "premium_phase"
-                ? "/profile"
-                : "/profile#mission-recap",
+                  : returnPack.blockageState === "premium_phase"
+                    ? "Review premium gate"
+                    : "See the gated path",
+      ),
+      followupHref,
       followupCtaVariant:
         returnPack.blockageState === "weekly_pace" || returnPack.blockageState === "ready"
           ? "priority_followup_review"
@@ -298,6 +316,8 @@ function getDashboardPriorityAction(data: DashboardData) {
   if (!nextPack) {
     return null;
   }
+
+  const followupHref = "/dashboard#quest-board";
 
   return {
     eyebrow: "Top action",
@@ -318,8 +338,8 @@ function getDashboardPriorityAction(data: DashboardData) {
     secondaryMetricValue: nextPack.weeklyGoal.label,
     followupLabel: "What changes after this",
     followupValue: nextPack.unlockRewardPreview,
-    followupCtaLabel: "Review what opens next",
-    followupHref: "/dashboard#quest-board",
+    followupCtaLabel: getFollowupLabelForHref(followupHref, "Review what opens next"),
+    followupHref,
     followupCtaVariant: "priority_followup_review",
     followupIntentLabel: "Planning move",
   };
