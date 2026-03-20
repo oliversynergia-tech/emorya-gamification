@@ -1527,6 +1527,64 @@ function getPackUnlockOutcomePreview({
   };
 }
 
+function getPackDependencySummary({
+  blockageState,
+  rewardEligible,
+  directRewardMetadata,
+  premiumNudge,
+}: {
+  blockageState: DashboardData["campaignPacks"][number]["blockageState"];
+  rewardEligible: boolean;
+  directRewardMetadata: { asset: TokenAsset; amount: number } | null;
+  premiumNudge: string | null;
+}): DashboardData["campaignPacks"][number]["dependencySummary"] {
+  const items: DashboardData["campaignPacks"][number]["dependencySummary"] = [];
+
+  if (blockageState === "wallet_connection") {
+    items.push({
+      label: "Wallet gate",
+      detail: "The next meaningful unlock still depends on wallet connection.",
+    });
+  }
+
+  if (blockageState === "starter_path") {
+    items.push({
+      label: "Starter path",
+      detail: "Starter-path stability still has to clear before deeper reward pressure matters.",
+    });
+  }
+
+  if (!rewardEligible || blockageState === "trust" || blockageState === "level") {
+    items.push({
+      label: "Eligibility gate",
+      detail: "This step is still contributing toward the level, trust, and eligibility threshold.",
+    });
+  }
+
+  if (premiumNudge) {
+    items.push({
+      label: "Premium phase",
+      detail: "The next unlock is starting to carry stronger premium-conversion weight.",
+    });
+  }
+
+  if (directRewardMetadata) {
+    items.push({
+      label: "Reward rail",
+      detail: `The pack is still aligned with the ${directRewardMetadata.amount} ${directRewardMetadata.asset} direct reward rail.`,
+    });
+  }
+
+  if (items.length === 0) {
+    items.push({
+      label: "Momentum",
+      detail: "The next unlock is mostly about maintaining pace rather than clearing a hard gate.",
+    });
+  }
+
+  return items;
+}
+
 function getQuestGateLabel({
   track,
   verificationType,
@@ -2199,6 +2257,12 @@ async function getUserCampaignPackJourneys({
       premiumNudge,
       rewardEligible: user.rewardEligibility.eligible,
     });
+    const dependencySummary = getPackDependencySummary({
+      blockageState,
+      rewardEligible: user.rewardEligibility.eligible,
+      directRewardMetadata,
+      premiumNudge,
+    });
     const primaryCta = resolvePackPrimaryCta({
       user,
       userProgressState,
@@ -2243,6 +2307,7 @@ async function getUserCampaignPackJourneys({
       unlockPreview,
       unlockRewardPreview,
       unlockOutcomePreview,
+      dependencySummary,
       returnAction,
       returnWindow,
       rewardFocus,
@@ -2301,6 +2366,7 @@ async function getUserCampaignPackJourneys({
       unlockPreview: pack.unlockPreview,
       unlockRewardPreview: pack.unlockRewardPreview,
       unlockOutcomePreview: pack.unlockOutcomePreview,
+      dependencySummary: pack.dependencySummary,
       returnAction: pack.returnAction,
       returnWindow: pack.returnWindow,
       rewardFocus: pack.rewardFocus,
@@ -3210,6 +3276,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           recommendedVariant: null,
           recommendedBadge: null,
           recommendedReason: null,
+          recommendationHistory: [],
           totalClicks: 0,
           uniqueUsers: 0,
           walletLinkedUsers: 0,
@@ -3223,6 +3290,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         },
         createdAt: quest.createdAt,
         lastUpdatedAt: quest.updatedAt,
+        reminderEffectiveness: {
+          handledCount: 0,
+          snoozedCount: 0,
+          totalCount: 0,
+          handledRate: 0,
+        },
       };
     current.lifecycleState = lifecycleState === "live" || current.lifecycleState === "live"
       ? "live"
@@ -3520,6 +3593,17 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         recommendedVariant: recommendedCta.variant,
         recommendedBadge: recommendedCta.badge,
         recommendedReason: recommendedCta.reason,
+        recommendationHistory: campaignPackAudit
+          .filter(
+            (entry) =>
+              entry.packId === pack.packId &&
+              (entry.action === "save_benchmark_override" ||
+                entry.action === "clear_benchmark_override" ||
+                entry.action === "update_lifecycle" ||
+                entry.action === "suppress_alert" ||
+                entry.action === "clear_alert_suppression"),
+          )
+          .slice(0, 3),
         totalClicks: ctaSummary.totalClicks,
         uniqueUsers: ctaSummary.uniqueUsers,
         walletLinkedUsers: ctaSummary.walletLinkedUsers,
@@ -3974,6 +4058,18 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       scheduleEntry.snoozedCount += 1;
     }
     reminderVariantScheduleMap.set(scheduleKey, scheduleEntry);
+    pack.reminderEffectiveness.totalCount += 1;
+    if (row.notification_status === "handled") {
+      pack.reminderEffectiveness.handledCount += 1;
+    } else if (row.notification_status === "snoozed") {
+      pack.reminderEffectiveness.snoozedCount += 1;
+    }
+  }
+  for (const pack of packAnalyticsLookup.values()) {
+    pack.reminderEffectiveness.handledRate =
+      pack.reminderEffectiveness.totalCount > 0
+        ? pack.reminderEffectiveness.handledCount / pack.reminderEffectiveness.totalCount
+        : 0;
   }
   const reminderScheduleSummary: AdminOverviewData["campaignOperations"]["reminderScheduleSummary"] = Array.from(
     reminderScheduleSummaryMap.entries(),

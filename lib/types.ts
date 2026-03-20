@@ -427,6 +427,10 @@ export type DashboardData = {
       premium: string | null;
       directReward: string | null;
     };
+    dependencySummary: Array<{
+      label: string;
+      detail: string;
+    }>;
     rewardFocus: string;
     badgeLabel: string;
     leaderboardCallout: string;
@@ -962,6 +966,18 @@ export type AdminOverviewData = {
         recommendedVariant: string | null;
         recommendedBadge: string | null;
         recommendedReason: string | null;
+        recommendationHistory: Array<{
+          action:
+            | "create_pack"
+            | "update_lifecycle"
+            | "save_benchmark_override"
+            | "clear_benchmark_override"
+            | "suppress_alert"
+            | "clear_alert_suppression";
+          detail: string;
+          changedByDisplayName: string | null;
+          createdAt: string;
+        }>;
         totalClicks: number;
         uniqueUsers: number;
         walletLinkedUsers: number;
@@ -999,6 +1015,12 @@ export type AdminOverviewData = {
       };
       createdAt: string;
       lastUpdatedAt: string;
+      reminderEffectiveness: {
+        handledCount: number;
+        snoozedCount: number;
+        totalCount: number;
+        handledRate: number;
+      };
     }>;
     partnerReporting: Array<{
       packId: string;

@@ -490,7 +490,15 @@ export function DashboardSnapshot({
           </div>
         ) : null}
         {priorityAction && onMissionViewChange ? (
-          <div className="panel panel--glass">
+          <div
+            className={`panel panel--glass ${
+              priorityAction.stateCategory === "Hard block"
+                ? "panel--priority-hard"
+                : priorityAction.stateCategory === "Momentum recovery"
+                  ? "panel--priority-recovery"
+                  : "panel--priority-soft"
+            }`}
+          >
             <div className="panel__header">
               <div>
                 <p className="eyebrow">{priorityAction.eyebrow}</p>
@@ -2297,6 +2305,9 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
                 <div>
                   <strong>{pack.label}</strong>
                   <p>{pack.missionCtaSummary.recommendedReason}</p>
+                  <p className="form-note">
+                    Reminder effectiveness: {pack.reminderEffectiveness.handledCount} handled, {pack.reminderEffectiveness.snoozedCount} snoozed.
+                  </p>
                 </div>
                 <div className="achievement-card__side">
                   <span>{pack.missionCtaSummary.recommendedBadge}</span>

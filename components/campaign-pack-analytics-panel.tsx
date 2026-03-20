@@ -566,6 +566,25 @@ export function CampaignPackAnalyticsPanel({
                   </div>
                 </article>
               ) : null}
+              <p className="form-note">
+                Reminder effectiveness: {pack.reminderEffectiveness.handledCount} handled, {pack.reminderEffectiveness.snoozedCount} snoozed, {Math.round(pack.reminderEffectiveness.handledRate * 100)}% handled rate.
+              </p>
+              {pack.missionCtaSummary.recommendationHistory.length > 0 ? (
+                <div className="achievement-list">
+                  {pack.missionCtaSummary.recommendationHistory.map((entry) => (
+                    <article key={`${pack.packId}-recommendation-history-${entry.createdAt}-${entry.action}`} className="achievement-card">
+                      <div>
+                        <strong>{entry.action.replaceAll("_", " ")}</strong>
+                        <p>{entry.detail}</p>
+                      </div>
+                      <div className="achievement-card__side">
+                        <span>{entry.changedByDisplayName ?? "Unknown admin"}</span>
+                        <span>{new Date(entry.createdAt).toLocaleString()}</span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
               {pack.missionCtaSummary.variantBreakdown.length > 0 ? (
                 <div className="achievement-list">
                   {pack.missionCtaSummary.variantBreakdown.map((entry) => (

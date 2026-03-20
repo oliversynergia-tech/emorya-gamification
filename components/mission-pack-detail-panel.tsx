@@ -74,6 +74,16 @@ export function MissionPackDetailPanel({
             {selectedActivePack.unlockOutcomePreview.directReward ? (
               <p className="form-note">{selectedActivePack.unlockOutcomePreview.directReward}</p>
             ) : null}
+            <div className="achievement-list">
+              {selectedActivePack.dependencySummary.map((dependency) => (
+                <article key={`${selectedActivePack.packId}-${dependency.label}`} className="achievement-card">
+                  <div>
+                    <strong>{dependency.label}</strong>
+                    <p>{dependency.detail}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
             <p className="form-note">{selectedActivePack.rewardFocus}</p>
             {selectedActivePack.returnAction ? <p className="form-note">{selectedActivePack.returnAction}</p> : null}
             {selectedActivePack.returnAction ? (
