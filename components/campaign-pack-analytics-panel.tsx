@@ -23,6 +23,23 @@ function toHistorySnapshot(entries: PackAnalyticsItem["missionCtaSummary"]["reco
   return entries.map((entry) => `${entry.action.replaceAll("_", " ")}: ${entry.detail}`);
 }
 
+function getReminderExportModeLabel(mode: ReminderExportMode) {
+  switch (mode) {
+    case "live":
+      return "Live packs only";
+    case "bridge":
+      return "Bridge packs only";
+    case "feeder":
+      return "Feeder packs only";
+    case "live_bridge":
+      return "Live bridge packs";
+    case "live_feeder":
+      return "Live feeder packs";
+    default:
+      return "Current filtered set";
+  }
+}
+
 function exportPackAnalytics(entries: PackAnalyticsItem[]) {
   const lines = [
     [
@@ -205,8 +222,10 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
   URL.revokeObjectURL(url);
 }
 
-function exportReminderComparison(entries: PackAnalyticsItem[]) {
+function exportReminderComparison(entries: PackAnalyticsItem[], mode: ReminderExportMode) {
   const lines = [
+    [`export_scope`, JSON.stringify(getReminderExportModeLabel(mode))].join(","),
+    "",
     [
       "pack_id",
       "label",
@@ -268,6 +287,7 @@ function printPartnerReport(entries: PartnerReportItem[]) {
       <p style="margin:0 0 12px;color:#5e5035;"><strong>${entry.operatorOutcomeTitle}</strong><br/>${entry.operatorOutcomeDetail}</p>
       <p style="margin:0 0 12px;color:#5e5035;">${entry.lifecyclePhaseSummary}</p>
       <p style="margin:0 0 12px;color:#5e5035;">${entry.benchmarkOverrideImpactSummary}</p>
+      ${entry.benchmarkOverrideHistorySummary ? `<p style="margin:0 0 12px;color:#5e5035;">Benchmark change history: ${entry.benchmarkOverrideHistorySummary}</p>` : ""}
       ${entry.recommendationHistorySnapshot.length > 0 ? `<p style="margin:0 0 12px;color:#5e5035;">Recent operator shifts: ${entry.recommendationHistorySnapshot.join(" | ")}</p>` : ""}
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
         <div><strong>${entry.participantCount}</strong><div>Participants</div></div>
@@ -626,7 +646,7 @@ export function CampaignPackAnalyticsPanel({
         <button className="button button--secondary" type="button" onClick={() => exportPackAnalytics(filteredPacks)}>
           Export CSV
         </button>
-        <button className="button button--secondary" type="button" onClick={() => exportReminderComparison(reminderExportEntries)}>
+        <button className="button button--secondary" type="button" onClick={() => exportReminderComparison(reminderExportEntries, reminderExportMode)}>
           Export reminder comparison
         </button>
         <button className="button button--secondary" type="button" onClick={() => exportPartnerReporting(partnerReports)}>
@@ -675,6 +695,30 @@ export function CampaignPackAnalyticsPanel({
           ))}
         </div>
       ) : null}
+      <div className="achievement-list">
+        {(["draft", "ready", "live"] as const).map((lifecycleState) => {
+          const matching = filteredPacks.filter((pack) => pack.lifecycleState === lifecycleState);
+          if (matching.length === 0) {
+            return null;
+          }
+          const averageHandledRate =
+            matching.reduce((sum, pack) => sum + pack.reminderEffectiveness.handledRate, 0) / matching.length;
+          const averageCompletionDelta =
+            matching.reduce((sum, pack) => sum + pack.operatorOutcome.trend.completionDelta, 0) / matching.length;
+          return (
+            <article key={`lifecycle-compare-${lifecycleState}`} className="achievement-card">
+              <div>
+                <strong>{lifecycleState} pack comparison</strong>
+                <p>{matching.length} packs in this phase across the current filtered set.</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{Math.round(averageHandledRate * 100)}% avg reminder handled</span>
+                <span>avg completion delta {averageCompletionDelta >= 0 ? "+" : ""}{averageCompletionDelta.toFixed(1)}</span>
+              </div>
+            </article>
+          );
+        })}
+      </div>
       {reminderComparison.strongest.length > 0 || reminderComparison.weakest.length > 0 ? (
         <div className="achievement-list">
           <article className="achievement-card">
@@ -913,6 +957,11 @@ export function CampaignPackAnalyticsPanel({
               <p className="form-note">
                 {partnerReports.find((entry) => entry.packId === pack.packId)?.benchmarkOverrideImpactSummary ?? ""}
               </p>
+              {partnerReports.find((entry) => entry.packId === pack.packId)?.benchmarkOverrideHistorySummary ? (
+                <p className="form-note">
+                  Benchmark change history: {partnerReports.find((entry) => entry.packId === pack.packId)?.benchmarkOverrideHistorySummary}
+                </p>
+              ) : null}
               {partnerReports.find((entry) => entry.packId === pack.packId)?.recommendationHistorySnapshot.length ? (
                 <p className="form-note">
                   Recent pack shifts: {partnerReports.find((entry) => entry.packId === pack.packId)?.recommendationHistorySnapshot.join(" | ")}

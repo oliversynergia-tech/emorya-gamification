@@ -51,6 +51,29 @@ export function MissionPackDetailPanel({
               : `Likely clears into ${selectedActivePack.milestone.label.toLowerCase()}.`,
         }))
     : [];
+  const dependencyGroups = remainingQuestProgression.reduce(
+    (groups, quest) => {
+      const label =
+        quest.dependencyProgressLabel.toLowerCase().includes("wallet")
+          ? "Wallet"
+          : quest.dependencyProgressLabel.toLowerCase().includes("starter")
+            ? "Starter path"
+            : quest.dependencyProgressLabel.toLowerCase().includes("premium")
+              ? "Premium"
+              : quest.dependencyProgressLabel.toLowerCase().includes("recovery") ||
+                  quest.dependencyProgressLabel.toLowerCase().includes("pace")
+                ? "Recovery"
+                : quest.dependencyProgressLabel.toLowerCase().includes("trust") ||
+                    quest.dependencyProgressLabel.toLowerCase().includes("eligibility")
+                  ? "Trust and eligibility"
+                  : "Mission progression";
+      const current = groups.get(label) ?? [];
+      current.push(quest);
+      groups.set(label, current);
+      return groups;
+    },
+    new Map<string, typeof remainingQuestProgression>(),
+  );
 
   return (
     <div className="panel panel--glass">
@@ -140,6 +163,15 @@ export function MissionPackDetailPanel({
                     <span>{remainingQuestProgression.length} steps left</span>
                   </div>
                 </article>
+                {Array.from(dependencyGroups.entries()).map(([label, items]) => (
+                  <article key={`${selectedActivePack.packId}-group-${label}`} className="achievement-card">
+                    <div>
+                      <strong>{label}</strong>
+                      <p>{items.length} remaining step{items.length === 1 ? "" : "s"} in this dependency cluster.</p>
+                      <p className="form-note">{items.map((item) => item.title).join(" -> ")}</p>
+                    </div>
+                  </article>
+                ))}
                 {selectedActivePack.questStatuses.map((quest) => (
                   <article key={quest.questId} className="achievement-card">
                     <div>

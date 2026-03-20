@@ -111,6 +111,9 @@ function getDashboardPriorityAction(data: DashboardData) {
       secondaryMetricValue: walletGatePack.weeklyGoal.label,
       followupLabel: "What changes after this",
       followupValue: walletGatePack.unlockRewardPreview,
+      followupCtaLabel: "Review what opens next",
+      followupHref: "/profile#mission-recap",
+      followupCtaVariant: "priority_followup_review",
     };
   }
 
@@ -137,6 +140,9 @@ function getDashboardPriorityAction(data: DashboardData) {
       secondaryMetricValue: premiumPack.weeklyGoal.label,
       followupLabel: "What changes after this",
       followupValue: premiumPack.unlockRewardPreview,
+      followupCtaLabel: "Review premium path",
+      followupHref: "/profile#mission-recap",
+      followupCtaVariant: "priority_followup_review",
     };
   }
 
@@ -245,6 +251,15 @@ function getDashboardPriorityAction(data: DashboardData) {
       secondaryMetricValue: secondaryMetric.value,
       followupLabel: "What changes after this",
       followupValue: returnPack.unlockRewardPreview,
+      followupCtaLabel:
+        returnPack.blockageState === "weekly_pace" || returnPack.blockageState === "ready"
+          ? "Review what opens next"
+          : "See the gated path",
+      followupHref: "/profile#mission-recap",
+      followupCtaVariant:
+        returnPack.blockageState === "weekly_pace" || returnPack.blockageState === "ready"
+          ? "priority_followup_review"
+          : "priority_followup_gate",
     };
   }
 
@@ -272,6 +287,9 @@ function getDashboardPriorityAction(data: DashboardData) {
     secondaryMetricValue: nextPack.weeklyGoal.label,
     followupLabel: "What changes after this",
     followupValue: nextPack.unlockRewardPreview,
+    followupCtaLabel: "Review what opens next",
+    followupHref: "/profile#mission-recap",
+    followupCtaVariant: "priority_followup_review",
   };
 }
 
@@ -597,13 +615,13 @@ export function DashboardSnapshot({
               </MissionLink>
               <MissionLink
                 className="button button--secondary"
-                href="/profile#mission-recap"
+                href={priorityAction.followupHref}
                 packId={priorityAction.packId}
                 eventType="dashboard_priority_profile_cta"
-                ctaLabel="Review mission recap"
-                ctaVariant="priority_profile"
+                ctaLabel={priorityAction.followupCtaLabel}
+                ctaVariant={priorityAction.followupCtaVariant}
               >
-                Review mission recap
+                {priorityAction.followupCtaLabel}
               </MissionLink>
             </div>
           </div>

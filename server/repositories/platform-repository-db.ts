@@ -3890,6 +3890,16 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       benchmarkOverrideImpactSummary: entry.benchmark.isOverridden
         ? `This pack is using a custom benchmark override${entry.benchmark.overrideReason ? `: ${entry.benchmark.overrideReason}` : "."}`
         : "This pack is still being judged against the default lane benchmark set.",
+      benchmarkOverrideHistorySummary:
+        campaignPackAudit
+          .filter(
+            (auditEntry) =>
+              auditEntry.packId === entry.packId &&
+              (auditEntry.action === "save_benchmark_override" || auditEntry.action === "clear_benchmark_override"),
+          )
+          .slice(0, 2)
+          .map((auditEntry) => auditEntry.detail)
+          .join(" | ") || null,
       recommendationHistorySnapshot: entry.missionCtaSummary.recommendationHistory
         .slice(0, 2)
         .map((historyEntry) => `${historyEntry.action.replaceAll("_", " ")}: ${historyEntry.detail}`),
