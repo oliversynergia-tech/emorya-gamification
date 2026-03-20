@@ -154,6 +154,50 @@ a {
   background: var(--purple);
 }
 
+.mission-cue {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.mission-cue strong {
+  margin-right: 6px;
+}
+
+.mission-cue--ready {
+  border-color: rgba(240, 80, 158, 0.34);
+  background: linear-gradient(180deg, rgba(240, 80, 158, 0.18), rgba(240, 80, 158, 0.06));
+}
+
+.mission-cue--planning {
+  border-color: rgba(143, 93, 255, 0.28);
+  background: linear-gradient(180deg, rgba(143, 93, 255, 0.15), rgba(143, 93, 255, 0.05));
+}
+
+.mission-cue-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: var(--text-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mission-cue-badge--ready {
+  background: rgba(240, 80, 158, 0.18);
+  color: #ffd2e8;
+}
+
+.mission-cue-badge--planning {
+  background: rgba(143, 93, 255, 0.16);
+  color: #ddd0ff;
+}
+
 .topbar,
 .content,
 .panel,

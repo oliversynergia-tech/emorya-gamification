@@ -27,11 +27,13 @@ function getProfilePackCue(pack: DashboardCampaignPack) {
     return {
       badge: "Exact quest ready",
       note: `Resume exact quest: ${pack.nextQuestTitle} is ready now.`,
+      tone: "ready",
     };
   }
   return {
     badge: "Review mission path",
     note: "Review the mission path to see what opens next before you jump back in.",
+    tone: "planning",
   };
 }
 
@@ -117,22 +119,26 @@ export function ProfileMissionRecapPanel({
       </div>
       {filtered.active.length > 0 ? (
         <div className="achievement-list">
-          {filtered.active.map((pack) => (
-            <article key={`profile-pack-${pack.packId}`} className={`achievement-card ${pack.urgency ? "achievement-card--urgent" : ""}`}>
-              <div>
-                <strong>{pack.label}</strong>
-                <p>{pack.nextAction}</p>
-                <p className="form-note">{pack.tierPhaseCopy}</p>
-                <p className="form-note">
-                  {pack.completedQuestCount}/{pack.totalQuestCount} missions complete. {pack.sequenceReason}
-                </p>
-                <p className="form-note">{getProfilePackCue(pack).note}</p>
-                {pack.returnAction ? <p className="form-note">{pack.returnAction}</p> : null}
-              </div>
+          {filtered.active.map((pack) => {
+            const cue = getProfilePackCue(pack);
+            return (
+              <article key={`profile-pack-${pack.packId}`} className={`achievement-card ${pack.urgency ? "achievement-card--urgent" : ""}`}>
+                <div>
+                  <strong>{pack.label}</strong>
+                  <p>{pack.nextAction}</p>
+                  <p className="form-note">{pack.tierPhaseCopy}</p>
+                  <p className="form-note">
+                    {pack.completedQuestCount}/{pack.totalQuestCount} missions complete. {pack.sequenceReason}
+                  </p>
+                  <p className={`mission-cue mission-cue--${cue.tone}`}>
+                    <strong>{cue.badge}</strong> {cue.note}
+                  </p>
+                  {pack.returnAction ? <p className="form-note">{pack.returnAction}</p> : null}
+                </div>
                 <div className="achievement-card__side">
                   <span>{pack.badgeLabel}</span>
                   <span>{pack.weeklyGoal.targetXp} XP target</span>
-                  <span>{getProfilePackCue(pack).badge}</span>
+                  <span className={`mission-cue-badge mission-cue-badge--${cue.tone}`}>{cue.badge}</span>
                   <MissionLink
                     className="text-link"
                     href={getProfilePackHref(pack)}
@@ -157,7 +163,8 @@ export function ProfileMissionRecapPanel({
                   ) : null}
                 </div>
               </article>
-          ))}
+            );
+          })}
         </div>
       ) : null}
       {filtered.history.length > 0 ? (

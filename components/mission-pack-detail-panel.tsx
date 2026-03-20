@@ -7,6 +7,21 @@ import type { DashboardData } from "@/lib/types";
 
 type MissionView = "active" | "completed" | "all" | "reward";
 
+function getMissionCue(pack: DashboardData["campaignPacks"][number]) {
+  if (pack.nextQuestActionable && pack.nextQuestTitle) {
+    return {
+      badge: "Exact quest ready",
+      note: `Resume exact quest: ${pack.nextQuestTitle} is ready now.`,
+      tone: "ready",
+    } as const;
+  }
+  return {
+    badge: "Review mission path",
+    note: "Review the remaining mission path to see what opens next before you jump back in.",
+    tone: "planning",
+  } as const;
+}
+
 export function MissionPackDetailPanel({
   activePacks,
   packHistory,
@@ -139,6 +154,7 @@ export function MissionPackDetailPanel({
     },
     new Map<string, typeof remainingQuestProgression>(),
   );
+  const missionCue = selectedActivePack ? getMissionCue(selectedActivePack) : null;
 
   return (
     <div className="panel panel--glass">
@@ -188,6 +204,11 @@ export function MissionPackDetailPanel({
               ))}
             </div>
             <p className="form-note">{selectedActivePack.rewardFocus}</p>
+            {missionCue ? (
+              <p className={`mission-cue mission-cue--${missionCue.tone}`}>
+                <strong>{missionCue.badge}</strong> {missionCue.note}
+              </p>
+            ) : null}
             {selectedActivePack.returnAction ? <p className="form-note">{selectedActivePack.returnAction}</p> : null}
             {selectedActivePack.returnAction ? (
               <p className="form-note">
@@ -299,6 +320,7 @@ export function MissionPackDetailPanel({
           <div className="achievement-card__side">
             <span>{selectedActivePack.completedQuestCount}/{selectedActivePack.totalQuestCount} complete</span>
             <span>{selectedActivePack.milestone.label}</span>
+            {missionCue ? <span className={`mission-cue-badge mission-cue-badge--${missionCue.tone}`}>{missionCue.badge}</span> : null}
             <MissionLink
               className="button button--secondary"
               href={selectedActivePack.nextQuestActionable && selectedActivePack.nextQuestId ? `/dashboard#quest-${selectedActivePack.nextQuestId}` : selectedActivePack.ctaHref ?? "#quest-board"}

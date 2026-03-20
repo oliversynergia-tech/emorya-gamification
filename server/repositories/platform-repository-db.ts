@@ -3887,6 +3887,14 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           : entry.lifecycleState === "ready"
             ? "Ready-state changes are now visible. This is the best phase for validating CTA and reminder choices before full live pressure."
             : "Live-state performance is now the main operator read. Trend movement here is the strongest signal for intervention or scaling.",
+      zeroCompletionRiskTrendSummary:
+        (entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0) === 0
+          ? (entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0) === 0
+            ? `${entry.lifecycleState} phase is still in a zero-completion risk state week over week.`
+            : `${entry.lifecycleState} phase just moved into a zero-completion risk state this week.`
+          : (entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0) === 0
+            ? `${entry.lifecycleState} phase eased out of zero-completion risk this week.`
+            : `${entry.lifecycleState} phase is currently moving with non-zero completions.`,
       benchmarkOverrideImpactSummary: entry.benchmark.isOverridden
         ? `This pack is using a custom benchmark override${entry.benchmark.overrideReason ? `: ${entry.benchmark.overrideReason}` : "."}`
         : "This pack is still being judged against the default lane benchmark set.",

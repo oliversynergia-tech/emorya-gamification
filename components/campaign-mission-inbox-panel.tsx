@@ -19,7 +19,7 @@ export function CampaignMissionInboxPanel({
   title?: string;
   eyebrow?: string;
 }) {
-  const storageKey = "campaign-mission-inbox:state";
+  const storageKey = `campaign-mission-inbox:state:${missionView}`;
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const [currentTime, setCurrentTime] = useState(() => Date.now());
@@ -111,7 +111,7 @@ export function CampaignMissionInboxPanel({
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener("campaign-mission-inbox-sync", handleMissionInboxSync as EventListener);
     };
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {

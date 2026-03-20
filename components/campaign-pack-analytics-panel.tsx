@@ -460,6 +460,19 @@ function printPartnerReport(
     })
     .filter((entry): entry is string => Boolean(entry))
     .join(" · ");
+  const lifecycleRiskSummary = (["draft", "ready", "live"] as const)
+    .map((phase) => {
+      const phaseEntries = entries.filter((entry) => entry.lifecycleState === phase);
+      if (phaseEntries.length === 0) {
+        return null;
+      }
+      const movingIntoRisk = phaseEntries.filter((entry) => entry.zeroCompletionRiskTrendSummary.includes("just moved into")).length;
+      const easingOutOfRisk = phaseEntries.filter((entry) => entry.zeroCompletionRiskTrendSummary.includes("eased out")).length;
+      const steadyRisk = phaseEntries.filter((entry) => entry.zeroCompletionRiskTrendSummary.includes("still in")).length;
+      return `${phase}: ${movingIntoRisk} rising · ${easingOutOfRisk} easing · ${steadyRisk} steady risk`;
+    })
+    .filter((entry): entry is string => Boolean(entry))
+    .join(" · ");
   const benchmarkChangeSummary = entries
     .filter((entry) => entry.benchmarkOverrideHistorySummary)
     .slice(0, 4)
@@ -485,6 +498,7 @@ function printPartnerReport(
       <p style="margin:0 0 12px;color:#5e5035;"><strong>${entry.partnerSummaryHeadline}</strong><br/>${entry.partnerSummaryDetail}</p>
       <p style="margin:0 0 12px;color:#5e5035;"><strong>${entry.operatorOutcomeTitle}</strong><br/>${entry.operatorOutcomeDetail}</p>
       <p style="margin:0 0 12px;color:#5e5035;">${entry.lifecyclePhaseSummary}</p>
+      <p style="margin:0 0 12px;color:#5e5035;">${entry.zeroCompletionRiskTrendSummary}</p>
       <p style="margin:0 0 12px;color:#5e5035;">${entry.benchmarkOverrideImpactSummary}</p>
       ${entry.benchmarkOverrideHistorySummary ? `<p style="margin:0 0 12px;color:#5e5035;">Benchmark change history: ${entry.benchmarkOverrideHistorySummary}</p>` : ""}
       ${entry.lifecycleHistorySummary ? `<p style="margin:0 0 12px;color:#5e5035;">Lifecycle history: ${entry.lifecycleHistorySummary}</p>` : ""}
@@ -571,6 +585,14 @@ function printPartnerReport(
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
                 <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Temporary operator interventions</p>
                 <p style="margin:0;color:#5e5035;">${suppressionChangeSummary}</p>
+              </section>`
+            : ""
+        }
+        ${
+          lifecycleRiskSummary
+            ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Zero-completion risk by lifecycle</p>
+                <p style="margin:0;color:#5e5035;">Stagnation pressure by phase: ${lifecycleRiskSummary}</p>
               </section>`
             : ""
         }
@@ -721,6 +743,21 @@ export function CampaignPackAnalyticsPanel({
       weakest: [...ranked].reverse().slice(0, 3),
     };
   }, [filteredPacks]);
+  const filteredBenchmarkKindSummary = useMemo(
+    () =>
+      (["bridge", "feeder", "mixed"] as const)
+        .map((kind) => {
+          const kindEntries = filteredPacks.filter((pack) => getPackKind(pack) === kind);
+          if (kindEntries.length === 0) {
+            return null;
+          }
+          const onTrackCount = kindEntries.filter((pack) => pack.benchmark.status === "on_track").length;
+          return `${kind}: ${onTrackCount}/${kindEntries.length} on track`;
+        })
+        .filter((entry): entry is string => Boolean(entry))
+        .join(" · "),
+    [filteredPacks],
+  );
 
   const reminderExportEntries = useMemo(() => {
     return filteredPacks.filter((pack) => {
@@ -1002,6 +1039,19 @@ export function CampaignPackAnalyticsPanel({
           ))}
         </div>
       ) : null}
+      {filteredBenchmarkKindSummary ? (
+        <div className="achievement-list">
+          <article className="achievement-card achievement-card--progress">
+            <div>
+              <strong>Benchmark status by pack kind</strong>
+              <p>Quick read on how bridge, feeder, and mixed packs are performing against their current benchmark status.</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{filteredBenchmarkKindSummary}</span>
+            </div>
+          </article>
+        </div>
+      ) : null}
       <div className="achievement-list">
         {(["draft", "ready", "live"] as const).map((lifecycleState) => {
           const matching = filteredPacks.filter((pack) => pack.lifecycleState === lifecycleState);
@@ -1180,6 +1230,41 @@ export function CampaignPackAnalyticsPanel({
               </div>
             </article>
           ))}
+        </div>
+      ) : null}
+      {filteredPacks.some((pack) => pack.lifecycleState === "live") ? (
+        <div className="achievement-list">
+          <article className="achievement-card">
+            <div>
+              <strong>Live zero-completion risk</strong>
+              <p>Which live packs are currently driving stagnation risk, and whether that pressure is rising or easing week over week.</p>
+            </div>
+          </article>
+          {filteredPacks
+            .filter((pack) => pack.lifecycleState === "live")
+            .map((pack) => {
+              const latestCompletionCount = pack.weeklyTrend[pack.weeklyTrend.length - 1]?.completionCount ?? 0;
+              const previousCompletionCount = pack.weeklyTrend[pack.weeklyTrend.length - 2]?.completionCount ?? 0;
+              const currentRisk = latestCompletionCount === 0;
+              const previousRisk = previousCompletionCount === 0;
+              const riskShift = currentRisk === previousRisk ? "steady" : currentRisk ? "rising" : "easing";
+
+              return (
+                <article key={`zero-risk-${pack.packId}`} className="achievement-card">
+                  <div>
+                    <strong>{pack.label}</strong>
+                    <p>{currentRisk ? "Current week is at zero completions." : `Current week has ${latestCompletionCount} completions.`}</p>
+                    <p className="form-note">
+                      Previous week: {previousCompletionCount} completions. Risk is {riskShift}.
+                    </p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{currentRisk ? "At risk" : "Moving"}</span>
+                    <span>{riskShift}</span>
+                  </div>
+                </article>
+              );
+            })}
         </div>
       ) : null}
       <div className="achievement-list">

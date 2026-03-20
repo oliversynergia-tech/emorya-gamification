@@ -1064,6 +1064,7 @@ export type AdminOverviewData = {
       operatorOutcomeTitle: string;
       operatorOutcomeDetail: string;
       lifecyclePhaseSummary: string;
+      zeroCompletionRiskTrendSummary: string;
       benchmarkOverrideImpactSummary: string;
       benchmarkOverrideHistorySummary: string | null;
       lifecycleHistorySummary: string | null;
