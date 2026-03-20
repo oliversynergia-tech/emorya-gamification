@@ -15,6 +15,7 @@ import { CampaignMissionInboxPanel } from "@/components/campaign-mission-inbox-p
 import { CampaignMissionCtaAnalyticsPanel } from "@/components/campaign-mission-cta-analytics-panel";
 import { CampaignPackNotificationHistoryPanel } from "@/components/campaign-pack-notification-history-panel";
 import { MissionLink } from "@/components/mission-link";
+import { MissionEventHistoryPanel } from "@/components/mission-event-history-panel";
 import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
 import { ProfileMissionRecapPanel } from "@/components/profile-mission-recap-panel";
 import { SourceLaneReportPanel } from "@/components/source-lane-report-panel";
@@ -435,6 +436,7 @@ export function DashboardSnapshot({
                     <p className="form-note">{pack.tierPhaseCopy}</p>
                     <p className="form-note">{pack.priorityReason}</p>
                     <p className="form-note">{pack.unlockPreview}</p>
+                    {pack.returnAction ? <p className="form-note">{pack.returnAction}</p> : null}
                     <p className="form-note">{pack.leaderboardCallout}</p>
                     <p className="form-note">{pack.weeklyGoal.label}</p>
                     {pack.onboardingHint ? <p className="form-note">{pack.onboardingHint}</p> : null}
@@ -1367,6 +1369,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
       </div>
       <ProfileMissionRecapPanel activePacks={data.campaignPacks} packHistory={data.campaignPackHistory} />
       <CampaignMissionInboxPanel notifications={data.campaignNotifications} title="Mission inbox" eyebrow="Profile mission inbox" />
+      <MissionEventHistoryPanel entries={data.missionEventHistory} />
       <div className="panel">
         <div className="panel__header">
           <div>

@@ -549,6 +549,11 @@ export function CampaignPackAnalyticsPanel({
                 ({(pack.likelyPackCausedPremiumConversionRate * 100).toFixed(0)}%). This is the stricter attribution view for upgrades that happened within two weeks of first pack touch.
               </p>
               <p className="form-note">
+                Mission CTA performance: {pack.missionCtaSummary.totalClicks} clicks from {pack.missionCtaSummary.uniqueUsers} users.
+                {` `}
+                Top variant: {pack.missionCtaSummary.topCtaVariant ?? "n/a"}{pack.missionCtaSummary.topCtaLabel ? ` via ${pack.missionCtaSummary.topCtaLabel}` : ""}.
+              </p>
+              <p className="form-note">
                 Benchmark lane: {pack.benchmark.activeLane}. Targets: {Math.round(pack.benchmark.walletLinkRateTarget * 100)}% wallet,
                 {` `}
                 {Math.round(pack.benchmark.rewardEligibilityRateTarget * 100)}% eligibility, {Math.round(pack.benchmark.premiumConversionRateTarget * 100)}% premium,

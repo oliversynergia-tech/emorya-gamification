@@ -431,6 +431,7 @@ export type DashboardData = {
     } | null;
     benchmarkNote: string;
     premiumNudge: string | null;
+    returnAction: string | null;
     milestone: {
       label: string;
       tone: "info" | "success" | "warning";
@@ -471,6 +472,14 @@ export type DashboardData = {
   leaderboard: LeaderboardEntry[];
   referralLeaderboard: LeaderboardEntry[];
   activityFeed: ActivityItem[];
+  missionEventHistory: Array<{
+    id: string;
+    packId: string;
+    title: string;
+    detail: string;
+    timeAgo: string;
+    createdAt: string;
+  }>;
   premiumMoments: string[];
 };
 
@@ -789,6 +798,12 @@ export type AdminOverviewData = {
         isOverridden: boolean;
         overrideReason: string | null;
         status: "on_track" | "mixed" | "off_track";
+      };
+      missionCtaSummary: {
+        topCtaLabel: string | null;
+        topCtaVariant: string | null;
+        totalClicks: number;
+        uniqueUsers: number;
       };
       createdAt: string;
       lastUpdatedAt: string;

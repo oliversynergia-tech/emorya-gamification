@@ -1,4 +1,5 @@
 import { AuthClientPanel } from "@/components/auth-client-panel";
+import { MissionLink } from "@/components/mission-link";
 import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
 import {
@@ -28,6 +29,7 @@ export default async function AuthPage() {
     premiumUpsellMultiplier: data.economy.campaignPreset.premiumUpsellMultiplier,
     weeklyTargetOffset: data.economy.campaignPreset.weeklyTargetOffset,
   });
+  const returnPack = data.campaignPacks.find((pack) => pack.returnAction) ?? null;
 
   return (
     <SiteShell eyebrow="Account access" currentUser={session?.user ?? null}>
@@ -175,6 +177,41 @@ export default async function AuthPage() {
             ))}
           </div>
         </section>
+        {returnPack ? (
+          <section className="panel panel--glass">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Return path</p>
+                <h3>Your live mission needs a comeback move</h3>
+              </div>
+              <span className="badge badge--pink">{returnPack.label}</span>
+            </div>
+            <p className="form-note">{returnPack.returnAction}</p>
+            <p className="form-note">{returnPack.unlockPreview}</p>
+            <div className="hero__actions">
+              <MissionLink
+                className="button button--primary"
+                href={returnPack.ctaHref ?? "/dashboard#campaign-mission"}
+                packId={returnPack.packId}
+                eventType="auth_return_cta"
+                ctaLabel={returnPack.ctaLabel}
+                ctaVariant={returnPack.ctaVariant}
+              >
+                {returnPack.ctaLabel}
+              </MissionLink>
+              <MissionLink
+                className="button button--secondary"
+                href="/dashboard#campaign-mission"
+                packId={returnPack.packId}
+                eventType="auth_dashboard_return_cta"
+                ctaLabel="Return to dashboard mission"
+                ctaVariant="return_path"
+              >
+                Return to dashboard mission
+              </MissionLink>
+            </div>
+          </section>
+        ) : null}
       </section>
       <section className="grid grid--auth">
         <div id="auth-panel">

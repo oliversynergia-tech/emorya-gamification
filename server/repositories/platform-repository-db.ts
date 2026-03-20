@@ -1588,6 +1588,10 @@ async function getUserCampaignPackJourneys({
       (firstRow.template_kind ?? "mixed") as "bridge" | "feeder" | "mixed",
       experienceLane,
     );
+    const returnAction =
+      user.rewardEligibility.eligible && weeklyGoalShortfall > Math.max(weeklyGoalTarget * 0.4, 80)
+        ? `You are still reward-eligible, but ${firstRow.pack_label ?? "this mission"} needs one strong return action now: ${nextQuestTitle ?? "clear the next mission"} and recover the weekly pace gap.`
+        : null;
     const priorityReason = getPackPriorityReason({
       userProgressState,
       rewardEligible: user.rewardEligibility.eligible,
@@ -1640,6 +1644,7 @@ async function getUserCampaignPackJourneys({
       tierPhaseCopy,
       priorityReason,
       unlockPreview,
+      returnAction,
       rewardFocus,
       badgeLabel: packBadgeLabel(firstRow.template_kind, milestone.label),
       leaderboardCallout: `${experienceLane} currently adds ${(getCampaignLeaderboardMomentumMultiplier(economySettings, attributionSource === "direct" ? null : attributionSource) * 100 - 100).toFixed(0)}% leaderboard momentum, so this pack is helping shape your rank pressure now.`,
@@ -1693,6 +1698,7 @@ async function getUserCampaignPackJourneys({
       tierPhaseCopy: pack.tierPhaseCopy,
       priorityReason: pack.priorityReason,
       unlockPreview: pack.unlockPreview,
+      returnAction: pack.returnAction,
       rewardFocus: pack.rewardFocus,
       badgeLabel: pack.badgeLabel,
       leaderboardCallout: pack.leaderboardCallout,
@@ -1812,6 +1818,20 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   const featuredTracks = getCampaignFeaturedTracks(activeCampaignLane, campaignEconomy);
   const missionActivityItems = buildMissionActivityFeedItems(campaignPacks);
   const mergedActivityFeed = [...missionActivityItems, ...activityFeed].slice(0, 8);
+  const missionEventHistory = mergedActivityFeed
+    .filter((item) => item.action.includes("campaign pack") || item.actor === "Mission monitor" || item.action.includes("mission CTA"))
+    .map((item) => ({
+      id: item.id,
+      packId:
+        campaignPacks.find((pack) => item.detail.includes(pack.label))?.packId ??
+        campaignPackHistory.find((pack) => item.detail.includes(pack.label))?.packId ??
+        "unknown",
+      title: item.action,
+      detail: item.detail,
+      timeAgo: item.timeAgo,
+      createdAt: new Date().toISOString(),
+    }))
+    .slice(0, 8);
 
   return {
     user,
@@ -1839,6 +1859,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     leaderboard,
     referralLeaderboard,
     activityFeed: mergedActivityFeed,
+    missionEventHistory,
     premiumMoments: [
       `Level ${user.level} reached. ${getTierLabel(user.tier)} is your current tier.`,
       `Monthly earns ${economySettings.xpTierMultipliers.monthly.toFixed(2)}x XP. Annual earns ${economySettings.xpTierMultipliers.annual.toFixed(2)}x XP.`,
@@ -2397,6 +2418,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           overrideReason: null,
           status: "on_track" as const,
         },
+        missionCtaSummary: {
+          topCtaLabel: null,
+          topCtaVariant: null,
+          totalClicks: 0,
+          uniqueUsers: 0,
+        },
         createdAt: quest.createdAt,
         lastUpdatedAt: quest.updatedAt,
       };
@@ -2507,6 +2534,38 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
   const campaignPackBenchmarkOverrideMap = new Map(
     campaignPackBenchmarkOverrides.map((override) => [override.packId, override] as const),
   );
+  const missionCtaSummaryMap = new Map<
+    string,
+    {
+      topCtaLabel: string | null;
+      topCtaVariant: string | null;
+      totalClicks: number;
+      uniqueUsers: number;
+      maxClicks: number;
+    }
+  >();
+  for (const entry of campaignMissionCtaAnalytics.rows) {
+    if (!entry.pack_id) {
+      continue;
+    }
+    const clickCount = Number(entry.click_count ?? 0);
+    const uniqueUserCount = Number(entry.unique_user_count ?? 0);
+    const current = missionCtaSummaryMap.get(entry.pack_id) ?? {
+      topCtaLabel: null,
+      topCtaVariant: null,
+      totalClicks: 0,
+      uniqueUsers: 0,
+      maxClicks: -1,
+    };
+    current.totalClicks += clickCount;
+    current.uniqueUsers += uniqueUserCount;
+    if (clickCount > current.maxClicks) {
+      current.maxClicks = clickCount;
+      current.topCtaLabel = entry.cta_label ?? null;
+      current.topCtaVariant = entry.cta_variant ?? null;
+    }
+    missionCtaSummaryMap.set(entry.pack_id, current);
+  }
   for (const pack of packAnalyticsMap.values()) {
     const dominantSource =
       pack.sourceBreakdown.slice().sort((left, right) => right.participantCount - left.participantCount)[0]?.activeLane ??
@@ -2526,6 +2585,15 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       overrideReason: benchmarkOverride?.reason ?? null,
       status: score >= 5 ? "on_track" : score >= 3 ? "mixed" : "off_track",
     };
+    const ctaSummary = missionCtaSummaryMap.get(pack.packId);
+    if (ctaSummary) {
+      pack.missionCtaSummary = {
+        topCtaLabel: ctaSummary.topCtaLabel,
+        topCtaVariant: ctaSummary.topCtaVariant,
+        totalClicks: ctaSummary.totalClicks,
+        uniqueUsers: ctaSummary.uniqueUsers,
+      };
+    }
   }
   const packAnalytics = Array.from(packAnalyticsMap.values()).sort(
     (left, right) => right.activeQuestCount - left.activeQuestCount || right.questCount - left.questCount,
