@@ -363,6 +363,50 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                     <p className="form-note">
                       <span className={`badge ${pack.milestone.tone === "success" ? "badge--pink" : ""}`}>{pack.milestone.label}</span>
                     </p>
+                    <div className="xp-meter campaign-pack-meter">
+                      <div className="xp-meter__meta">
+                        <span>Pack progress</span>
+                        <span>{pack.completedQuestCount}/{pack.totalQuestCount} complete</span>
+                      </div>
+                      <div className="xp-meter__track">
+                        <div
+                          className="xp-meter__fill"
+                          style={{ width: `${pack.totalQuestCount > 0 ? (pack.completedQuestCount / pack.totalQuestCount) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <small>
+                        {pack.inProgressQuestCount} in progress, {pack.openQuestCount} open, {pack.rejectedQuestCount} rejected.
+                      </small>
+                    </div>
+                    <div className="reward-state-bars">
+                      <div>
+                        <span>First win</span>
+                        <div className="reward-state-bars__track">
+                          <div
+                            className="reward-state-bars__fill"
+                            style={{ width: `${pack.completedQuestCount > 0 ? 100 : 0}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <span>Halfway</span>
+                        <div className="reward-state-bars__track">
+                          <div
+                            className="reward-state-bars__fill"
+                            style={{ width: `${pack.totalQuestCount > 1 && pack.completedQuestCount >= Math.ceil(pack.totalQuestCount / 2) ? 100 : Math.min((pack.completedQuestCount / Math.max(Math.ceil(pack.totalQuestCount / 2), 1)) * 100, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <span>Pack complete</span>
+                        <div className="reward-state-bars__track">
+                          <div
+                            className="reward-state-bars__fill reward-state-bars__fill--gold"
+                            style={{ width: `${pack.totalQuestCount > 0 ? (pack.completedQuestCount / pack.totalQuestCount) * 100 : 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                     <p className="form-note">{pack.nextAction}</p>
                     <p className="form-note">{pack.benchmarkNote}</p>
                     <div className="hero__actions">
@@ -378,6 +422,11 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                       >
                         {pack.ctaLabel}
                       </a>
+                      {pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete" ? (
+                        <a className="button button--secondary" href="/leaderboard#referral-board">
+                          Invite from this milestone
+                        </a>
+                      ) : null}
                     </div>
                   </div>
                   <div className="achievement-card__side">
@@ -425,7 +474,7 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                       <div className="hero__actions">
                         <a
                           className="button button--secondary"
-                          href={notification.ctaQuestId ? `#quest-action-${notification.ctaQuestId}` : "#quest-board"}
+                          href={notification.ctaHref ?? (notification.ctaQuestId ? `#quest-action-${notification.ctaQuestId}` : "#quest-board")}
                         >
                           {notification.ctaLabel}
                         </a>
@@ -436,6 +485,36 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                     <span className={`badge ${notification.tone === "success" ? "badge--pink" : ""}`}>
                       {notification.tone}
                     </span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {data.campaignPackHistory.length > 0 ? (
+          <div className="panel panel--glass">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Completed campaign packs</p>
+                <h3>Recent campaign wins</h3>
+              </div>
+              <span className="badge badge--pink">{data.campaignPackHistory.length} archived</span>
+            </div>
+            <div className="achievement-list">
+              {data.campaignPackHistory.map((pack) => (
+                <article key={`history-${pack.packId}`} className="achievement-card">
+                  <div>
+                    <strong>{pack.label}</strong>
+                    <p>{pack.summary}</p>
+                    <p className="form-note">
+                      {pack.kind === "feeder"
+                        ? `${getCampaignSourceLabel(pack.attributionSource)} feeder into ${getCampaignSourceLabel(pack.activeLane)}.`
+                        : `${getCampaignSourceLabel(pack.activeLane)} lane pack.`}
+                    </p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{pack.totalQuestCount} missions</span>
+                    <span>{pack.completedAt ? new Date(pack.completedAt).toLocaleDateString() : "Completed"}</span>
                   </div>
                 </article>
               ))}
@@ -890,7 +969,18 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
 }
 
 export function QuestBoardSection({ data }: { data: DashboardData }) {
-  const activeQuests = data.quests.filter((quest) => quest.status !== "locked");
+  const activePackIds = new Set(data.campaignPacks.map((pack) => pack.packId));
+  const activeQuests = data.quests
+    .filter((quest) => quest.status !== "locked")
+    .sort((left, right) => {
+      const leftPriority = left.campaignPackId && activePackIds.has(left.campaignPackId) ? 1 : 0;
+      const rightPriority = right.campaignPackId && activePackIds.has(right.campaignPackId) ? 1 : 0;
+      if (leftPriority !== rightPriority) {
+        return rightPriority - leftPriority;
+      }
+
+      return Number(Boolean(right.recommended)) - Number(Boolean(left.recommended));
+    });
   const lockedPreviews = data.quests.filter((quest) => quest.status === "locked");
   const orderedTracks: QuestTrack[] = ["starter", "daily", "social", "wallet", "referral", "premium", "creative", "ambassador", "campaign", "quiz"];
   const groupedActiveTracks = orderedTracks
@@ -1082,7 +1172,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           </div>
           <span className="badge badge--pink">#{data.user.referral.rank} for you</span>
         </div>
-        <div className="referral-campaign-card">
+        <div className="referral-campaign-card" id="referral-board">
           <div className="quest-card__meta">
             <span>Current referral leader</span>
             <span>{topReferralEntry ? `${topReferralEntry.xp} XP` : "No referral XP yet"}</span>

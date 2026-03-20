@@ -28,8 +28,18 @@ export function QuestActionsPanel({
     () =>
       quests.filter((quest) =>
         ["quiz", "manual-review", "link-visit", "wallet-check"].includes(quest.verificationType),
-      ),
-    [quests],
+      ).sort((left, right) => {
+        if (highlightedQuestId && left.id === highlightedQuestId) {
+          return -1;
+        }
+
+        if (highlightedQuestId && right.id === highlightedQuestId) {
+          return 1;
+        }
+
+        return Number(Boolean(right.recommended)) - Number(Boolean(left.recommended));
+      }),
+    [highlightedQuestId, quests],
   );
   const [answersCorrect, setAnswersCorrect] = useState<SubmissionState>({});
   const [contentUrls, setContentUrls] = useState<SubmissionState>({});

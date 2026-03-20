@@ -229,6 +229,18 @@ type CampaignPackJourneyRow = QueryResultRow & {
   completion_status: "pending" | "approved" | "rejected" | null;
 };
 
+type CampaignPackHistoryRow = QueryResultRow & {
+  pack_id: string;
+  pack_label: string | null;
+  pack_state: "draft" | "ready" | "live" | null;
+  attribution_source: CampaignSource | "direct" | null;
+  experience_lane: CampaignSource | "direct" | null;
+  template_kind: "bridge" | "feeder" | "mixed" | null;
+  quest_count: string;
+  approved_count: string;
+  completed_at: string | null;
+};
+
 type AchievementRow = QueryResultRow & {
   slug: string;
   name: string;
@@ -970,6 +982,7 @@ async function getUserCampaignPackJourneys({
 }): Promise<{
   campaignPacks: DashboardData["campaignPacks"];
   campaignNotifications: DashboardData["campaignNotifications"];
+  campaignPackHistory: DashboardData["campaignPackHistory"];
 }> {
   const result = await runQuery<CampaignPackJourneyRow>(
     `SELECT q.metadata->>'campaignPackId' AS pack_id,
@@ -1005,6 +1018,7 @@ async function getUserCampaignPackJourneys({
     return {
       campaignPacks: [],
       campaignNotifications: [],
+      campaignPackHistory: [],
     };
   }
 
@@ -1167,27 +1181,101 @@ async function getUserCampaignPackJourneys({
     }));
 
   const campaignNotifications = campaignPacks
-    .filter((pack) => pack.lifecycleState === "live" || pack.milestone.tone === "success")
-    .slice(0, 4)
-    .map((pack) => ({
-      id: `pack-${pack.packId}-${pack.lifecycleState}-${pack.milestone.label}`,
-      tone: pack.lifecycleState === "live" ? "info" : pack.milestone.tone,
-      title:
-        pack.lifecycleState === "live"
-          ? `${pack.label} is now live in your lane`
-          : `${pack.label}: ${pack.milestone.label}`,
-      detail:
-        pack.lifecycleState === "live"
-          ? `${pack.kind === "feeder" ? `${pack.attributionSource} is feeding into ${pack.activeLane}` : `${pack.activeLane} is active`} and this pack is ready for user progression now.`
-          : `${pack.completedQuestCount}/${pack.totalQuestCount} missions are complete. ${pack.nextAction}`,
-      packId: pack.packId,
-      ctaLabel: pack.ctaLabel,
-      ctaQuestId: pack.nextQuestId,
-    }));
+    .flatMap((pack) => {
+      const notifications: DashboardData["campaignNotifications"] = [];
+
+      if (pack.lifecycleState === "live") {
+        notifications.push({
+          id: `pack-live-${pack.packId}`,
+          tone: "info",
+          title: `${pack.label} is now live in your lane`,
+          detail: `${pack.kind === "feeder" ? `${pack.attributionSource} is feeding into ${pack.activeLane}` : `${pack.activeLane} is active`} and this pack is ready for user progression now.`,
+          packId: pack.packId,
+          ctaLabel: pack.ctaLabel,
+          ctaQuestId: pack.nextQuestId,
+        });
+      }
+
+      if (pack.milestone.tone === "success") {
+        notifications.push({
+          id: `pack-milestone-${pack.packId}-${pack.milestone.label}`,
+          tone: "success",
+          title: `${pack.label}: ${pack.milestone.label}`,
+          detail: `${pack.completedQuestCount}/${pack.totalQuestCount} missions are complete. ${pack.nextAction}`,
+          packId: pack.packId,
+          ctaLabel: pack.ctaLabel,
+          ctaQuestId: pack.nextQuestId,
+        });
+      }
+
+      if (pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete") {
+        notifications.push({
+          id: `pack-referral-${pack.packId}-${pack.milestone.label}`,
+          tone: "info",
+          title: `${pack.label}: referral moment unlocked`,
+          detail: "This is the right point to bring others in. Your pack progress now has enough momentum to turn invitations into a stronger bridge path.",
+          packId: pack.packId,
+          ctaLabel: "Open referral leaderboard",
+          ctaQuestId: null,
+          ctaHref: "/leaderboard#referral-board",
+        });
+      }
+
+      return notifications;
+    })
+    .slice(0, 5);
+
+  const historyResult = await runQuery<CampaignPackHistoryRow>(
+    `SELECT q.metadata->>'campaignPackId' AS pack_id,
+            q.metadata->>'campaignPackLabel' AS pack_label,
+            q.metadata->>'campaignPackState' AS pack_state,
+            q.metadata->>'campaignAttributionSource' AS attribution_source,
+            q.metadata->>'campaignExperienceLane' AS experience_lane,
+            q.metadata->>'campaignTemplateKind' AS template_kind,
+            COUNT(q.id)::text AS quest_count,
+            COUNT(*) FILTER (WHERE qc.status = 'approved')::text AS approved_count,
+            MAX(qc.completed_at) AS completed_at
+     FROM quest_definitions q
+     LEFT JOIN LATERAL (
+       SELECT status, completed_at
+       FROM quest_completions
+       WHERE user_id = $1
+         AND quest_id = q.id
+       ORDER BY created_at DESC
+       LIMIT 1
+     ) qc ON TRUE
+     WHERE q.metadata ? 'campaignPackId'
+     GROUP BY q.metadata->>'campaignPackId',
+              q.metadata->>'campaignPackLabel',
+              q.metadata->>'campaignPackState',
+              q.metadata->>'campaignAttributionSource',
+              q.metadata->>'campaignExperienceLane',
+              q.metadata->>'campaignTemplateKind'
+     HAVING COUNT(q.id) > 0
+        AND COUNT(q.id) FILTER (WHERE qc.status = 'approved') = COUNT(q.id)
+     ORDER BY MAX(qc.completed_at) DESC NULLS LAST
+     LIMIT 4`,
+    [userId],
+  );
+
+  const campaignPackHistory = historyResult.rows.map((row) => ({
+    packId: row.pack_id,
+    label: row.pack_label ?? "Campaign pack",
+    completedAt: row.completed_at,
+    totalQuestCount: Number(row.quest_count ?? 0),
+    attributionSource: (row.attribution_source ?? "direct") as CampaignSource | "direct",
+    activeLane: (row.experience_lane ?? row.attribution_source ?? "direct") as CampaignSource | "direct",
+    kind: (row.template_kind ?? "mixed") as "bridge" | "feeder" | "mixed",
+    summary:
+      row.template_kind === "feeder"
+        ? `Completed as a feeder pack into ${(row.experience_lane ?? "direct").toString()}.`
+        : `Completed across ${Number(row.quest_count ?? 0)} mission${Number(row.quest_count ?? 0) === 1 ? "" : "s"}.`,
+  }));
 
   return {
     campaignPacks,
     campaignNotifications,
+    campaignPackHistory,
   };
 }
 
@@ -1222,7 +1310,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     getReferralLeaderboard(),
     getActivityFeed(),
   ]);
-  const { campaignPacks, campaignNotifications } = await getUserCampaignPackJourneys({
+  const { campaignPacks, campaignNotifications, campaignPackHistory } = await getUserCampaignPackJourneys({
     userId,
     user,
     userProgressState,
@@ -1252,6 +1340,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     },
     campaignPacks,
     campaignNotifications,
+    campaignPackHistory,
     quests,
     achievements,
     leaderboard,

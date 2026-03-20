@@ -116,6 +116,39 @@ function buildCampaignNotifications(
     }));
 }
 
+function updateCampaignPackHistory(
+  history: DashboardData["campaignPackHistory"],
+  campaignPacks: DashboardData["campaignPacks"],
+): DashboardData["campaignPackHistory"] {
+  const nextHistory = [...history];
+
+  for (const pack of campaignPacks) {
+    if (pack.completedQuestCount < pack.totalQuestCount || pack.totalQuestCount === 0) {
+      continue;
+    }
+
+    if (nextHistory.some((entry) => entry.packId === pack.packId)) {
+      continue;
+    }
+
+    nextHistory.unshift({
+      packId: pack.packId,
+      label: pack.label,
+      completedAt: new Date().toISOString(),
+      totalQuestCount: pack.totalQuestCount,
+      attributionSource: pack.attributionSource,
+      activeLane: pack.activeLane,
+      kind: pack.kind,
+      summary:
+        pack.kind === "feeder"
+          ? `Completed as a feeder pack into ${pack.activeLane}.`
+          : `Completed across ${pack.totalQuestCount} mission${pack.totalQuestCount === 1 ? "" : "s"}.`,
+    });
+  }
+
+  return nextHistory.slice(0, 4);
+}
+
 export function DashboardExperience({
   initialData,
   isAuthenticated,
@@ -149,6 +182,7 @@ export function DashboardExperience({
     }
 
       const nextCampaignPacks = updateCampaignPacks(current.campaignPacks, questId, outcome);
+      const nextCampaignPackHistory = updateCampaignPackHistory(current.campaignPackHistory, nextCampaignPacks);
 
       return {
         ...current,
@@ -169,6 +203,7 @@ export function DashboardExperience({
         ),
         campaignPacks: nextCampaignPacks,
         campaignNotifications: buildCampaignNotifications(nextCampaignPacks),
+        campaignPackHistory: nextCampaignPackHistory,
         quests: nextQuests,
       };
     });

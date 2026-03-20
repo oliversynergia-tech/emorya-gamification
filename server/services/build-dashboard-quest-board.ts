@@ -98,6 +98,8 @@ function mapEvaluatedQuestToQuest({
     premiumPreview: quest.is_premium_preview,
     timebox: typeof quest.metadata?.timebox === "string" ? quest.metadata.timebox : undefined,
     targetUrl: typeof quest.metadata?.targetUrl === "string" ? quest.metadata.targetUrl : undefined,
+    campaignPackId: typeof quest.metadata?.campaignPackId === "string" ? quest.metadata.campaignPackId : undefined,
+    campaignPackLabel: typeof quest.metadata?.campaignPackLabel === "string" ? quest.metadata.campaignPackLabel : undefined,
   };
 }
 
@@ -117,6 +119,18 @@ export function buildDashboardQuestBoard({
   const featuredTracks = getCampaignFeaturedTracks(
     activeCampaignLane,
     getCampaignEconomyOverride(settings, userProgressState.campaignSource),
+  );
+  const activeMissionPackIds = Array.from(
+    new Set(
+      quests
+        .filter((quest) =>
+          quest.metadata?.campaignPackId &&
+          quest.metadata?.campaignPackState === "live" &&
+          (quest.metadata?.campaignExperienceLane === activeCampaignLane ||
+            quest.metadata?.campaignAttributionSource === (userProgressState.campaignSource ?? "direct")),
+        )
+        .map((quest) => String(quest.metadata.campaignPackId)),
+    ),
   );
   const evaluatedByQuestId = new Map<string, { evaluatedQuest: EvaluatedQuest; cadence: QuestCadence }>();
 
@@ -157,7 +171,8 @@ export function buildDashboardQuestBoard({
       (journeyState === "reward_eligible_free" && (track === "wallet" || track === "referral" || track === "premium")) ||
       ((journeyState === "monthly_premium" || journeyState === "annual_premium") &&
         (track === "premium" || track === "referral" || track === "wallet")) ||
-      featuredTracks.includes(track);
+      featuredTracks.includes(track) ||
+      (typeof quest.metadata?.campaignPackId === "string" && activeMissionPackIds.includes(quest.metadata.campaignPackId));
 
     evaluatedByQuestId.set(quest.id, {
       evaluatedQuest: evaluateQuest({

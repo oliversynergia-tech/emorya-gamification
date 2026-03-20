@@ -72,6 +72,8 @@ export type Quest = {
   premiumPreview?: boolean;
   timebox?: string;
   targetUrl?: string;
+  campaignPackId?: string;
+  campaignPackLabel?: string;
 };
 
 export type UserRecord = {
@@ -421,6 +423,17 @@ export type DashboardData = {
     packId: string;
     ctaLabel?: string;
     ctaQuestId?: string | null;
+    ctaHref?: string | null;
+  }>;
+  campaignPackHistory: Array<{
+    packId: string;
+    label: string;
+    completedAt: string | null;
+    totalQuestCount: number;
+    attributionSource: CampaignSource | "direct";
+    activeLane: CampaignSource | "direct";
+    kind: "bridge" | "feeder" | "mixed";
+    summary: string;
   }>;
   quests: Quest[];
   achievements: Achievement[];
