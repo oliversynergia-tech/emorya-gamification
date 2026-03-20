@@ -63,6 +63,9 @@ import {
   syncModerationNotificationHistory,
 } from "@/server/repositories/moderation-notification-repository";
 import {
+  listRecentCampaignPackAudit,
+} from "@/server/repositories/campaign-pack-audit-repository";
+import {
   listCampaignPackBenchmarkOverrides,
 } from "@/server/repositories/campaign-pack-admin-repository";
 import {
@@ -1005,7 +1008,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackPerformance] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -1039,6 +1042,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     listQuestDefinitionsForAdmin(),
     listCampaignPackBenchmarkOverrides(),
     getCampaignPackAlertSuppressionAnalytics(),
+    listRecentCampaignPackAudit(),
     runQuery<{
       pack_id: string;
       completion_count: string;
@@ -1748,6 +1752,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       notificationHistory: campaignPackNotificationHistory,
       suppressions: activeCampaignPackSuppressions,
       suppressionAnalytics,
+      audit: campaignPackAudit,
       packReady:
         ["Zealy bridge quest", "Galxe feeder quest", "TaskOn feeder quest"].every((label) =>
           questDefinitionTemplates.some((template) => template.label === label && template.isActive),

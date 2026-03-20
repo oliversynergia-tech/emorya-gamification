@@ -757,6 +757,21 @@ export type AdminOverviewData = {
         count: number;
       }>;
     };
+    audit: Array<{
+      id: string;
+      packId: string;
+      label: string;
+      action:
+        | "create_pack"
+        | "update_lifecycle"
+        | "save_benchmark_override"
+        | "clear_benchmark_override"
+        | "suppress_alert"
+        | "clear_alert_suppression";
+      detail: string;
+      changedByDisplayName: string | null;
+      createdAt: string;
+    }>;
     packReady: boolean;
     activeLaneMode: "bridged" | "separate";
   };

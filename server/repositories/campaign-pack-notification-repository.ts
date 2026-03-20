@@ -176,6 +176,42 @@ export async function listActiveCampaignPackAlertSuppressions(limit = 20) {
   }));
 }
 
+export async function getCampaignPackAlertSuppressionById(suppressionId: string) {
+  const result = await runQuery<CampaignPackAlertSuppressionRow>(
+    `SELECT suppression.id,
+            suppression.pack_id,
+            suppression.label,
+            suppression.title,
+            suppression.suppressed_until,
+            suppression.reason,
+            suppression.created_at,
+            creator.display_name AS created_by_display_name,
+            suppression.cleared_at,
+            clearer.display_name AS cleared_by_display_name
+     FROM campaign_pack_alert_suppressions suppression
+     LEFT JOIN users creator ON creator.id = suppression.created_by
+     LEFT JOIN users clearer ON clearer.id = suppression.cleared_by
+     WHERE suppression.id = $1
+     LIMIT 1`,
+    [suppressionId],
+  );
+
+  return result.rows[0]
+    ? {
+        id: result.rows[0].id,
+        packId: result.rows[0].pack_id,
+        label: result.rows[0].label,
+        title: result.rows[0].title,
+        suppressedUntil: result.rows[0].suppressed_until,
+        reason: result.rows[0].reason,
+        createdAt: result.rows[0].created_at,
+        createdByDisplayName: result.rows[0].created_by_display_name,
+        clearedAt: result.rows[0].cleared_at,
+        clearedByDisplayName: result.rows[0].cleared_by_display_name,
+      }
+    : null;
+}
+
 export async function getCampaignPackAlertSuppressionAnalytics() {
   const byDurationResult = await runQuery<{ hours: number | string; count: number | string }>(
     `SELECT GREATEST(1, ROUND(EXTRACT(EPOCH FROM (suppressed_until - created_at)) / 3600.0))::int AS hours,

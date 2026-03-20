@@ -319,6 +319,24 @@ CREATE TABLE campaign_pack_benchmark_overrides (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE campaign_pack_audit (
+  id UUID PRIMARY KEY,
+  pack_id TEXT NOT NULL,
+  label TEXT NOT NULL,
+  action TEXT NOT NULL CHECK (action IN (
+    'create_pack',
+    'update_lifecycle',
+    'save_benchmark_override',
+    'clear_benchmark_override',
+    'suppress_alert',
+    'clear_alert_suppression'
+  )),
+  detail TEXT NOT NULL,
+  changed_by UUID REFERENCES users(id),
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE economy_settings (
   id UUID PRIMARY KEY,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -391,6 +409,7 @@ CREATE INDEX idx_campaign_pack_alert_deliveries_created_at ON campaign_pack_aler
 CREATE INDEX idx_campaign_pack_alert_deliveries_fingerprint ON campaign_pack_alert_deliveries(channel, event_status, fingerprint);
 CREATE INDEX idx_campaign_pack_alert_suppressions_active ON campaign_pack_alert_suppressions(pack_id, title, suppressed_until DESC);
 CREATE INDEX idx_campaign_pack_benchmark_overrides_pack_id ON campaign_pack_benchmark_overrides(pack_id);
+CREATE INDEX idx_campaign_pack_audit_created_at ON campaign_pack_audit(created_at DESC);
 CREATE UNIQUE INDEX idx_economy_settings_active_single ON economy_settings(is_active) WHERE is_active = TRUE;
 CREATE INDEX idx_economy_settings_audit_created_at ON economy_settings_audit(created_at DESC);
 CREATE INDEX idx_token_redemption_audit_created_at ON token_redemption_audit(created_at DESC);

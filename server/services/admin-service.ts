@@ -24,11 +24,14 @@ import {
   acknowledgeCampaignPackNotificationDelivery,
   clearCampaignPackAlertSuppression,
   createCampaignPackAlertSuppression,
+  getCampaignPackAlertSuppressionById,
 } from "@/server/repositories/campaign-pack-notification-repository";
 import {
   clearCampaignPackBenchmarkOverride,
+  getCampaignPackBenchmarkOverrideByPackId,
   upsertCampaignPackBenchmarkOverride,
 } from "@/server/repositories/campaign-pack-admin-repository";
+import { createCampaignPackAuditEntry } from "@/server/repositories/campaign-pack-audit-repository";
 import {
   createRewardAsset,
   createRewardProgram,
@@ -331,6 +334,18 @@ export async function createCampaignPack({
     });
   }
 
+  await createCampaignPackAuditEntry({
+    packId,
+    label: trimmedLabel,
+    action: "create_pack",
+    detail: `Created campaign pack from ${selectedTemplates.length} saved bridge/feeder templates.`,
+    changedBy: currentUser?.id ?? null,
+    metadata: {
+      templateLabels: selectedTemplates.map((template) => template.label),
+      lifecycleState: "draft",
+    },
+  });
+
   return {
     quests: await listQuestDefinitionsForAdmin(),
     packSummary: {
@@ -359,6 +374,18 @@ export async function updateCampaignPackLifecycle({
   if (!updatedCount) {
     throw new Error("Campaign pack not found.");
   }
+
+  await createCampaignPackAuditEntry({
+    packId,
+    label: packId,
+    action: "update_lifecycle",
+    detail: `Updated campaign pack lifecycle to ${lifecycleState}.`,
+    changedBy: currentUser?.id ?? null,
+    metadata: {
+      lifecycleState,
+      updatedCount,
+    },
+  });
 
   return {
     quests: await listQuestDefinitionsForAdmin(),
@@ -409,6 +436,18 @@ export async function saveCampaignPackBenchmarkOverride({
     updatedBy: currentUser.id,
   });
 
+  await createCampaignPackAuditEntry({
+    packId: packId.trim(),
+    label: label.trim(),
+    action: "save_benchmark_override",
+    detail: "Saved custom benchmark override for the campaign pack.",
+    changedBy: currentUser.id,
+    metadata: {
+      benchmark,
+      reason: reason?.trim() || null,
+    },
+  });
+
   return listQuestDefinitionsForAdmin();
 }
 
@@ -423,8 +462,21 @@ export async function removeCampaignPackBenchmarkOverride(packId: string) {
     throw new Error("Campaign pack benchmark override removal requires a pack id.");
   }
 
+  const existingOverride = await getCampaignPackBenchmarkOverrideByPackId(packId.trim());
+
   await clearCampaignPackBenchmarkOverride({
     packId: packId.trim(),
+  });
+
+  await createCampaignPackAuditEntry({
+    packId: packId.trim(),
+    label: existingOverride?.label ?? packId.trim(),
+    action: "clear_benchmark_override",
+    detail: "Cleared the custom campaign pack benchmark override and returned to lane defaults.",
+    changedBy: currentUser.id,
+    metadata: {
+      reason: existingOverride?.reason ?? null,
+    },
   });
 
   return listQuestDefinitionsForAdmin();
@@ -608,7 +660,7 @@ export async function suppressCampaignPackAlert({
     throw new Error("Campaign alert suppression requires packId, label, title, and a positive hour window.");
   }
 
-  return createCampaignPackAlertSuppression({
+  const suppressions = await createCampaignPackAlertSuppression({
     packId: packId.trim(),
     label: label.trim(),
     title: title.trim(),
@@ -616,6 +668,21 @@ export async function suppressCampaignPackAlert({
     reason,
     createdBy: currentUser.id,
   });
+
+  await createCampaignPackAuditEntry({
+    packId: packId.trim(),
+    label: label.trim(),
+    action: "suppress_alert",
+    detail: `Suppressed "${title.trim()}" for ${hours} hours.`,
+    changedBy: currentUser.id,
+    metadata: {
+      hours,
+      title: title.trim(),
+      reason: reason?.trim() || null,
+    },
+  });
+
+  return suppressions;
 }
 
 export async function clearCampaignPackAlertSuppressionById(suppressionId: string) {
@@ -626,10 +693,27 @@ export async function clearCampaignPackAlertSuppressionById(suppressionId: strin
     throw new Error("You must be signed in to access admin controls.");
   }
 
-  return clearCampaignPackAlertSuppression({
+  const existingSuppression = await getCampaignPackAlertSuppressionById(suppressionId);
+  const suppressions = await clearCampaignPackAlertSuppression({
     suppressionId,
     clearedBy: currentUser.id,
   });
+
+  if (existingSuppression) {
+    await createCampaignPackAuditEntry({
+      packId: existingSuppression.packId,
+      label: existingSuppression.label,
+      action: "clear_alert_suppression",
+      detail: `Cleared suppression for "${existingSuppression.title}".`,
+      changedBy: currentUser.id,
+      metadata: {
+        title: existingSuppression.title,
+        reason: existingSuppression.reason,
+      },
+    });
+  }
+
+  return suppressions;
 }
 
 export async function getTokenSettlementQueue() {

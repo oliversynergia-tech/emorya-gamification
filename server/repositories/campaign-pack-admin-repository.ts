@@ -52,6 +52,28 @@ export async function listCampaignPackBenchmarkOverrides() {
   return result.rows.map(mapBenchmarkOverride);
 }
 
+export async function getCampaignPackBenchmarkOverrideByPackId(packId: string) {
+  const result = await runQuery<CampaignPackBenchmarkOverrideRow>(
+    `SELECT pack_override.id,
+            pack_override.pack_id,
+            pack_override.label,
+            pack_override.wallet_link_rate_target,
+            pack_override.reward_eligibility_rate_target,
+            pack_override.premium_conversion_rate_target,
+            pack_override.average_weekly_xp_target,
+            pack_override.reason,
+            pack_override.updated_at,
+            updater.display_name AS updated_by_display_name
+     FROM campaign_pack_benchmark_overrides pack_override
+     LEFT JOIN users updater ON updater.id = pack_override.updated_by
+     WHERE pack_override.pack_id = $1
+     LIMIT 1`,
+    [packId],
+  );
+
+  return result.rows[0] ? mapBenchmarkOverride(result.rows[0]) : null;
+}
+
 export async function upsertCampaignPackBenchmarkOverride({
   packId,
   label,

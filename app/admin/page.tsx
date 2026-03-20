@@ -1,5 +1,6 @@
 import { EconomySettingsPanel } from "@/components/economy-settings-panel";
 import { ModerationNotificationHistoryPanel } from "@/components/moderation-notification-history-panel";
+import { PayoutOperationsDashboard } from "@/components/payout-operations-dashboard";
 import { QuestDefinitionManagementPanel } from "@/components/quest-definition-management-panel";
 import { QuestDefinitionToolingPanel } from "@/components/quest-definition-tooling-panel";
 import { RewardAssetsPanel } from "@/components/reward-assets-panel";
@@ -118,6 +119,10 @@ export default async function AdminPage() {
             canManage={hasSuperAdminAccess}
           />
         </div>
+        <PayoutOperationsDashboard
+          queue={data.tokenSettlementQueue}
+          analytics={data.settlementAnalytics}
+        />
         <TokenSettlementPanel
           initialQueue={data.tokenSettlementQueue}
           analytics={data.settlementAnalytics}

@@ -10,6 +10,7 @@ import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionTier } from "@/lib/types";
 import { CampaignPackAnalyticsPanel } from "@/components/campaign-pack-analytics-panel";
 import { CampaignPackAlertPanel } from "@/components/campaign-pack-alert-panel";
+import { CampaignPackAuditPanel } from "@/components/campaign-pack-audit-panel";
 import { CampaignPackNotificationHistoryPanel } from "@/components/campaign-pack-notification-history-panel";
 import { PayoutAuditTrailPanel } from "@/components/payout-audit-trail-panel";
 import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
@@ -1661,6 +1662,7 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
           initialEntries={data.campaignOperations.notificationHistory}
           canManage={canManageCampaignPacks}
         />
+        <CampaignPackAuditPanel entries={data.campaignOperations.audit} />
         <CampaignPackAnalyticsPanel
           packs={data.campaignOperations.packAnalytics}
           partnerReports={data.campaignOperations.partnerReporting}
