@@ -18,7 +18,7 @@ export function MissionPackDetailPanel({
 }) {
   const initialPackId = activePacks[0]?.packId ?? packHistory[0]?.packId ?? "none";
   const [selectedPackId, setSelectedPackId] = useState(initialPackId);
-  const [showLadderDetails, setShowLadderDetails] = useState(false);
+  const [expandedLadders, setExpandedLadders] = useState<Record<string, boolean>>({});
   const selectedActivePack = useMemo(
     () => activePacks.find((pack) => pack.packId === selectedPackId) ?? null,
     [activePacks, selectedPackId],
@@ -37,6 +37,8 @@ export function MissionPackDetailPanel({
   if (options.length === 0) {
     return null;
   }
+
+  const showLadderDetails = expandedLadders[selectedPackId] ?? false;
 
   const remainingQuestProgression = selectedActivePack
     ? selectedActivePack.questStatuses
@@ -162,7 +164,16 @@ export function MissionPackDetailPanel({
                   </div>
                   <div className="achievement-card__side">
                     <span>{remainingQuestProgression.length} steps left</span>
-                    <button className="button button--secondary button--small" type="button" onClick={() => setShowLadderDetails((current) => !current)}>
+                    <button
+                      className="button button--secondary button--small"
+                      type="button"
+                      onClick={() =>
+                        setExpandedLadders((current) => ({
+                          ...current,
+                          [selectedPackId]: !(current[selectedPackId] ?? false),
+                        }))
+                      }
+                    >
                       {showLadderDetails ? "Collapse ladder" : "Expand ladder"}
                     </button>
                   </div>

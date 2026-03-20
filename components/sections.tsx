@@ -112,7 +112,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       followupLabel: "What changes after this",
       followupValue: walletGatePack.unlockRewardPreview,
       followupCtaLabel: "Review what opens next",
-      followupHref: "/profile#mission-recap",
+      followupHref: "/profile#wallet-link-panel",
       followupCtaVariant: "priority_followup_review",
       followupIntentLabel: "Planning move",
     };
@@ -142,7 +142,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       followupLabel: "What changes after this",
       followupValue: premiumPack.unlockRewardPreview,
       followupCtaLabel: "Review premium path",
-      followupHref: "/profile#mission-recap",
+      followupHref: "/profile",
       followupCtaVariant: "priority_followup_review",
       followupIntentLabel: "Planning move",
     };
@@ -266,10 +266,19 @@ function getDashboardPriorityAction(data: DashboardData) {
                 ? "See the starter gate"
                 : returnPack.blockageState === "trust"
                   ? "See the trust gate"
-                  : returnPack.blockageState === "premium_phase"
-                    ? "Review premium gate"
-                    : "See the gated path",
-      followupHref: "/profile#mission-recap",
+                : returnPack.blockageState === "premium_phase"
+                  ? "Review premium gate"
+                  : "See the gated path",
+      followupHref:
+        returnPack.blockageState === "weekly_pace"
+          ? "/dashboard"
+          : returnPack.blockageState === "ready"
+            ? "/dashboard"
+            : returnPack.blockageState === "wallet_connection"
+              ? "/profile#wallet-link-panel"
+              : returnPack.blockageState === "premium_phase"
+                ? "/profile"
+                : "/profile#mission-recap",
       followupCtaVariant:
         returnPack.blockageState === "weekly_pace" || returnPack.blockageState === "ready"
           ? "priority_followup_review"
@@ -306,7 +315,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     followupLabel: "What changes after this",
     followupValue: nextPack.unlockRewardPreview,
     followupCtaLabel: "Review what opens next",
-    followupHref: "/profile#mission-recap",
+    followupHref: "/dashboard",
     followupCtaVariant: "priority_followup_review",
     followupIntentLabel: "Planning move",
   };

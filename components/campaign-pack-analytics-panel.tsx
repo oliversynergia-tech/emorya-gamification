@@ -65,8 +65,21 @@ function slugifyForFilename(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "all";
 }
 
-function exportPackAnalytics(entries: PackAnalyticsItem[]) {
+function exportPackAnalytics(
+  entries: PackAnalyticsItem[],
+  filters: {
+    search: string;
+    source: "all" | CampaignSource;
+    status: "all" | "active" | "inactive";
+    kind: "all" | "bridge" | "feeder" | "mixed";
+  },
+) {
   const lines = [
+    [`search_filter`, JSON.stringify(filters.search.trim() || "No search filter")].join(","),
+    [`source_filter`, JSON.stringify(getSourceFilterLabel(filters.source))].join(","),
+    [`status_filter`, JSON.stringify(getStatusFilterLabel(filters.status))].join(","),
+    [`kind_filter`, JSON.stringify(getKindFilterLabel(filters.kind))].join(","),
+    "",
     [
       "pack_id",
       "label",
@@ -179,7 +192,7 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "emorya-campaign-pack-analytics.csv";
+  link.download = `emorya-campaign-pack-analytics-${slugifyForFilename(filters.search || "all-packs")}-${slugifyForFilename(getSourceFilterLabel(filters.source))}-${slugifyForFilename(getStatusFilterLabel(filters.status))}-${slugifyForFilename(getKindFilterLabel(filters.kind))}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -316,6 +329,12 @@ function printPartnerReport(entries: PartnerReportItem[]) {
     return;
   }
 
+  const lifecycleOverview = entries
+    .filter((entry) => entry.lifecycleHistorySummary)
+    .slice(0, 4)
+    .map((entry) => `${entry.label}: ${entry.lifecycleHistorySummary}`)
+    .join(" | ");
+
   const cards = entries.map((entry) => `
     <article style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 16px;background:#fffaf1;">
       <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Partner Snapshot</p>
@@ -354,6 +373,14 @@ function printPartnerReport(entries: PartnerReportItem[]) {
         <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Emorya Gamification</p>
         <h1>Partner Campaign Pack Report</h1>
         <p>This export is optimized for partner sharing and PDF save/export from the browser print dialog.</p>
+        ${
+          lifecycleOverview
+            ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Lifecycle highlights</p>
+                <p style="margin:0;color:#5e5035;">${lifecycleOverview}</p>
+              </section>`
+            : ""
+        }
         ${cards}
       </body>
     </html>
@@ -682,7 +709,18 @@ export function CampaignPackAnalyticsPanel({
             <option value="live_feeder">Live feeder packs</option>
           </select>
         </label>
-        <button className="button button--secondary" type="button" onClick={() => exportPackAnalytics(filteredPacks)}>
+        <button
+          className="button button--secondary"
+          type="button"
+          onClick={() =>
+            exportPackAnalytics(filteredPacks, {
+              search,
+              source: sourceFilter,
+              status: statusFilter,
+              kind: kindFilter,
+            })
+          }
+        >
           Export CSV
         </button>
         <button
@@ -754,6 +792,15 @@ export function CampaignPackAnalyticsPanel({
             matching.reduce((sum, pack) => sum + pack.reminderEffectiveness.handledRate, 0) / matching.length;
           const averageCompletionDelta =
             matching.reduce((sum, pack) => sum + pack.operatorOutcome.trend.completionDelta, 0) / matching.length;
+          const topVariantByPhase = Array.from(
+            matching
+              .flatMap((pack) => pack.missionCtaSummary.variantBreakdown)
+              .reduce((totals, variant) => {
+                totals.set(variant.ctaVariant, (totals.get(variant.ctaVariant) ?? 0) + variant.clickCount);
+                return totals;
+              }, new Map<string, number>())
+              .entries(),
+          ).sort((left, right) => right[1] - left[1])[0];
           return (
             <article key={`lifecycle-compare-${lifecycleState}`} className="achievement-card">
               <div>
@@ -792,6 +839,7 @@ export function CampaignPackAnalyticsPanel({
                     (matching.reduce((sum, pack) => sum + pack.premiumConversionRate, 0) / matching.length) * 100,
                   )}% avg premium
                 </span>
+                <span>top CTA {topVariantByPhase?.[0] ?? "n/a"}</span>
                 <span>avg completion delta {averageCompletionDelta >= 0 ? "+" : ""}{averageCompletionDelta.toFixed(1)}</span>
               </div>
             </article>
