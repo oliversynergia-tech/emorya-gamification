@@ -796,6 +796,23 @@ export type AdminOverviewData = {
       detail: string;
       createdAt: string;
     }>;
+    missionReminderStatusTrend: Array<{
+      status: "handled" | "snoozed";
+      currentCount: number;
+      previousCount: number;
+      delta: number;
+    }>;
+    blockageSummary: Array<{
+      state:
+        | "wallet_connection"
+        | "starter_path"
+        | "level"
+        | "trust"
+        | "premium_phase"
+        | "weekly_pace"
+        | "ready";
+      count: number;
+    }>;
     packAnalytics: Array<{
       packId: string;
       label: string;
@@ -877,6 +894,12 @@ export type AdminOverviewData = {
           approvedCompletionCount: number;
           approvedUserCount: number;
           approvedUserRate: number;
+          tierBreakdown: Array<{
+            subscriptionTier: SubscriptionTier;
+            clickCount: number;
+            approvedUserCount: number;
+            approvedUserRate: number;
+          }>;
           laneBreakdown: Array<{
             attributionSource: CampaignSource | "direct";
             activeLane: CampaignSource | "direct";

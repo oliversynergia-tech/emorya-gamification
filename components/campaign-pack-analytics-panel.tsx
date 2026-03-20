@@ -572,6 +572,13 @@ export function CampaignPackAnalyticsPanel({
                               .join(", ")
                             : "No lane-specific CTA mix recorded yet."}
                         </p>
+                        <p className="form-note">
+                          {entry.tierBreakdown.length > 0
+                            ? entry.tierBreakdown
+                              .map((tier) => `${tier.subscriptionTier}: ${tier.clickCount} clicks / ${tier.approvedUserCount} approved users / ${Math.round(tier.approvedUserRate * 100)}%`)
+                              .join(", ")
+                            : "No tier-specific CTA performance recorded yet."}
+                        </p>
                       </div>
                       <div className="achievement-card__side">
                         <span>{entry.clickCount} clicks</span>

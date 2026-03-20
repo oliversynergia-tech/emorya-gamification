@@ -261,6 +261,12 @@ type MissionInboxHistoryRow = QueryResultRow & {
   created_at: string;
 };
 
+type MissionReminderStatusTrendRow = QueryResultRow & {
+  notification_status: "handled" | "snoozed" | null;
+  bucket: "current" | "previous";
+  count: string;
+};
+
 type AchievementRow = QueryResultRow & {
   slug: string;
   name: string;
@@ -2134,7 +2140,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends, campaignMissionSubmitAttempts, campaignMissionCtaByTier, campaignMissionApprovedByTier, campaignMissionApprovedByVariant, campaignMissionInboxHistory] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends, campaignMissionSubmitAttempts, campaignMissionCtaByTier, campaignMissionApprovedByTier, campaignMissionApprovedByVariant, campaignMissionInboxHistory, missionReminderStatusTrend] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -2340,6 +2346,22 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
        WHERE al.action_type = 'campaign-mission-inbox-state'
        ORDER BY al.created_at DESC
        LIMIT 20`,
+    ),
+    runQuery<MissionReminderStatusTrendRow>(
+      `SELECT al.metadata->>'notificationStatus' AS notification_status,
+              CASE
+                WHEN al.created_at >= NOW() - INTERVAL '7 days' THEN 'current'
+                ELSE 'previous'
+              END AS bucket,
+              COUNT(*)::text AS count
+       FROM activity_log al
+       WHERE al.action_type = 'campaign-mission-inbox-state'
+         AND al.created_at >= NOW() - INTERVAL '14 days'
+       GROUP BY al.metadata->>'notificationStatus',
+                CASE
+                  WHEN al.created_at >= NOW() - INTERVAL '7 days' THEN 'current'
+                  ELSE 'previous'
+                END`,
     ),
   ]);
 
@@ -2964,6 +2986,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         approvedCompletionCount: number;
         approvedUserCount: number;
         approvedUserRate: number;
+        tierBreakdown: Array<{
+          subscriptionTier: SubscriptionTier;
+          clickCount: number;
+          approvedUserCount: number;
+          approvedUserRate: number;
+        }>;
         laneBreakdown: Array<{
           attributionSource: CampaignSource | "direct";
           activeLane: CampaignSource | "direct";
@@ -3042,6 +3070,24 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       approvedCompletionCount: approvedSummary?.approvedCompletionCount ?? 0,
       approvedUserCount: approvedSummary?.approvedUserCount ?? 0,
       approvedUserRate: uniqueUserCount > 0 ? (approvedSummary?.approvedUserCount ?? 0) / uniqueUserCount : 0,
+      tierBreakdown: campaignMissionCtaByTier.rows
+        .filter(
+          (tierRow) =>
+            tierRow.pack_id === entry.pack_id &&
+            (tierRow.cta_variant ?? "unknown") === (entry.cta_variant ?? "unknown"),
+        )
+        .map((tierRow) => {
+          const approvedTierSummary = missionApprovedByTierMap.get(
+            `${tierRow.pack_id ?? "unknown"}::${tierRow.subscription_tier ?? "free"}`,
+          );
+          const tierUniqueUsers = Number(tierRow.unique_user_count ?? 0);
+          return {
+            subscriptionTier: tierRow.subscription_tier,
+            clickCount: Number(tierRow.click_count ?? 0),
+            approvedUserCount: approvedTierSummary?.approvedUserCount ?? 0,
+            approvedUserRate: tierUniqueUsers > 0 ? (approvedTierSummary?.approvedUserCount ?? 0) / tierUniqueUsers : 0,
+          };
+        }),
       laneBreakdown:
         missionCtaLaneMap.get(`${entry.pack_id}::${entry.cta_label ?? "unknown"}::${entry.cta_variant ?? "unknown"}`) ?? [],
     });
@@ -3304,6 +3350,66 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       detail: row.detail ?? "Updated mission inbox state.",
       createdAt: row.created_at,
     }));
+  const missionReminderStatusTrendMap = new Map<
+    AdminOverviewData["campaignOperations"]["missionReminderStatusTrend"][number]["status"],
+    { currentCount: number; previousCount: number }
+  >([
+    ["handled", { currentCount: 0, previousCount: 0 }],
+    ["snoozed", { currentCount: 0, previousCount: 0 }],
+  ]);
+  for (const row of missionReminderStatusTrend.rows) {
+    if (!row.notification_status) {
+      continue;
+    }
+    const entry = missionReminderStatusTrendMap.get(row.notification_status as "handled" | "snoozed");
+    if (!entry) {
+      continue;
+    }
+    if (row.bucket === "current") {
+      entry.currentCount += Number(row.count ?? 0);
+    } else {
+      entry.previousCount += Number(row.count ?? 0);
+    }
+  }
+  const missionReminderStatusTrendData: AdminOverviewData["campaignOperations"]["missionReminderStatusTrend"] = Array.from(
+    missionReminderStatusTrendMap.entries(),
+  ).map(([status, entry]) => ({
+    status,
+    currentCount: entry.currentCount,
+    previousCount: entry.previousCount,
+    delta: entry.currentCount - entry.previousCount,
+  }));
+  const blockageSummaryMap = new Map<
+    AdminOverviewData["campaignOperations"]["blockageSummary"][number]["state"],
+    number
+  >([
+    ["wallet_connection", 0],
+    ["starter_path", 0],
+    ["level", 0],
+    ["trust", 0],
+    ["premium_phase", 0],
+    ["weekly_pace", 0],
+    ["ready", 0],
+  ]);
+  for (const pack of packAnalytics) {
+    const participantCount = pack.sourceBreakdown.reduce((sum, entry) => sum + entry.participantCount, 0);
+    let state: AdminOverviewData["campaignOperations"]["blockageSummary"][number]["state"] = "ready";
+    if (pack.walletLinkRate < 0.25) {
+      state = "wallet_connection";
+    } else if (pack.starterPathCompletionRate < 0.25) {
+      state = "starter_path";
+    } else if (pack.rewardEligibilityRate < 0.25) {
+      state = "trust";
+    } else if (pack.premiumConversionRate < pack.benchmark.premiumConversionRateTarget) {
+      state = "premium_phase";
+    } else if (pack.retainedActivityRate < pack.benchmark.retainedActivityRateTarget) {
+      state = "weekly_pace";
+    }
+    blockageSummaryMap.set(state, (blockageSummaryMap.get(state) ?? 0) + participantCount);
+  }
+  const blockageSummary: AdminOverviewData["campaignOperations"]["blockageSummary"] = Array.from(
+    blockageSummaryMap.entries(),
+  ).map(([state, count]) => ({ state, count }));
 
   return {
     stats: [
@@ -3339,6 +3445,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       returnWindowSummary,
       returnWindowTrend,
       missionInboxHistory,
+      missionReminderStatusTrend: missionReminderStatusTrendData,
+      blockageSummary,
       packAnalytics,
       partnerReporting,
       alerts: visibleCampaignPackAlerts,

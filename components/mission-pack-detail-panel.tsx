@@ -78,6 +78,13 @@ export function MissionPackDetailPanel({
                   <article key={quest.questId} className="achievement-card">
                     <div>
                       <strong>{quest.title}</strong>
+                      <p className="form-note">
+                        {quest.status === "completed"
+                          ? "Now"
+                          : quest.actionable
+                            ? "Next"
+                            : "Later"}
+                      </p>
                       <p>
                         {quest.status === "completed"
                           ? "Already completed for this mission."

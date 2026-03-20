@@ -2193,6 +2193,23 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
             </article>
           ))}
         </div>
+        <div className="info-grid">
+          {data.campaignOperations.missionReminderStatusTrend.map((entry) => (
+            <div key={`reminder-status-${entry.status}`} className="info-card">
+              <span>{entry.status === "handled" ? "Handled reminders" : "Snoozed reminders"}</span>
+              <strong>
+                {entry.delta >= 0 ? "+" : ""}
+                {entry.delta}
+              </strong>
+            </div>
+          ))}
+          {data.campaignOperations.blockageSummary.map((entry) => (
+            <div key={`blockage-${entry.state}`} className="info-card">
+              <span>{entry.state.replaceAll("_", " ")}</span>
+              <strong>{entry.count}</strong>
+            </div>
+          ))}
+        </div>
         <CampaignPackAuditPanel entries={data.campaignOperations.audit} />
         <CampaignPackAnalyticsPanel
           packs={data.campaignOperations.packAnalytics}
