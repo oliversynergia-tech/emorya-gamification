@@ -48,3 +48,7 @@ If the release gate fails:
 - keep traffic on the previous app version
 - fix the env, migration, or quest-definition issue in a new commit or release candidate
 - rerun `npm run ops:release:gate` before promoting the new build
+
+For the broader production handoff beyond the gate itself, use:
+
+- [`docs/launch-hardening-checklist.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/launch-hardening-checklist.md)

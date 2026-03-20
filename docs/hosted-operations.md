@@ -160,3 +160,7 @@ Before switching production traffic:
 - set `CRON_SNAPSHOTS_ENABLED=true` if the hosted environment is responsible for leaderboard history
 - set `AUTOMATION_ACTOR_USER_ID` before enabling `automation_ready` payout mode
 - keep `CAMPAIGN_PACK_REPORT_OUTPUT_DIR` on persistent storage if scheduled report generation is enabled
+
+Use the full checklist here before calling the environment launch-ready:
+
+- [`docs/launch-hardening-checklist.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/launch-hardening-checklist.md)

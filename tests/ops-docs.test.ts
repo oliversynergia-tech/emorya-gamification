@@ -11,6 +11,9 @@ const packageJson = JSON.parse(readFileSync(resolve(rootDir, "package.json"), "u
   scripts: Record<string, string>;
 };
 const hostedOperationsDoc = readFileSync(resolve(rootDir, "docs/hosted-operations.md"), "utf8");
+const previewAndDeployDoc = readFileSync(resolve(rootDir, "docs/preview-and-deploy.md"), "utf8");
+const releaseProcedureDoc = readFileSync(resolve(rootDir, "docs/release-procedure.md"), "utf8");
+const launchHardeningChecklistDoc = readFileSync(resolve(rootDir, "docs/launch-hardening-checklist.md"), "utf8");
 
 test("hosted operations docs reference the supported ops scripts", () => {
   const requiredScripts = [
@@ -58,4 +61,22 @@ test("hosted operations docs include campaign pack reporting ops guidance", () =
   assert.match(hostedOperationsDoc, /ops:campaign-packs:report/);
   assert.match(hostedOperationsDoc, /campaign pack reports/i);
   assert.match(hostedOperationsDoc, /ops:campaign-packs:report:scheduled/);
+});
+
+test("launch hardening checklist is referenced from deploy docs", () => {
+  assert.match(hostedOperationsDoc, /launch-hardening-checklist\.md/);
+  assert.match(previewAndDeployDoc, /launch-hardening-checklist\.md/);
+  assert.match(releaseProcedureDoc, /launch-hardening-checklist\.md/);
+});
+
+test("launch hardening checklist includes current production readiness items", () => {
+  for (const text of [
+    "APP_URL",
+    "CRON_SNAPSHOTS_ENABLED",
+    "AUTOMATION_ACTOR_USER_ID",
+    "CAMPAIGN_PACK_REPORT_OUTPUT_DIR",
+    "ops:release:gate",
+  ]) {
+    assert.match(launchHardeningChecklistDoc, new RegExp(text.replace(/[:.]/g, "\\$&")));
+  }
 });

@@ -121,6 +121,10 @@ Before a real hosted deployment, make sure:
 - campaign-pack alert routes are configured in admin if live packs are expected to be monitored in production
 - campaign-pack report scheduling is configured if partners need recurring snapshots from production
 
+For the fuller production readiness pass, use:
+
+- [`docs/launch-hardening-checklist.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/launch-hardening-checklist.md)
+
 ## Recommended release flow
 
 For the current repo, the cleanest repeatable flow is:
