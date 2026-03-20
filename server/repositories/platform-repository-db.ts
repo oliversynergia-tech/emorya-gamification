@@ -1683,7 +1683,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
   }
   const campaignPackNotifications = buildCampaignPackNotifications({
     alerts,
-    channels: getModerationAlertChannelConfig(),
+    channels: economySettings.campaignAlertChannels,
   });
   await syncCampaignPackNotificationHistory(campaignPackNotifications);
   const campaignPackNotificationHistory = await listRecentCampaignPackNotificationDeliveries();

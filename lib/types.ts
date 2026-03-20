@@ -804,6 +804,14 @@ export type ModerationAlertChannelConfig = {
   discordWebhookUrl: string | null;
 };
 
+export type CampaignAlertChannelConfig = {
+  inboxEnabled: boolean;
+  webhookUrl: string | null;
+  emailRecipient: string | null;
+  slackWebhookUrl: string | null;
+  discordWebhookUrl: string | null;
+};
+
 export type TokenRedemptionProgram = {
   asset: TokenAsset;
   minimumEligibilityPoints: number;
@@ -858,6 +866,7 @@ export type EconomySettings = {
   differentiateUpstreamCampaignSources: boolean;
   campaignOverrides: Record<CampaignSource, CampaignEconomyOverride>;
   campaignPackBenchmarks: Record<CampaignSource | "direct", CampaignPackBenchmarkConfig>;
+  campaignAlertChannels: CampaignAlertChannelConfig;
   updatedAt: string;
 };
 

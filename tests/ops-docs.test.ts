@@ -17,6 +17,7 @@ test("hosted operations docs reference the supported ops scripts", () => {
     "ops:db:migrate",
     "ops:db:migrate:status",
     "ops:db:validate:quests",
+    "ops:campaign-packs:report",
     "ops:db:snapshot:scheduled",
     "ops:env:check",
     "ops:release:state-check",
@@ -50,4 +51,9 @@ test("hosted operations docs include moderation alert envs", () => {
   ]) {
     assert.match(hostedOperationsDoc, new RegExp(key));
   }
+});
+
+test("hosted operations docs include campaign pack reporting ops guidance", () => {
+  assert.match(hostedOperationsDoc, /ops:campaign-packs:report/);
+  assert.match(hostedOperationsDoc, /campaign pack reports/i);
 });

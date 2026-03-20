@@ -78,6 +78,16 @@ For moderation alert routing in production:
 
 Use [`.env.example`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/.env.example) as the source template.
 
+For campaign-pack alert routing in production:
+
+- configure destinations in the admin economy settings panel
+- keep those routes separate from moderation so pack-performance alerts do not inherit queue-SLA recipients by accident
+
+For recurring partner reports in production:
+
+- schedule `npm run ops:campaign-packs:report -- --output-dir /persistent/reports/campaign-packs`
+- keep the output directory on persistent storage, not ephemeral build storage
+
 ## Shareable preview workflow
 
 1. Commit your work locally.
@@ -103,6 +113,8 @@ Before a real hosted deployment, make sure:
 - snapshot commands are either run manually or scheduled somewhere
 - at least one admin user has a row in `user_roles`
 - moderation alert thresholds and at least one delivery route are configured if the admin queue is expected to be monitored in production
+- campaign-pack alert routes are configured in admin if live packs are expected to be monitored in production
+- campaign-pack report scheduling is configured if partners need recurring snapshots from production
 
 ## Recommended release flow
 

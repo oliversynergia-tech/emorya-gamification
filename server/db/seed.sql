@@ -803,6 +803,7 @@ INSERT INTO economy_settings (
   referral_monthly_conversion_base_xp,
   referral_annual_conversion_base_xp,
   annual_referral_direct_token_amount,
+  campaign_alert_channels,
   campaign_overrides
 ) VALUES (
   'ce246eca-e256-487d-849c-769dbd5f366c',
@@ -830,6 +831,7 @@ INSERT INTO economy_settings (
   150,
   300,
   25.0000,
+  '{"inboxEnabled": true, "webhookUrl": null, "emailRecipient": null, "slackWebhookUrl": null, "discordWebhookUrl": null}'::jsonb,
   '{
     "direct": {"signupBonusXp": 0, "monthlyConversionBonusXp": 0, "annualConversionBonusXp": 0, "annualDirectTokenBonus": 0, "questXpMultiplierBonus": 0, "eligibilityPointsMultiplierBonus": 0, "tokenYieldMultiplierBonus": 0, "minimumEligibilityPointsOffset": 0, "directTokenRewardBonus": 0, "weeklyTargetXpOffset": 0, "premiumUpsellBonusMultiplier": 0, "leaderboardMomentumBonus": 0},
     "zealy": {"signupBonusXp": 10, "monthlyConversionBonusXp": 20, "annualConversionBonusXp": 40, "annualDirectTokenBonus": 5, "questXpMultiplierBonus": 0.05, "eligibilityPointsMultiplierBonus": 0.10, "tokenYieldMultiplierBonus": 0.05, "minimumEligibilityPointsOffset": -10, "directTokenRewardBonus": 1, "weeklyTargetXpOffset": -15, "premiumUpsellBonusMultiplier": 0.08, "leaderboardMomentumBonus": 0.05},
@@ -861,6 +863,7 @@ ON CONFLICT (id) DO UPDATE SET
   referral_monthly_conversion_base_xp = EXCLUDED.referral_monthly_conversion_base_xp,
   referral_annual_conversion_base_xp = EXCLUDED.referral_annual_conversion_base_xp,
   annual_referral_direct_token_amount = EXCLUDED.annual_referral_direct_token_amount,
+  campaign_alert_channels = EXCLUDED.campaign_alert_channels,
   campaign_overrides = EXCLUDED.campaign_overrides,
   updated_at = NOW();
 

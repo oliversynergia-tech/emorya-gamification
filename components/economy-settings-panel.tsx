@@ -14,6 +14,12 @@ type EconomySettingsResponse = {
 
 type TierForm = Record<SubscriptionTier, number>;
 type CampaignOverrideKey = "direct" | "zealy" | "galxe" | "taskon";
+type CampaignAlertChannelKey =
+  | "inboxEnabled"
+  | "webhookUrl"
+  | "emailRecipient"
+  | "slackWebhookUrl"
+  | "discordWebhookUrl";
 
 function parseNumber(value: string) {
   const parsed = Number(value);
@@ -83,6 +89,19 @@ export function EconomySettingsPanel({
     }));
   }
 
+  function updateCampaignAlertChannel(key: CampaignAlertChannelKey, value: string | boolean) {
+    setSettings((current) => ({
+      ...current,
+      campaignAlertChannels: {
+        ...current.campaignAlertChannels,
+        [key]:
+          typeof value === "boolean"
+            ? value
+            : value.trim() || null,
+      },
+    }));
+  }
+
   async function save() {
     const enablingSeparateLiveLanes =
       settings.differentiateUpstreamCampaignSources && !savedDifferentiateUpstream;
@@ -132,6 +151,7 @@ export function EconomySettingsPanel({
           referralMonthlyConversionBaseXp: settings.referralMonthlyConversionBaseXp,
           referralAnnualConversionBaseXp: settings.referralAnnualConversionBaseXp,
           annualReferralDirectTokenAmount: settings.annualReferralDirectTokenAmount,
+          campaignAlertChannels: settings.campaignAlertChannels,
           campaignPackBenchmarks: settings.campaignPackBenchmarks,
           campaignOverrides: settings.campaignOverrides,
         }),
@@ -517,6 +537,68 @@ export function EconomySettingsPanel({
               </div>
             </article>
           ))}
+        </div>
+      </section>
+      <section className="panel panel--glass">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Campaign alert routing</p>
+            <h3>Dedicated channels for live pack benchmark alerts</h3>
+          </div>
+        </div>
+        <p className="form-note">
+          These routes are separate from moderation. Use them for live campaign pack benchmark breaches, partner-pack drops, and bridge performance warnings.
+        </p>
+        <div className="profile-grid">
+          <label className="field field--checkbox">
+            <span>Inbox alerting enabled</span>
+            <input
+              disabled={!canManage || pending}
+              type="checkbox"
+              checked={settings.campaignAlertChannels.inboxEnabled}
+              onChange={(event) => updateCampaignAlertChannel("inboxEnabled", event.target.checked)}
+            />
+          </label>
+          <label className="field">
+            <span>Webhook URL</span>
+            <input
+              disabled={!canManage || pending}
+              type="url"
+              value={settings.campaignAlertChannels.webhookUrl ?? ""}
+              onChange={(event) => updateCampaignAlertChannel("webhookUrl", event.target.value)}
+              placeholder="https://example.com/campaign-alerts"
+            />
+          </label>
+          <label className="field">
+            <span>Email recipient</span>
+            <input
+              disabled={!canManage || pending}
+              type="email"
+              value={settings.campaignAlertChannels.emailRecipient ?? ""}
+              onChange={(event) => updateCampaignAlertChannel("emailRecipient", event.target.value)}
+              placeholder="campaign-ops@emorya.com"
+            />
+          </label>
+          <label className="field">
+            <span>Slack webhook</span>
+            <input
+              disabled={!canManage || pending}
+              type="url"
+              value={settings.campaignAlertChannels.slackWebhookUrl ?? ""}
+              onChange={(event) => updateCampaignAlertChannel("slackWebhookUrl", event.target.value)}
+              placeholder="https://hooks.slack.com/services/..."
+            />
+          </label>
+          <label className="field">
+            <span>Discord webhook</span>
+            <input
+              disabled={!canManage || pending}
+              type="url"
+              value={settings.campaignAlertChannels.discordWebhookUrl ?? ""}
+              onChange={(event) => updateCampaignAlertChannel("discordWebhookUrl", event.target.value)}
+              placeholder="https://discord.com/api/webhooks/..."
+            />
+          </label>
         </div>
       </section>
       <section className="panel panel--glass">

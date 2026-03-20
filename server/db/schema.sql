@@ -315,6 +315,7 @@ CREATE TABLE economy_settings (
   referral_monthly_conversion_base_xp INTEGER NOT NULL DEFAULT 150,
   referral_annual_conversion_base_xp INTEGER NOT NULL DEFAULT 300,
   annual_referral_direct_token_amount NUMERIC(18, 4) NOT NULL DEFAULT 25.0000,
+  campaign_alert_channels JSONB NOT NULL DEFAULT '{"inboxEnabled": true}'::JSONB,
   campaign_pack_benchmarks JSONB NOT NULL DEFAULT '{}'::JSONB,
   campaign_overrides JSONB NOT NULL DEFAULT '{}'::JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

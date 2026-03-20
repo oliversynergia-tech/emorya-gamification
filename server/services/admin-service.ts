@@ -638,6 +638,25 @@ function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id"
     referralMonthlyConversionBaseXp: Math.max(input.referralMonthlyConversionBaseXp, 0),
     referralAnnualConversionBaseXp: Math.max(input.referralAnnualConversionBaseXp, 0),
     annualReferralDirectTokenAmount: Math.max(input.annualReferralDirectTokenAmount, 0),
+    campaignAlertChannels: {
+      inboxEnabled: input.campaignAlertChannels?.inboxEnabled ?? true,
+      webhookUrl:
+        typeof input.campaignAlertChannels?.webhookUrl === "string"
+          ? input.campaignAlertChannels.webhookUrl.trim() || null
+          : null,
+      emailRecipient:
+        typeof input.campaignAlertChannels?.emailRecipient === "string"
+          ? input.campaignAlertChannels.emailRecipient.trim() || null
+          : null,
+      slackWebhookUrl:
+        typeof input.campaignAlertChannels?.slackWebhookUrl === "string"
+          ? input.campaignAlertChannels.slackWebhookUrl.trim() || null
+          : null,
+      discordWebhookUrl:
+        typeof input.campaignAlertChannels?.discordWebhookUrl === "string"
+          ? input.campaignAlertChannels.discordWebhookUrl.trim() || null
+          : null,
+    },
     campaignPackBenchmarks: {
       direct: {
         walletLinkRateTarget: Math.max(input.campaignPackBenchmarks?.direct?.walletLinkRateTarget ?? 0, 0),

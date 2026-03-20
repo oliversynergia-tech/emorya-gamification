@@ -235,13 +235,26 @@ test("runEconomySettingsUpdateRoute forwards the update body", async () => {
   const services = {
     saveEconomySettings: mock.fn(async (input: Record<string, unknown>) => {
       assert.equal(input.payoutAsset, "EGLD");
+      assert.deepEqual(input.campaignAlertChannels, {
+        inboxEnabled: true,
+        webhookUrl: "https://example.com/campaign-alerts",
+      });
       return {
         economySettings: { payoutAsset: "EGLD" },
       };
     }),
   };
 
-  const result = await runEconomySettingsUpdateRoute({ payoutAsset: "EGLD" }, services);
+  const result = await runEconomySettingsUpdateRoute(
+    {
+      payoutAsset: "EGLD",
+      campaignAlertChannels: {
+        inboxEnabled: true,
+        webhookUrl: "https://example.com/campaign-alerts",
+      },
+    },
+    services,
+  );
 
   assert.equal(result.status, 200);
   assert.deepEqual(result.body, {

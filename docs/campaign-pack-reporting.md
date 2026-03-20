@@ -31,6 +31,8 @@ The HTML file is designed for browser print-to-PDF export.
   - average weekly XP
   - benchmark lane/status
 - It is safe to schedule via cron or any existing job runner.
+- The script reads `.env.local` locally and standard environment variables in hosted environments.
+- Use a persistent output directory in hosted ops so weekly CSV/HTML exports are retained outside ephemeral build artifacts.
 
 ## Example cron
 
@@ -38,3 +40,17 @@ The HTML file is designed for browser print-to-PDF export.
 0 9 * * 1 cd /path/to/emorya-gamification && npm run ops:campaign-packs:report -- --output-dir reports/weekly
 ```
 
+## Hosted scheduling guidance
+
+Recommended pattern:
+
+1. Run the command from the same deployed environment that has database access.
+2. Write reports to a persistent volume or mounted storage path.
+3. Pair the schedule with the admin campaign alert routing so weak live packs trigger both:
+   - routed alerts in admin
+   - recurring partner-facing performance exports
+
+Suggested weekly cadence:
+
+- Monday morning for partner snapshots
+- additional mid-week run for active launch windows if needed

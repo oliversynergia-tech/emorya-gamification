@@ -80,7 +80,7 @@ await withClient(async (client) => {
            direct_annual_referral_enabled, differentiate_upstream_campaign_sources, minimum_eligibility_points,
            points_per_token, xp_multiplier_free, xp_multiplier_monthly, xp_multiplier_annual,
            token_multiplier_free, token_multiplier_monthly, token_multiplier_annual,
-           annual_referral_direct_token_amount, campaign_overrides
+           annual_referral_direct_token_amount, campaign_alert_channels, campaign_overrides
     FROM economy_settings
     WHERE is_active = TRUE
     ORDER BY updated_at DESC
@@ -245,9 +245,20 @@ await withClient(async (client) => {
     }
 
     const campaignOverrides = economy.campaign_overrides ?? {};
+    const campaignAlertChannels = economy.campaign_alert_channels ?? {};
 
     for (const source of requiredCampaignSources) {
       validateOverrideObject(source, campaignOverrides[source], errors);
+    }
+
+    if (typeof campaignAlertChannels.inboxEnabled !== "boolean") {
+      errors.push("campaign_alert_channels.inboxEnabled must be a boolean.");
+    }
+    for (const key of ["webhookUrl", "emailRecipient", "slackWebhookUrl", "discordWebhookUrl"]) {
+      const value = campaignAlertChannels[key];
+      if (!(value === null || value === undefined || typeof value === "string")) {
+        errors.push(`campaign_alert_channels.${key} must be null or a string.`);
+      }
     }
 
     if (economy.redemption_enabled === true && minimumPoints < pointsPerToken) {
@@ -272,7 +283,7 @@ await withClient(async (client) => {
   const migrationResult = await client.query(
     `SELECT filename
      FROM schema_migrations
-     WHERE filename IN ('013_add_token_redemption_settlement_details.sql', '014_add_campaign_overrides_and_referral_direct_rewards.sql', '016_add_reward_assets_and_programs.sql', '017_add_payout_operation_controls.sql', '018_add_quest_definition_templates.sql', '019_expand_campaign_override_funnel_presets.sql', '020_add_token_redemption_workflow_states.sql', '021_add_upstream_campaign_differentiation.sql', '022_add_bridge_and_feeder_templates.sql', '024_expand_payout_exception_workflow.sql')
+     WHERE filename IN ('013_add_token_redemption_settlement_details.sql', '014_add_campaign_overrides_and_referral_direct_rewards.sql', '016_add_reward_assets_and_programs.sql', '017_add_payout_operation_controls.sql', '018_add_quest_definition_templates.sql', '019_expand_campaign_override_funnel_presets.sql', '020_add_token_redemption_workflow_states.sql', '021_add_upstream_campaign_differentiation.sql', '022_add_bridge_and_feeder_templates.sql', '024_expand_payout_exception_workflow.sql', '027_add_campaign_alert_channels_to_economy.sql')
      ORDER BY filename ASC`,
   );
   const appliedMigrations = new Set(migrationResult.rows.map((row) => String(row.filename)));
@@ -288,6 +299,7 @@ await withClient(async (client) => {
     "021_add_upstream_campaign_differentiation.sql",
     "022_add_bridge_and_feeder_templates.sql",
     "024_expand_payout_exception_workflow.sql",
+    "027_add_campaign_alert_channels_to_economy.sql",
   ]) {
     if (!appliedMigrations.has(filename)) {
       errors.push(`Required migration not applied: ${filename}`);

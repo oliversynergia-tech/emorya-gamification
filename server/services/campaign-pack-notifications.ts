@@ -1,11 +1,11 @@
-import type { AdminOverviewData, ModerationAlertChannelConfig } from "../../lib/types.ts";
+import type { AdminOverviewData, CampaignAlertChannelConfig } from "../../lib/types.ts";
 
 export function buildCampaignPackNotifications({
   alerts,
   channels,
 }: {
   alerts: AdminOverviewData["campaignOperations"]["alerts"];
-  channels: ModerationAlertChannelConfig;
+  channels: CampaignAlertChannelConfig;
 }) {
   const highestSeverity = alerts.some((alert) => alert.severity === "critical") ? "critical" : "warning";
   const hasAlerts = alerts.length > 0;
@@ -82,4 +82,3 @@ export function buildCampaignPackNotifications({
 
   return notifications;
 }
-

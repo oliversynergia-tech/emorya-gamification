@@ -109,3 +109,29 @@ MODERATION_ALERT_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 ```
 
 These settings drive the admin queue-health warnings and the outbound notification routing summary shown in the admin surface.
+
+## Campaign pack alerts and campaign pack reports
+
+Campaign-pack alert routing is configured in the admin economy settings now, not through the moderation env vars above.
+
+Recommended setup:
+
+- keep campaign inbox alerting on
+- add an email recipient or team webhook in the economy settings panel for live pack benchmark breaches
+- review the active route summary in the campaign operations section after saving
+
+For recurring partner reporting in hosted environments, schedule:
+
+- `npm run ops:campaign-packs:report -- --output-dir /persistent/reports/campaign-packs`
+
+Suggested cadence:
+
+- weekly for normal partner updates
+- twice weekly during live acquisition pushes
+
+The command writes:
+
+- `campaign-pack-report-YYYY-MM-DD.csv`
+- `campaign-pack-report-YYYY-MM-DD.html`
+
+The HTML output is print-friendly and can be saved to PDF from a browser when needed.

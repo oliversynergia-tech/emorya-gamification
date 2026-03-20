@@ -1,5 +1,20 @@
-import type { CampaignSource, EconomySettings, QuestTrack, SubscriptionTier, TokenAsset } from "./types.ts";
+import type {
+  CampaignAlertChannelConfig,
+  CampaignSource,
+  EconomySettings,
+  QuestTrack,
+  SubscriptionTier,
+  TokenAsset,
+} from "./types.ts";
 import { defaultCampaignPackBenchmarks } from "./campaign-pack-benchmarks.ts";
+
+export const defaultCampaignAlertChannels: CampaignAlertChannelConfig = {
+  inboxEnabled: true,
+  webhookUrl: null,
+  emailRecipient: null,
+  slackWebhookUrl: null,
+  discordWebhookUrl: null,
+};
 
 export const defaultEconomySettings: EconomySettings = {
   id: "default",
@@ -89,6 +104,7 @@ export const defaultEconomySettings: EconomySettings = {
     },
   },
   campaignPackBenchmarks: defaultCampaignPackBenchmarks,
+  campaignAlertChannels: defaultCampaignAlertChannels,
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -249,6 +265,9 @@ export function buildEconomySettingsSummary(previous: EconomySettings, next: Eco
   }
   if (JSON.stringify(previous.campaignPackBenchmarks) !== JSON.stringify(next.campaignPackBenchmarks)) {
     changes.push("campaign pack benchmarks updated");
+  }
+  if (JSON.stringify(previous.campaignAlertChannels) !== JSON.stringify(next.campaignAlertChannels)) {
+    changes.push("campaign pack alert routing updated");
   }
 
   return changes.length > 0 ? changes.join(", ") : "Economy settings saved with no effective change.";
