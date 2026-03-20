@@ -170,8 +170,14 @@ function getDashboardPriorityAction(data: DashboardData) {
               : returnPack.blockageState === "weekly_pace"
                 ? returnPack.unlockRewardPreview
                 : returnPack.unlockPreview;
+    const eyebrow =
+      returnPack.blockageState === "weekly_pace"
+        ? "Return today"
+        : returnPack.blockageState === "ready"
+          ? "Resume mission"
+          : "Blocked mission";
     return {
-      eyebrow: "Resume mission",
+      eyebrow,
       title,
       detail: returnPack.returnAction ?? returnPack.nextAction,
       supporting,
@@ -486,6 +492,13 @@ export function DashboardSnapshot({
             <p className="form-note">{priorityAction.detail}</p>
             <p className="form-note">{priorityAction.supporting}</p>
             <p className="form-note">{priorityAction.blockedStateLabel}.</p>
+            <p className="form-note">
+              {priorityAction.blockedStateLabel === "Blocked by weekly pace"
+                ? "This is a recovery problem, not a hard progression block."
+                : priorityAction.blockedStateLabel === "Ready to resume"
+                  ? "Nothing structural is blocking this pack right now."
+                  : "This pack still has a real progression gate in front of it."}
+            </p>
             <p className="form-note">Best return window: {priorityAction.timing}.</p>
             <div className="hero__actions">
               <MissionLink
@@ -2266,6 +2279,23 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
           ))}
         </div>
         <div className="achievement-list">
+          {data.campaignOperations.packAnalytics
+            .filter((pack) => pack.activeQuestCount > 0 && pack.missionCtaSummary.recommendedBadge)
+            .slice(0, 4)
+            .map((pack) => (
+              <article key={`pack-cta-quick-${pack.packId}`} className="achievement-card">
+                <div>
+                  <strong>{pack.label}</strong>
+                  <p>{pack.missionCtaSummary.recommendedReason}</p>
+                </div>
+                <div className="achievement-card__side">
+                  <span>{pack.missionCtaSummary.recommendedBadge}</span>
+                  <span>{pack.missionCtaSummary.recommendedVariant}</span>
+                </div>
+              </article>
+            ))}
+        </div>
+        <div className="achievement-list">
           {data.campaignOperations.reminderVariantTrend.map((entry) => (
             <article key={`reminder-variant-trend-${entry.variant}`} className="achievement-card">
               <div>
@@ -2273,6 +2303,20 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
                 <p>
                   Current {entry.currentCount} vs previous {entry.previousCount}. Delta {entry.delta >= 0 ? "+" : ""}
                   {entry.delta}.
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.campaignOperations.reminderVariantByBlockage.map((entry) => (
+            <article key={`reminder-variant-blockage-${entry.state}-${entry.variant}`} className="achievement-card">
+              <div>
+                <strong>
+                  {entry.variant.replaceAll("_", " ")} on {entry.state.replaceAll("_", " ")}
+                </strong>
+                <p>
+                  {entry.handledCount} handled, {entry.snoozedCount} snoozed.
                 </p>
               </div>
             </article>

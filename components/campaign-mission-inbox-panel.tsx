@@ -169,6 +169,7 @@ export function CampaignMissionInboxPanel({
             <div>
               <strong>{notification.title}</strong>
               <p>{notification.detail}</p>
+              {notification.reminderScheduleLabel ? <p className="form-note">{notification.reminderScheduleLabel}</p> : null}
               {notification.ctaLabel ? (
                 <div className="hero__actions">
                   <MissionLink

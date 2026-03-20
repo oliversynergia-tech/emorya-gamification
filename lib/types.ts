@@ -421,6 +421,12 @@ export type DashboardData = {
       | "ready";
     unlockPreview: string;
     unlockRewardPreview: string;
+    unlockOutcomePreview: {
+      xp: string;
+      eligibility: string;
+      premium: string | null;
+      directReward: string | null;
+    };
     rewardFocus: string;
     badgeLabel: string;
     leaderboardCallout: string;
@@ -467,6 +473,8 @@ export type DashboardData = {
     detail: string;
     packId: string;
     reminderVariant?: string | null;
+    reminderSchedule?: "today" | "this_week" | "wait_for_unlock";
+    reminderScheduleLabel?: string | null;
     ctaLabel?: string;
     ctaQuestId?: string | null;
     ctaHref?: string | null;
@@ -847,6 +855,19 @@ export type AdminOverviewData = {
       currentCount: number;
       previousCount: number;
       delta: number;
+    }>;
+    reminderVariantByBlockage: Array<{
+      state:
+        | "wallet_connection"
+        | "starter_path"
+        | "level"
+        | "trust"
+        | "premium_phase"
+        | "weekly_pace"
+        | "ready";
+      variant: string;
+      handledCount: number;
+      snoozedCount: number;
     }>;
     blockageSuggestions: Array<{
       state:

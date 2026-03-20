@@ -257,6 +257,7 @@ type MissionInboxHistoryRow = QueryResultRow & {
   pack_id: string | null;
   notification_status: "handled" | "snoozed" | null;
   notification_until: string | null;
+  reminder_variant: string | null;
   detail: string | null;
   created_at: string;
 };
@@ -1447,6 +1448,84 @@ function getReminderVariantForPack(pack: DashboardData["campaignPacks"][number])
   }
 }
 
+function getReminderScheduleForPack(
+  pack: Pick<DashboardData["campaignPacks"][number], "blockageState" | "returnWindow">,
+): {
+  schedule: DashboardData["campaignNotifications"][number]["reminderSchedule"];
+  label: string;
+} {
+  if (pack.blockageState === "wallet_connection" || pack.blockageState === "weekly_pace") {
+    return {
+      schedule: "today",
+      label: "Keep this in the same-day reminder loop until the block clears.",
+    };
+  }
+
+  if (
+    pack.blockageState === "starter_path" ||
+    pack.blockageState === "level" ||
+    pack.blockageState === "trust" ||
+    pack.blockageState === "premium_phase"
+  ) {
+    return {
+      schedule: "this_week",
+      label: "Keep this in the weekly reminder loop while the next unlock builds.",
+    };
+  }
+
+  if (pack.returnWindow === "wait_for_unlock") {
+    return {
+      schedule: "wait_for_unlock",
+      label: "Hold reminders until the next meaningful unlock condition changes.",
+    };
+  }
+
+  return {
+    schedule: pack.returnWindow,
+    label:
+      pack.returnWindow === "today"
+        ? "This pack should get a same-day nudge while the return window is hot."
+        : "This pack can stay on the weekly reminder rhythm for now.",
+  };
+}
+
+function getPackUnlockOutcomePreview({
+  blockageState,
+  directRewardMetadata,
+  premiumNudge,
+  rewardEligible,
+}: {
+  blockageState: DashboardData["campaignPacks"][number]["blockageState"];
+  directRewardMetadata: { asset: TokenAsset; amount: number } | null;
+  premiumNudge: string | null;
+  rewardEligible: boolean;
+}): DashboardData["campaignPacks"][number]["unlockOutcomePreview"] {
+  return {
+    xp:
+      blockageState === "level"
+        ? "This step matters most because it adds the XP pressure needed for the next level gate."
+        : "This step keeps XP momentum moving so the pack stays on track.",
+    eligibility:
+      blockageState === "wallet_connection"
+        ? "Eligibility is still waiting on wallet connection before the reward path fully opens."
+        : blockageState === "starter_path"
+          ? "Eligibility improves as the starter path becomes more complete and trusted."
+          : blockageState === "trust"
+            ? "Eligibility is mainly waiting on stronger verified activity and trust signals."
+            : rewardEligible
+              ? "Eligibility is already live, so this step is about pushing deeper into the active reward loop."
+              : "Eligibility pressure improves as this quest moves the pack closer to its next gate.",
+    premium:
+      premiumNudge
+        ? "This mission is entering a premium-relevant phase, so the next unlock has stronger upgrade weight."
+        : null,
+    directReward:
+      directRewardMetadata && rewardEligible
+        ? `This pack is still aligned with a ${directRewardMetadata.amount} ${directRewardMetadata.asset} direct reward route.`
+        : null,
+  };
+}
+
 function getRecommendedPackCta(
   state: DashboardData["campaignPacks"][number]["blockageState"],
 ): {
@@ -1628,6 +1707,8 @@ function buildCampaignNotifications(
         detail: `${detailParts.join(" ")} ${pack.nextAction}`.trim(),
         packId: pack.packId,
         reminderVariant: getReminderVariantForPack(pack),
+        reminderSchedule: getReminderScheduleForPack(pack).schedule,
+        reminderScheduleLabel: getReminderScheduleForPack(pack).label,
         ctaLabel:
           pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
             ? "Open referral leaderboard"
@@ -1657,6 +1738,8 @@ function buildCampaignNotifications(
       detail: `Weekly pace is slipping by ${inactivityNotification.weeklyGoal.shortfallXp} XP. A clean mission clear now will pull this pack back onto its current target.`,
       packId: inactivityNotification.packId,
       reminderVariant: getReminderVariantForPack(inactivityNotification),
+      reminderSchedule: getReminderScheduleForPack(inactivityNotification).schedule,
+      reminderScheduleLabel: getReminderScheduleForPack(inactivityNotification).label,
       ctaLabel: inactivityNotification.ctaLabel,
       ctaQuestId: inactivityNotification.nextQuestId,
       ctaHref: inactivityNotification.ctaHref,
@@ -1673,6 +1756,8 @@ function buildCampaignNotifications(
       detail: `${returnReminder.returnAction ?? returnReminder.nextAction} ${returnReminder.unlockPreview}`,
       packId: returnReminder.packId,
       reminderVariant: getReminderVariantForPack(returnReminder),
+      reminderSchedule: getReminderScheduleForPack(returnReminder).schedule,
+      reminderScheduleLabel: getReminderScheduleForPack(returnReminder).label,
       ctaLabel: returnReminder.ctaLabel,
       ctaQuestId: returnReminder.nextQuestId,
       ctaHref: returnReminder.ctaHref,
@@ -2063,6 +2148,12 @@ async function getUserCampaignPackJourneys({
       rewardEligible: user.rewardEligibility.eligible,
       premiumNudge,
     });
+    const unlockOutcomePreview = getPackUnlockOutcomePreview({
+      blockageState,
+      directRewardMetadata,
+      premiumNudge,
+      rewardEligible: user.rewardEligibility.eligible,
+    });
     const primaryCta = resolvePackPrimaryCta({
       user,
       userProgressState,
@@ -2106,6 +2197,7 @@ async function getUserCampaignPackJourneys({
       blockageState,
       unlockPreview,
       unlockRewardPreview,
+      unlockOutcomePreview,
       returnAction,
       returnWindow,
       rewardFocus,
@@ -2163,6 +2255,7 @@ async function getUserCampaignPackJourneys({
       blockageState: pack.blockageState,
       unlockPreview: pack.unlockPreview,
       unlockRewardPreview: pack.unlockRewardPreview,
+      unlockOutcomePreview: pack.unlockOutcomePreview,
       returnAction: pack.returnAction,
       returnWindow: pack.returnWindow,
       rewardFocus: pack.rewardFocus,
@@ -2540,6 +2633,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
               al.metadata->>'packId' AS pack_id,
               al.metadata->>'notificationStatus' AS notification_status,
               NULLIF(al.metadata->>'notificationUntil', '') AS notification_until,
+              al.metadata->>'reminderVariant' AS reminder_variant,
               al.metadata->>'detail' AS detail,
               al.created_at::text AS created_at
        FROM activity_log al
@@ -3605,6 +3699,15 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       detail: row.detail ?? "Updated mission inbox state.",
       createdAt: row.created_at,
     }));
+  const reminderVariantByBlockageMap = new Map<
+    string,
+    {
+      state: AdminOverviewData["campaignOperations"]["blockageSummary"][number]["state"];
+      variant: string;
+      handledCount: number;
+      snoozedCount: number;
+    }
+  >();
   const missionReminderStatusTrendMap = new Map<
     AdminOverviewData["campaignOperations"]["missionReminderStatusTrend"][number]["status"],
     { currentCount: number; previousCount: number }
@@ -3746,6 +3849,46 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       delta: entry.currentCount - entry.previousCount,
     }))
     .sort((left, right) => right.currentCount - left.currentCount);
+  for (const row of campaignMissionInboxHistory.rows) {
+    if (!row.pack_id || !row.notification_status) {
+      continue;
+    }
+    const pack = packAnalyticsLookup.get(row.pack_id);
+    if (!pack) {
+      continue;
+    }
+    const state: AdminOverviewData["campaignOperations"]["blockageSummary"][number]["state"] =
+      pack.walletLinkRate < 0.25
+        ? "wallet_connection"
+        : pack.starterPathCompletionRate < 0.25
+          ? "starter_path"
+          : pack.rewardEligibilityRate < pack.benchmark.rewardEligibilityRateTarget
+            ? "trust"
+            : pack.premiumConversionRate < pack.benchmark.premiumConversionRateTarget
+              ? "premium_phase"
+              : pack.retainedActivityRate < pack.benchmark.retainedActivityRateTarget
+                ? "weekly_pace"
+                : "ready";
+    const variant = row.reminder_variant ?? "unknown";
+    const key = `${state}::${variant}`;
+    const current = reminderVariantByBlockageMap.get(key) ?? {
+      state,
+      variant,
+      handledCount: 0,
+      snoozedCount: 0,
+    };
+    if (row.notification_status === "handled") {
+      current.handledCount += 1;
+    } else if (row.notification_status === "snoozed") {
+      current.snoozedCount += 1;
+    }
+    reminderVariantByBlockageMap.set(key, current);
+  }
+  const reminderVariantByBlockage: AdminOverviewData["campaignOperations"]["reminderVariantByBlockage"] = Array.from(
+    reminderVariantByBlockageMap.values(),
+  )
+    .sort((left, right) => right.handledCount + right.snoozedCount - (left.handledCount + left.snoozedCount))
+    .slice(0, 8);
   const blockageSuggestions: AdminOverviewData["campaignOperations"]["blockageSuggestions"] = blockageSummary
     .filter((entry) => entry.count > 0)
     .sort((left, right) => right.count - left.count)
@@ -3821,6 +3964,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       blockageTrend,
       reminderVariantSummary,
       reminderVariantTrend,
+      reminderVariantByBlockage,
       blockageSuggestions,
       packAnalytics,
       partnerReporting,
