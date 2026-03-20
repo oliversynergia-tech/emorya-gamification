@@ -555,6 +555,17 @@ export function CampaignPackAnalyticsPanel({
                 {` `}
                 Clicker correlation: {(pack.missionCtaSummary.walletLinkRate * 100).toFixed(0)}% wallet-linked, {(pack.missionCtaSummary.rewardEligibilityRate * 100).toFixed(0)}% reward-ready, {(pack.missionCtaSummary.premiumConversionRate * 100).toFixed(0)}% premium.
               </p>
+              {pack.missionCtaSummary.recommendedBadge ? (
+                <article className="achievement-card">
+                  <div>
+                    <strong>{pack.missionCtaSummary.recommendedBadge}</strong>
+                    <p>{pack.missionCtaSummary.recommendedReason}</p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{pack.missionCtaSummary.recommendedVariant}</span>
+                  </div>
+                </article>
+              ) : null}
               {pack.missionCtaSummary.variantBreakdown.length > 0 ? (
                 <div className="achievement-list">
                   {pack.missionCtaSummary.variantBreakdown.map((entry) => (

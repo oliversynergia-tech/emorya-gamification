@@ -91,7 +91,6 @@ function getCampaignSourceLabel(source: "direct" | "zealy" | "galxe" | "taskon")
 
 function getDashboardPriorityAction(data: DashboardData) {
   const walletGatePack = data.campaignPacks.find((pack) => pack.ctaVariant === "wallet_gate");
-  const nextRequirement = data.user.rewardEligibility.nextRequirement?.toLowerCase() ?? "";
   if (walletGatePack) {
     return {
       eyebrow: "Top action",
@@ -130,22 +129,52 @@ function getDashboardPriorityAction(data: DashboardData) {
   const returnPack = data.campaignPacks.find((pack) => pack.returnAction);
   if (returnPack) {
     const blockedStateLabel =
-      returnPack.returnWindow === "wait_for_unlock"
-        ? nextRequirement.includes("level 5")
-          ? "Blocked by level"
-          : nextRequirement.includes("trust")
-            ? "Blocked by trust"
-            : nextRequirement.includes("starter path")
-              ? "Blocked by starter path"
-              : "Blocked by eligibility"
-        : returnPack.returnWindow === "this_week"
-          ? "Blocked by weekly pace"
-          : "Ready to resume";
+      returnPack.blockageState === "level"
+        ? "Blocked by level"
+        : returnPack.blockageState === "trust"
+          ? "Blocked by trust"
+          : returnPack.blockageState === "starter_path"
+            ? "Blocked by starter path"
+            : returnPack.blockageState === "premium_phase"
+              ? "Blocked by premium phase"
+              : returnPack.blockageState === "weekly_pace"
+                ? "Blocked by weekly pace"
+                : returnPack.blockageState === "wallet_connection"
+                  ? "Blocked by wallet connection"
+                  : returnPack.returnWindow === "wait_for_unlock"
+                    ? "Blocked by eligibility"
+                    : "Ready to resume";
+    const title =
+      returnPack.blockageState === "wallet_connection"
+        ? "Connect your wallet to reopen this mission path"
+        : returnPack.blockageState === "trust"
+          ? "Rebuild trust signals to reopen the reward path"
+          : returnPack.blockageState === "level"
+            ? "A quick XP push gets this mission moving again"
+            : returnPack.blockageState === "starter_path"
+              ? "Finish the starter path to unblock this mission"
+              : returnPack.blockageState === "premium_phase"
+                ? "This mission is now strongest at the premium step"
+                : returnPack.blockageState === "weekly_pace"
+                  ? "One clean return move puts this pack back on pace"
+                  : "One strong return move puts this pack back on pace";
+    const supporting =
+      returnPack.blockageState === "wallet_connection"
+        ? "Wallet connection is still the gate between this mission and the live reward rail."
+        : returnPack.blockageState === "trust"
+          ? "The next unlock depends on verified activity and cleaner eligibility signals."
+          : returnPack.blockageState === "level"
+            ? "The next mission step is mainly waiting on XP and level pressure."
+            : returnPack.blockageState === "starter_path"
+              ? "Starter-path completion is still the simplest unlock for the next mission step."
+              : returnPack.blockageState === "weekly_pace"
+                ? returnPack.unlockRewardPreview
+                : returnPack.unlockPreview;
     return {
       eyebrow: "Resume mission",
-      title: "One strong return move puts this pack back on pace",
+      title,
       detail: returnPack.returnAction ?? returnPack.nextAction,
-      supporting: returnPack.unlockPreview,
+      supporting,
       href: returnPack.ctaHref ?? "#quest-board",
       label: returnPack.ctaLabel,
       packId: returnPack.packId,
@@ -177,9 +206,9 @@ function getDashboardPriorityAction(data: DashboardData) {
     ctaVariant: nextPack.ctaVariant,
     packLabel: nextPack.label,
     timing: "today",
-    blockedStateLabel: "Ready to progress",
-  };
-}
+      blockedStateLabel: "Ready to progress",
+    };
+  }
 
 function renderQuestCard(quest: Quest) {
   return (
@@ -567,6 +596,7 @@ export function DashboardSnapshot({
                     <p className="form-note">{pack.tierPhaseCopy}</p>
                     <p className="form-note">{pack.priorityReason}</p>
                     <p className="form-note">{pack.unlockPreview}</p>
+                    <p className="form-note">{pack.unlockRewardPreview}</p>
                     {pack.returnAction ? <p className="form-note">{pack.returnAction}</p> : null}
                     {pack.returnAction ? (
                       <p className="form-note">
@@ -2230,6 +2260,19 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
                 <strong>{entry.variant.replaceAll("_", " ")}</strong>
                 <p>
                   {entry.handledCount} handled, {entry.snoozedCount} snoozed, {Math.round(entry.handledRate * 100)}% handled rate.
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.campaignOperations.reminderVariantTrend.map((entry) => (
+            <article key={`reminder-variant-trend-${entry.variant}`} className="achievement-card">
+              <div>
+                <strong>{entry.variant.replaceAll("_", " ")}</strong>
+                <p>
+                  Current {entry.currentCount} vs previous {entry.previousCount}. Delta {entry.delta >= 0 ? "+" : ""}
+                  {entry.delta}.
                 </p>
               </div>
             </article>

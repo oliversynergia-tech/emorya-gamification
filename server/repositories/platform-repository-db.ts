@@ -270,6 +270,7 @@ type MissionReminderStatusTrendRow = QueryResultRow & {
 type MissionReminderVariantRow = QueryResultRow & {
   reminder_variant: string | null;
   notification_status: "handled" | "snoozed" | null;
+  bucket: "current" | "previous";
   count: string;
 };
 
@@ -1302,6 +1303,51 @@ function getPackPriorityReason({
   return "This mission is prioritized because it is the strongest live route for your current weekly momentum and lane pressure.";
 }
 
+function getCampaignPackBlockageState({
+  userProgressState,
+  rewardEligible,
+  nextRequirement,
+  weeklyGoalShortfall,
+  weeklyGoalTarget,
+  premiumNudge,
+}: {
+  userProgressState: UserProgressState;
+  rewardEligible: boolean;
+  nextRequirement: string | null;
+  weeklyGoalShortfall: number;
+  weeklyGoalTarget: number;
+  premiumNudge: string | null;
+}): DashboardData["campaignPacks"][number]["blockageState"] {
+  if (!userProgressState.walletLinked) {
+    return "wallet_connection";
+  }
+
+  if (!userProgressState.starterPathComplete) {
+    return "starter_path";
+  }
+
+  if (!rewardEligible) {
+    const normalizedRequirement = (nextRequirement ?? "").toLowerCase();
+    if (normalizedRequirement.includes("level")) {
+      return "level";
+    }
+    if (normalizedRequirement.includes("starter path")) {
+      return "starter_path";
+    }
+    return "trust";
+  }
+
+  if (premiumNudge) {
+    return "premium_phase";
+  }
+
+  if (weeklyGoalShortfall > Math.max(weeklyGoalTarget * 0.2, 40)) {
+    return "weekly_pace";
+  }
+
+  return "ready";
+}
+
 function getPackUnlockPreview({
   questStatuses,
   featuredTracks,
@@ -1326,6 +1372,132 @@ function getPackUnlockPreview({
   }
 
   return `There are ${remainingQuestCount} mission step${remainingQuestCount === 1 ? "" : "s"} left in this pack, with the next unlock biased toward the current lane focus.`;
+}
+
+function getPackUnlockRewardPreview({
+  currentQuestTitle,
+  nextQuestTitle,
+  blockageState,
+  directRewardMetadata,
+  featuredTracks,
+  rewardEligible,
+  premiumNudge,
+}: {
+  currentQuestTitle: string | null;
+  nextQuestTitle: string | null;
+  blockageState: DashboardData["campaignPacks"][number]["blockageState"];
+  directRewardMetadata: { asset: TokenAsset; amount: number } | null;
+  featuredTracks: QuestTrack[];
+  rewardEligible: boolean;
+  premiumNudge: string | null;
+}) {
+  const currentLabel = currentQuestTitle ?? "this now quest";
+  const nextLabel = nextQuestTitle ?? "the next mission step";
+
+  if (blockageState === "wallet_connection") {
+    return `Finishing ${currentLabel} keeps this pack pointed at the wallet gate so ${nextLabel} can move into the live reward rail.`;
+  }
+
+  if (blockageState === "starter_path") {
+    return `Finishing ${currentLabel} clears another starter-path step so ${nextLabel} can push identity and trust forward.`;
+  }
+
+  if (blockageState === "level" || blockageState === "trust") {
+    return `Finishing ${currentLabel} adds the XP and verified activity pressure this pack needs before ${nextLabel} can unlock reward eligibility.`;
+  }
+
+  if (premiumNudge) {
+    return `Finishing ${currentLabel} sets up ${nextLabel} as a stronger premium-conversion moment without dropping mission pace.`;
+  }
+
+  if (directRewardMetadata && rewardEligible) {
+    return `Finishing ${currentLabel} keeps ${nextLabel} on track for the ${directRewardMetadata.amount} ${directRewardMetadata.asset} direct reward route.`;
+  }
+
+  if (featuredTracks.includes("referral")) {
+    return `Finishing ${currentLabel} unlocks ${nextLabel} as a stronger referral and leaderboard-pressure moment.`;
+  }
+
+  if (featuredTracks.includes("premium")) {
+    return `Finishing ${currentLabel} opens ${nextLabel} with a more premium-weighted XP and conversion path.`;
+  }
+
+  return `Finishing ${currentLabel} unlocks ${nextLabel} as the next clean progression step in this pack.`;
+}
+
+function getReminderVariantForPack(pack: DashboardData["campaignPacks"][number]) {
+  if (pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete") {
+    return "referral_milestone";
+  }
+
+  switch (pack.blockageState) {
+    case "wallet_connection":
+      return "wallet_unblock";
+    case "starter_path":
+      return "starter_path_push";
+    case "level":
+    case "trust":
+      return "eligibility_recovery";
+    case "premium_phase":
+      return "premium_phase";
+    case "weekly_pace":
+      return pack.returnWindow === "today" ? "today_return" : "weekly_return";
+    default:
+      return pack.returnWindow === "wait_for_unlock" ? "unlock_wait" : "mission_progress";
+  }
+}
+
+function getRecommendedPackCta(
+  state: DashboardData["campaignPacks"][number]["blockageState"],
+): {
+  variant: string;
+  badge: string;
+  reason: string;
+} {
+  switch (state) {
+    case "wallet_connection":
+      return {
+        variant: "wallet_gate",
+        badge: "Wallet-first CTA",
+        reason: "Most users in this pack are still blocked before the live reward path opens.",
+      };
+    case "starter_path":
+      return {
+        variant: "starter_path_clarity",
+        badge: "Starter-path CTA",
+        reason: "This pack needs clearer guidance through the starter-path portion of the loop.",
+      };
+    case "level":
+      return {
+        variant: "xp_level_push",
+        badge: "Level-up CTA",
+        reason: "The dominant friction here is reaching the next XP threshold cleanly.",
+      };
+    case "trust":
+      return {
+        variant: "trust_signal_push",
+        badge: "Trust CTA",
+        reason: "Verified activity and reward-readiness are the main blockers in this pack right now.",
+      };
+    case "premium_phase":
+      return {
+        variant: "premium_phase",
+        badge: "Premium CTA",
+        reason: "This pack is already through the base loop and is now strongest at the premium step.",
+      };
+    case "weekly_pace":
+      return {
+        variant: "recovery_return",
+        badge: "Recovery CTA",
+        reason: "The best move is pulling users back onto pace before the pack cools off.",
+      };
+    default:
+      return {
+        variant: "default_progression",
+        badge: "Progress CTA",
+        reason: "This pack is mostly ready, so simple next-step progression language should win.",
+      };
+  }
 }
 
 function resolvePackPrimaryCta({
@@ -1455,10 +1627,7 @@ function buildCampaignNotifications(
             : `${pack.label} is active in your mission flow`,
         detail: `${detailParts.join(" ")} ${pack.nextAction}`.trim(),
         packId: pack.packId,
-        reminderVariant:
-          pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
-            ? "referral_milestone"
-            : "mission_progress",
+        reminderVariant: getReminderVariantForPack(pack),
         ctaLabel:
           pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
             ? "Open referral leaderboard"
@@ -1487,7 +1656,7 @@ function buildCampaignNotifications(
       title: `${inactivityNotification.label} is cooling off`,
       detail: `Weekly pace is slipping by ${inactivityNotification.weeklyGoal.shortfallXp} XP. A clean mission clear now will pull this pack back onto its current target.`,
       packId: inactivityNotification.packId,
-      reminderVariant: "pace_recovery",
+      reminderVariant: getReminderVariantForPack(inactivityNotification),
       ctaLabel: inactivityNotification.ctaLabel,
       ctaQuestId: inactivityNotification.nextQuestId,
       ctaHref: inactivityNotification.ctaHref,
@@ -1503,12 +1672,7 @@ function buildCampaignNotifications(
       title: `${returnReminder.label} needs a return move`,
       detail: `${returnReminder.returnAction ?? returnReminder.nextAction} ${returnReminder.unlockPreview}`,
       packId: returnReminder.packId,
-      reminderVariant:
-        returnReminder.returnWindow === "wait_for_unlock"
-          ? "unlock_wait"
-          : returnReminder.returnWindow === "this_week"
-            ? "weekly_return"
-            : "today_return",
+      reminderVariant: getReminderVariantForPack(returnReminder),
       ctaLabel: returnReminder.ctaLabel,
       ctaQuestId: returnReminder.nextQuestId,
       ctaHref: returnReminder.ctaHref,
@@ -1877,10 +2041,27 @@ async function getUserCampaignPackJourneys({
       activeLane: experienceLane,
       attributionSource,
     });
+    const blockageState = getCampaignPackBlockageState({
+      userProgressState,
+      rewardEligible: user.rewardEligibility.eligible,
+      nextRequirement: user.rewardEligibility.nextRequirement,
+      weeklyGoalShortfall,
+      weeklyGoalTarget,
+      premiumNudge,
+    });
     const unlockPreview = getPackUnlockPreview({
       questStatuses,
       featuredTracks,
       directRewardMetadata,
+    });
+    const unlockRewardPreview = getPackUnlockRewardPreview({
+      currentQuestTitle: nextQuestTitle,
+      nextQuestTitle: questStatuses.find((quest) => !quest.actionable && quest.status !== "completed")?.title ?? null,
+      blockageState,
+      directRewardMetadata,
+      featuredTracks,
+      rewardEligible: user.rewardEligibility.eligible,
+      premiumNudge,
     });
     const primaryCta = resolvePackPrimaryCta({
       user,
@@ -1922,7 +2103,9 @@ async function getUserCampaignPackJourneys({
       sequenceReason,
       tierPhaseCopy,
       priorityReason,
+      blockageState,
       unlockPreview,
+      unlockRewardPreview,
       returnAction,
       returnWindow,
       rewardFocus,
@@ -1977,7 +2160,9 @@ async function getUserCampaignPackJourneys({
       sequenceReason: pack.sequenceReason,
       tierPhaseCopy: pack.tierPhaseCopy,
       priorityReason: pack.priorityReason,
+      blockageState: pack.blockageState,
       unlockPreview: pack.unlockPreview,
+      unlockRewardPreview: pack.unlockRewardPreview,
       returnAction: pack.returnAction,
       returnWindow: pack.returnWindow,
       rewardFocus: pack.rewardFocus,
@@ -2383,11 +2568,20 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     runQuery<MissionReminderVariantRow>(
       `SELECT COALESCE(al.metadata->>'reminderVariant', 'unknown') AS reminder_variant,
               al.metadata->>'notificationStatus' AS notification_status,
+              CASE
+                WHEN al.created_at >= NOW() - INTERVAL '7 days' THEN 'current'
+                ELSE 'previous'
+              END AS bucket,
               COUNT(*)::text AS count
        FROM activity_log al
        WHERE al.action_type = 'campaign-mission-inbox-state'
+         AND al.created_at >= NOW() - INTERVAL '14 days'
        GROUP BY COALESCE(al.metadata->>'reminderVariant', 'unknown'),
-                al.metadata->>'notificationStatus'`,
+                al.metadata->>'notificationStatus',
+                CASE
+                  WHEN al.created_at >= NOW() - INTERVAL '7 days' THEN 'current'
+                  ELSE 'previous'
+                END`,
     ),
   ]);
 
@@ -2873,6 +3067,9 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         missionCtaSummary: {
           topCtaLabel: null,
           topCtaVariant: null,
+          recommendedVariant: null,
+          recommendedBadge: null,
+          recommendedReason: null,
           totalClicks: 0,
           uniqueUsers: 0,
           walletLinkedUsers: 0,
@@ -3154,9 +3351,26 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     };
     const ctaSummary = missionCtaSummaryMap.get(pack.packId);
     if (ctaSummary) {
+      const recommendationState =
+        pack.walletLinkRate < 0.25
+          ? "wallet_connection"
+          : pack.starterPathCompletionRate < 0.25
+            ? "starter_path"
+            : pack.rewardEligibilityRate < pack.benchmark.rewardEligibilityRateTarget
+              ? "trust"
+              : pack.premiumConversionRate < pack.benchmark.premiumConversionRateTarget
+                ? "premium_phase"
+                : pack.retainedActivityRate < pack.benchmark.retainedActivityRateTarget ||
+                    pack.averageWeeklyXp < pack.benchmark.averageWeeklyXpTarget
+                  ? "weekly_pace"
+                  : "ready";
+      const recommendedCta = getRecommendedPackCta(recommendationState);
       pack.missionCtaSummary = {
         topCtaLabel: ctaSummary.topCtaLabel,
         topCtaVariant: ctaSummary.topCtaVariant,
+        recommendedVariant: recommendedCta.variant,
+        recommendedBadge: recommendedCta.badge,
+        recommendedReason: recommendedCta.reason,
         totalClicks: ctaSummary.totalClicks,
         uniqueUsers: ctaSummary.uniqueUsers,
         walletLinkedUsers: ctaSummary.walletLinkedUsers,
@@ -3493,6 +3707,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     delta: entry.currentCount - entry.previousCount,
   }));
   const reminderVariantMap = new Map<string, { handledCount: number; snoozedCount: number }>();
+  const reminderVariantTrendMap = new Map<string, { currentCount: number; previousCount: number }>();
   for (const row of missionReminderVariantSummary.rows) {
     const variant = row.reminder_variant ?? "unknown";
     const current = reminderVariantMap.get(variant) ?? { handledCount: 0, snoozedCount: 0 };
@@ -3502,6 +3717,13 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       current.snoozedCount += Number(row.count ?? 0);
     }
     reminderVariantMap.set(variant, current);
+    const trend = reminderVariantTrendMap.get(variant) ?? { currentCount: 0, previousCount: 0 };
+    if (row.bucket === "current") {
+      trend.currentCount += Number(row.count ?? 0);
+    } else {
+      trend.previousCount += Number(row.count ?? 0);
+    }
+    reminderVariantTrendMap.set(variant, trend);
   }
   const reminderVariantSummary: AdminOverviewData["campaignOperations"]["reminderVariantSummary"] = Array.from(
     reminderVariantMap.entries(),
@@ -3514,6 +3736,16 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         ? entry.handledCount / (entry.handledCount + entry.snoozedCount)
         : 0,
   }));
+  const reminderVariantTrend: AdminOverviewData["campaignOperations"]["reminderVariantTrend"] = Array.from(
+    reminderVariantTrendMap.entries(),
+  )
+    .map(([variant, entry]) => ({
+      variant,
+      currentCount: entry.currentCount,
+      previousCount: entry.previousCount,
+      delta: entry.currentCount - entry.previousCount,
+    }))
+    .sort((left, right) => right.currentCount - left.currentCount);
   const blockageSuggestions: AdminOverviewData["campaignOperations"]["blockageSuggestions"] = blockageSummary
     .filter((entry) => entry.count > 0)
     .sort((left, right) => right.count - left.count)
@@ -3588,6 +3820,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       blockageSummary,
       blockageTrend,
       reminderVariantSummary,
+      reminderVariantTrend,
       blockageSuggestions,
       packAnalytics,
       partnerReporting,

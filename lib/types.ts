@@ -411,7 +411,16 @@ export type DashboardData = {
     sequenceReason: string;
     tierPhaseCopy: string;
     priorityReason: string;
+    blockageState:
+      | "wallet_connection"
+      | "starter_path"
+      | "level"
+      | "trust"
+      | "premium_phase"
+      | "weekly_pace"
+      | "ready";
     unlockPreview: string;
+    unlockRewardPreview: string;
     rewardFocus: string;
     badgeLabel: string;
     leaderboardCallout: string;
@@ -833,6 +842,12 @@ export type AdminOverviewData = {
       snoozedCount: number;
       handledRate: number;
     }>;
+    reminderVariantTrend: Array<{
+      variant: string;
+      currentCount: number;
+      previousCount: number;
+      delta: number;
+    }>;
     blockageSuggestions: Array<{
       state:
         | "wallet_connection"
@@ -910,6 +925,9 @@ export type AdminOverviewData = {
       missionCtaSummary: {
         topCtaLabel: string | null;
         topCtaVariant: string | null;
+        recommendedVariant: string | null;
+        recommendedBadge: string | null;
+        recommendedReason: string | null;
         totalClicks: number;
         uniqueUsers: number;
         walletLinkedUsers: number;

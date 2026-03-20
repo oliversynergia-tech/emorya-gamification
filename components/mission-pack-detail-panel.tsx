@@ -65,6 +65,7 @@ export function MissionPackDetailPanel({
             <p>{selectedActivePack.nextAction}</p>
             <p className="form-note">{selectedActivePack.sequenceReason}</p>
             <p className="form-note">{selectedActivePack.unlockPreview}</p>
+            <p className="form-note">{selectedActivePack.unlockRewardPreview}</p>
             <p className="form-note">{selectedActivePack.rewardFocus}</p>
             {selectedActivePack.returnAction ? <p className="form-note">{selectedActivePack.returnAction}</p> : null}
             {selectedActivePack.returnAction ? (
@@ -110,12 +111,13 @@ export function MissionPackDetailPanel({
                       <p className="form-note">
                         {quest.track} track. {quest.rewardLabel}
                       </p>
-                      <p className="form-note">
-                        {quest.cadence} cadence. {quest.verificationType} verification.
-                      </p>
-                      <p className="form-note">{quest.nextHint}</p>
-                      <p className="form-note">{quest.rewardTimingLabel}</p>
-                    </div>
+                    <p className="form-note">
+                      {quest.cadence} cadence. {quest.verificationType} verification.
+                    </p>
+                    <p className="form-note">{quest.nextHint}</p>
+                    <p className="form-note">{quest.rewardTimingLabel}</p>
+                    {quest.actionable ? <p className="form-note">{selectedActivePack.unlockRewardPreview}</p> : null}
+                  </div>
                     <div className="achievement-card__side">
                       <span>{quest.status.replace("-", " ")}</span>
                       <span>{quest.actionable ? "Ready now" : "Queued"}</span>
