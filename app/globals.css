@@ -1077,6 +1077,13 @@ a {
   border-radius: var(--radius-card);
 }
 
+.achievement-card--urgent {
+  border: 1px solid rgba(240, 214, 160, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(240, 214, 160, 0.08), transparent 0 34%),
+    rgba(255, 255, 255, 0.04);
+}
+
 .quest-card__note {
   display: block;
   margin-top: 12px;

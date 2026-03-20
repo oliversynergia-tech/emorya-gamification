@@ -412,9 +412,14 @@ export type DashboardData = {
       label: string;
     };
     urgency: string | null;
+    onboardingHint: string | null;
     directRewardSummary: {
       asset: TokenAsset;
       amount: number;
+    } | null;
+    directRewardState: {
+      label: string;
+      tone: "info" | "success" | "warning";
     } | null;
     benchmarkNote: string;
     premiumNudge: string | null;

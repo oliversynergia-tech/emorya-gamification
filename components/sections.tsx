@@ -368,7 +368,7 @@ export function DashboardSnapshot({
             </div>
             <div className="achievement-list">
               {data.campaignPacks.map((pack) => (
-                <article key={pack.packId} className="achievement-card">
+                <article key={pack.packId} className={`achievement-card ${pack.urgency ? "achievement-card--urgent" : ""}`}>
                   <div>
                     <strong>{pack.label}</strong>
                     <p>
@@ -430,10 +430,16 @@ export function DashboardSnapshot({
                     <p className="form-note">{pack.sequenceReason}</p>
                     <p className="form-note">{pack.leaderboardCallout}</p>
                     <p className="form-note">{pack.weeklyGoal.label}</p>
+                    {pack.onboardingHint ? <p className="form-note">{pack.onboardingHint}</p> : null}
                     {pack.urgency ? <p className="form-note">Mission window: {pack.urgency}</p> : null}
                     {pack.directRewardSummary ? (
                       <p className="form-note">
                         Direct reward path: {pack.directRewardSummary.amount} {pack.directRewardSummary.asset} is attached to this mission route.
+                      </p>
+                    ) : null}
+                    {pack.directRewardState ? (
+                      <p className="form-note">
+                        <span className={`badge ${pack.directRewardState.tone === "success" ? "badge--pink" : ""}`}>{pack.directRewardState.label}</span>
                       </p>
                     ) : null}
                     <p className="form-note">{pack.benchmarkNote}</p>
@@ -543,6 +549,22 @@ export function DashboardSnapshot({
               </div>
             ) : null}
             <div className="achievement-list">
+              {(() => {
+                const strongestXpPack = data.campaignPackHistory.reduce((best, pack) => (pack.totalXpAwarded > (best?.totalXpAwarded ?? -1) ? pack : best), null as (typeof data.campaignPackHistory)[number] | null);
+                const strongestReferralPack = data.campaignPackHistory.reduce((best, pack) => (pack.referralQuestCount > (best?.referralQuestCount ?? -1) ? pack : best), null as (typeof data.campaignPackHistory)[number] | null);
+                const strongestPremiumPack = data.campaignPackHistory.reduce((best, pack) => (pack.premiumQuestCount > (best?.premiumQuestCount ?? -1) ? pack : best), null as (typeof data.campaignPackHistory)[number] | null);
+
+                return (
+                  <article className="achievement-card achievement-card--progress">
+                    <div>
+                      <strong>Pack comparison snapshot</strong>
+                      <p>
+                        Strongest XP: {strongestXpPack?.label ?? "n/a"}. Strongest referral: {strongestReferralPack?.label ?? "n/a"}. Strongest premium path: {strongestPremiumPack?.label ?? "n/a"}.
+                      </p>
+                    </div>
+                  </article>
+                );
+              })()}
               {data.campaignPackHistory.map((pack) => (
                 <article key={`history-${pack.packId}`} className="achievement-card">
                   <div>

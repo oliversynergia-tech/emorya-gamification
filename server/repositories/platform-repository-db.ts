@@ -1172,6 +1172,34 @@ async function getUserCampaignPackJourneys({
         : null;
     const weeklyGoalTarget = Math.max(dataUserWeeklyTarget(user.weeklyProgress.nextThreshold, user.weeklyProgress.currentThreshold) + Math.max(economySettings.campaignOverrides[experienceLane]?.weeklyTargetXpOffset ?? 0, 0), user.weeklyProgress.currentThreshold);
     const weeklyGoalShortfall = Math.max(weeklyGoalTarget - user.weeklyProgress.xp, 0);
+    const onboardingHint =
+      user.journeyState === "signed_up_free" && completedQuestCount === 0
+        ? `Start here: clear one mission, connect xPortal, and keep the weekly XP loop alive. That is the shortest path from campaign arrival to real Emorya progression.`
+        : null;
+    const scheduledDirectMatch = directRewardMetadata
+      ? user.tokenProgram.scheduledDirectRewards.find(
+          (reward) => reward.asset === directRewardMetadata.asset && reward.amount >= directRewardMetadata.amount,
+        )
+      : null;
+    const settledDirectMatch = directRewardMetadata
+      ? user.tokenProgram.redemptionHistory.find(
+          (entry) => entry.asset === directRewardMetadata.asset && entry.status === "settled" && entry.tokenAmount >= directRewardMetadata.amount,
+        )
+      : null;
+    const claimedDirectMatch = directRewardMetadata
+      ? user.tokenProgram.redemptionHistory.find(
+          (entry) => entry.asset === directRewardMetadata.asset && entry.status === "claimed" && entry.tokenAmount >= directRewardMetadata.amount,
+        )
+      : null;
+    const directRewardState = directRewardMetadata
+      ? settledDirectMatch
+        ? { label: "Direct reward settled", tone: "success" as const }
+        : claimedDirectMatch
+          ? { label: "Direct reward claimed", tone: "info" as const }
+          : scheduledDirectMatch
+            ? { label: "Direct reward scheduled", tone: "info" as const }
+            : { label: "Direct reward projected", tone: "warning" as const }
+      : null;
 
     const rewardFocus =
       firstRow.template_kind === "feeder"
@@ -1210,7 +1238,9 @@ async function getUserCampaignPackJourneys({
         label: weeklyGoalShortfall > 0 ? `${weeklyGoalShortfall} XP to hit this mission's short-term pace` : "Weekly mission pace is already on track",
       },
       urgency: typeof firstTimebox === "string" ? firstTimebox : null,
+      onboardingHint,
       directRewardSummary: directRewardMetadata,
+      directRewardState,
       benchmarkNote: `This lane is benchmarked toward ${(benchmark.walletLinkRateTarget * 100).toFixed(0)}% wallet link, ${(benchmark.rewardEligibilityRateTarget * 100).toFixed(0)}% reward eligibility, and ${(benchmark.premiumConversionRateTarget * 100).toFixed(0)}% premium conversion.`,
       premiumNudge,
       milestone,
@@ -1252,7 +1282,9 @@ async function getUserCampaignPackJourneys({
       leaderboardCallout: pack.leaderboardCallout,
       weeklyGoal: pack.weeklyGoal,
       urgency: pack.urgency,
+      onboardingHint: pack.onboardingHint,
       directRewardSummary: pack.directRewardSummary,
+      directRewardState: pack.directRewardState,
       benchmarkNote: pack.benchmarkNote,
       premiumNudge: pack.premiumNudge,
       milestone: pack.milestone,
