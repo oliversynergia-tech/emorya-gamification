@@ -252,6 +252,7 @@ export default async function LeaderboardPage() {
                   packId={activeMissionPack.packId}
                   eventType="leaderboard_mission_cta"
                   ctaLabel={activeMissionPack.ctaLabel}
+                  ctaVariant={activeMissionPack.ctaVariant}
                 >
                   {activeMissionPack.ctaLabel}
                 </MissionLink>

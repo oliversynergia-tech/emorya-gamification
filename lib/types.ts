@@ -405,6 +405,7 @@ export type DashboardData = {
     nextQuestActionable: boolean;
     ctaLabel: string;
     ctaHref: string | null;
+    ctaVariant: string;
     nextAction: string;
     sequenceReason: string;
     tierPhaseCopy: string;
@@ -715,6 +716,17 @@ export type AdminOverviewData = {
       source: CampaignSource;
       total: number;
       active: number;
+    }>;
+    missionCtaAnalytics: Array<{
+      packId: string;
+      label: string;
+      activeLane: CampaignSource | "direct";
+      eventType: string;
+      ctaLabel: string;
+      ctaVariant: string;
+      clickCount: number;
+      uniqueUserCount: number;
+      lastClickedAt: string | null;
     }>;
     packAnalytics: Array<{
       packId: string;

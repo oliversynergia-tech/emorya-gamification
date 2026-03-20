@@ -5,11 +5,13 @@ export async function trackCampaignEvent({
   packId,
   eventType,
   ctaLabel,
+  ctaVariant,
   href,
 }: {
   packId: string;
   eventType: string;
   ctaLabel: string;
+  ctaVariant?: string;
   href: string;
 }) {
   const currentUser = await getAuthenticatedUser();
@@ -30,6 +32,7 @@ export async function trackCampaignEvent({
       eventType,
       href,
       ctaLabel,
+      ctaVariant: ctaVariant ?? null,
     },
   });
 }

@@ -10,12 +10,14 @@ export async function POST(request: Request) {
       packId?: string;
       eventType?: string;
       ctaLabel?: string;
+      ctaVariant?: string;
       href?: string;
     };
 
     const packId = body.packId?.trim();
     const eventType = body.eventType?.trim();
     const ctaLabel = body.ctaLabel?.trim();
+    const ctaVariant = body.ctaVariant?.trim();
     const href = body.href?.trim();
 
     if (!packId || !eventType || !ctaLabel || !href) {
@@ -26,6 +28,7 @@ export async function POST(request: Request) {
       packId,
       eventType,
       ctaLabel,
+      ctaVariant,
       href,
     });
 

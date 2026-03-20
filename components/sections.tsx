@@ -12,7 +12,9 @@ import { CampaignPackAnalyticsPanel } from "@/components/campaign-pack-analytics
 import { CampaignPackAlertPanel } from "@/components/campaign-pack-alert-panel";
 import { CampaignPackAuditPanel } from "@/components/campaign-pack-audit-panel";
 import { CampaignMissionInboxPanel } from "@/components/campaign-mission-inbox-panel";
+import { CampaignMissionCtaAnalyticsPanel } from "@/components/campaign-mission-cta-analytics-panel";
 import { CampaignPackNotificationHistoryPanel } from "@/components/campaign-pack-notification-history-panel";
+import { MissionLink } from "@/components/mission-link";
 import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
 import { ProfileMissionRecapPanel } from "@/components/profile-mission-recap-panel";
 import { SourceLaneReportPanel } from "@/components/source-lane-report-panel";
@@ -450,16 +452,27 @@ export function DashboardSnapshot({
                     <p className="form-note">{pack.benchmarkNote}</p>
                     {pack.premiumNudge ? <p className="form-note">{pack.premiumNudge}</p> : null}
                     <div className="hero__actions">
-                      <a
+                      <MissionLink
                         className="button button--secondary"
                         href={pack.ctaHref ?? "#quest-board"}
+                        packId={pack.packId}
+                        eventType="dashboard_mission_cta"
+                        ctaLabel={pack.ctaLabel}
+                        ctaVariant={pack.ctaVariant}
                       >
                         {pack.ctaLabel}
-                      </a>
+                      </MissionLink>
                       {pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete" ? (
-                        <a className="button button--secondary" href="/leaderboard#referral-board">
+                        <MissionLink
+                          className="button button--secondary"
+                          href="/leaderboard#referral-board"
+                          packId={pack.packId}
+                          eventType="dashboard_referral_cta"
+                          ctaLabel="Invite from this milestone"
+                          ctaVariant="referral_milestone"
+                        >
                           Invite from this milestone
-                        </a>
+                        </MissionLink>
                       ) : null}
                     </div>
                   </div>
@@ -1935,6 +1948,7 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
           initialEntries={data.campaignOperations.notificationHistory}
           canManage={canManageCampaignPacks}
         />
+        <CampaignMissionCtaAnalyticsPanel entries={data.campaignOperations.missionCtaAnalytics} />
         <CampaignPackAuditPanel entries={data.campaignOperations.audit} />
         <CampaignPackAnalyticsPanel
           packs={data.campaignOperations.packAnalytics}

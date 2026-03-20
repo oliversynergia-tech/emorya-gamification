@@ -372,6 +372,8 @@ export function QuestActionsPanel({
               <small className="form-note">
                 {activeCampaignPack.label}: {activeCampaignPack.milestone.label}. {activeCampaignPack.sequenceReason}
               </small>
+              <small className="form-note">{activeCampaignPack.priorityReason}</small>
+              <small className="form-note">{activeCampaignPack.unlockPreview}</small>
               {missionCelebration ? (
                 <div className="achievement-card achievement-card--progress">
                   <div>

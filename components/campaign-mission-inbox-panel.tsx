@@ -14,7 +14,7 @@ export function CampaignMissionInboxPanel({
   title?: string;
   eyebrow?: string;
 }) {
-  const storageKey = `campaign-mission-inbox:${title}`;
+  const storageKey = "campaign-mission-inbox:dismissed";
   const [dismissedIds, setDismissedIds] = useState<string[]>(() => {
     if (typeof window === "undefined") {
       return [];
@@ -38,8 +38,41 @@ export function CampaignMissionInboxPanel({
   });
 
   useEffect(() => {
+    function handleStorage(event: StorageEvent) {
+      if (event.key !== storageKey || !event.newValue) {
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(event.newValue) as string[];
+        if (Array.isArray(parsed)) {
+          setDismissedIds(parsed);
+        }
+      } catch {
+        // Ignore malformed storage updates.
+      }
+    }
+
+    function handleMissionInboxSync(event: Event) {
+      const detail = (event as CustomEvent<string[]>).detail;
+      if (Array.isArray(detail)) {
+        setDismissedIds(detail);
+      }
+    }
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("campaign-mission-inbox-sync", handleMissionInboxSync as EventListener);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("campaign-mission-inbox-sync", handleMissionInboxSync as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(dismissedIds));
+      window.dispatchEvent(new CustomEvent("campaign-mission-inbox-sync", { detail: dismissedIds }));
     } catch {
       // Ignore storage failures.
     }
@@ -77,6 +110,7 @@ export function CampaignMissionInboxPanel({
                     packId={notification.packId}
                     eventType="mission_inbox_cta"
                     ctaLabel={notification.ctaLabel}
+                    ctaVariant="mission_inbox"
                   >
                     {notification.ctaLabel}
                   </MissionLink>

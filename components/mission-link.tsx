@@ -7,6 +7,7 @@ async function trackMissionEvent(payload: {
   packId: string;
   eventType: string;
   ctaLabel: string;
+  ctaVariant?: string;
   href: string;
 }) {
   try {
@@ -30,6 +31,7 @@ export function MissionLink({
   packId,
   eventType,
   ctaLabel,
+  ctaVariant,
 }: {
   href: string;
   className?: string;
@@ -37,6 +39,7 @@ export function MissionLink({
   packId: string;
   eventType: string;
   ctaLabel: string;
+  ctaVariant?: string;
 }) {
   const router = useRouter();
 
@@ -50,6 +53,7 @@ export function MissionLink({
       packId,
       eventType,
       ctaLabel,
+      ctaVariant,
       href,
     });
 
