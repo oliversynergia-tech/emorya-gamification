@@ -37,6 +37,21 @@ export function MissionPackDetailPanel({
     return null;
   }
 
+  const remainingQuestProgression = selectedActivePack
+    ? selectedActivePack.questStatuses
+        .filter((quest) => quest.status !== "completed")
+        .map((quest, index, remaining) => ({
+          questId: quest.questId,
+          title: quest.title,
+          stage: index === 0 ? "Now" : index === 1 ? "Next" : "Later",
+          dependencyProgressLabel: quest.dependencyProgressLabel,
+          nextClearLabel:
+            remaining[index + 1]?.title
+              ? `Likely clears into ${remaining[index + 1]?.title}.`
+              : `Likely clears into ${selectedActivePack.milestone.label.toLowerCase()}.`,
+        }))
+    : [];
+
   return (
     <div className="panel panel--glass">
       <div className="panel__header">
@@ -104,6 +119,15 @@ export function MissionPackDetailPanel({
                     </p>
                   </div>
                 </article>
+                {remainingQuestProgression.map((quest) => (
+                  <article key={`${selectedActivePack.packId}-progress-${quest.questId}`} className="achievement-card">
+                    <div>
+                      <strong>{quest.stage}: {quest.title}</strong>
+                      <p>{quest.dependencyProgressLabel}</p>
+                      <p className="form-note">{quest.nextClearLabel}</p>
+                    </div>
+                  </article>
+                ))}
                 {selectedActivePack.questStatuses.map((quest) => (
                   <article key={quest.questId} className="achievement-card">
                     <div>

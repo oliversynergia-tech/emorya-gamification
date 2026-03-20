@@ -107,6 +107,8 @@ function getDashboardPriorityAction(data: DashboardData) {
       stateCategory: "Hard block",
       stateMetricLabel: "Next unlock",
       stateMetricValue: "Connect xPortal",
+      secondaryMetricLabel: "Mission pace",
+      secondaryMetricValue: walletGatePack.weeklyGoal.label,
     };
   }
 
@@ -129,6 +131,8 @@ function getDashboardPriorityAction(data: DashboardData) {
       stateCategory: "Hard block",
       stateMetricLabel: "Next unlock",
       stateMetricValue: "Premium phase push",
+      secondaryMetricLabel: "Mission pace",
+      secondaryMetricValue: premiumPack.weeklyGoal.label,
     };
   }
 
@@ -204,6 +208,10 @@ function getDashboardPriorityAction(data: DashboardData) {
                   : returnPack.returnWindow === "wait_for_unlock"
                     ? { label: "Next unlock", value: "Wait for unlock window" }
                     : { label: "Return window", value: returnPack.returnWindow.replaceAll("_", " ") };
+    const secondaryMetric =
+      returnPack.urgency
+        ? { label: "Urgency", value: returnPack.urgency }
+        : { label: "Mission pace", value: returnPack.weeklyGoal.label };
     return {
       eyebrow,
       title,
@@ -229,6 +237,8 @@ function getDashboardPriorityAction(data: DashboardData) {
             : "Hard block",
       stateMetricLabel: stateMetric.label,
       stateMetricValue: stateMetric.value,
+      secondaryMetricLabel: secondaryMetric.label,
+      secondaryMetricValue: secondaryMetric.value,
     };
   }
 
@@ -252,6 +262,8 @@ function getDashboardPriorityAction(data: DashboardData) {
     stateCategory: "Soft block",
     stateMetricLabel: "Next unlock",
     stateMetricValue: nextPack.unlockPreview,
+    secondaryMetricLabel: "Mission pace",
+    secondaryMetricValue: nextPack.weeklyGoal.label,
   };
 }
 
@@ -549,6 +561,9 @@ export function DashboardSnapshot({
             </p>
             <p className="form-note">
               {priorityAction.stateMetricLabel}: {priorityAction.stateMetricValue}.
+            </p>
+            <p className="form-note">
+              {priorityAction.secondaryMetricLabel}: {priorityAction.secondaryMetricValue}.
             </p>
             <p className="form-note">Best return window: {priorityAction.timing}.</p>
             <div className="hero__actions">

@@ -17,6 +17,10 @@ type BenchmarkDraft = {
   reason: string;
 };
 
+function toHistorySnapshot(entries: PackAnalyticsItem["missionCtaSummary"]["recommendationHistory"]) {
+  return entries.map((entry) => `${entry.action.replaceAll("_", " ")}: ${entry.detail}`);
+}
+
 function exportPackAnalytics(entries: PackAnalyticsItem[]) {
   const lines = [
     [
@@ -122,7 +126,7 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
         entry.reminderEffectiveness.trend.currentCount,
         entry.reminderEffectiveness.trend.previousCount,
         entry.reminderEffectiveness.trend.delta,
-        JSON.stringify(entry.missionCtaSummary.recommendationHistory),
+        JSON.stringify(toHistorySnapshot(entry.missionCtaSummary.recommendationHistory)),
       ].join(","),
     ),
   ].join("\n");
@@ -156,6 +160,9 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
       "average_weekly_xp",
       "partner_summary_headline",
       "partner_summary_detail",
+      "operator_outcome_title",
+      "operator_outcome_detail",
+      "recommendation_history_snapshot",
     ].join(","),
     ...entries.map((entry) =>
       [
@@ -174,6 +181,9 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
         entry.averageWeeklyXp,
         JSON.stringify(entry.partnerSummaryHeadline),
         JSON.stringify(entry.partnerSummaryDetail),
+        JSON.stringify(entry.operatorOutcomeTitle),
+        JSON.stringify(entry.operatorOutcomeDetail),
+        JSON.stringify(entry.recommendationHistorySnapshot),
       ].join(","),
     ),
   ].join("\n");
@@ -201,6 +211,8 @@ function printPartnerReport(entries: PartnerReportItem[]) {
       <h2 style="margin:0 0 8px;font-size:22px;color:#20170a;">${entry.label}</h2>
       <p style="margin:0 0 12px;color:#5e5035;">Sources: ${entry.sources.join(", ")}. Benchmark lane: ${entry.benchmarkLane}. Status: ${entry.benchmarkStatus}.</p>
       <p style="margin:0 0 12px;color:#5e5035;"><strong>${entry.partnerSummaryHeadline}</strong><br/>${entry.partnerSummaryDetail}</p>
+      <p style="margin:0 0 12px;color:#5e5035;"><strong>${entry.operatorOutcomeTitle}</strong><br/>${entry.operatorOutcomeDetail}</p>
+      ${entry.recommendationHistorySnapshot.length > 0 ? `<p style="margin:0 0 12px;color:#5e5035;">Recent operator shifts: ${entry.recommendationHistorySnapshot.join(" | ")}</p>` : ""}
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
         <div><strong>${entry.participantCount}</strong><div>Participants</div></div>
         <div><strong>${entry.approvedCompletionCount}</strong><div>Approved completions</div></div>
@@ -251,6 +263,7 @@ export function CampaignPackAnalyticsPanel({
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<"all" | CampaignSource>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [kindFilter, setKindFilter] = useState<"all" | "bridge" | "feeder" | "mixed">("all");
   const [comparisonPackId, setComparisonPackId] = useState<string>("all");
   const [historyFilter, setHistoryFilter] = useState<"all" | "lifecycle" | "benchmark" | "alerts">("all");
   const [pendingPackId, setPendingPackId] = useState<string | null>(null);
@@ -306,6 +319,18 @@ export function CampaignPackAnalyticsPanel({
         return false;
       }
 
+      if (kindFilter !== "all") {
+        const packKind =
+          pack.bridgeCount > 0 && pack.feederCount === 0
+            ? "bridge"
+            : pack.feederCount > 0 && pack.bridgeCount === 0
+              ? "feeder"
+              : "mixed";
+        if (packKind !== kindFilter) {
+          return false;
+        }
+      }
+
       if (!normalizedSearch) {
         return true;
       }
@@ -315,7 +340,7 @@ export function CampaignPackAnalyticsPanel({
         pack.packId.toLowerCase().includes(normalizedSearch)
       );
     });
-  }, [packs, search, sourceFilter, statusFilter]);
+  }, [packs, search, sourceFilter, statusFilter, kindFilter]);
 
   const comparisonBasePack = useMemo(() => {
     if (comparisonPackId === "all") {
@@ -485,6 +510,15 @@ export function CampaignPackAnalyticsPanel({
           </select>
         </label>
         <label className="field">
+          <span>Kind</span>
+          <select value={kindFilter} onChange={(event) => setKindFilter(event.target.value as typeof kindFilter)}>
+            <option value="all">All kinds</option>
+            <option value="bridge">Bridge only</option>
+            <option value="feeder">Feeder only</option>
+            <option value="mixed">Mixed only</option>
+          </select>
+        </label>
+        <label className="field">
           <span>Compare against</span>
           <select value={comparisonPackId} onChange={(event) => setComparisonPackId(event.target.value)}>
             <option value="all">Top filtered pack</option>
@@ -643,6 +677,11 @@ export function CampaignPackAnalyticsPanel({
                     <p className="form-note">{pack.operatorNextMove.detail}</p>
                     <p className="form-note">{pack.operatorOutcome.title}</p>
                     <p className="form-note">{pack.operatorOutcome.detail}</p>
+                    <p className="form-note">
+                      Outcome trend: completions {pack.operatorOutcome.trend.currentCompletions} vs {pack.operatorOutcome.trend.previousCompletions}
+                      {` `}({pack.operatorOutcome.trend.completionDelta >= 0 ? "+" : ""}{pack.operatorOutcome.trend.completionDelta}), participants {pack.operatorOutcome.trend.currentParticipants} vs {pack.operatorOutcome.trend.previousParticipants}
+                      {` `}({pack.operatorOutcome.trend.participantDelta >= 0 ? "+" : ""}{pack.operatorOutcome.trend.participantDelta}).
+                    </p>
                   </div>
                   <div className="achievement-card__side">
                     <span>{pack.missionCtaSummary.recommendedVariant}</span>
@@ -761,6 +800,16 @@ export function CampaignPackAnalyticsPanel({
                 {` `}
                 {partnerReports.find((entry) => entry.packId === pack.packId)?.partnerSummaryDetail ?? ""}
               </p>
+              <p className="form-note">
+                Partner-safe operator read: <strong>{partnerReports.find((entry) => entry.packId === pack.packId)?.operatorOutcomeTitle ?? "Outcome pending"}</strong>
+                {` `}
+                {partnerReports.find((entry) => entry.packId === pack.packId)?.operatorOutcomeDetail ?? ""}
+              </p>
+              {partnerReports.find((entry) => entry.packId === pack.packId)?.recommendationHistorySnapshot.length ? (
+                <p className="form-note">
+                  Recent pack shifts: {partnerReports.find((entry) => entry.packId === pack.packId)?.recommendationHistorySnapshot.join(" | ")}
+                </p>
+              ) : null}
               <div className="achievement-list">
                 {auditEntries
                   .filter((entry) => entry.packId === pack.packId && (entry.action === "save_benchmark_override" || entry.action === "clear_benchmark_override"))

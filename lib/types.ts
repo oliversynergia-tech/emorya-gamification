@@ -1035,6 +1035,14 @@ export type AdminOverviewData = {
       operatorOutcome: {
         title: string;
         detail: string;
+        trend: {
+          currentCompletions: number;
+          previousCompletions: number;
+          currentParticipants: number;
+          previousParticipants: number;
+          completionDelta: number;
+          participantDelta: number;
+        };
       };
     }>;
     partnerReporting: Array<{
@@ -1053,6 +1061,9 @@ export type AdminOverviewData = {
       averageWeeklyXp: number;
       partnerSummaryHeadline: string;
       partnerSummaryDetail: string;
+      operatorOutcomeTitle: string;
+      operatorOutcomeDetail: string;
+      recommendationHistorySnapshot: string[];
     }>;
     alerts: Array<{
       packId: string;

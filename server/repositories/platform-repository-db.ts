@@ -3496,6 +3496,14 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         operatorOutcome: {
           title: "Outcome signal is still forming",
           detail: "Reminder handling, CTA traffic, and mission approvals need a little more pack activity before the operator outcome call becomes meaningful.",
+          trend: {
+            currentCompletions: 0,
+            previousCompletions: 0,
+            currentParticipants: 0,
+            previousParticipants: 0,
+            completionDelta: 0,
+            participantDelta: 0,
+          },
         },
       };
     current.lifecycleState = lifecycleState === "live" || current.lifecycleState === "live"
@@ -3823,12 +3831,25 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         topCtaVariant: ctaSummary.topCtaVariant,
         returnWindow: recommendationWindow,
       });
-      pack.operatorOutcome = getPackOperatorOutcome({
+      pack.operatorOutcome = {
+        ...pack.operatorOutcome,
+        ...getPackOperatorOutcome({
         reminderHandledRate,
         ctaUsers: ctaSummary.uniqueUsers,
         participantCount: pack.participantCount,
         approvedCompletionCount: pack.approvedCompletionCount,
-      });
+        }),
+      };
+      const latestTrend = pack.weeklyTrend[pack.weeklyTrend.length - 1];
+      const previousTrend = pack.weeklyTrend[pack.weeklyTrend.length - 2];
+      pack.operatorOutcome.trend = {
+        currentCompletions: latestTrend?.completionCount ?? 0,
+        previousCompletions: previousTrend?.completionCount ?? 0,
+        currentParticipants: latestTrend?.participantCount ?? 0,
+        previousParticipants: previousTrend?.participantCount ?? 0,
+        completionDelta: (latestTrend?.completionCount ?? 0) - (previousTrend?.completionCount ?? 0),
+        participantDelta: (latestTrend?.participantCount ?? 0) - (previousTrend?.participantCount ?? 0),
+      };
     }
   }
   const packAnalytics = Array.from(packAnalyticsMap.values()).sort(
@@ -3858,6 +3879,11 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
             : "Pack is under the current lane benchmarks and needs intervention.",
       partnerSummaryDetail:
         `${Math.round(entry.walletLinkRate * 100)}% wallet linked, ${Math.round(entry.rewardEligibilityRate * 100)}% reward eligible, ${Math.round(entry.premiumConversionRate * 100)}% premium conversion, and ${Math.round(entry.likelyPackCausedPremiumConversionRate * 100)}% likely pack-caused premium within 14 days.`,
+      operatorOutcomeTitle: entry.operatorOutcome.title,
+      operatorOutcomeDetail: entry.operatorOutcome.detail,
+      recommendationHistorySnapshot: entry.missionCtaSummary.recommendationHistory
+        .slice(0, 2)
+        .map((historyEntry) => `${historyEntry.action.replaceAll("_", " ")}: ${historyEntry.detail}`),
     }))
     .sort((left, right) => right.participantCount - left.participantCount || right.approvedCompletionCount - left.approvedCompletionCount);
   const alerts: AdminOverviewData["campaignOperations"]["alerts"] = [];
