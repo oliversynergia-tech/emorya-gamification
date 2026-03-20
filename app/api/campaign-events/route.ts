@@ -12,6 +12,9 @@ export async function POST(request: Request) {
       ctaLabel?: string;
       ctaVariant?: string;
       href?: string;
+      notificationId?: string;
+      notificationStatus?: "handled" | "snoozed";
+      notificationUntil?: string | null;
     };
 
     const packId = body.packId?.trim();
@@ -19,6 +22,9 @@ export async function POST(request: Request) {
     const ctaLabel = body.ctaLabel?.trim();
     const ctaVariant = body.ctaVariant?.trim();
     const href = body.href?.trim();
+    const notificationId = body.notificationId?.trim();
+    const notificationStatus = body.notificationStatus;
+    const notificationUntil = body.notificationUntil?.trim() ?? null;
 
     if (!packId || !eventType || !ctaLabel || !href) {
       return NextResponse.json({ ok: false, error: "Missing campaign event fields." }, { status: 400 });
@@ -30,6 +36,9 @@ export async function POST(request: Request) {
       ctaLabel,
       ctaVariant,
       href,
+      notificationId,
+      notificationStatus,
+      notificationUntil,
     });
 
     return NextResponse.json({ ok: true });

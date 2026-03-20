@@ -555,6 +555,26 @@ export function CampaignPackAnalyticsPanel({
                 {` `}
                 Clicker correlation: {(pack.missionCtaSummary.walletLinkRate * 100).toFixed(0)}% wallet-linked, {(pack.missionCtaSummary.rewardEligibilityRate * 100).toFixed(0)}% reward-ready, {(pack.missionCtaSummary.premiumConversionRate * 100).toFixed(0)}% premium.
               </p>
+              {pack.missionCtaSummary.variantBreakdown.length > 0 ? (
+                <div className="achievement-list">
+                  {pack.missionCtaSummary.variantBreakdown.map((entry) => (
+                    <article key={`${pack.packId}-${entry.ctaVariant}-${entry.ctaLabel ?? "unknown"}`} className="achievement-card">
+                      <div>
+                        <strong>{entry.ctaVariant}</strong>
+                        <p>{entry.ctaLabel ?? "Mission CTA"}.</p>
+                        <p className="form-note">
+                          {entry.approvedCompletionCount} approved completions from {entry.approvedUserCount} users after this CTA path.
+                        </p>
+                      </div>
+                      <div className="achievement-card__side">
+                        <span>{entry.clickCount} clicks</span>
+                        <span>{entry.uniqueUsers} users</span>
+                        <span>{(entry.approvedUserRate * 100).toFixed(0)}% approved-user rate</span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
               <p className="form-note">
                 CTA to pack funnel: {pack.participantCount > 0 ? ((pack.missionCtaSummary.uniqueUsers / pack.participantCount) * 100).toFixed(0) : "0"}% of participants touched a mission CTA, {pack.missionCtaSummary.uniqueUsers > 0 ? ((pack.approvedCompletionCount / pack.missionCtaSummary.uniqueUsers) * 100).toFixed(0) : "0"}% approved completions per CTA user, and {pack.questCount > 0 ? ((pack.approvedCompletionCount / pack.questCount) * 100).toFixed(0) : "0"}% quest-to-approval density across the pack.
               </p>

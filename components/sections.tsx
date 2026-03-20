@@ -103,7 +103,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       ctaVariant: walletGatePack.ctaVariant,
       packLabel: walletGatePack.label,
       timing: "wait for unlock",
-      blockedStateLabel: "Blocked by wallet",
+      blockedStateLabel: "Blocked by wallet connection",
     };
   }
 
@@ -130,7 +130,7 @@ function getDashboardPriorityAction(data: DashboardData) {
   if (returnPack) {
     const blockedStateLabel =
       returnPack.returnWindow === "wait_for_unlock"
-        ? "Blocked by eligibility"
+        ? "Blocked by eligibility and trust"
         : returnPack.returnWindow === "this_week"
           ? "Blocked by weekly pace"
           : "Ready to resume";
@@ -2111,6 +2111,21 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
                     : "Wait for unlock"}
               </span>
               <strong>{entry.count}</strong>
+            </div>
+          ))}
+          {data.campaignOperations.returnWindowTrend.map((entry) => (
+            <div key={`trend-${entry.window}`} className="info-card">
+              <span>
+                {entry.window === "today"
+                  ? "Today trend"
+                  : entry.window === "this_week"
+                    ? "This-week trend"
+                    : "Unlock trend"}
+              </span>
+              <strong>
+                {entry.delta >= 0 ? "+" : ""}
+                {entry.delta}
+              </strong>
             </div>
           ))}
         </div>

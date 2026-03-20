@@ -97,7 +97,13 @@ function updateCampaignPacks(
 
 function buildCampaignNotifications(
   campaignPacks: DashboardData["campaignPacks"],
+  previousNotifications: DashboardData["campaignNotifications"] = [],
 ): DashboardData["campaignNotifications"] {
+  const persistedStateMap = new Map(
+    previousNotifications
+      .filter((notification) => notification.persistedState)
+      .map((notification) => [notification.id, notification.persistedState] as const),
+  );
   const notifications = campaignPacks.slice(0, 4).map((pack) => {
     const detailParts: string[] = [];
     const tone =
@@ -132,7 +138,7 @@ function buildCampaignNotifications(
     }
 
     return {
-      id: `pack-${pack.packId}-${pack.lifecycleState}-${pack.milestone.label}`,
+      id: `pack-summary-${pack.packId}-${pack.lifecycleState}-${pack.milestone.label}`,
       tone,
       title:
         pack.milestone.tone === "success"
@@ -152,6 +158,7 @@ function buildCampaignNotifications(
         pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
           ? "/leaderboard#referral-board"
           : pack.ctaHref,
+      persistedState: persistedStateMap.get(`pack-summary-${pack.packId}-${pack.lifecycleState}-${pack.milestone.label}`) ?? null,
     };
   });
 
@@ -166,6 +173,7 @@ function buildCampaignNotifications(
       ctaLabel: returnReminder.ctaLabel,
       ctaQuestId: returnReminder.nextQuestId,
       ctaHref: returnReminder.ctaHref,
+      persistedState: persistedStateMap.get(`pack-return-${returnReminder.packId}`) ?? null,
     });
   }
 
@@ -266,7 +274,7 @@ export function DashboardExperience({
       if (!progressUpdate) {
       return {
         ...current,
-        campaignNotifications: buildCampaignNotifications(current.campaignPacks),
+        campaignNotifications: buildCampaignNotifications(current.campaignPacks, current.campaignNotifications),
         quests: nextQuests,
       };
     }
@@ -292,7 +300,7 @@ export function DashboardExperience({
             : achievement,
         ),
         campaignPacks: nextCampaignPacks,
-        campaignNotifications: buildCampaignNotifications(nextCampaignPacks),
+        campaignNotifications: buildCampaignNotifications(nextCampaignPacks, current.campaignNotifications),
         campaignPackHistory: nextCampaignPackHistory,
         quests: nextQuests,
       };

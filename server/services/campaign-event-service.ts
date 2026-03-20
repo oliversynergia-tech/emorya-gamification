@@ -7,12 +7,18 @@ export async function trackCampaignEvent({
   ctaLabel,
   ctaVariant,
   href,
+  notificationId,
+  notificationStatus,
+  notificationUntil,
 }: {
   packId: string;
   eventType: string;
   ctaLabel: string;
   ctaVariant?: string;
   href: string;
+  notificationId?: string;
+  notificationStatus?: "handled" | "snoozed";
+  notificationUntil?: string | null;
 }) {
   const currentUser = await getAuthenticatedUser();
 
@@ -20,8 +26,18 @@ export async function trackCampaignEvent({
     throw new Error("You must be signed in to track campaign events.");
   }
 
-  const actionType = eventType.includes("submit") ? "campaign-quest-submit-attempt" : "campaign-cta-click";
-  const actionLabel = eventType.includes("submit") ? "attempted mission quest submission" : "clicked mission CTA";
+  const actionType =
+    eventType === "mission_inbox_state"
+      ? "campaign-mission-inbox-state"
+      : eventType.includes("submit")
+        ? "campaign-quest-submit-attempt"
+        : "campaign-cta-click";
+  const actionLabel =
+    eventType === "mission_inbox_state"
+      ? "updated mission inbox state"
+      : eventType.includes("submit")
+        ? "attempted mission quest submission"
+        : "clicked mission CTA";
 
   await createActivityLogEntry({
     userId: currentUser.id,
@@ -36,6 +52,9 @@ export async function trackCampaignEvent({
       href,
       ctaLabel,
       ctaVariant: ctaVariant ?? null,
+      notificationId: notificationId ?? null,
+      notificationStatus: notificationStatus ?? null,
+      notificationUntil: notificationUntil ?? null,
     },
   });
 }

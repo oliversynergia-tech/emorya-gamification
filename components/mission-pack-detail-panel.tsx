@@ -89,6 +89,10 @@ export function MissionPackDetailPanel({
                                 ? "This is ready to take right now."
                                 : "This unlocks after the current mission step moves forward."}
                       </p>
+                      <p className="form-note">
+                        {quest.track} track. {quest.rewardLabel}
+                      </p>
+                      <p className="form-note">{quest.nextHint}</p>
                     </div>
                     <div className="achievement-card__side">
                       <span>{quest.status.replace("-", " ")}</span>

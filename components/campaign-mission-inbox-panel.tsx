@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { usePathname } from "next/navigation";
 
 import type { DashboardData } from "@/lib/types";
 import { MissionLink } from "@/components/mission-link";
@@ -15,28 +16,63 @@ export function CampaignMissionInboxPanel({
   eyebrow?: string;
 }) {
   const storageKey = "campaign-mission-inbox:state";
+  const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [inboxState, setInboxState] = useState<Record<string, { status: "dismissed" | "handled" | "snoozed"; until?: string | null }>>(() => {
+    const persistedFromServer = Object.fromEntries(
+      notifications
+        .filter((notification) => notification.persistedState)
+        .map((notification) => [notification.id, notification.persistedState]),
+    ) as Record<string, { status: "handled" | "snoozed"; until?: string | null }>;
+
     if (typeof window === "undefined") {
-      return {};
+      return persistedFromServer;
     }
 
     try {
       const saved = window.localStorage.getItem(storageKey);
       if (!saved) {
-        return {};
+        return persistedFromServer;
       }
 
       const parsed = JSON.parse(saved) as Record<string, { status: "dismissed" | "handled" | "snoozed"; until?: string | null }>;
       if (parsed && typeof parsed === "object") {
-        return parsed;
+        return {
+          ...persistedFromServer,
+          ...parsed,
+        };
       }
     } catch {
       // Ignore broken local storage state.
     }
 
-    return {};
+    return persistedFromServer;
   });
+
+  async function persistInboxState(notificationId: string, status: "handled" | "snoozed", until?: string | null) {
+    try {
+      await fetch("/api/campaign-events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          packId: notifications.find((notification) => notification.id === notificationId)?.packId,
+          eventType: "mission_inbox_state",
+          ctaLabel: status === "handled" ? "Handled mission inbox item" : "Snoozed mission inbox item",
+          ctaVariant: "mission_inbox_state",
+          href: pathname ?? "/dashboard",
+          notificationId,
+          notificationStatus: status,
+          notificationUntil: until ?? null,
+        }),
+        keepalive: true,
+      });
+    } catch {
+      // Ignore persistence failures; local state still updates.
+    }
+  }
 
   useEffect(() => {
     function handleStorage(event: StorageEvent) {
@@ -155,15 +191,20 @@ export function CampaignMissionInboxPanel({
                   key={`${notification.id}-${option.label}`}
                   type="button"
                   className="button button--secondary"
-                  onClick={() =>
+                  disabled={isPending}
+                  onClick={() => {
+                    const until = new Date(Date.now() + option.hours * 60 * 60 * 1000).toISOString();
                     setInboxState((current) => ({
                       ...current,
                       [notification.id]: {
                         status: "snoozed",
-                        until: new Date(Date.now() + option.hours * 60 * 60 * 1000).toISOString(),
+                        until,
                       },
-                    }))
-                  }
+                    }));
+                    startTransition(() => {
+                      void persistInboxState(notification.id, "snoozed", until);
+                    });
+                  }}
                 >
                   {option.label}
                 </button>
@@ -171,15 +212,19 @@ export function CampaignMissionInboxPanel({
               <button
                 type="button"
                 className="button button--secondary"
-                onClick={() =>
+                disabled={isPending}
+                onClick={() => {
                   setInboxState((current) => ({
                     ...current,
                     [notification.id]: {
                       status: "handled",
                       until: null,
                     },
-                  }))
-                }
+                  }));
+                  startTransition(() => {
+                    void persistInboxState(notification.id, "handled", null);
+                  });
+                }}
               >
                 Mark handled
               </button>

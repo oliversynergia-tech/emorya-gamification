@@ -441,8 +441,11 @@ export type DashboardData = {
     questStatuses: Array<{
       questId: string;
       title: string;
+      track: QuestTrack;
       status: "available" | "in-progress" | "completed" | "rejected";
       actionable: boolean;
+      nextHint: string;
+      rewardLabel: string;
     }>;
   }>;
   campaignNotifications: Array<{
@@ -454,6 +457,10 @@ export type DashboardData = {
     ctaLabel?: string;
     ctaQuestId?: string | null;
     ctaHref?: string | null;
+    persistedState?: {
+      status: "handled" | "snoozed";
+      until?: string | null;
+    } | null;
   }>;
   campaignPackHistory: Array<{
     packId: string;
@@ -770,6 +777,12 @@ export type AdminOverviewData = {
       window: "today" | "this_week" | "wait_for_unlock";
       count: number;
     }>;
+    returnWindowTrend: Array<{
+      window: "today" | "this_week" | "wait_for_unlock";
+      currentCount: number;
+      previousCount: number;
+      delta: number;
+    }>;
     packAnalytics: Array<{
       packId: string;
       label: string;
@@ -843,6 +856,15 @@ export type AdminOverviewData = {
         walletLinkRate: number;
         rewardEligibilityRate: number;
         premiumConversionRate: number;
+        variantBreakdown: Array<{
+          ctaVariant: string;
+          ctaLabel: string | null;
+          clickCount: number;
+          uniqueUsers: number;
+          approvedCompletionCount: number;
+          approvedUserCount: number;
+          approvedUserRate: number;
+        }>;
       };
       createdAt: string;
       lastUpdatedAt: string;
