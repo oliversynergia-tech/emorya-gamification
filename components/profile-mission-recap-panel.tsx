@@ -82,6 +82,7 @@ export function ProfileMissionRecapPanel({
                 <p className="form-note">
                   {pack.completedQuestCount}/{pack.totalQuestCount} missions complete. {pack.sequenceReason}
                 </p>
+                {pack.returnAction ? <p className="form-note">{pack.returnAction}</p> : null}
               </div>
                 <div className="achievement-card__side">
                   <span>{pack.badgeLabel}</span>

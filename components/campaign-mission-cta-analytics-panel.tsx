@@ -36,7 +36,20 @@ export function CampaignMissionCtaAnalyticsPanel({
 
   function exportRows() {
     const lines = [
-      ["pack_id", "label", "active_lane", "event_type", "cta_label", "cta_variant", "click_count", "unique_user_count", "last_clicked_at"].join(","),
+      [
+        "pack_id",
+        "label",
+        "active_lane",
+        "event_type",
+        "cta_label",
+        "cta_variant",
+        "click_count",
+        "unique_user_count",
+        "wallet_link_rate",
+        "reward_eligibility_rate",
+        "premium_conversion_rate",
+        "last_clicked_at",
+      ].join(","),
       ...filtered.map((entry) =>
         [
           entry.packId,
@@ -47,6 +60,9 @@ export function CampaignMissionCtaAnalyticsPanel({
           entry.ctaVariant,
           entry.clickCount,
           entry.uniqueUserCount,
+          entry.walletLinkRate,
+          entry.rewardEligibilityRate,
+          entry.premiumConversionRate,
           entry.lastClickedAt ?? "",
         ].join(","),
       ),
@@ -114,10 +130,35 @@ export function CampaignMissionCtaAnalyticsPanel({
                 {entry.ctaLabel} via {entry.eventType} on the {entry.activeLane} lane.
               </p>
               <small>Variant: {entry.ctaVariant}</small>
+              {entry.weeklyTrend.length > 0 ? (
+                <div className="reward-state-bars">
+                  {entry.weeklyTrend.map((point) => {
+                    const peak = Math.max(...entry.weeklyTrend.map((trendPoint) => trendPoint.clickCount), 1);
+
+                    return (
+                      <div key={`${entry.packId}-${entry.ctaVariant}-${point.bucketStart}`}>
+                        <span>{new Date(point.bucketStart).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                        <div className="reward-state-bars__track">
+                          <div
+                            className="reward-state-bars__fill"
+                            style={{ width: `${(point.clickCount / peak) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+              <p className="form-note">
+                Correlation: {(entry.walletLinkRate * 100).toFixed(0)}% wallet-linked,{" "}
+                {(entry.rewardEligibilityRate * 100).toFixed(0)}% reward-ready,{" "}
+                {(entry.premiumConversionRate * 100).toFixed(0)}% premium among clickers.
+              </p>
             </div>
             <div className="achievement-card__side">
               <span>{entry.clickCount} clicks</span>
               <span>{entry.uniqueUserCount} users</span>
+              <span>{entry.premiumUserCount} premium</span>
               <span>{entry.lastClickedAt ? new Date(entry.lastClickedAt).toLocaleDateString() : "No clicks"}</span>
             </div>
           </article>

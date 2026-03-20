@@ -188,6 +188,9 @@ export default async function AuthPage() {
             </div>
             <p className="form-note">{returnPack.returnAction}</p>
             <p className="form-note">{returnPack.unlockPreview}</p>
+            <p className="form-note">
+              This pack is still reward-eligible. A return move worth roughly {returnPack.weeklyGoal.shortfallXp} XP closes the current weekly pace gap and keeps the mission lane warm.
+            </p>
             <div className="hero__actions">
               <MissionLink
                 className="button button--primary"

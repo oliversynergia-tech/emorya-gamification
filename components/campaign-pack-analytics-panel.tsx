@@ -552,6 +552,8 @@ export function CampaignPackAnalyticsPanel({
                 Mission CTA performance: {pack.missionCtaSummary.totalClicks} clicks from {pack.missionCtaSummary.uniqueUsers} users.
                 {` `}
                 Top variant: {pack.missionCtaSummary.topCtaVariant ?? "n/a"}{pack.missionCtaSummary.topCtaLabel ? ` via ${pack.missionCtaSummary.topCtaLabel}` : ""}.
+                {` `}
+                Clicker correlation: {(pack.missionCtaSummary.walletLinkRate * 100).toFixed(0)}% wallet-linked, {(pack.missionCtaSummary.rewardEligibilityRate * 100).toFixed(0)}% reward-ready, {(pack.missionCtaSummary.premiumConversionRate * 100).toFixed(0)}% premium.
               </p>
               <p className="form-note">
                 Benchmark lane: {pack.benchmark.activeLane}. Targets: {Math.round(pack.benchmark.walletLinkRateTarget * 100)}% wallet,

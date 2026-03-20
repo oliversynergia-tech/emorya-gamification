@@ -197,6 +197,7 @@ export type ActivityItem = {
   action: string;
   detail: string;
   timeAgo: string;
+  createdAt: string;
 };
 
 export type DashboardCampaignPack = DashboardData["campaignPacks"][number];
@@ -475,6 +476,7 @@ export type DashboardData = {
   missionEventHistory: Array<{
     id: string;
     packId: string;
+    packLabel: string;
     title: string;
     detail: string;
     timeAgo: string;
@@ -736,6 +738,16 @@ export type AdminOverviewData = {
       clickCount: number;
       uniqueUserCount: number;
       lastClickedAt: string | null;
+      weeklyTrend: Array<{
+        bucketStart: string;
+        clickCount: number;
+      }>;
+      walletLinkedUserCount: number;
+      rewardEligibleUserCount: number;
+      premiumUserCount: number;
+      walletLinkRate: number;
+      rewardEligibilityRate: number;
+      premiumConversionRate: number;
     }>;
     packAnalytics: Array<{
       packId: string;
@@ -804,6 +816,12 @@ export type AdminOverviewData = {
         topCtaVariant: string | null;
         totalClicks: number;
         uniqueUsers: number;
+        walletLinkedUsers: number;
+        rewardEligibleUsers: number;
+        premiumUsers: number;
+        walletLinkRate: number;
+        rewardEligibilityRate: number;
+        premiumConversionRate: number;
       };
       createdAt: string;
       lastUpdatedAt: string;

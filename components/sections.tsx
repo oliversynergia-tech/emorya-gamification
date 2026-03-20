@@ -213,6 +213,7 @@ export function DashboardSnapshot({
     .filter((achievement) => !achievement.unlocked)
     .sort((left, right) => right.progress - left.progress)
     .slice(0, 2);
+  const resumeMissionPack = data.campaignPacks.find((pack) => pack.returnAction) ?? null;
 
   return (
     <section className="grid grid--dashboard">
@@ -348,6 +349,44 @@ export function DashboardSnapshot({
                   {data.user.rewardEligibility.eligible ? "Live" : "Pending"}
                 </span>
               </article>
+            </div>
+          </div>
+        ) : null}
+        {resumeMissionPack && onMissionViewChange ? (
+          <div className="panel panel--glass">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Resume mission</p>
+                <h3>One strong return move puts this pack back on pace</h3>
+              </div>
+              <span className="badge badge--pink">{resumeMissionPack.label}</span>
+            </div>
+            <p className="form-note">{resumeMissionPack.returnAction}</p>
+            <p className="form-note">{resumeMissionPack.unlockPreview}</p>
+            <p className="form-note">
+              Weekly mission gap: {resumeMissionPack.weeklyGoal.shortfallXp} XP remaining before this pack gets back to its current target.
+            </p>
+            <div className="hero__actions">
+              <MissionLink
+                className="button button--primary"
+                href={resumeMissionPack.ctaHref ?? "#quest-board"}
+                packId={resumeMissionPack.packId}
+                eventType="dashboard_resume_cta"
+                ctaLabel={resumeMissionPack.ctaLabel}
+                ctaVariant={resumeMissionPack.ctaVariant}
+              >
+                {resumeMissionPack.ctaLabel}
+              </MissionLink>
+              <MissionLink
+                className="button button--secondary"
+                href="/profile#mission-recap"
+                packId={resumeMissionPack.packId}
+                eventType="dashboard_resume_profile_cta"
+                ctaLabel="Review mission recap"
+                ctaVariant="resume_profile"
+              >
+                Review mission recap
+              </MissionLink>
             </div>
           </div>
         ) : null}

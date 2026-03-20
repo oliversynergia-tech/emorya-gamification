@@ -1073,7 +1073,133 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
       action: item.action,
       detail: item.detail,
       timeAgo: item.timeAgo,
+      createdAt: item.createdAt,
     }));
+}
+
+async function buildUserProgressSnapshot(userIds: string[]) {
+  if (userIds.length === 0) {
+    return {
+      progressMap: new Map<string, UserProgressState>(),
+      userMap: new Map<string, PackProgressUserRow>(),
+      walletMap: new Map<string, string>(),
+    };
+  }
+
+  const [progressUsers, packWallets, packSocials, packReferrals, packWeeklyXp, packCompletedQuests] = await Promise.all([
+    runQuery<PackProgressUserRow>(
+      `SELECT id, level, total_xp, current_streak, subscription_tier, subscription_started_at, attribution_source
+       FROM users
+       WHERE id = ANY($1::uuid[])`,
+      [userIds],
+    ),
+    runQuery<PackWalletRow>(
+      `SELECT DISTINCT ON (user_id)
+              user_id::text AS user_id,
+              created_at
+       FROM user_identities
+       WHERE user_id = ANY($1::uuid[])
+         AND provider = 'multiversx'
+         AND status = 'active'
+       ORDER BY user_id, created_at ASC`,
+      [userIds],
+    ),
+    runQuery<PackSocialRow>(
+      `SELECT user_id::text AS user_id, platform
+       FROM social_connections
+       WHERE user_id = ANY($1::uuid[])
+         AND verified = TRUE
+       ORDER BY user_id, platform ASC`,
+      [userIds],
+    ),
+    runQuery<PackReferralCountsRow>(
+      `SELECT referrals.referrer_user_id::text AS user_id,
+              COUNT(*)::text AS successful_referrals,
+              COUNT(*) FILTER (WHERE referrals.referee_subscribed = TRUE AND referee_user.subscription_tier = 'monthly')::text AS monthly_premium_referrals,
+              COUNT(*) FILTER (WHERE referrals.referee_subscribed = TRUE AND referee_user.subscription_tier = 'annual')::text AS annual_premium_referrals
+       FROM referrals
+       INNER JOIN users referee_user ON referee_user.id = referrals.referee_user_id
+       WHERE referrals.referrer_user_id = ANY($1::uuid[])
+       GROUP BY referrals.referrer_user_id`,
+      [userIds],
+    ),
+    runQuery<PackWeeklyXpRow>(
+      `SELECT user_id::text AS user_id,
+              COALESCE(SUM(xp_earned), 0)::text AS weekly_xp
+       FROM activity_log
+       WHERE user_id = ANY($1::uuid[])
+         AND created_at >= NOW() - INTERVAL '7 days'
+       GROUP BY user_id`,
+      [userIds],
+    ),
+    runQuery<PackCompletedQuestRow>(
+      `SELECT qc.user_id::text AS user_id,
+              q.slug,
+              q.category,
+              q.verification_type,
+              q.required_level,
+              q.is_premium_preview
+       FROM quest_completions qc
+       INNER JOIN quest_definitions q ON q.id = qc.quest_id
+       WHERE qc.user_id = ANY($1::uuid[])
+         AND qc.status = 'approved'
+       ORDER BY qc.user_id, qc.completed_at ASC NULLS LAST, qc.created_at ASC`,
+      [userIds],
+    ),
+  ]);
+
+  const walletMap = new Map(packWallets.rows.map((row) => [row.user_id, row.created_at] as const));
+  const socialsMap = new Map<string, SupportedSocialPlatform[]>();
+  for (const row of packSocials.rows) {
+    const current = socialsMap.get(row.user_id) ?? [];
+    current.push(row.platform);
+    socialsMap.set(row.user_id, current);
+  }
+  const referralMap = new Map(packReferrals.rows.map((row) => [row.user_id, row] as const));
+  const weeklyXpMap = new Map(packWeeklyXp.rows.map((row) => [row.user_id, Number(row.weekly_xp)] as const));
+  const userMap = new Map(progressUsers.rows.map((user) => [user.id, user] as const));
+  const completedQuestMap = new Map<string, PackCompletedQuestRow[]>();
+  for (const row of packCompletedQuests.rows) {
+    const current = completedQuestMap.get(row.user_id) ?? [];
+    current.push(row);
+    completedQuestMap.set(row.user_id, current);
+  }
+
+  const progressMap = new Map<string, UserProgressState>();
+  for (const user of progressUsers.rows) {
+    const earliestWalletLink = walletMap.get(user.id) ?? null;
+    const walletAgeDays = earliestWalletLink
+      ? Math.max(Math.floor((Date.now() - new Date(earliestWalletLink).getTime()) / 86400000), 0)
+      : 0;
+
+    progressMap.set(
+      user.id,
+      deriveUserProgressState({
+        userId: user.id,
+        level: user.level,
+        totalXp: user.total_xp,
+        currentStreak: user.current_streak,
+        weeklyXp: weeklyXpMap.get(user.id) ?? 0,
+        walletLinked: Boolean(earliestWalletLink),
+        walletAgeDays,
+        subscriptionTier: user.subscription_tier,
+        connectedSocials: socialsMap.get(user.id) ?? [],
+        successfulReferralCount: Number(referralMap.get(user.id)?.successful_referrals ?? 0),
+        monthlyPremiumReferralCount: Number(referralMap.get(user.id)?.monthly_premium_referrals ?? 0),
+        annualPremiumReferralCount: Number(referralMap.get(user.id)?.annual_premium_referrals ?? 0),
+        approvedQuests: (completedQuestMap.get(user.id) ?? []).map((quest) => ({
+          slug: quest.slug,
+          category: quest.category,
+          verificationType: quest.verification_type,
+          requiredLevel: quest.required_level,
+          isPremiumPreview: quest.is_premium_preview,
+        })),
+        campaignSource: user.attribution_source,
+      }),
+    );
+  }
+
+  return { progressMap, userMap, walletMap };
 }
 
 function dataUserWeeklyTarget(nextThreshold: number | null, currentThreshold: number) {
@@ -1820,17 +1946,22 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   const mergedActivityFeed = [...missionActivityItems, ...activityFeed].slice(0, 8);
   const missionEventHistory = mergedActivityFeed
     .filter((item) => item.action.includes("campaign pack") || item.actor === "Mission monitor" || item.action.includes("mission CTA"))
-    .map((item) => ({
-      id: item.id,
-      packId:
-        campaignPacks.find((pack) => item.detail.includes(pack.label))?.packId ??
-        campaignPackHistory.find((pack) => item.detail.includes(pack.label))?.packId ??
-        "unknown",
-      title: item.action,
-      detail: item.detail,
-      timeAgo: item.timeAgo,
-      createdAt: new Date().toISOString(),
-    }))
+    .map((item) => {
+      const matchedPack =
+        campaignPacks.find((pack) => item.detail.includes(pack.label)) ??
+        campaignPackHistory.find((pack) => item.detail.includes(pack.label)) ??
+        null;
+
+      return {
+        id: item.id,
+        packId: matchedPack?.packId ?? "unknown",
+        packLabel: matchedPack?.label ?? "Mission event",
+        title: item.action,
+        detail: item.detail,
+        timeAgo: item.timeAgo,
+        createdAt: item.createdAt,
+      };
+    })
     .slice(0, 8);
 
   return {
@@ -1871,7 +2002,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -1952,6 +2083,30 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
                 COALESCE(al.metadata->>'ctaVariant', 'unknown')
        ORDER BY MAX(al.created_at) DESC NULLS LAST
        LIMIT 24`,
+    ),
+    runQuery<{
+      pack_id: string | null;
+      event_type: string | null;
+      cta_label: string | null;
+      cta_variant: string | null;
+      bucket_start: string;
+      click_count: string;
+    }>(
+      `SELECT al.metadata->>'packId' AS pack_id,
+              al.metadata->>'eventType' AS event_type,
+              al.metadata->>'ctaLabel' AS cta_label,
+              COALESCE(al.metadata->>'ctaVariant', 'unknown') AS cta_variant,
+              DATE_TRUNC('week', al.created_at)::date::text AS bucket_start,
+              COUNT(*)::text AS click_count
+       FROM activity_log al
+       WHERE al.action_type = 'campaign-cta-click'
+         AND al.created_at >= NOW() - INTERVAL '28 days'
+       GROUP BY al.metadata->>'packId',
+                al.metadata->>'eventType',
+                al.metadata->>'ctaLabel',
+                COALESCE(al.metadata->>'ctaVariant', 'unknown'),
+                DATE_TRUNC('week', al.created_at)::date
+       ORDER BY bucket_start ASC`,
     ),
   ]);
 
@@ -2094,187 +2249,149 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     });
     packTrendMap.set(row.pack_id, current);
   }
+  const { progressMap: participantProgressMap, userMap: participantUserMap, walletMap: participantWalletMap } =
+    await buildUserProgressSnapshot(participantIds);
+  for (const [userId, progress] of participantProgressMap) {
+    userProgressMapGlobal.set(userId, progress);
+  }
 
-  if (participantIds.length > 0) {
-    const [progressUsers, packWallets, packSocials, packReferrals, packWeeklyXp, packCompletedQuests] = await Promise.all([
-      runQuery<PackProgressUserRow>(
-        `SELECT id, level, total_xp, current_streak, subscription_tier, subscription_started_at, attribution_source
-         FROM users
-         WHERE id = ANY($1::uuid[])`,
-        [participantIds],
-      ),
-      runQuery<PackWalletRow>(
-        `SELECT DISTINCT ON (user_id)
-                user_id::text AS user_id,
-                created_at
-         FROM user_identities
-         WHERE user_id = ANY($1::uuid[])
-           AND provider = 'multiversx'
-           AND status = 'active'
-         ORDER BY user_id, created_at ASC`,
-        [participantIds],
-      ),
-      runQuery<PackSocialRow>(
-        `SELECT user_id::text AS user_id, platform
-         FROM social_connections
-         WHERE user_id = ANY($1::uuid[])
-           AND verified = TRUE
-         ORDER BY user_id, platform ASC`,
-        [participantIds],
-      ),
-      runQuery<PackReferralCountsRow>(
-        `SELECT referrals.referrer_user_id::text AS user_id,
-                COUNT(*)::text AS successful_referrals,
-                COUNT(*) FILTER (WHERE referrals.referee_subscribed = TRUE AND referee_user.subscription_tier = 'monthly')::text AS monthly_premium_referrals,
-                COUNT(*) FILTER (WHERE referrals.referee_subscribed = TRUE AND referee_user.subscription_tier = 'annual')::text AS annual_premium_referrals
-         FROM referrals
-         INNER JOIN users referee_user ON referee_user.id = referrals.referee_user_id
-         WHERE referrals.referrer_user_id = ANY($1::uuid[])
-         GROUP BY referrals.referrer_user_id`,
-        [participantIds],
-      ),
-      runQuery<PackWeeklyXpRow>(
-        `SELECT user_id::text AS user_id,
-                COALESCE(SUM(xp_earned), 0)::text AS weekly_xp
-         FROM activity_log
-         WHERE user_id = ANY($1::uuid[])
-           AND created_at >= NOW() - INTERVAL '7 days'
-         GROUP BY user_id`,
-        [participantIds],
-      ),
-      runQuery<PackCompletedQuestRow>(
-        `SELECT qc.user_id::text AS user_id,
-                q.slug,
-                q.category,
-                q.verification_type,
-                q.required_level,
-                q.is_premium_preview
-         FROM quest_completions qc
-         INNER JOIN quest_definitions q ON q.id = qc.quest_id
-         WHERE qc.user_id = ANY($1::uuid[])
-           AND qc.status = 'approved'
-         ORDER BY qc.user_id, qc.completed_at ASC NULLS LAST, qc.created_at ASC`,
-        [participantIds],
-      ),
-    ]);
-
-    const walletMap = new Map(packWallets.rows.map((row) => [row.user_id, row.created_at] as const));
-    const socialsMap = new Map<string, SupportedSocialPlatform[]>();
-    for (const row of packSocials.rows) {
-      const current = socialsMap.get(row.user_id) ?? [];
-      current.push(row.platform);
-      socialsMap.set(row.user_id, current);
+  for (const participant of packParticipantsResult.rows) {
+    const progress = participantProgressMap.get(participant.user_id);
+    if (!progress) {
+      continue;
     }
-    const referralMap = new Map(packReferrals.rows.map((row) => [row.user_id, row] as const));
-    const weeklyXpMap = new Map(packWeeklyXp.rows.map((row) => [row.user_id, Number(row.weekly_xp)] as const));
-    const progressUserMap = new Map(progressUsers.rows.map((user) => [user.id, user] as const));
-    const completedQuestMap = new Map<string, PackCompletedQuestRow[]>();
-    for (const row of packCompletedQuests.rows) {
-      const current = completedQuestMap.get(row.user_id) ?? [];
-      current.push(row);
-      completedQuestMap.set(row.user_id, current);
+    const current = packProgressMap.get(participant.pack_id) ?? {
+      walletLinkedParticipantCount: 0,
+      firstTouchToWalletLinkCount: 0,
+      firstTouchToWalletLinkDaysTotal: 0,
+      walletToPremiumCount: 0,
+      walletToPremiumDaysTotal: 0,
+      starterPathCompleteCount: 0,
+      rewardEligibleCount: 0,
+      retainedActiveCount: 0,
+      weeklyXpTotal: 0,
+      engagedWeeklyXpCount: 0,
+      premiumUpgradeCount: 0,
+      premiumUpgradeDaysTotal: 0,
+      likelyPackCausedPremiumCount: 0,
+    };
+    if (progress.walletLinked) {
+      current.walletLinkedParticipantCount += 1;
     }
-    for (const user of progressUsers.rows) {
-      const earliestWalletLink = walletMap.get(user.id) ?? null;
-      const walletAgeDays = earliestWalletLink
-        ? Math.max(Math.floor((Date.now() - new Date(earliestWalletLink).getTime()) / 86400000), 0)
-        : 0;
-      userProgressMapGlobal.set(
-        user.id,
-        deriveUserProgressState({
-          userId: user.id,
-          level: user.level,
-          totalXp: user.total_xp,
-          currentStreak: user.current_streak,
-          weeklyXp: weeklyXpMap.get(user.id) ?? 0,
-          walletLinked: Boolean(earliestWalletLink),
-          walletAgeDays,
-          subscriptionTier: user.subscription_tier,
-          connectedSocials: socialsMap.get(user.id) ?? [],
-          successfulReferralCount: Number(referralMap.get(user.id)?.successful_referrals ?? 0),
-          monthlyPremiumReferralCount: Number(referralMap.get(user.id)?.monthly_premium_referrals ?? 0),
-          annualPremiumReferralCount: Number(referralMap.get(user.id)?.annual_premium_referrals ?? 0),
-          approvedQuests: (completedQuestMap.get(user.id) ?? []).map((quest) => ({
-            slug: quest.slug,
-            category: quest.category,
-            verificationType: quest.verification_type,
-            requiredLevel: quest.required_level,
-            isPremiumPreview: quest.is_premium_preview,
-          })),
-          campaignSource: user.attribution_source,
-        }),
-      );
+    if (progress.starterPathComplete) {
+      current.starterPathCompleteCount += 1;
     }
-
-    for (const participant of packParticipantsResult.rows) {
-      const progress = userProgressMapGlobal.get(participant.user_id);
-      if (!progress) {
-        continue;
-      }
-      const current = packProgressMap.get(participant.pack_id) ?? {
-        walletLinkedParticipantCount: 0,
-        firstTouchToWalletLinkCount: 0,
-        firstTouchToWalletLinkDaysTotal: 0,
-        walletToPremiumCount: 0,
-        walletToPremiumDaysTotal: 0,
-        starterPathCompleteCount: 0,
-        rewardEligibleCount: 0,
-        retainedActiveCount: 0,
-        weeklyXpTotal: 0,
-        engagedWeeklyXpCount: 0,
-        premiumUpgradeCount: 0,
-        premiumUpgradeDaysTotal: 0,
-        likelyPackCausedPremiumCount: 0,
-      };
-      if (progress.walletLinked) {
-        current.walletLinkedParticipantCount += 1;
-      }
-      if (progress.starterPathComplete) {
-        current.starterPathCompleteCount += 1;
-      }
-      if (progress.rewardEligible) {
-        current.rewardEligibleCount += 1;
-      }
-      if (progress.weeklyXp > 0) {
-        current.retainedActiveCount += 1;
-      }
-      current.weeklyXpTotal += progress.weeklyXp;
-      if (progress.weeklyXp >= 250) {
-        current.engagedWeeklyXpCount += 1;
-      }
-      const sourceUser = progressUserMap.get(participant.user_id);
-      const firstInteractionAt = packFirstInteractionMap.get(`${participant.pack_id}:${participant.user_id}`);
-      const earliestWalletLink = walletMap.get(participant.user_id) ?? null;
-      if (
-        earliestWalletLink &&
-        firstInteractionAt &&
-        new Date(earliestWalletLink).getTime() >= new Date(firstInteractionAt).getTime()
-      ) {
-        current.firstTouchToWalletLinkCount += 1;
-        current.firstTouchToWalletLinkDaysTotal +=
-          (new Date(earliestWalletLink).getTime() - new Date(firstInteractionAt).getTime()) / 86400000;
-      }
-      if (
-        sourceUser?.subscription_started_at &&
-        earliestWalletLink &&
-        new Date(sourceUser.subscription_started_at).getTime() >= new Date(earliestWalletLink).getTime()
-      ) {
-        current.walletToPremiumCount += 1;
-        current.walletToPremiumDaysTotal +=
-          (new Date(sourceUser.subscription_started_at).getTime() - new Date(earliestWalletLink).getTime()) / 86400000;
-        if (firstInteractionAt && new Date(sourceUser.subscription_started_at).getTime() >= new Date(firstInteractionAt).getTime()) {
-          current.premiumUpgradeCount += 1;
-          current.premiumUpgradeDaysTotal +=
-            (new Date(sourceUser.subscription_started_at).getTime() - new Date(firstInteractionAt).getTime()) / 86400000;
-          if (
-            (new Date(sourceUser.subscription_started_at).getTime() - new Date(firstInteractionAt).getTime()) / 86400000 <= 14
-          ) {
-            current.likelyPackCausedPremiumCount += 1;
-          }
+    if (progress.rewardEligible) {
+      current.rewardEligibleCount += 1;
+    }
+    if (progress.weeklyXp > 0) {
+      current.retainedActiveCount += 1;
+    }
+    current.weeklyXpTotal += progress.weeklyXp;
+    if (progress.weeklyXp >= 250) {
+      current.engagedWeeklyXpCount += 1;
+    }
+    const sourceUser = participantUserMap.get(participant.user_id);
+    const firstInteractionAt = packFirstInteractionMap.get(`${participant.pack_id}:${participant.user_id}`);
+    const earliestWalletLink = participantWalletMap.get(participant.user_id) ?? null;
+    if (
+      earliestWalletLink &&
+      firstInteractionAt &&
+      new Date(earliestWalletLink).getTime() >= new Date(firstInteractionAt).getTime()
+    ) {
+      current.firstTouchToWalletLinkCount += 1;
+      current.firstTouchToWalletLinkDaysTotal +=
+        (new Date(earliestWalletLink).getTime() - new Date(firstInteractionAt).getTime()) / 86400000;
+    }
+    if (
+      sourceUser?.subscription_started_at &&
+      earliestWalletLink &&
+      new Date(sourceUser.subscription_started_at).getTime() >= new Date(earliestWalletLink).getTime()
+    ) {
+      current.walletToPremiumCount += 1;
+      current.walletToPremiumDaysTotal +=
+        (new Date(sourceUser.subscription_started_at).getTime() - new Date(earliestWalletLink).getTime()) / 86400000;
+      if (firstInteractionAt && new Date(sourceUser.subscription_started_at).getTime() >= new Date(firstInteractionAt).getTime()) {
+        current.premiumUpgradeCount += 1;
+        current.premiumUpgradeDaysTotal +=
+          (new Date(sourceUser.subscription_started_at).getTime() - new Date(firstInteractionAt).getTime()) / 86400000;
+        if (
+          (new Date(sourceUser.subscription_started_at).getTime() - new Date(firstInteractionAt).getTime()) / 86400000 <= 14
+        ) {
+          current.likelyPackCausedPremiumCount += 1;
         }
       }
-      packProgressMap.set(participant.pack_id, current);
     }
+    packProgressMap.set(participant.pack_id, current);
+  }
+  const missionClickUsersResult = await runQuery<{
+    pack_id: string | null;
+    event_type: string | null;
+    cta_label: string | null;
+    cta_variant: string | null;
+    user_id: string;
+  }>(
+    `SELECT DISTINCT
+            al.metadata->>'packId' AS pack_id,
+            al.metadata->>'eventType' AS event_type,
+            al.metadata->>'ctaLabel' AS cta_label,
+            COALESCE(al.metadata->>'ctaVariant', 'unknown') AS cta_variant,
+            al.user_id::text AS user_id
+     FROM activity_log al
+     WHERE al.action_type = 'campaign-cta-click'
+       AND al.metadata ? 'packId'`,
+  );
+  const missionClickUserIds = Array.from(new Set(missionClickUsersResult.rows.map((row) => row.user_id)));
+  const { progressMap: missionClickProgressMap, userMap: missionClickUserMap } =
+    await buildUserProgressSnapshot(missionClickUserIds);
+  const missionCtaCorrelationMap = new Map<
+    string,
+    {
+      walletLinkedUserCount: number;
+      rewardEligibleUserCount: number;
+      premiumUserCount: number;
+    }
+  >();
+
+  for (const row of missionClickUsersResult.rows) {
+    if (!row.pack_id) {
+      continue;
+    }
+    const key = `${row.pack_id}::${row.event_type ?? "unknown"}::${row.cta_label ?? "unknown"}::${row.cta_variant ?? "unknown"}`;
+    const current = missionCtaCorrelationMap.get(key) ?? {
+      walletLinkedUserCount: 0,
+      rewardEligibleUserCount: 0,
+      premiumUserCount: 0,
+    };
+    const progress = missionClickProgressMap.get(row.user_id);
+    const user = missionClickUserMap.get(row.user_id);
+    if (progress?.walletLinked) {
+      current.walletLinkedUserCount += 1;
+    }
+    if (progress?.rewardEligible) {
+      current.rewardEligibleUserCount += 1;
+    }
+    if (user && user.subscription_tier !== "free") {
+      current.premiumUserCount += 1;
+    }
+    missionCtaCorrelationMap.set(key, current);
+  }
+
+  const missionCtaTrendMap = new Map<
+    string,
+    AdminOverviewData["campaignOperations"]["missionCtaAnalytics"][number]["weeklyTrend"]
+  >();
+  for (const row of campaignMissionCtaTrends.rows) {
+    if (!row.pack_id) {
+      continue;
+    }
+    const key = `${row.pack_id}::${row.event_type ?? "unknown"}::${row.cta_label ?? "unknown"}::${row.cta_variant ?? "unknown"}`;
+    const current = missionCtaTrendMap.get(key) ?? [];
+    current.push({
+      bucketStart: row.bucket_start,
+      clickCount: Number(row.click_count ?? 0),
+    });
+    missionCtaTrendMap.set(key, current);
   }
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -2423,6 +2540,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           topCtaVariant: null,
           totalClicks: 0,
           uniqueUsers: 0,
+          walletLinkedUsers: 0,
+          rewardEligibleUsers: 0,
+          premiumUsers: 0,
+          walletLinkRate: 0,
+          rewardEligibilityRate: 0,
+          premiumConversionRate: 0,
         },
         createdAt: quest.createdAt,
         lastUpdatedAt: quest.updatedAt,
@@ -2541,6 +2664,9 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       topCtaVariant: string | null;
       totalClicks: number;
       uniqueUsers: number;
+      walletLinkedUsers: number;
+      rewardEligibleUsers: number;
+      premiumUsers: number;
       maxClicks: number;
     }
   >();
@@ -2548,6 +2674,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     if (!entry.pack_id) {
       continue;
     }
+    const correlationKey = `${entry.pack_id}::${entry.event_type ?? "unknown"}::${entry.cta_label ?? "unknown"}::${entry.cta_variant ?? "unknown"}`;
+    const correlation = missionCtaCorrelationMap.get(correlationKey);
     const clickCount = Number(entry.click_count ?? 0);
     const uniqueUserCount = Number(entry.unique_user_count ?? 0);
     const current = missionCtaSummaryMap.get(entry.pack_id) ?? {
@@ -2555,10 +2683,16 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       topCtaVariant: null,
       totalClicks: 0,
       uniqueUsers: 0,
+      walletLinkedUsers: 0,
+      rewardEligibleUsers: 0,
+      premiumUsers: 0,
       maxClicks: -1,
     };
     current.totalClicks += clickCount;
     current.uniqueUsers += uniqueUserCount;
+    current.walletLinkedUsers += correlation?.walletLinkedUserCount ?? 0;
+    current.rewardEligibleUsers += correlation?.rewardEligibleUserCount ?? 0;
+    current.premiumUsers += correlation?.premiumUserCount ?? 0;
     if (clickCount > current.maxClicks) {
       current.maxClicks = clickCount;
       current.topCtaLabel = entry.cta_label ?? null;
@@ -2592,6 +2726,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         topCtaVariant: ctaSummary.topCtaVariant,
         totalClicks: ctaSummary.totalClicks,
         uniqueUsers: ctaSummary.uniqueUsers,
+        walletLinkedUsers: ctaSummary.walletLinkedUsers,
+        rewardEligibleUsers: ctaSummary.rewardEligibleUsers,
+        premiumUsers: ctaSummary.premiumUsers,
+        walletLinkRate: ctaSummary.uniqueUsers > 0 ? ctaSummary.walletLinkedUsers / ctaSummary.uniqueUsers : 0,
+        rewardEligibilityRate: ctaSummary.uniqueUsers > 0 ? ctaSummary.rewardEligibleUsers / ctaSummary.uniqueUsers : 0,
+        premiumConversionRate: ctaSummary.uniqueUsers > 0 ? ctaSummary.premiumUsers / ctaSummary.uniqueUsers : 0,
       };
     }
   }
@@ -2707,6 +2847,9 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     .filter((row) => typeof row.pack_id === "string" && row.pack_id.length > 0)
     .map((row) => {
       const pack = packAnalyticsLookup.get(row.pack_id ?? "");
+      const key = `${row.pack_id ?? "unknown"}::${row.event_type ?? "unknown"}::${row.cta_label ?? "unknown"}::${row.cta_variant ?? "unknown"}`;
+      const correlation = missionCtaCorrelationMap.get(key);
+      const uniqueUserCount = Number(row.unique_user_count ?? 0);
 
       return {
         packId: row.pack_id ?? "unknown",
@@ -2716,10 +2859,18 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         ctaLabel: row.cta_label ?? "Unknown CTA",
         ctaVariant: row.cta_variant ?? "unknown",
         clickCount: Number(row.click_count ?? 0),
-        uniqueUserCount: Number(row.unique_user_count ?? 0),
+        uniqueUserCount,
         lastClickedAt: row.last_clicked_at,
+        weeklyTrend: missionCtaTrendMap.get(key) ?? [],
+        walletLinkedUserCount: correlation?.walletLinkedUserCount ?? 0,
+        rewardEligibleUserCount: correlation?.rewardEligibleUserCount ?? 0,
+        premiumUserCount: correlation?.premiumUserCount ?? 0,
+        walletLinkRate: uniqueUserCount > 0 ? (correlation?.walletLinkedUserCount ?? 0) / uniqueUserCount : 0,
+        rewardEligibilityRate: uniqueUserCount > 0 ? (correlation?.rewardEligibleUserCount ?? 0) / uniqueUserCount : 0,
+        premiumConversionRate: uniqueUserCount > 0 ? (correlation?.premiumUserCount ?? 0) / uniqueUserCount : 0,
       };
-    });
+    })
+    .sort((left, right) => right.clickCount - left.clickCount || right.uniqueUserCount - left.uniqueUserCount);
 
   return {
     stats: [
