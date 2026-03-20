@@ -461,6 +461,7 @@ export type DashboardData = {
       verificationType: VerificationType;
       status: "available" | "in-progress" | "completed" | "rejected";
       actionable: boolean;
+      gateLabel: string;
       nextHint: string;
       rewardLabel: string;
       rewardTimingLabel: string;
@@ -856,6 +857,12 @@ export type AdminOverviewData = {
       previousCount: number;
       delta: number;
     }>;
+    reminderScheduleSummary: Array<{
+      schedule: "today" | "this_week" | "wait_for_unlock";
+      currentCount: number;
+      previousCount: number;
+      delta: number;
+    }>;
     reminderVariantByBlockage: Array<{
       state:
         | "wallet_connection"
@@ -866,6 +873,12 @@ export type AdminOverviewData = {
         | "weekly_pace"
         | "ready";
       variant: string;
+      handledCount: number;
+      snoozedCount: number;
+    }>;
+    reminderVariantScheduleSummary: Array<{
+      variant: string;
+      schedule: "today" | "this_week" | "wait_for_unlock";
       handledCount: number;
       snoozedCount: number;
     }>;

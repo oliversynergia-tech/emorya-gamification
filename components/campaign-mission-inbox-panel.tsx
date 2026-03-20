@@ -68,6 +68,7 @@ export function CampaignMissionInboxPanel({
           notificationStatus: status,
           notificationUntil: until ?? null,
           reminderVariant: notification?.reminderVariant ?? null,
+          reminderSchedule: notification?.reminderSchedule ?? null,
         }),
         keepalive: true,
       });

@@ -119,14 +119,15 @@ export function MissionPackDetailPanel({
                       <p className="form-note">
                         {quest.track} track. {quest.rewardLabel}
                       </p>
-                    <p className="form-note">
-                      {quest.cadence} cadence. {quest.verificationType} verification.
-                    </p>
-                    <p className="form-note">{quest.nextHint}</p>
-                    <p className="form-note">{quest.rewardTimingLabel}</p>
-                    {quest.actionable ? <p className="form-note">{selectedActivePack.unlockRewardPreview}</p> : null}
-                    {quest.actionable ? <p className="form-note">{selectedActivePack.unlockOutcomePreview.xp}</p> : null}
-                  </div>
+                      <p className="form-note">{quest.gateLabel}</p>
+                      <p className="form-note">
+                        {quest.cadence} cadence. {quest.verificationType} verification.
+                      </p>
+                      <p className="form-note">{quest.nextHint}</p>
+                      <p className="form-note">{quest.rewardTimingLabel}</p>
+                      {quest.actionable ? <p className="form-note">{selectedActivePack.unlockRewardPreview}</p> : null}
+                      {quest.actionable ? <p className="form-note">{selectedActivePack.unlockOutcomePreview.xp}</p> : null}
+                    </div>
                     <div className="achievement-card__side">
                       <span>{quest.status.replace("-", " ")}</span>
                       <span>{quest.actionable ? "Ready now" : "Queued"}</span>

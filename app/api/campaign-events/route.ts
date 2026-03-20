@@ -16,6 +16,7 @@ export async function POST(request: Request) {
       notificationStatus?: "handled" | "snoozed";
       notificationUntil?: string | null;
       reminderVariant?: string | null;
+      reminderSchedule?: "today" | "this_week" | "wait_for_unlock" | null;
     };
 
     const packId = body.packId?.trim();
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
     const notificationStatus = body.notificationStatus;
     const notificationUntil = body.notificationUntil?.trim() ?? null;
     const reminderVariant = body.reminderVariant?.trim() ?? null;
+    const reminderSchedule = body.reminderSchedule?.trim() as "today" | "this_week" | "wait_for_unlock" | null;
 
     if (!packId || !eventType || !ctaLabel || !href) {
       return NextResponse.json({ ok: false, error: "Missing campaign event fields." }, { status: 400 });
@@ -42,6 +44,7 @@ export async function POST(request: Request) {
       notificationStatus,
       notificationUntil,
       reminderVariant,
+      reminderSchedule,
     });
 
     return NextResponse.json({ ok: true });

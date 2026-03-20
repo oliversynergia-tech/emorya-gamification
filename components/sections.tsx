@@ -104,6 +104,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       packLabel: walletGatePack.label,
       timing: "wait for unlock",
       blockedStateLabel: "Blocked by wallet connection",
+      stateCategory: "Hard block",
     };
   }
 
@@ -123,6 +124,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       packLabel: premiumPack.label,
       timing: "this week",
       blockedStateLabel: "Blocked by premium phase",
+      stateCategory: "Hard block",
     };
   }
 
@@ -193,6 +195,12 @@ function getDashboardPriorityAction(data: DashboardData) {
             ? "this week"
             : "wait for unlock",
       blockedStateLabel,
+      stateCategory:
+        returnPack.blockageState === "weekly_pace"
+          ? "Momentum recovery"
+          : returnPack.blockageState === "ready"
+            ? "Soft block"
+            : "Hard block",
     };
   }
 
@@ -212,8 +220,9 @@ function getDashboardPriorityAction(data: DashboardData) {
     ctaVariant: nextPack.ctaVariant,
     packLabel: nextPack.label,
     timing: "today",
-      blockedStateLabel: "Ready to progress",
-    };
+    blockedStateLabel: "Ready to progress",
+    stateCategory: "Soft block",
+  };
   }
 
 function renderQuestCard(quest: Quest) {
@@ -492,6 +501,7 @@ export function DashboardSnapshot({
             <p className="form-note">{priorityAction.detail}</p>
             <p className="form-note">{priorityAction.supporting}</p>
             <p className="form-note">{priorityAction.blockedStateLabel}.</p>
+            <p className="form-note">{priorityAction.stateCategory}.</p>
             <p className="form-note">
               {priorityAction.blockedStateLabel === "Blocked by weekly pace"
                 ? "This is a recovery problem, not a hard progression block."
@@ -2296,6 +2306,19 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
             ))}
         </div>
         <div className="achievement-list">
+          {data.campaignOperations.reminderScheduleSummary.map((entry) => (
+            <article key={`reminder-schedule-${entry.schedule}`} className="achievement-card">
+              <div>
+                <strong>{entry.schedule.replaceAll("_", " ")}</strong>
+                <p>
+                  Current {entry.currentCount} vs previous {entry.previousCount}. Delta {entry.delta >= 0 ? "+" : ""}
+                  {entry.delta}.
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
           {data.campaignOperations.reminderVariantTrend.map((entry) => (
             <article key={`reminder-variant-trend-${entry.variant}`} className="achievement-card">
               <div>
@@ -2314,6 +2337,20 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
               <div>
                 <strong>
                   {entry.variant.replaceAll("_", " ")} on {entry.state.replaceAll("_", " ")}
+                </strong>
+                <p>
+                  {entry.handledCount} handled, {entry.snoozedCount} snoozed.
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.campaignOperations.reminderVariantScheduleSummary.map((entry) => (
+            <article key={`reminder-variant-schedule-${entry.variant}-${entry.schedule}`} className="achievement-card">
+              <div>
+                <strong>
+                  {entry.variant.replaceAll("_", " ")} on {entry.schedule.replaceAll("_", " ")}
                 </strong>
                 <p>
                   {entry.handledCount} handled, {entry.snoozedCount} snoozed.

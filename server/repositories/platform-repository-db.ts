@@ -258,6 +258,7 @@ type MissionInboxHistoryRow = QueryResultRow & {
   notification_status: "handled" | "snoozed" | null;
   notification_until: string | null;
   reminder_variant: string | null;
+  reminder_schedule: "today" | "this_week" | "wait_for_unlock" | null;
   detail: string | null;
   created_at: string;
 };
@@ -1526,8 +1527,43 @@ function getPackUnlockOutcomePreview({
   };
 }
 
+function getQuestGateLabel({
+  track,
+  verificationType,
+  isPremiumPreview,
+  hasDirectReward,
+}: {
+  track: QuestTrack;
+  verificationType: VerificationType;
+  isPremiumPreview: boolean;
+  hasDirectReward: boolean;
+}) {
+  if (verificationType === "wallet-check" || track === "wallet") {
+    return "Helps clear the wallet gate";
+  }
+
+  if (isPremiumPreview || track === "premium") {
+    return "Helps clear the premium phase";
+  }
+
+  if (hasDirectReward) {
+    return "Helps move the direct reward rail forward";
+  }
+
+  if (track === "starter") {
+    return "Helps clear the starter-path gate";
+  }
+
+  if (track === "daily" || track === "campaign") {
+    return "Helps recover weekly pace and mission momentum";
+  }
+
+  return "Helps build trust, eligibility, and progression pressure";
+}
+
 function getRecommendedPackCta(
   state: DashboardData["campaignPacks"][number]["blockageState"],
+  returnWindow: DashboardData["campaignPacks"][number]["returnWindow"] | "wait_for_unlock",
 ): {
   variant: string;
   badge: string;
@@ -1566,9 +1602,12 @@ function getRecommendedPackCta(
       };
     case "weekly_pace":
       return {
-        variant: "recovery_return",
-        badge: "Recovery CTA",
-        reason: "The best move is pulling users back onto pace before the pack cools off.",
+        variant: returnWindow === "today" ? "recovery_today" : "recovery_this_week",
+        badge: returnWindow === "today" ? "Today recovery CTA" : "Recovery CTA",
+        reason:
+          returnWindow === "today"
+            ? "This pack needs a same-day return move before momentum slips further."
+            : "The best move is pulling users back onto pace before the pack cools off.",
       };
     default:
       return {
@@ -1968,6 +2007,12 @@ async function getUserCampaignPackJourneys({
             : row.is_premium_preview
               ? "Premium progression step"
               : "XP-first progression step",
+        gateLabel: getQuestGateLabel({
+          track,
+          verificationType: row.verification_type,
+          isPremiumPreview: row.is_premium_preview,
+          hasDirectReward: Boolean(directReward && typeof directReward.amount === "number"),
+        }),
         rewardTimingLabel:
           directReward && typeof directReward.amount === "number"
             ? "Direct reward follows the pack payout state once this mission path is approved."
@@ -2634,6 +2679,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
               al.metadata->>'notificationStatus' AS notification_status,
               NULLIF(al.metadata->>'notificationUntil', '') AS notification_until,
               al.metadata->>'reminderVariant' AS reminder_variant,
+              al.metadata->>'reminderSchedule' AS reminder_schedule,
               al.metadata->>'detail' AS detail,
               al.created_at::text AS created_at
        FROM activity_log al
@@ -3458,7 +3504,16 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
                     pack.averageWeeklyXp < pack.benchmark.averageWeeklyXpTarget
                   ? "weekly_pace"
                   : "ready";
-      const recommendedCta = getRecommendedPackCta(recommendationState);
+      const recommendationWindow =
+        recommendationState === "weekly_pace" &&
+        pack.averageWeeklyXp < pack.benchmark.averageWeeklyXpTarget * 0.7
+          ? "today"
+          : recommendationState === "weekly_pace"
+            ? "this_week"
+            : recommendationState === "ready"
+              ? "this_week"
+              : "wait_for_unlock";
+      const recommendedCta = getRecommendedPackCta(recommendationState, recommendationWindow);
       pack.missionCtaSummary = {
         topCtaLabel: ctaSummary.topCtaLabel,
         topCtaVariant: ctaSummary.topCtaVariant,
@@ -3708,6 +3763,18 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       snoozedCount: number;
     }
   >();
+  const reminderScheduleSummaryMap = new Map<
+    AdminOverviewData["campaignOperations"]["reminderScheduleSummary"][number]["schedule"],
+    { currentCount: number; previousCount: number }
+  >([
+    ["today", { currentCount: 0, previousCount: 0 }],
+    ["this_week", { currentCount: 0, previousCount: 0 }],
+    ["wait_for_unlock", { currentCount: 0, previousCount: 0 }],
+  ]);
+  const reminderVariantScheduleMap = new Map<
+    string,
+    AdminOverviewData["campaignOperations"]["reminderVariantScheduleSummary"][number]
+  >();
   const missionReminderStatusTrendMap = new Map<
     AdminOverviewData["campaignOperations"]["missionReminderStatusTrend"][number]["status"],
     { currentCount: number; previousCount: number }
@@ -3883,9 +3950,46 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       current.snoozedCount += 1;
     }
     reminderVariantByBlockageMap.set(key, current);
+    const schedule = row.reminder_schedule ?? "wait_for_unlock";
+    const scheduleTrend = reminderScheduleSummaryMap.get(schedule);
+    if (scheduleTrend) {
+      const createdAt = new Date(row.created_at).getTime();
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      if (createdAt >= sevenDaysAgo) {
+        scheduleTrend.currentCount += 1;
+      } else {
+        scheduleTrend.previousCount += 1;
+      }
+    }
+    const scheduleKey = `${variant}::${schedule}`;
+    const scheduleEntry = reminderVariantScheduleMap.get(scheduleKey) ?? {
+      variant,
+      schedule,
+      handledCount: 0,
+      snoozedCount: 0,
+    };
+    if (row.notification_status === "handled") {
+      scheduleEntry.handledCount += 1;
+    } else if (row.notification_status === "snoozed") {
+      scheduleEntry.snoozedCount += 1;
+    }
+    reminderVariantScheduleMap.set(scheduleKey, scheduleEntry);
   }
+  const reminderScheduleSummary: AdminOverviewData["campaignOperations"]["reminderScheduleSummary"] = Array.from(
+    reminderScheduleSummaryMap.entries(),
+  ).map(([schedule, entry]) => ({
+    schedule,
+    currentCount: entry.currentCount,
+    previousCount: entry.previousCount,
+    delta: entry.currentCount - entry.previousCount,
+  }));
   const reminderVariantByBlockage: AdminOverviewData["campaignOperations"]["reminderVariantByBlockage"] = Array.from(
     reminderVariantByBlockageMap.values(),
+  )
+    .sort((left, right) => right.handledCount + right.snoozedCount - (left.handledCount + left.snoozedCount))
+    .slice(0, 8);
+  const reminderVariantScheduleSummary: AdminOverviewData["campaignOperations"]["reminderVariantScheduleSummary"] = Array.from(
+    reminderVariantScheduleMap.values(),
   )
     .sort((left, right) => right.handledCount + right.snoozedCount - (left.handledCount + left.snoozedCount))
     .slice(0, 8);
@@ -3964,7 +4068,9 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       blockageTrend,
       reminderVariantSummary,
       reminderVariantTrend,
+      reminderScheduleSummary,
       reminderVariantByBlockage,
+      reminderVariantScheduleSummary,
       blockageSuggestions,
       packAnalytics,
       partnerReporting,

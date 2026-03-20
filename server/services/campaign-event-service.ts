@@ -11,6 +11,7 @@ export async function trackCampaignEvent({
   notificationStatus,
   notificationUntil,
   reminderVariant,
+  reminderSchedule,
 }: {
   packId: string;
   eventType: string;
@@ -21,6 +22,7 @@ export async function trackCampaignEvent({
   notificationStatus?: "handled" | "snoozed";
   notificationUntil?: string | null;
   reminderVariant?: string | null;
+  reminderSchedule?: "today" | "this_week" | "wait_for_unlock" | null;
 }) {
   const currentUser = await getAuthenticatedUser();
 
@@ -58,6 +60,7 @@ export async function trackCampaignEvent({
       notificationStatus: notificationStatus ?? null,
       notificationUntil: notificationUntil ?? null,
       reminderVariant: reminderVariant ?? null,
+      reminderSchedule: reminderSchedule ?? null,
     },
   });
 }
