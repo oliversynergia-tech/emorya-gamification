@@ -9,10 +9,12 @@ export function MissionEventHistoryPanel({
   entries,
   activePacks = [],
   packHistory = [],
+  missionView = "all",
 }: {
   entries: DashboardData["missionEventHistory"];
   activePacks?: DashboardData["campaignPacks"];
   packHistory?: DashboardData["campaignPackHistory"];
+  missionView?: "active" | "completed" | "all" | "reward";
 }) {
   const [selectedPackId, setSelectedPackId] = useState<"all" | string>("all");
   const packOptions = useMemo(() => {
@@ -30,8 +32,35 @@ export function MissionEventHistoryPanel({
   }, [entries]);
 
   const filteredEntries = useMemo(
-    () => entries.filter((entry) => selectedPackId === "all" || entry.packId === selectedPackId),
-    [entries, selectedPackId],
+    () => {
+      const rewardPackIds = new Set(
+        activePacks
+          .filter((pack) => Boolean(pack.directRewardSummary || pack.directRewardState || pack.premiumNudge))
+          .map((pack) => pack.packId),
+      );
+      const rewardHistoryIds = new Set(
+        packHistory
+          .filter((pack) => pack.premiumQuestCount > 0 || pack.referralQuestCount > 0)
+          .map((pack) => pack.packId),
+      );
+
+      return entries.filter((entry) => {
+        if (selectedPackId !== "all" && entry.packId !== selectedPackId) {
+          return false;
+        }
+        if (missionView === "reward") {
+          return rewardPackIds.has(entry.packId) || rewardHistoryIds.has(entry.packId);
+        }
+        if (missionView === "active") {
+          return activePacks.some((pack) => pack.packId === entry.packId);
+        }
+        if (missionView === "completed") {
+          return packHistory.some((pack) => pack.packId === entry.packId);
+        }
+        return true;
+      });
+    },
+    [activePacks, entries, missionView, packHistory, selectedPackId],
   );
   const selectedActivePack = useMemo(
     () => activePacks.find((pack) => pack.packId === selectedPackId) ?? null,

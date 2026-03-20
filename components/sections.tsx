@@ -845,7 +845,13 @@ export function DashboardSnapshot({
             </div>
           </div>
         ) : null}
-        <CampaignMissionInboxPanel notifications={data.campaignNotifications} title="Live pack updates" eyebrow="Campaign inbox" />
+        <CampaignMissionInboxPanel
+          notifications={data.campaignNotifications}
+          activePacks={data.campaignPacks}
+          missionView={missionView}
+          title="Live pack updates"
+          eyebrow="Campaign inbox"
+        />
         <MissionPackDetailPanel
           activePacks={data.campaignPacks}
           packHistory={data.campaignPackHistory}
@@ -1716,7 +1722,13 @@ export function ProfileSection({ data }: { data: DashboardData }) {
         </div>
       </div>
       <ProfileMissionRecapPanel activePacks={data.campaignPacks} packHistory={data.campaignPackHistory} />
-      <CampaignMissionInboxPanel notifications={data.campaignNotifications} title="Mission inbox" eyebrow="Profile mission inbox" />
+      <CampaignMissionInboxPanel
+        notifications={data.campaignNotifications}
+        activePacks={data.campaignPacks}
+        missionView="reward"
+        title="Mission inbox"
+        eyebrow="Profile mission inbox"
+      />
       <MissionPackDetailPanel
         activePacks={data.campaignPacks}
         packHistory={data.campaignPackHistory}
@@ -1727,6 +1739,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
         entries={data.missionEventHistory}
         activePacks={data.campaignPacks}
         packHistory={data.campaignPackHistory}
+        missionView="reward"
       />
       <div className="panel">
         <div className="panel__header">

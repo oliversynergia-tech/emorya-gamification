@@ -113,6 +113,9 @@ export function ProfileMissionRecapPanel({
                 <p className="form-note">
                   {pack.completedQuestCount}/{pack.totalQuestCount} missions complete. {pack.sequenceReason}
                 </p>
+                {pack.nextQuestActionable && pack.nextQuestTitle ? (
+                  <p className="form-note">Resume exact quest: {pack.nextQuestTitle} is ready now.</p>
+                ) : null}
                 {pack.returnAction ? <p className="form-note">{pack.returnAction}</p> : null}
               </div>
                 <div className="achievement-card__side">

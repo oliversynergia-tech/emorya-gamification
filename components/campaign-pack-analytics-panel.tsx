@@ -422,6 +422,11 @@ function printPartnerReport(
     },
     { bridge: 0, feeder: 0, mixed: 0 },
   );
+  const sourceCompositionSummary = [
+    `${entries.filter((entry) => entry.sources.includes("direct")).length} direct-linked`,
+    `${entries.filter((entry) => entry.sources.includes("zealy")).length} bridged`,
+    `${entries.filter((entry) => entry.sources.some((source) => source === "galxe" || source === "taskon")).length} feeder-linked`,
+  ].join(" · ");
   const benchmarkChangeSummary = entries
     .filter((entry) => entry.benchmarkOverrideHistorySummary)
     .slice(0, 4)
@@ -491,6 +496,7 @@ function printPartnerReport(
         </section>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
           <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Campaign mix</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Composition: ${sourceCompositionSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Source mix: ${sourceMixSummary || "No source mix available"}</p>
           <p style="margin:0;color:#5e5035;">Pack kind mix: ${packKindMixSummary.bridge} bridge · ${packKindMixSummary.feeder} feeder · ${packKindMixSummary.mixed} mixed</p>
         </section>
@@ -521,7 +527,7 @@ function printPartnerReport(
         ${
           benchmarkChangeSummary
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
-                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Performance changes</p>
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Structural campaign changes</p>
                 <p style="margin:0;color:#5e5035;">${benchmarkChangeSummary}</p>
               </section>`
             : ""
@@ -529,7 +535,7 @@ function printPartnerReport(
         ${
           suppressionChangeSummary
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
-                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Operator interventions</p>
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Temporary operator interventions</p>
                 <p style="margin:0;color:#5e5035;">${suppressionChangeSummary}</p>
               </section>`
             : ""
@@ -1004,6 +1010,8 @@ export function CampaignPackAnalyticsPanel({
             matching.reduce((sum, pack) => sum + pack.averageWeeklyXp, 0) / matching.length;
           const averageEngagedWeeklyXpRate =
             matching.reduce((sum, pack) => sum + pack.engagedWeeklyXpRate, 0) / matching.length;
+          const zeroCompletionRiskRate =
+            matching.filter((pack) => (pack.weeklyTrend[pack.weeklyTrend.length - 1]?.completionCount ?? 0) === 0).length / matching.length;
           return (
             <article key={`lifecycle-compare-${lifecycleState}`} className="achievement-card">
               <div>
@@ -1078,6 +1086,16 @@ export function CampaignPackAnalyticsPanel({
                   <span>
                     engaged XP delta {averageEngagedWeeklyXpRate - comparisonBasePack.engagedWeeklyXpRate >= 0 ? "+" : ""}
                     {Math.round((averageEngagedWeeklyXpRate - comparisonBasePack.engagedWeeklyXpRate) * 100)} pts
+                  </span>
+                ) : null}
+                {comparisonBasePack ? (
+                  <span>
+                    zero-completion risk {zeroCompletionRiskRate - ((comparisonBasePack.weeklyTrend[comparisonBasePack.weeklyTrend.length - 1]?.completionCount ?? 0) === 0 ? 1 : 0) >= 0 ? "+" : ""}
+                    {Math.round(
+                      (zeroCompletionRiskRate -
+                        (((comparisonBasePack.weeklyTrend[comparisonBasePack.weeklyTrend.length - 1]?.completionCount ?? 0) === 0 ? 1 : 0))) *
+                        100,
+                    )} pts
                   </span>
                 ) : null}
                 <span>avg completion delta {averageCompletionDelta >= 0 ? "+" : ""}{averageCompletionDelta.toFixed(1)}</span>

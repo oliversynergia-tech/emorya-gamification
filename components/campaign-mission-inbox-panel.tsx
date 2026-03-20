@@ -8,10 +8,14 @@ import { MissionLink } from "@/components/mission-link";
 
 export function CampaignMissionInboxPanel({
   notifications,
+  activePacks = [],
+  missionView = "active",
   title = "Mission inbox",
   eyebrow = "Campaign inbox",
 }: {
   notifications: DashboardData["campaignNotifications"];
+  activePacks?: DashboardData["campaignPacks"];
+  missionView?: "active" | "completed" | "all" | "reward";
   title?: string;
   eyebrow?: string;
 }) {
@@ -131,6 +135,16 @@ export function CampaignMissionInboxPanel({
   const visibleNotifications = useMemo(
     () =>
       notifications.filter((notification) => {
+        if (missionView === "reward") {
+          const rewardPackIds = new Set(
+            activePacks
+              .filter((pack) => Boolean(pack.directRewardSummary || pack.directRewardState || pack.premiumNudge))
+              .map((pack) => pack.packId),
+          );
+          if (!rewardPackIds.has(notification.packId)) {
+            return false;
+          }
+        }
         const state = inboxState[notification.id];
         if (!state) {
           return true;
@@ -142,7 +156,7 @@ export function CampaignMissionInboxPanel({
 
         return false;
       }),
-    [currentTime, inboxState, notifications],
+    [activePacks, currentTime, inboxState, missionView, notifications],
   );
 
   if (visibleNotifications.length === 0) {
