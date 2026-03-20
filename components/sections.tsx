@@ -105,6 +105,8 @@ function getDashboardPriorityAction(data: DashboardData) {
       timing: "wait for unlock",
       blockedStateLabel: "Blocked by wallet connection",
       stateCategory: "Hard block",
+      stateMetricLabel: "Next unlock",
+      stateMetricValue: "Connect xPortal",
     };
   }
 
@@ -125,6 +127,8 @@ function getDashboardPriorityAction(data: DashboardData) {
       timing: "this week",
       blockedStateLabel: "Blocked by premium phase",
       stateCategory: "Hard block",
+      stateMetricLabel: "Next unlock",
+      stateMetricValue: "Premium phase push",
     };
   }
 
@@ -178,6 +182,28 @@ function getDashboardPriorityAction(data: DashboardData) {
         : returnPack.blockageState === "ready"
           ? "Resume mission"
           : "Blocked mission";
+    const stateMetric =
+      returnPack.blockageState === "weekly_pace"
+        ? {
+            label: "Pace gap",
+            value:
+              returnPack.weeklyGoal.shortfallXp > 0
+                ? `${returnPack.weeklyGoal.shortfallXp} XP behind target`
+                : "On pace",
+          }
+        : returnPack.blockageState === "wallet_connection"
+          ? { label: "Next unlock", value: "Connect xPortal" }
+          : returnPack.blockageState === "starter_path"
+            ? { label: "Next unlock", value: "Finish starter path" }
+            : returnPack.blockageState === "level"
+              ? { label: "Next unlock", value: returnPack.weeklyGoal.label }
+              : returnPack.blockageState === "trust"
+                ? { label: "Next unlock", value: "Rebuild trust and eligibility" }
+                : returnPack.blockageState === "premium_phase"
+                  ? { label: "Next unlock", value: "Premium mission step" }
+                  : returnPack.returnWindow === "wait_for_unlock"
+                    ? { label: "Next unlock", value: "Wait for unlock window" }
+                    : { label: "Return window", value: returnPack.returnWindow.replaceAll("_", " ") };
     return {
       eyebrow,
       title,
@@ -201,6 +227,8 @@ function getDashboardPriorityAction(data: DashboardData) {
           : returnPack.blockageState === "ready"
             ? "Soft block"
             : "Hard block",
+      stateMetricLabel: stateMetric.label,
+      stateMetricValue: stateMetric.value,
     };
   }
 
@@ -222,8 +250,10 @@ function getDashboardPriorityAction(data: DashboardData) {
     timing: "today",
     blockedStateLabel: "Ready to progress",
     stateCategory: "Soft block",
+    stateMetricLabel: "Next unlock",
+    stateMetricValue: nextPack.unlockPreview,
   };
-  }
+}
 
 function renderQuestCard(quest: Quest) {
   return (
@@ -516,6 +546,9 @@ export function DashboardSnapshot({
                 : priorityAction.blockedStateLabel === "Ready to resume"
                   ? "Nothing structural is blocking this pack right now."
                   : "This pack still has a real progression gate in front of it."}
+            </p>
+            <p className="form-note">
+              {priorityAction.stateMetricLabel}: {priorityAction.stateMetricValue}.
             </p>
             <p className="form-note">Best return window: {priorityAction.timing}.</p>
             <div className="hero__actions">

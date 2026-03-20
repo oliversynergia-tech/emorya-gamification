@@ -1720,6 +1720,54 @@ function getPackOperatorNextMove({
   };
 }
 
+function getPackOperatorOutcome({
+  reminderHandledRate,
+  ctaUsers,
+  participantCount,
+  approvedCompletionCount,
+}: {
+  reminderHandledRate: number;
+  ctaUsers: number;
+  participantCount: number;
+  approvedCompletionCount: number;
+}) {
+  const ctaReach = participantCount > 0 ? ctaUsers / participantCount : 0;
+  const approvalDensity = participantCount > 0 ? approvedCompletionCount / participantCount : 0;
+
+  if (reminderHandledRate >= 0.6 && ctaReach >= 0.35 && approvalDensity >= 0.2) {
+    return {
+      title: "Signals improving",
+      detail: "Reminder handling, CTA reach, and mission progression are all in a healthy range for this pack.",
+    };
+  }
+
+  if (reminderHandledRate < 0.35) {
+    return {
+      title: "Reminder pressure is weak",
+      detail: "Users are snoozing or ignoring too much of the reminder stream, so operator changes should start there.",
+    };
+  }
+
+  if (ctaReach < 0.2) {
+    return {
+      title: "CTA reach is still shallow",
+      detail: "The current recommendation is not yet pulling enough pack participants into the intended next action.",
+    };
+  }
+
+  if (approvalDensity < 0.15) {
+    return {
+      title: "Mission progression is still thin",
+      detail: "People are touching the pack, but those actions are not yet turning into enough approved mission movement.",
+    };
+  }
+
+  return {
+    title: "Mixed signals",
+    detail: "Some pack signals are improving, but the next operator move still needs close monitoring.",
+  };
+}
+
 function getRecommendedPackCta(
   state: DashboardData["campaignPacks"][number]["blockageState"],
   returnWindow: DashboardData["campaignPacks"][number]["returnWindow"] | "wait_for_unlock",
@@ -1775,6 +1823,26 @@ function getRecommendedPackCta(
         reason: "This pack is mostly ready, so simple next-step progression language should win.",
       };
   }
+}
+
+function getQuestDependencyProgressLabel(index: number, actionable: boolean, status: "available" | "in-progress" | "completed" | "rejected") {
+  if (status === "completed") {
+    return "Dependency already cleared";
+  }
+
+  if (actionable) {
+    return "Most likely dependency to clear now";
+  }
+
+  if (index === 1) {
+    return "Likely next dependency after the current step";
+  }
+
+  if (index === 2) {
+    return "Mid-pack dependency after the next unlock";
+  }
+
+  return "Later dependency in the remaining mission path";
 }
 
 function resolvePackPrimaryCta({
@@ -2115,7 +2183,7 @@ async function getUserCampaignPackJourneys({
         ),
       ),
     ).slice(0, 3) as QuestTrack[];
-    const questStatuses = rows.map((row) => {
+    const questStatuses = rows.map((row, index) => {
       const track = inferQuestTrack({
         slug: row.quest_slug,
         category: row.category,
@@ -2186,6 +2254,11 @@ async function getUserCampaignPackJourneys({
                   ? "trust"
                   : "ready",
         }),
+        dependencyProgressLabel: getQuestDependencyProgressLabel(
+          index,
+          ["quiz", "manual-review", "link-visit", "wallet-check"].includes(row.verification_type),
+          status,
+        ),
         rewardTimingLabel:
           directReward && typeof directReward.amount === "number"
             ? "Direct reward follows the pack payout state once this mission path is approved."
@@ -3420,6 +3493,10 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           title: "Keep monitoring this pack",
           detail: "Pack-specific operator guidance will appear once reminder and CTA signals accumulate.",
         },
+        operatorOutcome: {
+          title: "Outcome signal is still forming",
+          detail: "Reminder handling, CTA traffic, and mission approvals need a little more pack activity before the operator outcome call becomes meaningful.",
+        },
       };
     current.lifecycleState = lifecycleState === "live" || current.lifecycleState === "live"
       ? "live"
@@ -3745,6 +3822,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         reminderHandledRate,
         topCtaVariant: ctaSummary.topCtaVariant,
         returnWindow: recommendationWindow,
+      });
+      pack.operatorOutcome = getPackOperatorOutcome({
+        reminderHandledRate,
+        ctaUsers: ctaSummary.uniqueUsers,
+        participantCount: pack.participantCount,
+        approvedCompletionCount: pack.approvedCompletionCount,
       });
     }
   }

@@ -467,6 +467,7 @@ export type DashboardData = {
       actionable: boolean;
       gateLabel: string;
       dependencyDetail: string;
+      dependencyProgressLabel: string;
       nextHint: string;
       rewardLabel: string;
       rewardTimingLabel: string;
@@ -1028,6 +1029,10 @@ export type AdminOverviewData = {
         };
       };
       operatorNextMove: {
+        title: string;
+        detail: string;
+      };
+      operatorOutcome: {
         title: string;
         detail: string;
       };

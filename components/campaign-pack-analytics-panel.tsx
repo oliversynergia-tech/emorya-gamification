@@ -55,6 +55,18 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
       "benchmark_status",
       "benchmark_is_overridden",
       "benchmark_override_reason",
+      "recommended_cta_variant",
+      "recommended_cta_badge",
+      "recommended_cta_reason",
+      "operator_outcome_title",
+      "operator_outcome_detail",
+      "reminder_handled_count",
+      "reminder_snoozed_count",
+      "reminder_handled_rate",
+      "reminder_trend_current",
+      "reminder_trend_previous",
+      "reminder_trend_delta",
+      "recommendation_history_snapshot",
     ].join(","),
     ...entries.map((entry) =>
       [
@@ -99,6 +111,18 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
         entry.benchmark.status,
         entry.benchmark.isOverridden,
         JSON.stringify(entry.benchmark.overrideReason ?? ""),
+        JSON.stringify(entry.missionCtaSummary.recommendedVariant ?? ""),
+        JSON.stringify(entry.missionCtaSummary.recommendedBadge ?? ""),
+        JSON.stringify(entry.missionCtaSummary.recommendedReason ?? ""),
+        JSON.stringify(entry.operatorOutcome.title),
+        JSON.stringify(entry.operatorOutcome.detail),
+        entry.reminderEffectiveness.handledCount,
+        entry.reminderEffectiveness.snoozedCount,
+        entry.reminderEffectiveness.handledRate,
+        entry.reminderEffectiveness.trend.currentCount,
+        entry.reminderEffectiveness.trend.previousCount,
+        entry.reminderEffectiveness.trend.delta,
+        JSON.stringify(entry.missionCtaSummary.recommendationHistory),
       ].join(","),
     ),
   ].join("\n");
@@ -319,6 +343,24 @@ export function CampaignPackAnalyticsPanel({
       .sort((left, right) => right.premiumConversionDelta - left.premiumConversionDelta);
   }, [comparisonBasePack, filteredPacks]);
 
+  const reminderComparison = useMemo(() => {
+    const ranked = filteredPacks
+      .map((pack) => ({
+        packId: pack.packId,
+        label: pack.label,
+        handledRate: pack.reminderEffectiveness.handledRate,
+        totalCount: pack.reminderEffectiveness.totalCount,
+        trendDelta: pack.reminderEffectiveness.trend.delta,
+      }))
+      .filter((pack) => pack.totalCount > 0)
+      .sort((left, right) => right.handledRate - left.handledRate || right.trendDelta - left.trendDelta);
+
+    return {
+      strongest: ranked.slice(0, 3),
+      weakest: [...ranked].reverse().slice(0, 3),
+    };
+  }, [filteredPacks]);
+
   async function updateLifecycle(packId: string, lifecycleState: "draft" | "ready" | "live") {
     setPendingPackId(packId);
     setError(null);
@@ -502,6 +544,42 @@ export function CampaignPackAnalyticsPanel({
           ))}
         </div>
       ) : null}
+      {reminderComparison.strongest.length > 0 || reminderComparison.weakest.length > 0 ? (
+        <div className="achievement-list">
+          <article className="achievement-card">
+            <div>
+              <strong>Reminder effectiveness comparison</strong>
+              <p>Quick scan of which filtered live packs are landing reminder pressure best, and which ones need a closer look.</p>
+            </div>
+          </article>
+          {reminderComparison.strongest.map((pack) => (
+            <article key={`strong-${pack.packId}`} className="achievement-card">
+              <div>
+                <strong>{pack.label}</strong>
+                <p>Stronger reminder handling in the current filtered set.</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{Math.round(pack.handledRate * 100)}% handled</span>
+                <span>{pack.totalCount} reminder events</span>
+                <span>trend {pack.trendDelta >= 0 ? "+" : ""}{pack.trendDelta}</span>
+              </div>
+            </article>
+          ))}
+          {reminderComparison.weakest.map((pack) => (
+            <article key={`weak-${pack.packId}`} className="achievement-card">
+              <div>
+                <strong>{pack.label}</strong>
+                <p>Weaker reminder handling in the current filtered set.</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{Math.round(pack.handledRate * 100)}% handled</span>
+                <span>{pack.totalCount} reminder events</span>
+                <span>trend {pack.trendDelta >= 0 ? "+" : ""}{pack.trendDelta}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
       <div className="achievement-list">
         {filteredPacks.map((pack) => (
           <article key={pack.packId} className="achievement-card">
@@ -563,6 +641,8 @@ export function CampaignPackAnalyticsPanel({
                     <p>{pack.missionCtaSummary.recommendedReason}</p>
                     <p className="form-note">{pack.operatorNextMove.title}</p>
                     <p className="form-note">{pack.operatorNextMove.detail}</p>
+                    <p className="form-note">{pack.operatorOutcome.title}</p>
+                    <p className="form-note">{pack.operatorOutcome.detail}</p>
                   </div>
                   <div className="achievement-card__side">
                     <span>{pack.missionCtaSummary.recommendedVariant}</span>
