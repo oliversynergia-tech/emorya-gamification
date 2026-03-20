@@ -15,6 +15,13 @@ function isRewardBearingHistory(pack: DashboardCampaignPackHistory) {
   return pack.premiumQuestCount > 0 || pack.referralQuestCount > 0;
 }
 
+function getProfilePackHref(pack: DashboardCampaignPack) {
+  if (pack.nextQuestActionable && pack.nextQuestId) {
+    return `/dashboard#quest-${pack.nextQuestId}`;
+  }
+  return pack.ctaHref ?? "#quest-board";
+}
+
 export function ProfileMissionRecapPanel({
   activePacks,
   packHistory,
@@ -33,6 +40,9 @@ export function ProfileMissionRecapPanel({
     if (stored === "all") {
       return "active";
     }
+    if (stored === "reward") {
+      return "reward";
+    }
     const recapStored = window.localStorage.getItem("emorya-profile-mission-view");
     return recapStored === "completed" || recapStored === "reward" ? recapStored : "active";
   });
@@ -41,6 +51,7 @@ export function ProfileMissionRecapPanel({
     if (typeof window === "undefined") {
       return;
     }
+    window.localStorage.setItem("emorya-dashboard-mission-view", view === "reward" ? "reward" : view);
     window.localStorage.setItem("emorya-profile-mission-view", view);
   }, [view]);
 
@@ -109,7 +120,7 @@ export function ProfileMissionRecapPanel({
                   <span>{pack.weeklyGoal.targetXp} XP target</span>
                   <MissionLink
                     className="text-link"
-                    href={pack.ctaHref ?? "#quest-board"}
+                    href={getProfilePackHref(pack)}
                     packId={pack.packId}
                     eventType="profile_recap_cta"
                     ctaLabel={pack.ctaLabel}

@@ -457,8 +457,8 @@ export function DashboardSnapshot({
   onMissionViewChange,
 }: {
   data: DashboardData;
-  missionView?: "active" | "completed" | "all";
-  onMissionViewChange?: (view: "active" | "completed" | "all") => void;
+  missionView?: "active" | "completed" | "all" | "reward";
+  onMissionViewChange?: (view: "active" | "completed" | "all" | "reward") => void;
 }) {
   const progress = getLevelProgress(data.user.totalXp);
   const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
@@ -700,6 +700,9 @@ export function DashboardSnapshot({
               <button className={`button ${missionView === "all" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("all")}>
                 All mission views
               </button>
+              <button className={`button ${missionView === "reward" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("reward")}>
+                Reward-bearing
+              </button>
             </div>
             <div className="achievement-list">
               {data.campaignPacks.map((pack) => (
@@ -868,6 +871,9 @@ export function DashboardSnapshot({
                 </button>
                 <button className={`button ${missionView === "all" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("all")}>
                   All mission views
+                </button>
+                <button className={`button ${missionView === "reward" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("reward")}>
+                  Reward-bearing
                 </button>
               </div>
             ) : null}

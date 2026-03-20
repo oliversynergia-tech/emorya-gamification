@@ -392,6 +392,11 @@ function printPartnerReport(
     `${entries.filter((entry) => entry.benchmarkStatus === "mixed").length} mixed`,
     `${entries.filter((entry) => entry.benchmarkStatus === "off_track").length} off track`,
   ].join(" · ");
+  const lifecycleCompositionSummary = [
+    `${entries.filter((entry) => entry.lifecycleState === "live").length} live`,
+    `${entries.filter((entry) => entry.lifecycleState === "ready").length} ready`,
+    `${entries.filter((entry) => entry.lifecycleState === "draft").length} draft`,
+  ].join(" · ");
   const alertPressureSummary = `${entries.filter((entry) => entry.benchmarkStatus !== "on_track").length} packs currently need closer monitoring.`;
   const sourceMixSummary = Array.from(
     entries.reduce((totals, entry) => {
@@ -481,6 +486,7 @@ function printPartnerReport(
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
           <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Campaign status</p>
           <p style="margin:0 0 8px;color:#5e5035;">Benchmark status: ${benchmarkSummary}</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Lifecycle mix: ${lifecycleCompositionSummary}</p>
           <p style="margin:0;color:#5e5035;">Alert pressure: ${alertPressureSummary}</p>
         </section>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
@@ -515,7 +521,7 @@ function printPartnerReport(
         ${
           benchmarkChangeSummary
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
-                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Benchmark changes</p>
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Performance changes</p>
                 <p style="margin:0;color:#5e5035;">${benchmarkChangeSummary}</p>
               </section>`
             : ""
@@ -523,7 +529,7 @@ function printPartnerReport(
         ${
           suppressionChangeSummary
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
-                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Alert suppressions</p>
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Operator interventions</p>
                 <p style="margin:0;color:#5e5035;">${suppressionChangeSummary}</p>
               </section>`
             : ""
@@ -996,6 +1002,8 @@ export function CampaignPackAnalyticsPanel({
             matching.reduce((sum, pack) => sum + pack.retainedActivityRate, 0) / matching.length;
           const averageWeeklyXp =
             matching.reduce((sum, pack) => sum + pack.averageWeeklyXp, 0) / matching.length;
+          const averageEngagedWeeklyXpRate =
+            matching.reduce((sum, pack) => sum + pack.engagedWeeklyXpRate, 0) / matching.length;
           return (
             <article key={`lifecycle-compare-${lifecycleState}`} className="achievement-card">
               <div>
@@ -1064,6 +1072,12 @@ export function CampaignPackAnalyticsPanel({
                   <span>
                     weekly XP delta {averageWeeklyXp - comparisonBasePack.averageWeeklyXp >= 0 ? "+" : ""}
                     {Math.round(averageWeeklyXp - comparisonBasePack.averageWeeklyXp)}
+                  </span>
+                ) : null}
+                {comparisonBasePack ? (
+                  <span>
+                    engaged XP delta {averageEngagedWeeklyXpRate - comparisonBasePack.engagedWeeklyXpRate >= 0 ? "+" : ""}
+                    {Math.round((averageEngagedWeeklyXpRate - comparisonBasePack.engagedWeeklyXpRate) * 100)} pts
                   </span>
                 ) : null}
                 <span>avg completion delta {averageCompletionDelta >= 0 ? "+" : ""}{averageCompletionDelta.toFixed(1)}</span>

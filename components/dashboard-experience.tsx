@@ -6,7 +6,15 @@ import type { DashboardData, Quest, QuestProgressUpdate, QuestStatus } from "@/l
 import { DashboardSnapshot, PremiumFunnelSection, QuestBoardSection } from "@/components/sections";
 import { QuestActionsPanel } from "@/components/quest-actions-panel";
 
-type MissionView = "active" | "completed" | "all";
+type MissionView = "active" | "completed" | "all" | "reward";
+
+function isRewardBearingPack(pack: DashboardData["campaignPacks"][number]) {
+  return Boolean(pack.directRewardSummary || pack.directRewardState || pack.premiumNudge);
+}
+
+function isRewardBearingHistory(pack: DashboardData["campaignPackHistory"][number]) {
+  return pack.premiumQuestCount > 0 || pack.referralQuestCount > 0;
+}
 
 function getQuestStatusFromOutcome(outcome: "approved" | "pending" | "rejected"): QuestStatus {
   switch (outcome) {
@@ -232,7 +240,7 @@ export function DashboardExperience({
       return "active";
     }
     const stored = window.localStorage.getItem("emorya-dashboard-mission-view");
-    return stored === "completed" || stored === "all" ? stored : "active";
+    return stored === "completed" || stored === "all" || stored === "reward" ? stored : "active";
   });
   const highlightedQuestId = data.campaignPacks.find((pack) => pack.nextQuestActionable && pack.nextQuestId)?.nextQuestId ?? null;
 
@@ -266,6 +274,30 @@ export function DashboardExperience({
             : data.quests,
         campaignPacks: [],
         campaignNotifications: [],
+      };
+    }
+
+    if (missionView === "reward") {
+      const rewardPackIds = new Set(data.campaignPacks.filter(isRewardBearingPack).map((pack) => pack.packId));
+      const rewardHistory = data.campaignPackHistory.filter(isRewardBearingHistory);
+      const rewardHistoryIds = new Set(rewardHistory.map((pack) => pack.packId));
+
+      return {
+        ...data,
+        quests:
+          rewardPackIds.size > 0 || rewardHistoryIds.size > 0
+            ? data.quests.filter(
+                (quest) =>
+                  !quest.campaignPackId ||
+                  rewardPackIds.has(quest.campaignPackId) ||
+                  rewardHistoryIds.has(quest.campaignPackId),
+              )
+            : data.quests,
+        campaignPacks: data.campaignPacks.filter(isRewardBearingPack),
+        campaignPackHistory: rewardHistory,
+        campaignNotifications: data.campaignNotifications.filter((notification) =>
+          rewardPackIds.has(notification.packId),
+        ),
       };
     }
 
