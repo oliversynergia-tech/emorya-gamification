@@ -309,9 +309,9 @@ function exportPartnerReporting(
     "",
     [
       "pack_id",
-      "label",
-      "lifecycle_state",
-      "sources",
+      "pack_label",
+      "lifecycle_phase",
+      "source_mix",
       "benchmark_lane",
       "benchmark_status",
       "participant_count",
@@ -323,14 +323,14 @@ function exportPartnerReporting(
       "average_weekly_xp",
       "completion_trend_delta",
       "partner_summary_headline",
-      "partner_summary_detail",
-      "operator_outcome_title",
-      "operator_outcome_detail",
-      "lifecycle_phase_summary",
-      "zero_completion_risk_trend_summary",
-      "benchmark_override_impact_summary",
-      "lifecycle_history_summary",
-      "recommendation_history_snapshot",
+      "partner_summary_note",
+      "operator_outcome_headline",
+      "operator_outcome_note",
+      "lifecycle_phase_note",
+      "zero_completion_risk_note",
+      "benchmark_override_note",
+      "lifecycle_history_note",
+      "recommendation_history_note",
     ].join(","),
     ...entries.map((entry) =>
       [
@@ -421,11 +421,11 @@ function exportOperatorOutcomes(
     "",
     [
       "pack_id",
-      "label",
-      "lifecycle_state",
-      "kind",
-      "recommended_variant",
-      "recommended_reason",
+      "pack_label",
+      "lifecycle_phase",
+      "pack_kind",
+      "recommended_cta_variant",
+      "recommended_cta_reason",
       "reminder_handled_rate",
       "reminder_trend_delta",
       "cta_clicks",
@@ -435,8 +435,8 @@ function exportOperatorOutcomes(
       "cta_premium_conversion_rate",
       "zero_completion_risk_current",
       "zero_completion_risk_shift",
-      "operator_outcome_title",
-      "operator_outcome_detail",
+      "operator_outcome_headline",
+      "operator_outcome_note",
       "completion_trend_delta",
       "participant_trend_delta",
     ].join(","),
@@ -752,14 +752,14 @@ function printPartnerReport(
       <body>
         <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Emorya Gamification</p>
         <h1>Partner Campaign Pack Report</h1>
-        <p>This export is tuned for partner sharing and PDF save/export from the browser print dialog.</p>
+        <p>This report is tuned for partner sharing and clean PDF export from the browser print dialog.</p>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
           <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Export scope</p>
           <p style="margin:0 0 8px;color:#5e5035;">Search: ${filters.search.trim() || "No search filter"}</p>
           <p style="margin:0;color:#5e5035;">Source: ${getSourceFilterLabel(filters.source)} · Status: ${getStatusFilterLabel(filters.status)} · Kind: ${getKindFilterLabel(filters.kind)}</p>
         </section>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
-          <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Campaign status</p>
+          <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Campaign snapshot</p>
           <p style="margin:0 0 8px;color:#5e5035;">Benchmark status mix: ${benchmarkSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Lifecycle composition: ${lifecycleCompositionSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Benchmark by pack kind: ${benchmarkKindSummary || "No benchmark-by-kind mix available"}</p>
@@ -768,10 +768,10 @@ function printPartnerReport(
           <p style="margin:0 0 8px;color:#5e5035;">Operator outcome mix: ${operatorOutcomeMixSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Operator outcome by lifecycle: ${lifecycleOperatorOutcomeSummary || "No lifecycle outcome mix available"}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Zero-completion risk by lifecycle: ${lifecycleZeroCompletionMixSummary || "No lifecycle risk mix available"}</p>
-          <p style="margin:0;color:#5e5035;">Alert pressure: ${alertPressureSummary}</p>
+          <p style="margin:0;color:#5e5035;">Current alert pressure: ${alertPressureSummary}</p>
         </section>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
-          <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Campaign mix</p>
+          <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Campaign composition</p>
           <p style="margin:0 0 8px;color:#5e5035;">Composition: ${sourceCompositionSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Source mix: ${sourceMixSummary || "No source mix available"}</p>
           <p style="margin:0;color:#5e5035;">Pack kind mix: ${packKindMixSummary.bridge} bridge · ${packKindMixSummary.feeder} feeder · ${packKindMixSummary.mixed} mixed</p>
@@ -811,7 +811,7 @@ function printPartnerReport(
         ${
           suppressionChangeSummary
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
-                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Temporary operator interventions</p>
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Temporary operating interventions</p>
                 <p style="margin:0;color:#5e5035;">${suppressionChangeSummary}</p>
               </section>`
             : ""

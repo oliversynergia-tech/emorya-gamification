@@ -393,6 +393,11 @@ export function QuestActionsPanel({
         })}
       </div>
       {message ? <p className="status status--success">{message}</p> : null}
+      {message && !progressUpdate && activeCampaignPack && missionCue ? (
+        <p className={`mission-cue mission-cue--${missionCue.tone}`}>
+          <strong>{missionCue.badge}</strong> {missionCue.note}
+        </p>
+      ) : null}
       {progressUpdate ? (
         <div className="progress-feedback">
           <div className="panel__header">
