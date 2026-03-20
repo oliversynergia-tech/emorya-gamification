@@ -267,6 +267,12 @@ type MissionReminderStatusTrendRow = QueryResultRow & {
   count: string;
 };
 
+type MissionReminderVariantRow = QueryResultRow & {
+  reminder_variant: string | null;
+  notification_status: "handled" | "snoozed" | null;
+  count: string;
+};
+
 type AchievementRow = QueryResultRow & {
   slug: string;
   name: string;
@@ -1449,6 +1455,10 @@ function buildCampaignNotifications(
             : `${pack.label} is active in your mission flow`,
         detail: `${detailParts.join(" ")} ${pack.nextAction}`.trim(),
         packId: pack.packId,
+        reminderVariant:
+          pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
+            ? "referral_milestone"
+            : "mission_progress",
         ctaLabel:
           pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
             ? "Open referral leaderboard"
@@ -1477,6 +1487,7 @@ function buildCampaignNotifications(
       title: `${inactivityNotification.label} is cooling off`,
       detail: `Weekly pace is slipping by ${inactivityNotification.weeklyGoal.shortfallXp} XP. A clean mission clear now will pull this pack back onto its current target.`,
       packId: inactivityNotification.packId,
+      reminderVariant: "pace_recovery",
       ctaLabel: inactivityNotification.ctaLabel,
       ctaQuestId: inactivityNotification.nextQuestId,
       ctaHref: inactivityNotification.ctaHref,
@@ -1492,6 +1503,12 @@ function buildCampaignNotifications(
       title: `${returnReminder.label} needs a return move`,
       detail: `${returnReminder.returnAction ?? returnReminder.nextAction} ${returnReminder.unlockPreview}`,
       packId: returnReminder.packId,
+      reminderVariant:
+        returnReminder.returnWindow === "wait_for_unlock"
+          ? "unlock_wait"
+          : returnReminder.returnWindow === "this_week"
+            ? "weekly_return"
+            : "today_return",
       ctaLabel: returnReminder.ctaLabel,
       ctaQuestId: returnReminder.nextQuestId,
       ctaHref: returnReminder.ctaHref,
@@ -2140,7 +2157,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends, campaignMissionSubmitAttempts, campaignMissionCtaByTier, campaignMissionApprovedByTier, campaignMissionApprovedByVariant, campaignMissionInboxHistory, missionReminderStatusTrend] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends, campaignMissionSubmitAttempts, campaignMissionCtaByTier, campaignMissionApprovedByTier, campaignMissionApprovedByVariant, campaignMissionInboxHistory, missionReminderStatusTrend, missionReminderVariantSummary] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -2362,6 +2379,15 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
                   WHEN al.created_at >= NOW() - INTERVAL '7 days' THEN 'current'
                   ELSE 'previous'
                 END`,
+    ),
+    runQuery<MissionReminderVariantRow>(
+      `SELECT COALESCE(al.metadata->>'reminderVariant', 'unknown') AS reminder_variant,
+              al.metadata->>'notificationStatus' AS notification_status,
+              COUNT(*)::text AS count
+       FROM activity_log al
+       WHERE al.action_type = 'campaign-mission-inbox-state'
+       GROUP BY COALESCE(al.metadata->>'reminderVariant', 'unknown'),
+                al.metadata->>'notificationStatus'`,
     ),
   ]);
 
@@ -2856,6 +2882,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           rewardEligibilityRate: 0,
           premiumConversionRate: 0,
           variantBreakdown: [],
+          variantComparison: [],
         },
         createdAt: quest.createdAt,
         lastUpdatedAt: quest.updatedAt,
@@ -2998,6 +3025,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           uniqueUsers: number;
         }>;
       }>;
+      variantComparison: Array<{
+        variant: string;
+        clickCount: number;
+        approvedUserRate: number;
+        walletLinkRate: number;
+      }>;
     }
   >();
   const missionCtaLaneMap = new Map<
@@ -3048,6 +3081,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       premiumUsers: 0,
       maxClicks: -1,
       variantBreakdown: [],
+      variantComparison: [],
     };
     current.totalClicks += clickCount;
     current.uniqueUsers += uniqueUserCount;
@@ -3091,6 +3125,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       laneBreakdown:
         missionCtaLaneMap.get(`${entry.pack_id}::${entry.cta_label ?? "unknown"}::${entry.cta_variant ?? "unknown"}`) ?? [],
     });
+    current.variantComparison.push({
+      variant: entry.cta_variant ?? "unknown",
+      clickCount,
+      approvedUserRate: uniqueUserCount > 0 ? (approvedSummary?.approvedUserCount ?? 0) / uniqueUserCount : 0,
+      walletLinkRate: uniqueUserCount > 0 ? (correlation?.walletLinkedUserCount ?? 0) / uniqueUserCount : 0,
+    });
     missionCtaSummaryMap.set(entry.pack_id, current);
   }
   for (const pack of packAnalyticsMap.values()) {
@@ -3126,6 +3166,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         rewardEligibilityRate: ctaSummary.uniqueUsers > 0 ? ctaSummary.rewardEligibleUsers / ctaSummary.uniqueUsers : 0,
         premiumConversionRate: ctaSummary.uniqueUsers > 0 ? ctaSummary.premiumUsers / ctaSummary.uniqueUsers : 0,
         variantBreakdown: ctaSummary.variantBreakdown.sort((left, right) => right.clickCount - left.clickCount),
+        variantComparison: ctaSummary.variantComparison.sort((left, right) => right.approvedUserRate - left.approvedUserRate),
       };
     }
   }
@@ -3410,6 +3451,104 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
   const blockageSummary: AdminOverviewData["campaignOperations"]["blockageSummary"] = Array.from(
     blockageSummaryMap.entries(),
   ).map(([state, count]) => ({ state, count }));
+  const blockageTrendMap = new Map<
+    AdminOverviewData["campaignOperations"]["blockageTrend"][number]["state"],
+    { currentCount: number; previousCount: number }
+  >([
+    ["wallet_connection", { currentCount: 0, previousCount: 0 }],
+    ["starter_path", { currentCount: 0, previousCount: 0 }],
+    ["level", { currentCount: 0, previousCount: 0 }],
+    ["trust", { currentCount: 0, previousCount: 0 }],
+    ["premium_phase", { currentCount: 0, previousCount: 0 }],
+    ["weekly_pace", { currentCount: 0, previousCount: 0 }],
+    ["ready", { currentCount: 0, previousCount: 0 }],
+  ]);
+  for (const pack of packAnalytics) {
+    const latestParticipants = pack.weeklyTrend[pack.weeklyTrend.length - 1]?.participantCount ?? pack.participantCount;
+    const previousParticipants = pack.weeklyTrend[pack.weeklyTrend.length - 2]?.participantCount ?? 0;
+    let state: AdminOverviewData["campaignOperations"]["blockageTrend"][number]["state"] = "ready";
+    if (pack.walletLinkRate < 0.25) {
+      state = "wallet_connection";
+    } else if (pack.starterPathCompletionRate < 0.25) {
+      state = "starter_path";
+    } else if (pack.rewardEligibilityRate < 0.25) {
+      state = "trust";
+    } else if (pack.premiumConversionRate < pack.benchmark.premiumConversionRateTarget) {
+      state = "premium_phase";
+    } else if (pack.retainedActivityRate < pack.benchmark.retainedActivityRateTarget) {
+      state = "weekly_pace";
+    }
+    const entry = blockageTrendMap.get(state);
+    if (entry) {
+      entry.currentCount += latestParticipants;
+      entry.previousCount += previousParticipants;
+    }
+  }
+  const blockageTrend: AdminOverviewData["campaignOperations"]["blockageTrend"] = Array.from(
+    blockageTrendMap.entries(),
+  ).map(([state, entry]) => ({
+    state,
+    currentCount: entry.currentCount,
+    previousCount: entry.previousCount,
+    delta: entry.currentCount - entry.previousCount,
+  }));
+  const reminderVariantMap = new Map<string, { handledCount: number; snoozedCount: number }>();
+  for (const row of missionReminderVariantSummary.rows) {
+    const variant = row.reminder_variant ?? "unknown";
+    const current = reminderVariantMap.get(variant) ?? { handledCount: 0, snoozedCount: 0 };
+    if (row.notification_status === "handled") {
+      current.handledCount += Number(row.count ?? 0);
+    } else if (row.notification_status === "snoozed") {
+      current.snoozedCount += Number(row.count ?? 0);
+    }
+    reminderVariantMap.set(variant, current);
+  }
+  const reminderVariantSummary: AdminOverviewData["campaignOperations"]["reminderVariantSummary"] = Array.from(
+    reminderVariantMap.entries(),
+  ).map(([variant, entry]) => ({
+    variant,
+    handledCount: entry.handledCount,
+    snoozedCount: entry.snoozedCount,
+    handledRate:
+      entry.handledCount + entry.snoozedCount > 0
+        ? entry.handledCount / (entry.handledCount + entry.snoozedCount)
+        : 0,
+  }));
+  const blockageSuggestions: AdminOverviewData["campaignOperations"]["blockageSuggestions"] = blockageSummary
+    .filter((entry) => entry.count > 0)
+    .sort((left, right) => right.count - left.count)
+    .slice(0, 3)
+    .map((entry) => ({
+      state: entry.state,
+      title:
+        entry.state === "wallet_connection"
+          ? "Lean on wallet-first CTAs"
+          : entry.state === "starter_path"
+            ? "Push starter-path clarity"
+            : entry.state === "level"
+              ? "Use XP and level-up framing"
+              : entry.state === "trust"
+                ? "Use verified-activity prompts"
+                : entry.state === "premium_phase"
+                  ? "Use premium upgrade CTAs"
+                  : entry.state === "weekly_pace"
+                    ? "Use recovery and return CTAs"
+                    : "Keep progression CTAs simple",
+      detail:
+        entry.state === "wallet_connection"
+          ? "The biggest blocker is wallet connection, so pack CTAs should point directly to wallet-linked actions."
+          : entry.state === "starter_path"
+            ? "Users are still getting stuck in the starter path, so simplify early mission steps and reinforce first wins."
+            : entry.state === "level"
+              ? "Users need more XP and level momentum before the pack can pay off, so keep progression CTAs front and center."
+              : entry.state === "trust"
+                ? "Trust is the main blocker, so emphasize verified activity, repeat engagement, and account quality steps."
+                : entry.state === "premium_phase"
+                  ? "This pack is entering premium-heavy territory, so CTA language should support the upgrade path."
+                  : entry.state === "weekly_pace"
+                    ? "This pack is slipping on weekly pace, so recovery messaging and short-term return actions matter most."
+                    : "Most users are not blocked, so default mission progression CTAs are fine.",
+    }));
 
   return {
     stats: [
@@ -3447,6 +3586,9 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       missionInboxHistory,
       missionReminderStatusTrend: missionReminderStatusTrendData,
       blockageSummary,
+      blockageTrend,
+      reminderVariantSummary,
+      blockageSuggestions,
       packAnalytics,
       partnerReporting,
       alerts: visibleCampaignPackAlerts,

@@ -51,6 +51,7 @@ export function CampaignMissionInboxPanel({
   });
 
   async function persistInboxState(notificationId: string, status: "handled" | "snoozed", until?: string | null) {
+    const notification = notifications.find((entry) => entry.id === notificationId);
     try {
       await fetch("/api/campaign-events", {
         method: "POST",
@@ -58,7 +59,7 @@ export function CampaignMissionInboxPanel({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          packId: notifications.find((notification) => notification.id === notificationId)?.packId,
+          packId: notification?.packId,
           eventType: "mission_inbox_state",
           ctaLabel: status === "handled" ? "Handled mission inbox item" : "Snoozed mission inbox item",
           ctaVariant: "mission_inbox_state",
@@ -66,6 +67,7 @@ export function CampaignMissionInboxPanel({
           notificationId,
           notificationStatus: status,
           notificationUntil: until ?? null,
+          reminderVariant: notification?.reminderVariant ?? null,
         }),
         keepalive: true,
       });

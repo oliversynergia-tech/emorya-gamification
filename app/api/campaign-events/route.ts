@@ -15,6 +15,7 @@ export async function POST(request: Request) {
       notificationId?: string;
       notificationStatus?: "handled" | "snoozed";
       notificationUntil?: string | null;
+      reminderVariant?: string | null;
     };
 
     const packId = body.packId?.trim();
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     const notificationId = body.notificationId?.trim();
     const notificationStatus = body.notificationStatus;
     const notificationUntil = body.notificationUntil?.trim() ?? null;
+    const reminderVariant = body.reminderVariant?.trim() ?? null;
 
     if (!packId || !eventType || !ctaLabel || !href) {
       return NextResponse.json({ ok: false, error: "Missing campaign event fields." }, { status: 400 });
@@ -39,6 +41,7 @@ export async function POST(request: Request) {
       notificationId,
       notificationStatus,
       notificationUntil,
+      reminderVariant,
     });
 
     return NextResponse.json({ ok: true });

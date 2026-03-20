@@ -74,6 +74,17 @@ export function MissionPackDetailPanel({
             ) : null}
             {selectedActivePack.questStatuses.length > 0 ? (
               <div className="achievement-list">
+                <article className="achievement-card achievement-card--progress">
+                  <div>
+                    <strong>Milestone summary</strong>
+                    <p>
+                      Clear the current <strong>now</strong> quest to move the pack toward {selectedActivePack.milestone.label.toLowerCase()}.
+                    </p>
+                    <p className="form-note">
+                      {selectedActivePack.completedQuestCount}/{selectedActivePack.totalQuestCount} complete, with {selectedActivePack.openQuestCount} still open.
+                    </p>
+                  </div>
+                </article>
                 {selectedActivePack.questStatuses.map((quest) => (
                   <article key={quest.questId} className="achievement-card">
                     <div>

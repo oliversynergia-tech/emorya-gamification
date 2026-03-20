@@ -457,6 +457,7 @@ export type DashboardData = {
     title: string;
     detail: string;
     packId: string;
+    reminderVariant?: string | null;
     ctaLabel?: string;
     ctaQuestId?: string | null;
     ctaHref?: string | null;
@@ -813,6 +814,37 @@ export type AdminOverviewData = {
         | "ready";
       count: number;
     }>;
+    blockageTrend: Array<{
+      state:
+        | "wallet_connection"
+        | "starter_path"
+        | "level"
+        | "trust"
+        | "premium_phase"
+        | "weekly_pace"
+        | "ready";
+      currentCount: number;
+      previousCount: number;
+      delta: number;
+    }>;
+    reminderVariantSummary: Array<{
+      variant: string;
+      handledCount: number;
+      snoozedCount: number;
+      handledRate: number;
+    }>;
+    blockageSuggestions: Array<{
+      state:
+        | "wallet_connection"
+        | "starter_path"
+        | "level"
+        | "trust"
+        | "premium_phase"
+        | "weekly_pace"
+        | "ready";
+      title: string;
+      detail: string;
+    }>;
     packAnalytics: Array<{
       packId: string;
       label: string;
@@ -905,6 +937,12 @@ export type AdminOverviewData = {
             activeLane: CampaignSource | "direct";
             uniqueUsers: number;
           }>;
+        }>;
+        variantComparison: Array<{
+          variant: string;
+          clickCount: number;
+          approvedUserRate: number;
+          walletLinkRate: number;
         }>;
       };
       createdAt: string;

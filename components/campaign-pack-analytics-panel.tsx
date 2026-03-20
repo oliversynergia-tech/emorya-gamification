@@ -589,6 +589,20 @@ export function CampaignPackAnalyticsPanel({
                   ))}
                 </div>
               ) : null}
+              {pack.missionCtaSummary.variantComparison.length > 0 ? (
+                <div className="achievement-list">
+                  {pack.missionCtaSummary.variantComparison.map((entry) => (
+                    <article key={`${pack.packId}-compare-${entry.variant}`} className="achievement-card">
+                      <div>
+                        <strong>{entry.variant}</strong>
+                        <p className="form-note">
+                          {entry.clickCount} clicks, {(entry.walletLinkRate * 100).toFixed(0)}% wallet-linked, {(entry.approvedUserRate * 100).toFixed(0)}% approved-user rate.
+                        </p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
               <p className="form-note">
                 CTA to pack funnel: {pack.participantCount > 0 ? ((pack.missionCtaSummary.uniqueUsers / pack.participantCount) * 100).toFixed(0) : "0"}% of participants touched a mission CTA, {pack.missionCtaSummary.uniqueUsers > 0 ? ((pack.approvedCompletionCount / pack.missionCtaSummary.uniqueUsers) * 100).toFixed(0) : "0"}% approved completions per CTA user, and {pack.questCount > 0 ? ((pack.approvedCompletionCount / pack.questCount) * 100).toFixed(0) : "0"}% quest-to-approval density across the pack.
               </p>

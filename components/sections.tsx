@@ -2210,6 +2210,41 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
             </div>
           ))}
         </div>
+        <div className="achievement-list">
+          {data.campaignOperations.blockageTrend.map((entry) => (
+            <article key={`blockage-trend-${entry.state}`} className="achievement-card">
+              <div>
+                <strong>{entry.state.replaceAll("_", " ")}</strong>
+                <p>
+                  Current {entry.currentCount} vs previous {entry.previousCount}. Delta {entry.delta >= 0 ? "+" : ""}
+                  {entry.delta}.
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.campaignOperations.reminderVariantSummary.map((entry) => (
+            <article key={`reminder-variant-${entry.variant}`} className="achievement-card">
+              <div>
+                <strong>{entry.variant.replaceAll("_", " ")}</strong>
+                <p>
+                  {entry.handledCount} handled, {entry.snoozedCount} snoozed, {Math.round(entry.handledRate * 100)}% handled rate.
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.campaignOperations.blockageSuggestions.map((entry) => (
+            <article key={`blockage-suggestion-${entry.state}`} className="achievement-card">
+              <div>
+                <strong>{entry.title}</strong>
+                <p>{entry.detail}</p>
+              </div>
+            </article>
+          ))}
+        </div>
         <CampaignPackAuditPanel entries={data.campaignOperations.audit} />
         <CampaignPackAnalyticsPanel
           packs={data.campaignOperations.packAnalytics}
