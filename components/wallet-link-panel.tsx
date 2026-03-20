@@ -10,6 +10,7 @@ import QRCode from "qrcode";
 type WalletLinkPanelProps = {
   walletAddresses: string[];
   activeMissionLabel?: string | null;
+  activeMissionView?: "active" | "completed" | "all" | "reward";
 };
 
 type ChallengeResponse = {
@@ -66,7 +67,7 @@ async function getWalletProvider() {
   return providerPromise;
 }
 
-export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null }: WalletLinkPanelProps) {
+export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, activeMissionView = "active" }: WalletLinkPanelProps) {
   const router = useRouter();
   const [walletAddress, setWalletAddress] = useState("");
   const [challenge, setChallenge] = useState<ChallengeResponse["challenge"] | null>(null);
@@ -326,10 +327,22 @@ export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null }: 
             <p>Your active mission should now refresh with the next progression step instead of the wallet-link prompt.</p>
           </div>
           <div className="achievement-card__side">
-            <a className="text-link" href="/dashboard#campaign-mission">
+            <a
+              className="text-link"
+              href="/dashboard#campaign-mission"
+              onClick={() => {
+                window.localStorage.setItem("emorya-dashboard-mission-view", activeMissionView);
+              }}
+            >
               Return to active mission
             </a>
-            <a className="text-link" href="#mission-recap">
+            <a
+              className="text-link"
+              href="#mission-recap"
+              onClick={() => {
+                window.localStorage.setItem("emorya-profile-mission-view", activeMissionView === "all" ? "active" : activeMissionView);
+              }}
+            >
               Review mission recap
             </a>
           </div>

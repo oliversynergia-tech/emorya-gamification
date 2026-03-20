@@ -104,6 +104,23 @@ export function QuestActionsPanel({
 
     return null;
   }, [activeCampaignPack, progressUpdate]);
+  const missionCue = useMemo(() => {
+    if (!activeCampaignPack) {
+      return null;
+    }
+    if (activeCampaignPack.nextQuestActionable && activeCampaignPack.nextQuestTitle) {
+      return {
+        tone: "ready",
+        badge: "Exact quest ready",
+        note: `Next up: ${activeCampaignPack.nextQuestTitle} is ready now.`,
+      } as const;
+    }
+    return {
+      tone: "planning",
+      badge: "Review mission path",
+      note: "Review the mission path to see what opens next after this submission clears.",
+    } as const;
+  }, [activeCampaignPack]);
 
   async function submitQuest(
     quest: Quest,
@@ -406,6 +423,11 @@ export function QuestActionsPanel({
               <small className="form-note">
                 {activeCampaignPack.label}: {activeCampaignPack.milestone.label}. {activeCampaignPack.sequenceReason}
               </small>
+              {missionCue ? (
+                <p className={`mission-cue mission-cue--${missionCue.tone}`}>
+                  <strong>{missionCue.badge}</strong> {missionCue.note}
+                </p>
+              ) : null}
               <small className="form-note">{activeCampaignPack.priorityReason}</small>
               <small className="form-note">{activeCampaignPack.unlockPreview}</small>
               {missionCelebration ? (

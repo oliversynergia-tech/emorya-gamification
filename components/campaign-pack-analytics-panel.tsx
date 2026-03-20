@@ -278,6 +278,7 @@ function exportPartnerReporting(
       "premium_conversion_rate",
       "likely_pack_caused_premium_conversion_rate",
       "average_weekly_xp",
+      "completion_trend_delta",
       "partner_summary_headline",
       "partner_summary_detail",
       "operator_outcome_title",
@@ -303,6 +304,7 @@ function exportPartnerReporting(
         entry.premiumConversionRate,
         entry.likelyPackCausedPremiumConversionRate,
         entry.averageWeeklyXp,
+        entry.completionTrendDelta,
         JSON.stringify(entry.partnerSummaryHeadline),
         JSON.stringify(entry.partnerSummaryDetail),
         JSON.stringify(entry.operatorOutcomeTitle),
@@ -321,6 +323,84 @@ function exportPartnerReporting(
   const link = document.createElement("a");
   link.href = url;
   link.download = `emorya-partner-pack-report-${slugifyForFilename(filters.search || "all-packs")}-${slugifyForFilename(getSourceFilterLabel(filters.source))}-${slugifyForFilename(getStatusFilterLabel(filters.status))}-${slugifyForFilename(getKindFilterLabel(filters.kind))}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportOperatorOutcomes(
+  entries: PackAnalyticsItem[],
+  filters: {
+    search: string;
+    source: "all" | CampaignSource;
+    status: "all" | "active" | "inactive";
+    kind: "all" | "bridge" | "feeder" | "mixed";
+  },
+) {
+  const lines = [
+    [`search_filter`, JSON.stringify(filters.search.trim() || "No search filter")].join(","),
+    [`source_filter`, JSON.stringify(getSourceFilterLabel(filters.source))].join(","),
+    [`status_filter`, JSON.stringify(getStatusFilterLabel(filters.status))].join(","),
+    [`kind_filter`, JSON.stringify(getKindFilterLabel(filters.kind))].join(","),
+    "",
+    [
+      "pack_id",
+      "label",
+      "lifecycle_state",
+      "kind",
+      "recommended_variant",
+      "recommended_reason",
+      "reminder_handled_rate",
+      "reminder_trend_delta",
+      "cta_clicks",
+      "cta_unique_users",
+      "cta_wallet_link_rate",
+      "cta_reward_eligibility_rate",
+      "cta_premium_conversion_rate",
+      "zero_completion_risk_current",
+      "zero_completion_risk_shift",
+      "operator_outcome_title",
+      "operator_outcome_detail",
+      "completion_trend_delta",
+      "participant_trend_delta",
+    ].join(","),
+    ...entries.map((entry) =>
+      [
+        entry.packId,
+        JSON.stringify(entry.label),
+        entry.lifecycleState,
+        getPackKind(entry),
+        JSON.stringify(entry.missionCtaSummary.recommendedVariant ?? ""),
+        JSON.stringify(entry.missionCtaSummary.recommendedReason ?? ""),
+        entry.reminderEffectiveness.handledRate,
+        entry.reminderEffectiveness.trend.delta,
+        entry.missionCtaSummary.totalClicks,
+        entry.missionCtaSummary.uniqueUsers,
+        entry.missionCtaSummary.walletLinkRate,
+        entry.missionCtaSummary.rewardEligibilityRate,
+        entry.missionCtaSummary.premiumConversionRate,
+        (entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0) === 0 ? "at_risk" : "moving",
+        (entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0) === 0
+          ? (entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0) === 0
+            ? "steady"
+            : "rising"
+          : (entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0) === 0
+            ? "easing"
+            : "steady",
+        JSON.stringify(entry.operatorOutcome.title),
+        JSON.stringify(entry.operatorOutcome.detail),
+        entry.operatorOutcome.trend.completionDelta,
+        entry.operatorOutcome.trend.participantDelta,
+      ].join(","),
+    ),
+  ].join("\n");
+
+  const blob = new Blob([lines], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `emorya-pack-operator-outcomes-${slugifyForFilename(filters.search || "all-packs")}-${slugifyForFilename(getSourceFilterLabel(filters.source))}-${slugifyForFilename(getStatusFilterLabel(filters.status))}-${slugifyForFilename(getKindFilterLabel(filters.kind))}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -485,6 +565,17 @@ function printPartnerReport(
     })
     .filter((entry): entry is string => Boolean(entry))
     .join(" · ");
+  const benchmarkKindTrendSummary = ["bridge", "feeder", "mixed"]
+    .map((kind) => {
+      const kindEntries = entries.filter((entry) => getPackKind(entry) === kind);
+      if (kindEntries.length === 0) {
+        return null;
+      }
+      const averageCompletionTrend = kindEntries.reduce((sum, entry) => sum + entry.completionTrendDelta, 0) / kindEntries.length;
+      return `${kind}: ${averageCompletionTrend >= 0 ? "+" : ""}${averageCompletionTrend.toFixed(1)} avg completion delta`;
+    })
+    .filter((entry): entry is string => Boolean(entry))
+    .join(" · ");
   const benchmarkChangeSummary = entries
     .filter((entry) => entry.benchmarkOverrideHistorySummary)
     .slice(0, 4)
@@ -553,6 +644,7 @@ function printPartnerReport(
           <p style="margin:0 0 8px;color:#5e5035;">Benchmark status: ${benchmarkSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Lifecycle mix: ${lifecycleCompositionSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Benchmark by pack kind: ${benchmarkKindSummary || "No benchmark-by-kind mix available"}</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Pack-kind movement: ${benchmarkKindTrendSummary || "No pack-kind movement available"}</p>
           <p style="margin:0;color:#5e5035;">Alert pressure: ${alertPressureSummary}</p>
         </section>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
@@ -572,7 +664,7 @@ function printPartnerReport(
         ${
           recommendationOverview
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
-                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Recommendation shifts</p>
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Routing and copy shifts</p>
                 <p style="margin:0;color:#5e5035;">${recommendationOverview}</p>
               </section>`
             : ""
@@ -986,6 +1078,20 @@ export function CampaignPackAnalyticsPanel({
           }
         >
           Export CSV
+        </button>
+        <button
+          className="button button--secondary"
+          type="button"
+          onClick={() =>
+            exportOperatorOutcomes(filteredPacks, {
+              search,
+              source: sourceFilter,
+              status: statusFilter,
+              kind: kindFilter,
+            })
+          }
+        >
+          Export operator outcomes
         </button>
         <button
           className="button button--secondary"

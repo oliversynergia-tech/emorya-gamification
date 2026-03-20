@@ -3871,6 +3871,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       premiumConversionRate: entry.premiumConversionRate,
       likelyPackCausedPremiumConversionRate: entry.likelyPackCausedPremiumConversionRate,
       averageWeeklyXp: entry.averageWeeklyXp,
+      completionTrendDelta: entry.operatorOutcome.trend.completionDelta,
       partnerSummaryHeadline:
         entry.benchmark.status === "on_track"
           ? "Pack is meeting the current lane benchmarks."

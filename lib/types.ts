@@ -1059,6 +1059,7 @@ export type AdminOverviewData = {
       premiumConversionRate: number;
       likelyPackCausedPremiumConversionRate: number;
       averageWeeklyXp: number;
+      completionTrendDelta: number;
       partnerSummaryHeadline: string;
       partnerSummaryDetail: string;
       operatorOutcomeTitle: string;
