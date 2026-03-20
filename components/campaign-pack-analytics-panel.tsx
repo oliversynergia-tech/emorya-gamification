@@ -287,6 +287,25 @@ function exportPartnerReporting(
     [`source_filter`, JSON.stringify(getSourceFilterLabel(filters.source))].join(","),
     [`status_filter`, JSON.stringify(getStatusFilterLabel(filters.status))].join(","),
     [`kind_filter`, JSON.stringify(getKindFilterLabel(filters.kind))].join(","),
+    [
+      `benchmark_movement_by_kind`,
+      JSON.stringify(
+        (["bridge", "feeder", "mixed"] as const)
+          .map((kind) => {
+            const kindEntries = entries.filter((entry) => getPackKind(entry) === kind);
+            if (kindEntries.length === 0) {
+              return null;
+            }
+            const onTrackCount = kindEntries.filter((entry) => entry.benchmarkStatus === "on_track").length;
+            const averageCompletionTrend = kindEntries.reduce((sum, entry) => sum + entry.completionTrendDelta, 0) / kindEntries.length;
+            return `${kind}: ${onTrackCount}/${kindEntries.length} on track · ${
+              averageCompletionTrend >= 0 ? "+" : ""
+            }${averageCompletionTrend.toFixed(1)} completion momentum`;
+          })
+          .filter((entry): entry is string => Boolean(entry))
+          .join(" | "),
+      ),
+    ].join(","),
     "",
     [
       "pack_id",
@@ -369,6 +388,36 @@ function exportOperatorOutcomes(
     [`kind_filter`, JSON.stringify(getKindFilterLabel(filters.kind))].join(","),
     [`operator_outcome_mix`, JSON.stringify(getOperatorOutcomeMixSummary(entries))].join(","),
     [`zero_completion_risk_mix`, JSON.stringify(getZeroCompletionRiskMixSummary(entries))].join(","),
+    [
+      `zero_completion_risk_by_lifecycle`,
+      JSON.stringify(
+        (["draft", "ready", "live"] as const)
+          .map((phase) => {
+            const phaseEntries = entries.filter((entry) => entry.lifecycleState === phase);
+            if (phaseEntries.length === 0) {
+              return null;
+            }
+            const rising = phaseEntries.filter((entry) => {
+              const latest = entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0;
+              const previous = entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0;
+              return latest === 0 && previous > 0;
+            }).length;
+            const easing = phaseEntries.filter((entry) => {
+              const latest = entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0;
+              const previous = entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0;
+              return latest > 0 && previous === 0;
+            }).length;
+            const steady = phaseEntries.filter((entry) => {
+              const latest = entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0;
+              const previous = entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0;
+              return latest === 0 && previous === 0;
+            }).length;
+            return `${phase}: ${rising} rising · ${easing} easing · ${steady} steady risk`;
+          })
+          .filter((entry): entry is string => Boolean(entry))
+          .join(" | "),
+      ),
+    ].join(","),
     "",
     [
       "pack_id",

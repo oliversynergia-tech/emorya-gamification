@@ -423,7 +423,7 @@ export function HeroSection({ data }: { data: DashboardData }) {
         </div>
         <p className="form-note">{laneVisualProfile.emphasis}</p>
         <div className="hero__actions">
-          <a className="button button--primary" href="/dashboard">
+          <a className="button button--primary" href="/dashboard#campaign-mission">
             Open dashboard
           </a>
           <a className="button button--secondary" href="/admin">
