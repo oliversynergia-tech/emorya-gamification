@@ -76,15 +76,29 @@ export function CampaignMissionCtaAnalyticsPanel({
     [laneFilter, packSearch, tierEntries, variantFilter],
   );
   const tierSummary = useMemo(() => {
-    const summary = new Map<AdminOverviewData["campaignOperations"]["missionCtaByTier"][number]["subscriptionTier"], { clickCount: number; uniqueUserCount: number }>();
+    const summary = new Map<
+      AdminOverviewData["campaignOperations"]["missionCtaByTier"][number]["subscriptionTier"],
+      { clickCount: number; uniqueUserCount: number; approvedCompletionCount: number; approvedUserCount: number }
+    >();
     for (const entry of filteredTierEntries) {
-      const current = summary.get(entry.subscriptionTier) ?? { clickCount: 0, uniqueUserCount: 0 };
+      const current = summary.get(entry.subscriptionTier) ?? {
+        clickCount: 0,
+        uniqueUserCount: 0,
+        approvedCompletionCount: 0,
+        approvedUserCount: 0,
+      };
       current.clickCount += entry.clickCount;
       current.uniqueUserCount += entry.uniqueUserCount;
+      current.approvedCompletionCount += entry.approvedCompletionCount;
+      current.approvedUserCount += entry.approvedUserCount;
       summary.set(entry.subscriptionTier, current);
     }
 
-    return Array.from(summary.entries()).map(([tier, metrics]) => ({ tier, ...metrics }));
+    return Array.from(summary.entries()).map(([tier, metrics]) => ({
+      tier,
+      ...metrics,
+      approvedUserRate: metrics.uniqueUserCount > 0 ? metrics.approvedUserCount / metrics.uniqueUserCount : 0,
+    }));
   }, [filteredTierEntries]);
 
   function exportRows() {
@@ -210,6 +224,8 @@ export function CampaignMissionCtaAnalyticsPanel({
               <div className="achievement-card__side">
                 <span>{entry.clickCount} clicks</span>
                 <span>{entry.uniqueUserCount} users</span>
+                <span>{entry.approvedCompletionCount} approved</span>
+                <span>{(entry.approvedUserRate * 100).toFixed(0)}% approved-user rate</span>
               </div>
             </article>
           ))}

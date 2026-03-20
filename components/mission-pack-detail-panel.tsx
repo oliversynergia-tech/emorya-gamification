@@ -72,6 +72,32 @@ export function MissionPackDetailPanel({
                 Return window: {selectedActivePack.returnWindow === "today" ? "today" : selectedActivePack.returnWindow === "this_week" ? "this week" : "wait for next unlock"}.
               </p>
             ) : null}
+            {selectedActivePack.questStatuses.length > 0 ? (
+              <div className="achievement-list">
+                {selectedActivePack.questStatuses.map((quest) => (
+                  <article key={quest.questId} className="achievement-card">
+                    <div>
+                      <strong>{quest.title}</strong>
+                      <p>
+                        {quest.status === "completed"
+                          ? "Already completed for this mission."
+                          : quest.status === "in-progress"
+                            ? "Currently in progress inside this mission."
+                            : quest.status === "rejected"
+                              ? "Needs a cleaner re-submit before this mission can move."
+                              : quest.actionable
+                                ? "This is ready to take right now."
+                                : "This unlocks after the current mission step moves forward."}
+                      </p>
+                    </div>
+                    <div className="achievement-card__side">
+                      <span>{quest.status.replace("-", " ")}</span>
+                      <span>{quest.actionable ? "Ready now" : "Queued"}</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div className="achievement-card__side">
             <span>{selectedActivePack.completedQuestCount}/{selectedActivePack.totalQuestCount} complete</span>

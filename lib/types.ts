@@ -762,6 +762,13 @@ export type AdminOverviewData = {
       ctaVariant: string;
       clickCount: number;
       uniqueUserCount: number;
+      approvedCompletionCount: number;
+      approvedUserCount: number;
+      approvedUserRate: number;
+    }>;
+    returnWindowSummary: Array<{
+      window: "today" | "this_week" | "wait_for_unlock";
+      count: number;
     }>;
     packAnalytics: Array<{
       packId: string;

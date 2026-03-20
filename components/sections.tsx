@@ -103,6 +103,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       ctaVariant: walletGatePack.ctaVariant,
       packLabel: walletGatePack.label,
       timing: "wait for unlock",
+      blockedStateLabel: "Blocked by wallet",
     };
   }
 
@@ -121,11 +122,18 @@ function getDashboardPriorityAction(data: DashboardData) {
       ctaVariant: premiumPack.ctaVariant,
       packLabel: premiumPack.label,
       timing: "this week",
+      blockedStateLabel: "Blocked by premium phase",
     };
   }
 
   const returnPack = data.campaignPacks.find((pack) => pack.returnAction);
   if (returnPack) {
+    const blockedStateLabel =
+      returnPack.returnWindow === "wait_for_unlock"
+        ? "Blocked by eligibility"
+        : returnPack.returnWindow === "this_week"
+          ? "Blocked by weekly pace"
+          : "Ready to resume";
     return {
       eyebrow: "Resume mission",
       title: "One strong return move puts this pack back on pace",
@@ -142,6 +150,7 @@ function getDashboardPriorityAction(data: DashboardData) {
           : returnPack.returnWindow === "this_week"
             ? "this week"
             : "wait for unlock",
+      blockedStateLabel,
     };
   }
 
@@ -161,6 +170,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     ctaVariant: nextPack.ctaVariant,
     packLabel: nextPack.label,
     timing: "today",
+    blockedStateLabel: "Ready to progress",
   };
 }
 
@@ -439,6 +449,7 @@ export function DashboardSnapshot({
             </div>
             <p className="form-note">{priorityAction.detail}</p>
             <p className="form-note">{priorityAction.supporting}</p>
+            <p className="form-note">{priorityAction.blockedStateLabel}.</p>
             <p className="form-note">Best return window: {priorityAction.timing}.</p>
             <div className="hero__actions">
               <MissionLink
@@ -2089,6 +2100,20 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
           entries={data.campaignOperations.missionCtaAnalytics}
           tierEntries={data.campaignOperations.missionCtaByTier}
         />
+        <div className="info-grid">
+          {data.campaignOperations.returnWindowSummary.map((entry) => (
+            <div key={entry.window} className="info-card">
+              <span>
+                {entry.window === "today"
+                  ? "Return today"
+                  : entry.window === "this_week"
+                    ? "Return this week"
+                    : "Wait for unlock"}
+              </span>
+              <strong>{entry.count}</strong>
+            </div>
+          ))}
+        </div>
         <CampaignPackAuditPanel entries={data.campaignOperations.audit} />
         <CampaignPackAnalyticsPanel
           packs={data.campaignOperations.packAnalytics}

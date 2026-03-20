@@ -2046,7 +2046,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends, campaignMissionSubmitAttempts, campaignMissionCtaByTier] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends, campaignMissionSubmitAttempts, campaignMissionCtaByTier, campaignMissionApprovedByTier] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -2188,6 +2188,25 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
                 al.metadata->>'eventType',
                 COALESCE(al.metadata->>'ctaVariant', 'unknown'),
                 u.subscription_tier`,
+    ),
+    runQuery<{
+      pack_id: string | null;
+      subscription_tier: SubscriptionTier;
+      approved_completion_count: string;
+      approved_user_count: string;
+    }>(
+      `SELECT q.metadata->>'campaignPackId' AS pack_id,
+              u.subscription_tier,
+              COUNT(qc.id)::text AS approved_completion_count,
+              COUNT(DISTINCT qc.user_id)::text AS approved_user_count
+       FROM quest_definitions q
+       INNER JOIN quest_completions qc
+         ON qc.quest_id = q.id
+        AND qc.status = 'approved'
+       INNER JOIN users u
+         ON u.id = qc.user_id
+       WHERE q.metadata ? 'campaignPackId'
+       GROUP BY q.metadata->>'campaignPackId', u.subscription_tier`,
     ),
   ]);
 
@@ -2489,6 +2508,25 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       submitAttemptCount: Number(row.submit_attempt_count ?? 0),
       submitAttemptUserCount: Number(row.submit_attempt_user_count ?? 0),
     });
+  }
+  const missionApprovedByTierMap = new Map<
+    string,
+    {
+      approvedCompletionCount: number;
+      approvedUserCount: number;
+    }
+  >();
+  for (const row of campaignMissionApprovedByTier.rows) {
+    if (!row.pack_id) {
+      continue;
+    }
+    missionApprovedByTierMap.set(
+      `${row.pack_id}::${row.subscription_tier ?? "free"}`,
+      {
+        approvedCompletionCount: Number(row.approved_completion_count ?? 0),
+        approvedUserCount: Number(row.approved_user_count ?? 0),
+      },
+    );
   }
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -2974,17 +3012,52 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     .sort((left, right) => right.clickCount - left.clickCount || right.uniqueUserCount - left.uniqueUserCount);
   const missionCtaByTier: AdminOverviewData["campaignOperations"]["missionCtaByTier"] = campaignMissionCtaByTier.rows
     .filter((row) => typeof row.pack_id === "string" && row.pack_id.length > 0)
-    .map((row) => ({
-      packId: row.pack_id ?? "unknown",
-      label: packAnalyticsLookup.get(row.pack_id ?? "")?.label ?? "Unknown pack",
-      activeLane: packAnalyticsLookup.get(row.pack_id ?? "")?.benchmark.activeLane ?? "direct",
-      subscriptionTier: row.subscription_tier,
-      eventType: row.event_type ?? "unknown",
-      ctaVariant: row.cta_variant ?? "unknown",
-      clickCount: Number(row.click_count ?? 0),
-      uniqueUserCount: Number(row.unique_user_count ?? 0),
-    }))
+    .map((row) => {
+      const approvedSummary = missionApprovedByTierMap.get(
+        `${row.pack_id ?? "unknown"}::${row.subscription_tier ?? "free"}`,
+      );
+      const uniqueUserCount = Number(row.unique_user_count ?? 0);
+
+      return {
+        packId: row.pack_id ?? "unknown",
+        label: packAnalyticsLookup.get(row.pack_id ?? "")?.label ?? "Unknown pack",
+        activeLane: packAnalyticsLookup.get(row.pack_id ?? "")?.benchmark.activeLane ?? "direct",
+        subscriptionTier: row.subscription_tier,
+        eventType: row.event_type ?? "unknown",
+        ctaVariant: row.cta_variant ?? "unknown",
+        clickCount: Number(row.click_count ?? 0),
+        uniqueUserCount,
+        approvedCompletionCount: approvedSummary?.approvedCompletionCount ?? 0,
+        approvedUserCount: approvedSummary?.approvedUserCount ?? 0,
+        approvedUserRate: uniqueUserCount > 0 ? (approvedSummary?.approvedUserCount ?? 0) / uniqueUserCount : 0,
+      };
+    })
     .sort((left, right) => right.clickCount - left.clickCount || right.uniqueUserCount - left.uniqueUserCount);
+  const returnWindowSummary: AdminOverviewData["campaignOperations"]["returnWindowSummary"] = [
+    { window: "today", count: 0 },
+    { window: "this_week", count: 0 },
+    { window: "wait_for_unlock", count: 0 },
+  ];
+  const returnWindowLookup = new Map(returnWindowSummary.map((entry) => [entry.window, entry] as const));
+  for (const pack of packAnalytics) {
+    if (pack.lifecycleState !== "live" && pack.activeQuestCount === 0) {
+      continue;
+    }
+    const packParticipants = pack.sourceBreakdown.reduce((sum, entry) => sum + entry.participantCount, 0);
+    let targetWindow: AdminOverviewData["campaignOperations"]["returnWindowSummary"][number]["window"] = "today";
+    if (pack.rewardEligibilityRate < 0.25 || pack.walletLinkRate < 0.25) {
+      targetWindow = "wait_for_unlock";
+    } else if (
+      pack.retainedActivityRate < pack.benchmark.retainedActivityRateTarget ||
+      pack.averageWeeklyXp < pack.benchmark.averageWeeklyXpTarget
+    ) {
+      targetWindow = "this_week";
+    }
+    const summaryEntry = returnWindowLookup.get(targetWindow);
+    if (summaryEntry) {
+      summaryEntry.count += packParticipants;
+    }
+  }
 
   return {
     stats: [
@@ -3017,6 +3090,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       sourceTemplateCounts,
       missionCtaAnalytics,
       missionCtaByTier,
+      returnWindowSummary,
       packAnalytics,
       partnerReporting,
       alerts: visibleCampaignPackAlerts,

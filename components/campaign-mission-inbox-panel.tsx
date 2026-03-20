@@ -110,6 +110,12 @@ export function CampaignMissionInboxPanel({
     return null;
   }
 
+  const snoozeOptions = [
+    { label: "Later today", hours: 6 },
+    { label: "Tomorrow", hours: 24 },
+    { label: "This week", hours: 72 },
+  ] as const;
+
   return (
     <div className="panel panel--glass">
       <div className="panel__header">
@@ -144,21 +150,24 @@ export function CampaignMissionInboxPanel({
               <span className={`badge ${notification.tone === "success" ? "badge--pink" : ""}`}>
                 {notification.tone}
               </span>
-              <button
-                type="button"
-                className="button button--secondary"
-                onClick={() =>
-                  setInboxState((current) => ({
-                    ...current,
-                    [notification.id]: {
-                      status: "snoozed",
-                      until: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-                    },
-                  }))
-                }
-              >
-                Snooze 24h
-              </button>
+              {snoozeOptions.map((option) => (
+                <button
+                  key={`${notification.id}-${option.label}`}
+                  type="button"
+                  className="button button--secondary"
+                  onClick={() =>
+                    setInboxState((current) => ({
+                      ...current,
+                      [notification.id]: {
+                        status: "snoozed",
+                        until: new Date(Date.now() + option.hours * 60 * 60 * 1000).toISOString(),
+                      },
+                    }))
+                  }
+                >
+                  {option.label}
+                </button>
+              ))}
               <button
                 type="button"
                 className="button button--secondary"
