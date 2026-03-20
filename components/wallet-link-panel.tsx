@@ -9,6 +9,7 @@ import QRCode from "qrcode";
 
 type WalletLinkPanelProps = {
   walletAddresses: string[];
+  activeMissionLabel?: string | null;
 };
 
 type ChallengeResponse = {
@@ -65,7 +66,7 @@ async function getWalletProvider() {
   return providerPromise;
 }
 
-export function WalletLinkPanel({ walletAddresses }: WalletLinkPanelProps) {
+export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null }: WalletLinkPanelProps) {
   const router = useRouter();
   const [walletAddress, setWalletAddress] = useState("");
   const [challenge, setChallenge] = useState<ChallengeResponse["challenge"] | null>(null);
@@ -318,6 +319,22 @@ export function WalletLinkPanel({ walletAddresses }: WalletLinkPanelProps) {
         </div>
       ) : null}
       {message ? <p className="status status--success">{message}</p> : null}
+      {message && activeMissionLabel ? (
+        <div className="achievement-card achievement-card--progress">
+          <div>
+            <strong>{activeMissionLabel} has moved past the wallet gate</strong>
+            <p>Your active mission should now refresh with the next progression step instead of the wallet-link prompt.</p>
+          </div>
+          <div className="achievement-card__side">
+            <a className="text-link" href="/dashboard#campaign-mission">
+              Return to active mission
+            </a>
+            <a className="text-link" href="#mission-recap">
+              Review mission recap
+            </a>
+          </div>
+        </div>
+      ) : null}
       {error ? <p className="status status--error">{error}</p> : null}
       <p className="form-note">
         This now expects a real MultiversX signature for the issued challenge message.

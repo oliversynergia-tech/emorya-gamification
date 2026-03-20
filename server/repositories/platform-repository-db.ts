@@ -970,20 +970,26 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
       display_name: string | null;
       attribution_source: string | null;
       experience_lane: string | null;
+      approved_quest_count: string;
+      total_quest_count: string;
     }>(
       `SELECT pack_summary.pack_id,
               pack_summary.pack_label,
               pack_summary.completed_at,
               u.display_name,
               pack_summary.attribution_source,
-              pack_summary.experience_lane
+              pack_summary.experience_lane,
+              pack_summary.approved_quest_count::text,
+              pack_summary.total_quest_count::text
        FROM (
          SELECT completion_summary.user_id,
                 completion_summary.pack_id,
                 completion_summary.pack_label,
                 completion_summary.attribution_source,
                 completion_summary.experience_lane,
-                completion_summary.completed_at
+                completion_summary.completed_at,
+                completion_summary.approved_quest_count,
+                pack_totals.total_quest_count
          FROM (
            SELECT qc.user_id,
                   q.metadata->>'campaignPackId' AS pack_id,
@@ -1029,17 +1035,34 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
     createdAt: row.created_at,
   }));
 
-  const packItems = packHistoryResult.rows.map((row) => ({
-    id: `campaign-pack-complete-${row.pack_id}-${row.completed_at ?? "na"}`,
-    actor: row.display_name ?? "User",
-    action: "completed campaign pack",
-    detail:
+  const packItems = packHistoryResult.rows.map((row) => {
+    const approvedQuestCount = Number(row.approved_quest_count ?? 0);
+    const totalQuestCount = Number(row.total_quest_count ?? 0);
+    const halfwayTarget = Math.ceil(totalQuestCount / 2);
+    const action =
+      approvedQuestCount >= totalQuestCount && totalQuestCount > 0
+        ? "completed campaign pack"
+        : approvedQuestCount >= halfwayTarget && totalQuestCount > 1
+          ? "reached halfway in campaign pack"
+          : "cleared the first mission in";
+    const detailBase =
       row.attribution_source && row.experience_lane && row.attribution_source !== row.experience_lane
         ? `${row.pack_label ?? "Campaign pack"} through ${row.attribution_source} into ${row.experience_lane}`
-        : row.pack_label ?? "Campaign pack",
-    timeAgo: getRelativeTimeLabel(row.completed_at ?? new Date().toISOString()),
-    createdAt: row.completed_at ?? new Date().toISOString(),
-  }));
+        : row.pack_label ?? "Campaign pack";
+    const detail =
+      approvedQuestCount >= totalQuestCount && totalQuestCount > 0
+        ? detailBase
+        : `${detailBase} (${approvedQuestCount}/${totalQuestCount} missions approved)`;
+
+    return {
+      id: `campaign-pack-progress-${row.pack_id}-${approvedQuestCount}-${row.completed_at ?? "na"}`,
+      actor: row.display_name ?? "User",
+      action,
+      detail,
+      timeAgo: getRelativeTimeLabel(row.completed_at ?? new Date().toISOString()),
+      createdAt: row.completed_at ?? new Date().toISOString(),
+    };
+  });
 
   return [...activityItems, ...packItems]
     .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())

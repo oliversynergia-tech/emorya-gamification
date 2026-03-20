@@ -84,7 +84,7 @@ export default async function ProfilePage() {
       {session ? (
         <>
           {profile ? <ProfileEditor profile={profile} /> : null}
-          <WalletLinkPanel walletAddresses={session.walletAddresses} />
+          <WalletLinkPanel walletAddresses={session.walletAddresses} activeMissionLabel={data.campaignPacks[0]?.label ?? null} />
         </>
       ) : (
         <section className="panel auth-panel panel--glass">

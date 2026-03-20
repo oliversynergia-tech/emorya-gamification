@@ -199,6 +199,9 @@ export type ActivityItem = {
   timeAgo: string;
 };
 
+export type DashboardCampaignPack = DashboardData["campaignPacks"][number];
+export type DashboardCampaignPackHistory = DashboardData["campaignPackHistory"][number];
+
 export type LeaderboardEntry = {
   rank: number;
   displayName: string;

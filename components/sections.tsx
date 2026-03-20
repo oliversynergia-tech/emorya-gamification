@@ -11,8 +11,10 @@ import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionT
 import { CampaignPackAnalyticsPanel } from "@/components/campaign-pack-analytics-panel";
 import { CampaignPackAlertPanel } from "@/components/campaign-pack-alert-panel";
 import { CampaignPackAuditPanel } from "@/components/campaign-pack-audit-panel";
+import { CampaignMissionInboxPanel } from "@/components/campaign-mission-inbox-panel";
 import { CampaignPackNotificationHistoryPanel } from "@/components/campaign-pack-notification-history-panel";
 import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
+import { ProfileMissionRecapPanel } from "@/components/profile-mission-recap-panel";
 import { SourceLaneReportPanel } from "@/components/source-lane-report-panel";
 import { TokenReceiptHistoryPanel } from "@/components/token-receipt-history-panel";
 
@@ -291,7 +293,7 @@ export function DashboardSnapshot({
           </div>
         </div>
         {data.user.campaignSource ? (
-          <div className="panel panel--glass">
+          <div className="panel panel--glass" id="campaign-mission">
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Campaign bridge ladder</p>
@@ -485,42 +487,7 @@ export function DashboardSnapshot({
             </div>
           </div>
         ) : null}
-        {data.campaignNotifications.length > 0 ? (
-          <div className="panel panel--glass">
-            <div className="panel__header">
-              <div>
-                <p className="eyebrow">Campaign notifications</p>
-                <h3>Live pack updates</h3>
-              </div>
-              <span className="badge">{data.campaignNotifications.length} live</span>
-            </div>
-            <div className="achievement-list">
-              {data.campaignNotifications.map((notification) => (
-                <article key={notification.id} className="achievement-card">
-                  <div>
-                    <strong>{notification.title}</strong>
-                    <p>{notification.detail}</p>
-                    {notification.ctaLabel ? (
-                      <div className="hero__actions">
-                        <a
-                          className="button button--secondary"
-                          href={notification.ctaHref ?? (notification.ctaQuestId ? `#quest-action-${notification.ctaQuestId}` : "#quest-board")}
-                        >
-                          {notification.ctaLabel}
-                        </a>
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="achievement-card__side">
-                    <span className={`badge ${notification.tone === "success" ? "badge--pink" : ""}`}>
-                      {notification.tone}
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        ) : null}
+        <CampaignMissionInboxPanel notifications={data.campaignNotifications} title="Live pack updates" eyebrow="Campaign inbox" />
         {data.campaignPackHistory.length > 0 ? (
           <div className="panel panel--glass">
             <div className="panel__header">
@@ -1381,58 +1348,8 @@ export function ProfileSection({ data }: { data: DashboardData }) {
           ))}
         </div>
       </div>
-      <div className="panel">
-        <div className="panel__header">
-          <div>
-            <p className="eyebrow">Mission recap</p>
-            <h3>Campaign progress outside the dashboard</h3>
-          </div>
-          <span className="badge badge--pink">
-            {data.campaignPacks.length > 0 ? `${data.campaignPacks.length} active` : `${data.campaignPackHistory.length} archived`}
-          </span>
-        </div>
-        {data.campaignPacks.length > 0 ? (
-          <div className="achievement-list">
-            {data.campaignPacks.map((pack) => (
-              <article key={`profile-pack-${pack.packId}`} className={`achievement-card ${pack.urgency ? "achievement-card--urgent" : ""}`}>
-                <div>
-                  <strong>{pack.label}</strong>
-                  <p>{pack.nextAction}</p>
-                  <p className="form-note">{pack.tierPhaseCopy}</p>
-                  <p className="form-note">
-                    {pack.completedQuestCount}/{pack.totalQuestCount} missions complete. {pack.sequenceReason}
-                  </p>
-                </div>
-                <div className="achievement-card__side">
-                  <span>{pack.badgeLabel}</span>
-                  <span>{pack.weeklyGoal.targetXp} XP target</span>
-                  <a className="text-link" href={pack.ctaHref ?? "#quest-board"}>
-                    {pack.ctaLabel}
-                  </a>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : data.campaignPackHistory.length > 0 ? (
-          <div className="achievement-list">
-            {data.campaignPackHistory.slice(0, 3).map((pack) => (
-              <article key={`profile-history-${pack.packId}`} className="achievement-card achievement-card--progress">
-                <div>
-                  <strong>{pack.label}</strong>
-                  <p>{pack.summary}</p>
-                </div>
-                <div className="achievement-card__side">
-                  <span>{pack.totalXpAwarded} XP</span>
-                  <span>{pack.referralQuestCount} referral</span>
-                  <span>{pack.premiumQuestCount} premium</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="form-note">No campaign mission recap yet. Your next active mission will show up here as soon as a live pack is available.</p>
-        )}
-      </div>
+      <ProfileMissionRecapPanel activePacks={data.campaignPacks} packHistory={data.campaignPackHistory} />
+      <CampaignMissionInboxPanel notifications={data.campaignNotifications} title="Mission inbox" eyebrow="Profile mission inbox" />
       <div className="panel">
         <div className="panel__header">
           <div>
