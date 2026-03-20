@@ -65,6 +65,24 @@ function slugifyForFilename(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "all";
 }
 
+function getPackControlChangeSummary(
+  auditEntries: AdminOverviewData["campaignOperations"]["audit"],
+  packId: string,
+) {
+  return auditEntries
+    .filter(
+      (entry) =>
+        entry.packId === packId &&
+        (entry.action === "save_benchmark_override" ||
+          entry.action === "clear_benchmark_override" ||
+          entry.action === "suppress_alert" ||
+          entry.action === "clear_alert_suppression"),
+    )
+    .slice(0, 3)
+    .map((entry) => `${entry.createdAt.slice(0, 10)}: ${entry.detail}`)
+    .join(" | ");
+}
+
 function exportPackAnalytics(
   entries: PackAnalyticsItem[],
   filters: {
@@ -338,6 +356,7 @@ function exportReminderComparison(
 
 function printPartnerReport(
   entries: PartnerReportItem[],
+  auditEntries: AdminOverviewData["campaignOperations"]["audit"],
   filters: {
     search: string;
     source: "all" | CampaignSource;
@@ -360,6 +379,14 @@ function printPartnerReport(
     .slice(0, 4)
     .map((entry) => `${entry.label}: ${entry.recommendationHistorySnapshot.join(" | ")}`)
     .join(" | ");
+  const controlChangeOverview = entries
+    .map((entry) => {
+      const summary = getPackControlChangeSummary(auditEntries, entry.packId);
+      return summary ? `${entry.label}: ${summary}` : null;
+    })
+    .filter((entry): entry is string => Boolean(entry))
+    .slice(0, 4)
+    .join(" | ");
   const benchmarkSummary = [
     `${entries.filter((entry) => entry.benchmarkStatus === "on_track").length} on track`,
     `${entries.filter((entry) => entry.benchmarkStatus === "mixed").length} mixed`,
@@ -378,6 +405,7 @@ function printPartnerReport(
       <p style="margin:0 0 12px;color:#5e5035;">${entry.benchmarkOverrideImpactSummary}</p>
       ${entry.benchmarkOverrideHistorySummary ? `<p style="margin:0 0 12px;color:#5e5035;">Benchmark change history: ${entry.benchmarkOverrideHistorySummary}</p>` : ""}
       ${entry.lifecycleHistorySummary ? `<p style="margin:0 0 12px;color:#5e5035;">Lifecycle history: ${entry.lifecycleHistorySummary}</p>` : ""}
+      ${getPackControlChangeSummary(auditEntries, entry.packId) ? `<p style="margin:0 0 12px;color:#5e5035;">Recent control changes: ${getPackControlChangeSummary(auditEntries, entry.packId)}</p>` : ""}
       ${entry.recommendationHistorySnapshot.length > 0 ? `<p style="margin:0 0 12px;color:#5e5035;">Recent operator shifts: ${entry.recommendationHistorySnapshot.join(" | ")}</p>` : ""}
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
         <div><strong>${entry.participantCount}</strong><div>Participants</div></div>
@@ -428,6 +456,14 @@ function printPartnerReport(
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
                 <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Recommendation shifts</p>
                 <p style="margin:0;color:#5e5035;">${recommendationOverview}</p>
+              </section>`
+            : ""
+        }
+        ${
+          controlChangeOverview
+            ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Recent control changes</p>
+                <p style="margin:0;color:#5e5035;">${controlChangeOverview}</p>
               </section>`
             : ""
         }
@@ -809,7 +845,7 @@ export function CampaignPackAnalyticsPanel({
           className="button button--secondary"
           type="button"
           onClick={() =>
-            printPartnerReport(filteredPartnerReports, {
+            printPartnerReport(filteredPartnerReports, auditEntries, {
               search,
               source: sourceFilter,
               status: statusFilter,
@@ -931,6 +967,16 @@ export function CampaignPackAnalyticsPanel({
                 </span>
                 <span>top CTA {topVariantByPhase?.[0] ?? "n/a"}</span>
                 <span>{Math.round(averageCtaApprovalEfficiency * 100)}% CTA approval efficiency</span>
+                {comparisonBasePack ? (
+                  <span>
+                    premium delta {matching.reduce((sum, pack) => sum + pack.premiumConversionRate, 0) / matching.length - comparisonBasePack.premiumConversionRate >= 0 ? "+" : ""}
+                    {Math.round(
+                      ((matching.reduce((sum, pack) => sum + pack.premiumConversionRate, 0) / matching.length) -
+                        comparisonBasePack.premiumConversionRate) *
+                        100,
+                    )} pts
+                  </span>
+                ) : null}
                 {comparisonBasePack ? (
                   <span>
                     wallet delta {averageWalletLinkRate - comparisonBasePack.walletLinkRate >= 0 ? "+" : ""}
@@ -1195,6 +1241,11 @@ export function CampaignPackAnalyticsPanel({
               {partnerReports.find((entry) => entry.packId === pack.packId)?.lifecycleHistorySummary ? (
                 <p className="form-note">
                   Lifecycle history: {partnerReports.find((entry) => entry.packId === pack.packId)?.lifecycleHistorySummary}
+                </p>
+              ) : null}
+              {getPackControlChangeSummary(auditEntries, pack.packId) ? (
+                <p className="form-note">
+                  Recent control changes: {getPackControlChangeSummary(auditEntries, pack.packId)}
                 </p>
               ) : null}
               {partnerReports.find((entry) => entry.packId === pack.packId)?.recommendationHistorySnapshot.length ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { DashboardData, Quest, QuestProgressUpdate, QuestStatus } from "@/lib/types";
 import { DashboardSnapshot, PremiumFunnelSection, QuestBoardSection } from "@/components/sections";
@@ -227,8 +227,21 @@ export function DashboardExperience({
   walletAddresses?: string[];
 }) {
   const [data, setData] = useState(initialData);
-  const [missionView, setMissionView] = useState<MissionView>("active");
+  const [missionView, setMissionView] = useState<MissionView>(() => {
+    if (typeof window === "undefined") {
+      return "active";
+    }
+    const stored = window.localStorage.getItem("emorya-dashboard-mission-view");
+    return stored === "completed" || stored === "all" ? stored : "active";
+  });
   const highlightedQuestId = data.campaignPacks.find((pack) => pack.nextQuestActionable && pack.nextQuestId)?.nextQuestId ?? null;
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem("emorya-dashboard-mission-view", missionView);
+  }, [missionView]);
   const filteredData = useMemo<DashboardData>(() => {
     const activePackIds = new Set(data.campaignPacks.map((pack) => pack.packId));
     const completedPackIds = new Set(data.campaignPackHistory.map((pack) => pack.packId));

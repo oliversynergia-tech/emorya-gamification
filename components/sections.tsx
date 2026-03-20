@@ -102,6 +102,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     }
     return fallback;
   };
+  const getQuestBoardHref = (questId: string | null | undefined) => (questId ? `/dashboard#quest-${questId}` : "/dashboard#quest-board");
 
   const walletGatePack = data.campaignPacks.find((pack) => pack.ctaVariant === "wallet_gate");
   if (walletGatePack) {
@@ -241,15 +242,15 @@ function getDashboardPriorityAction(data: DashboardData) {
         : { label: "Mission pace", value: returnPack.weeklyGoal.label };
     const followupHref =
       returnPack.blockageState === "weekly_pace"
-        ? "/dashboard#quest-board"
+        ? getQuestBoardHref(returnPack.nextQuestId)
         : returnPack.blockageState === "ready"
-          ? "/dashboard#quest-board"
+          ? getQuestBoardHref(returnPack.nextQuestId)
           : returnPack.blockageState === "wallet_connection"
             ? "/profile#wallet-link-panel"
             : returnPack.blockageState === "starter_path"
-              ? "/dashboard#quest-board"
+              ? getQuestBoardHref(returnPack.nextQuestId)
               : returnPack.blockageState === "trust"
-                ? "/dashboard#quest-board"
+                ? getQuestBoardHref(returnPack.nextQuestId)
                 : returnPack.blockageState === "premium_phase"
                   ? "/profile"
                   : "/profile#mission-recap";
@@ -317,7 +318,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     return null;
   }
 
-  const followupHref = "/dashboard#quest-board";
+  const followupHref = getQuestBoardHref(nextPack.nextQuestId);
 
   return {
     eyebrow: "Top action",
@@ -349,6 +350,7 @@ function renderQuestCard(quest: Quest) {
   return (
     <article
       key={quest.id}
+      id={`quest-${quest.id}`}
       className={`quest-card quest-card--board quest-card--state-${quest.status} ${quest.status === "locked" ? "quest-card--locked" : ""}`}
     >
       <div className="quest-card__meta">
