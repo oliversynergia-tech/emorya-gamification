@@ -176,6 +176,39 @@ export async function listActiveCampaignPackAlertSuppressions(limit = 20) {
   }));
 }
 
+export async function getCampaignPackAlertSuppressionAnalytics() {
+  const byDurationResult = await runQuery<{ hours: number | string; count: number | string }>(
+    `SELECT GREATEST(1, ROUND(EXTRACT(EPOCH FROM (suppressed_until - created_at)) / 3600.0))::int AS hours,
+            COUNT(*)::int AS count
+     FROM campaign_pack_alert_suppressions
+     WHERE cleared_at IS NULL
+       AND suppressed_until > NOW()
+     GROUP BY 1
+     ORDER BY 1 ASC`,
+  );
+  const byReasonResult = await runQuery<{ reason: string | null; count: number | string }>(
+    `SELECT COALESCE(NULLIF(BTRIM(reason), ''), 'No reason given') AS reason,
+            COUNT(*)::int AS count
+     FROM campaign_pack_alert_suppressions
+     WHERE cleared_at IS NULL
+       AND suppressed_until > NOW()
+     GROUP BY 1
+     ORDER BY COUNT(*) DESC, 1 ASC`,
+  );
+
+  return {
+    activeCount: byDurationResult.rows.reduce((sum, row) => sum + Number(row.count), 0),
+    activeByDurationHours: byDurationResult.rows.map((row) => ({
+      hours: Number(row.hours),
+      count: Number(row.count),
+    })),
+    activeByReason: byReasonResult.rows.map((row) => ({
+      reason: row.reason ?? "No reason given",
+      count: Number(row.count),
+    })),
+  };
+}
+
 export async function createCampaignPackAlertSuppression({
   packId,
   label,

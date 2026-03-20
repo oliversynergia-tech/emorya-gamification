@@ -26,6 +26,10 @@ import {
   createCampaignPackAlertSuppression,
 } from "@/server/repositories/campaign-pack-notification-repository";
 import {
+  clearCampaignPackBenchmarkOverride,
+  upsertCampaignPackBenchmarkOverride,
+} from "@/server/repositories/campaign-pack-admin-repository";
+import {
   createRewardAsset,
   createRewardProgram,
   listRewardAssets,
@@ -90,6 +94,9 @@ export async function updateReviewerRole({
 }) {
   const currentUser = await getAuthenticatedUser();
   await assertAdminUser(currentUser);
+  if (!currentUser) {
+    throw new Error("Admin access required.");
+  }
 
   if (!currentUser) {
     throw new Error("You must be signed in to access admin controls.");
@@ -361,6 +368,66 @@ export async function updateCampaignPackLifecycle({
       updatedCount,
     },
   };
+}
+
+export async function saveCampaignPackBenchmarkOverride({
+  packId,
+  label,
+  benchmark,
+  reason,
+}: {
+  packId: string;
+  label: string;
+  benchmark: {
+    walletLinkRateTarget: number;
+    rewardEligibilityRateTarget: number;
+    premiumConversionRateTarget: number;
+    averageWeeklyXpTarget: number;
+  };
+  reason?: string | null;
+}) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+  if (!currentUser) {
+    throw new Error("Admin access required.");
+  }
+
+  if (!packId.trim() || !label.trim()) {
+    throw new Error("Campaign pack benchmark overrides require a pack id and label.");
+  }
+
+  await upsertCampaignPackBenchmarkOverride({
+    packId: packId.trim(),
+    label: label.trim(),
+    benchmark: {
+      walletLinkRateTarget: Math.max(benchmark.walletLinkRateTarget, 0),
+      rewardEligibilityRateTarget: Math.max(benchmark.rewardEligibilityRateTarget, 0),
+      premiumConversionRateTarget: Math.max(benchmark.premiumConversionRateTarget, 0),
+      averageWeeklyXpTarget: Math.max(Math.round(benchmark.averageWeeklyXpTarget), 0),
+    },
+    reason,
+    updatedBy: currentUser.id,
+  });
+
+  return listQuestDefinitionsForAdmin();
+}
+
+export async function removeCampaignPackBenchmarkOverride(packId: string) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+  if (!currentUser) {
+    throw new Error("Admin access required.");
+  }
+
+  if (!packId.trim()) {
+    throw new Error("Campaign pack benchmark override removal requires a pack id.");
+  }
+
+  await clearCampaignPackBenchmarkOverride({
+    packId: packId.trim(),
+  });
+
+  return listQuestDefinitionsForAdmin();
 }
 
 export async function updateQuestDefinition(

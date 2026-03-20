@@ -4,6 +4,8 @@ import test, { mock } from "node:test";
 import {
   runCampaignPackAlertSuppressionClearRoute,
   runCampaignPackAlertSuppressionRoute,
+  runCampaignPackBenchmarkOverrideClearRoute,
+  runCampaignPackBenchmarkOverrideRoute,
   runCampaignPackCreateRoute,
   runCampaignPackLifecycleRoute,
   runCampaignPackNotificationAcknowledgeRoute,
@@ -168,6 +170,66 @@ test("runCampaignPackAlertSuppressionClearRoute forwards the suppression id", as
   assert.deepEqual(result.body, {
     ok: true,
     suppressions: [],
+  });
+});
+
+test("runCampaignPackBenchmarkOverrideRoute forwards benchmark overrides", async () => {
+  const services = {
+    saveCampaignPackBenchmarkOverride: mock.fn(async (input: {
+      packId: string;
+      label: string;
+      benchmark: {
+        walletLinkRateTarget: number;
+        rewardEligibilityRateTarget: number;
+        premiumConversionRateTarget: number;
+        averageWeeklyXpTarget: number;
+      };
+      reason?: string | null;
+    }) => {
+      assert.equal(input.packId, "pack-1");
+      assert.equal(input.label, "March Bridge Pack");
+      assert.equal(input.benchmark.walletLinkRateTarget, 0.42);
+      assert.equal(input.reason, "Flagship pack");
+      return [{ id: "quest-pack-1" }];
+    }),
+  };
+
+  const result = await runCampaignPackBenchmarkOverrideRoute(
+    {
+      packId: "pack-1",
+      label: "March Bridge Pack",
+      benchmark: {
+        walletLinkRateTarget: 0.42,
+        rewardEligibilityRateTarget: 0.31,
+        premiumConversionRateTarget: 0.14,
+        averageWeeklyXpTarget: 260,
+      },
+      reason: "Flagship pack",
+    },
+    services,
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    quests: [{ id: "quest-pack-1" }],
+  });
+});
+
+test("runCampaignPackBenchmarkOverrideClearRoute forwards the pack id", async () => {
+  const services = {
+    clearCampaignPackBenchmarkOverride: mock.fn(async (packId: string) => {
+      assert.equal(packId, "pack-1");
+      return [];
+    }),
+  };
+
+  const result = await runCampaignPackBenchmarkOverrideClearRoute("pack-1", services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    quests: [],
   });
 });
 

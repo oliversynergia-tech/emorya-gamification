@@ -304,6 +304,21 @@ CREATE TABLE campaign_pack_alert_suppressions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE campaign_pack_benchmark_overrides (
+  id UUID PRIMARY KEY,
+  pack_id TEXT NOT NULL UNIQUE,
+  label TEXT NOT NULL,
+  wallet_link_rate_target NUMERIC(6, 4) NOT NULL,
+  reward_eligibility_rate_target NUMERIC(6, 4) NOT NULL,
+  premium_conversion_rate_target NUMERIC(6, 4) NOT NULL,
+  average_weekly_xp_target INTEGER NOT NULL,
+  reason TEXT,
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE economy_settings (
   id UUID PRIMARY KEY,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -375,6 +390,7 @@ CREATE INDEX idx_moderation_notification_deliveries_created_at ON moderation_not
 CREATE INDEX idx_campaign_pack_alert_deliveries_created_at ON campaign_pack_alert_deliveries(created_at DESC);
 CREATE INDEX idx_campaign_pack_alert_deliveries_fingerprint ON campaign_pack_alert_deliveries(channel, event_status, fingerprint);
 CREATE INDEX idx_campaign_pack_alert_suppressions_active ON campaign_pack_alert_suppressions(pack_id, title, suppressed_until DESC);
+CREATE INDEX idx_campaign_pack_benchmark_overrides_pack_id ON campaign_pack_benchmark_overrides(pack_id);
 CREATE UNIQUE INDEX idx_economy_settings_active_single ON economy_settings(is_active) WHERE is_active = TRUE;
 CREATE INDEX idx_economy_settings_audit_created_at ON economy_settings_audit(created_at DESC);
 CREATE INDEX idx_token_redemption_audit_created_at ON token_redemption_audit(created_at DESC);

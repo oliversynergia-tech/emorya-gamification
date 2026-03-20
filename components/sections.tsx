@@ -1624,6 +1624,7 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
         <CampaignPackAlertPanel
           alerts={data.campaignOperations.alerts}
           suppressions={data.campaignOperations.suppressions}
+          suppressionAnalytics={data.campaignOperations.suppressionAnalytics}
           canManage={canManageCampaignPacks}
         />
         <div className="achievement-list">

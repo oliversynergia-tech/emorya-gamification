@@ -10,10 +10,12 @@ type CampaignPackAlert = AdminOverviewData["campaignOperations"]["alerts"][numbe
 export function CampaignPackAlertPanel({
   alerts,
   suppressions,
+  suppressionAnalytics,
   canManage = false,
 }: {
   alerts: AdminOverviewData["campaignOperations"]["alerts"];
   suppressions: AdminOverviewData["campaignOperations"]["suppressions"];
+  suppressionAnalytics: AdminOverviewData["campaignOperations"]["suppressionAnalytics"];
   canManage?: boolean;
 }) {
   const router = useRouter();
@@ -108,6 +110,29 @@ export function CampaignPackAlertPanel({
       ) : (
         <p className="form-note">Live campaign packs are currently staying inside the baseline pack-performance thresholds.</p>
       )}
+      <div className="achievement-list">
+        <article className="achievement-card">
+          <div>
+            <strong>Suppression overview</strong>
+            <p>Active muting across live campaign-pack alerts so ops can spot noisy patterns quickly.</p>
+          </div>
+          <div className="achievement-card__side">
+            <span>{suppressionAnalytics.activeCount} active</span>
+            <span>{suppressionAnalytics.activeByDurationHours.map((entry) => `${entry.hours}h: ${entry.count}`).join(" · ") || "No duration mix yet"}</span>
+          </div>
+        </article>
+        {suppressionAnalytics.activeByReason.slice(0, 4).map((entry) => (
+          <article key={entry.reason} className="achievement-card">
+            <div>
+              <strong>{entry.reason}</strong>
+              <p>Current active suppressions using this reason.</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{entry.count} active</span>
+            </div>
+          </article>
+        ))}
+      </div>
       <div className="achievement-list">
         {suppressions.map((suppression) => (
           <article key={suppression.id} className="achievement-card">

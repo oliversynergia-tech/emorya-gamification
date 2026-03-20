@@ -681,6 +681,8 @@ export type AdminOverviewData = {
         rewardEligibilityRateTarget: number;
         premiumConversionRateTarget: number;
         averageWeeklyXpTarget: number;
+        isOverridden: boolean;
+        overrideReason: string | null;
         status: "on_track" | "mixed" | "off_track";
       };
       createdAt: string;
@@ -738,6 +740,17 @@ export type AdminOverviewData = {
       clearedAt: string | null;
       clearedByDisplayName: string | null;
     }>;
+    suppressionAnalytics: {
+      activeCount: number;
+      activeByDurationHours: Array<{
+        hours: number;
+        count: number;
+      }>;
+      activeByReason: Array<{
+        reason: string;
+        count: number;
+      }>;
+    };
     packReady: boolean;
     activeLaneMode: "bridged" | "separate";
   };
@@ -855,6 +868,14 @@ export type CampaignPackBenchmarkConfig = {
   rewardEligibilityRateTarget: number;
   premiumConversionRateTarget: number;
   averageWeeklyXpTarget: number;
+};
+
+export type CampaignPackBenchmarkOverride = CampaignPackBenchmarkConfig & {
+  packId: string;
+  label: string;
+  reason: string | null;
+  updatedAt: string;
+  updatedByDisplayName: string | null;
 };
 
 export type EconomySettings = {

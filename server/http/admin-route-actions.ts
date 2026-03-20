@@ -1,6 +1,8 @@
 import {
   handleCampaignPackAlertSuppressionClearRequest,
   handleCampaignPackAlertSuppressionRequest,
+  handleCampaignPackBenchmarkOverrideClearRequest,
+  handleCampaignPackBenchmarkOverrideRequest,
   handleCampaignPackCreateRequest,
   handleCampaignPackLifecycleRequest,
   handleCampaignPackNotificationAcknowledgeRequest,
@@ -30,6 +32,18 @@ export type AdminRouteActionServices = {
     packId: string;
     lifecycleState: "draft" | "ready" | "live";
   }) => Promise<unknown>;
+  saveCampaignPackBenchmarkOverride: (input: {
+    packId: string;
+    label: string;
+    benchmark: {
+      walletLinkRateTarget: number;
+      rewardEligibilityRateTarget: number;
+      premiumConversionRateTarget: number;
+      averageWeeklyXpTarget: number;
+    };
+    reason?: string | null;
+  }) => Promise<unknown>;
+  clearCampaignPackBenchmarkOverride: (packId: string) => Promise<unknown>;
   updateQuestDefinition: (questId: string, input: Record<string, unknown>) => Promise<unknown>;
   deleteQuestDefinition: (questId: string) => Promise<unknown>;
   getQuestDefinitionTemplateDirectory: () => Promise<unknown>;
@@ -98,6 +112,33 @@ export async function runCampaignPackLifecycleRoute(
   services: Pick<AdminRouteActionServices, "updateCampaignPackLifecycle">,
 ) {
   return handleCampaignPackLifecycleRequest(body, services.updateCampaignPackLifecycle);
+}
+
+export async function runCampaignPackBenchmarkOverrideRoute(
+  body: {
+    packId?: string;
+    label?: string;
+    benchmark?: {
+      walletLinkRateTarget?: number;
+      rewardEligibilityRateTarget?: number;
+      premiumConversionRateTarget?: number;
+      averageWeeklyXpTarget?: number;
+    };
+    reason?: string | null;
+  },
+  services: Pick<AdminRouteActionServices, "saveCampaignPackBenchmarkOverride">,
+) {
+  return handleCampaignPackBenchmarkOverrideRequest(body, services.saveCampaignPackBenchmarkOverride);
+}
+
+export async function runCampaignPackBenchmarkOverrideClearRoute(
+  packId: string,
+  services: Pick<AdminRouteActionServices, "clearCampaignPackBenchmarkOverride">,
+) {
+  return handleCampaignPackBenchmarkOverrideClearRequest(
+    packId,
+    services.clearCampaignPackBenchmarkOverride,
+  );
 }
 
 export async function runCampaignPackNotificationAcknowledgeRoute(

@@ -63,6 +63,10 @@ import {
   syncModerationNotificationHistory,
 } from "@/server/repositories/moderation-notification-repository";
 import {
+  listCampaignPackBenchmarkOverrides,
+} from "@/server/repositories/campaign-pack-admin-repository";
+import {
+  getCampaignPackAlertSuppressionAnalytics,
   listActiveCampaignPackAlertSuppressions,
   listRecentCampaignPackNotificationDeliveries,
   syncCampaignPackNotificationHistory,
@@ -1001,7 +1005,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackPerformance] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackPerformance] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -1033,6 +1037,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     getTokenSettlementAnalytics(),
     listQuestDefinitionTemplatesForAdmin(),
     listQuestDefinitionsForAdmin(),
+    listCampaignPackBenchmarkOverrides(),
+    getCampaignPackAlertSuppressionAnalytics(),
     runQuery<{
       pack_id: string;
       completion_count: string;
@@ -1505,6 +1511,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           rewardEligibilityRateTarget: 0,
           premiumConversionRateTarget: 0,
           averageWeeklyXpTarget: 0,
+          isOverridden: false,
+          overrideReason: null,
           status: "on_track" as const,
         },
         createdAt: quest.createdAt,
@@ -1611,12 +1619,16 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       });
     }
   }
+  const campaignPackBenchmarkOverrideMap = new Map(
+    campaignPackBenchmarkOverrides.map((override) => [override.packId, override] as const),
+  );
   for (const pack of packAnalyticsMap.values()) {
     const dominantSource =
       pack.sourceBreakdown.slice().sort((left, right) => right.participantCount - left.participantCount)[0]?.activeLane ??
       pack.sources[0] ??
       "direct";
-    const benchmark = getCampaignPackBenchmark(economySettings, dominantSource);
+    const benchmarkOverride = campaignPackBenchmarkOverrideMap.get(pack.packId) ?? null;
+    const benchmark = getCampaignPackBenchmark(economySettings, dominantSource, benchmarkOverride);
     const score =
       (pack.walletLinkRate >= benchmark.walletLinkRateTarget ? 1 : 0) +
       (pack.rewardEligibilityRate >= benchmark.rewardEligibilityRateTarget ? 1 : 0) +
@@ -1624,6 +1636,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       (pack.averageWeeklyXp >= benchmark.averageWeeklyXpTarget ? 1 : 0);
     pack.benchmark = {
       ...benchmark,
+      isOverridden: Boolean(benchmarkOverride),
+      overrideReason: benchmarkOverride?.reason ?? null,
       status: score >= 4 ? "on_track" : score >= 2 ? "mixed" : "off_track",
     };
   }
@@ -1733,6 +1747,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       notifications: campaignPackNotifications,
       notificationHistory: campaignPackNotificationHistory,
       suppressions: activeCampaignPackSuppressions,
+      suppressionAnalytics,
       packReady:
         ["Zealy bridge quest", "Galxe feeder quest", "TaskOn feeder quest"].every((label) =>
           questDefinitionTemplates.some((template) => template.label === label && template.isActive),

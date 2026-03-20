@@ -224,6 +224,99 @@ export async function handleCampaignPackLifecycleRequest(
   }
 }
 
+export async function handleCampaignPackBenchmarkOverrideRequest(
+  body: {
+    packId?: string;
+    label?: string;
+    benchmark?: {
+      walletLinkRateTarget?: number;
+      rewardEligibilityRateTarget?: number;
+      premiumConversionRateTarget?: number;
+      averageWeeklyXpTarget?: number;
+    };
+    reason?: string | null;
+  },
+  saveCampaignPackBenchmarkOverride: (input: {
+    packId: string;
+    label: string;
+    benchmark: {
+      walletLinkRateTarget: number;
+      rewardEligibilityRateTarget: number;
+      premiumConversionRateTarget: number;
+      averageWeeklyXpTarget: number;
+    };
+    reason?: string | null;
+  }) => Promise<unknown>,
+) {
+  if (
+    !body.packId ||
+    !body.label ||
+    typeof body.benchmark?.walletLinkRateTarget !== "number" ||
+    typeof body.benchmark?.rewardEligibilityRateTarget !== "number" ||
+    typeof body.benchmark?.premiumConversionRateTarget !== "number" ||
+    typeof body.benchmark?.averageWeeklyXpTarget !== "number"
+  ) {
+    return {
+      status: 400,
+      body: { ok: false, error: "packId, label, and a complete benchmark override are required." },
+    };
+  }
+
+  try {
+    const quests = await saveCampaignPackBenchmarkOverride({
+      packId: body.packId,
+      label: body.label,
+      benchmark: {
+        walletLinkRateTarget: body.benchmark.walletLinkRateTarget,
+        rewardEligibilityRateTarget: body.benchmark.rewardEligibilityRateTarget,
+        premiumConversionRateTarget: body.benchmark.premiumConversionRateTarget,
+        averageWeeklyXpTarget: body.benchmark.averageWeeklyXpTarget,
+      },
+      reason: body.reason,
+    });
+
+    return {
+      status: 200,
+      body: { ok: true, quests },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to save the campaign pack benchmark override.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleCampaignPackBenchmarkOverrideClearRequest(
+  packId: string,
+  clearCampaignPackBenchmarkOverride: (packId: string) => Promise<unknown>,
+) {
+  if (!packId) {
+    return {
+      status: 400,
+      body: { ok: false, error: "packId is required." },
+    };
+  }
+
+  try {
+    const quests = await clearCampaignPackBenchmarkOverride(packId);
+
+    return {
+      status: 200,
+      body: { ok: true, quests },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to clear the campaign pack benchmark override.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
 export async function handleQuestDefinitionUpdateRequest(
   {
     questId,

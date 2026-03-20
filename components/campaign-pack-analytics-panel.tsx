@@ -7,6 +7,13 @@ import type { AdminOverviewData, CampaignSource } from "@/lib/types";
 
 type PackAnalyticsItem = AdminOverviewData["campaignOperations"]["packAnalytics"][number];
 type PartnerReportItem = AdminOverviewData["campaignOperations"]["partnerReporting"][number];
+type BenchmarkDraft = {
+  walletLinkRateTarget: number;
+  rewardEligibilityRateTarget: number;
+  premiumConversionRateTarget: number;
+  averageWeeklyXpTarget: number;
+  reason: string;
+};
 
 function exportPackAnalytics(entries: PackAnalyticsItem[]) {
   const lines = [
@@ -41,6 +48,10 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
       "retained_activity_rate",
       "average_weekly_xp",
       "engaged_weekly_xp_rate",
+      "benchmark_lane",
+      "benchmark_status",
+      "benchmark_is_overridden",
+      "benchmark_override_reason",
     ].join(","),
     ...entries.map((entry) =>
       [
@@ -80,6 +91,10 @@ function exportPackAnalytics(entries: PackAnalyticsItem[]) {
         entry.retainedActivityRate,
         entry.averageWeeklyXp,
         entry.engagedWeeklyXpRate,
+        entry.benchmark.activeLane,
+        entry.benchmark.status,
+        entry.benchmark.isOverridden,
+        JSON.stringify(entry.benchmark.overrideReason ?? ""),
       ].join(","),
     ),
   ].join("\n");
@@ -200,7 +215,37 @@ export function CampaignPackAnalyticsPanel({
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [comparisonPackId, setComparisonPackId] = useState<string>("all");
   const [pendingPackId, setPendingPackId] = useState<string | null>(null);
+  const [benchmarkPendingPackId, setBenchmarkPendingPackId] = useState<string | null>(null);
+  const [benchmarkDrafts, setBenchmarkDrafts] = useState<Record<string, BenchmarkDraft>>({});
   const [error, setError] = useState<string | null>(null);
+
+  function getBenchmarkDraft(pack: PackAnalyticsItem): BenchmarkDraft {
+    return (
+      benchmarkDrafts[pack.packId] ?? {
+        walletLinkRateTarget: pack.benchmark.walletLinkRateTarget,
+        rewardEligibilityRateTarget: pack.benchmark.rewardEligibilityRateTarget,
+        premiumConversionRateTarget: pack.benchmark.premiumConversionRateTarget,
+        averageWeeklyXpTarget: pack.benchmark.averageWeeklyXpTarget,
+        reason: pack.benchmark.overrideReason ?? "",
+      }
+    );
+  }
+
+  function updateBenchmarkDraft(pack: PackAnalyticsItem, next: Partial<BenchmarkDraft>) {
+    setBenchmarkDrafts((current) => ({
+      ...current,
+      [pack.packId]: {
+        ...(current[pack.packId] ?? {
+          walletLinkRateTarget: pack.benchmark.walletLinkRateTarget,
+          rewardEligibilityRateTarget: pack.benchmark.rewardEligibilityRateTarget,
+          premiumConversionRateTarget: pack.benchmark.premiumConversionRateTarget,
+          averageWeeklyXpTarget: pack.benchmark.averageWeeklyXpTarget,
+          reason: pack.benchmark.overrideReason ?? "",
+        }),
+        ...next,
+      },
+    }));
+  }
 
   const filteredPacks = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -279,6 +324,71 @@ export function CampaignPackAnalyticsPanel({
       setError("Unable to reach the campaign pack service.");
     } finally {
       setPendingPackId(null);
+    }
+  }
+
+  async function saveBenchmarkOverride(pack: PackAnalyticsItem) {
+    const draft = getBenchmarkDraft(pack);
+    setBenchmarkPendingPackId(pack.packId);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/campaign-packs/${pack.packId}/benchmark`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          label: pack.label,
+          benchmark: {
+            walletLinkRateTarget: draft.walletLinkRateTarget,
+            rewardEligibilityRateTarget: draft.rewardEligibilityRateTarget,
+            premiumConversionRateTarget: draft.premiumConversionRateTarget,
+            averageWeeklyXpTarget: draft.averageWeeklyXpTarget,
+          },
+          reason: draft.reason,
+        }),
+      });
+      const result = (await response.json()) as { ok?: boolean; error?: string };
+
+      if (!response.ok || !result.ok) {
+        setError(result.error ?? "Unable to save the campaign pack benchmark override.");
+        return;
+      }
+
+      router.refresh();
+    } catch {
+      setError("Unable to reach the campaign pack benchmark service.");
+    } finally {
+      setBenchmarkPendingPackId(null);
+    }
+  }
+
+  async function clearBenchmarkOverride(packId: string) {
+    setBenchmarkPendingPackId(packId);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/campaign-packs/${packId}/benchmark`, {
+        method: "DELETE",
+      });
+      const result = (await response.json()) as { ok?: boolean; error?: string };
+
+      if (!response.ok || !result.ok) {
+        setError(result.error ?? "Unable to clear the campaign pack benchmark override.");
+        return;
+      }
+
+      setBenchmarkDrafts((current) => {
+        const next = { ...current };
+        delete next[packId];
+        return next;
+      });
+      router.refresh();
+    } catch {
+      setError("Unable to reach the campaign pack benchmark service.");
+    } finally {
+      setBenchmarkPendingPackId(null);
     }
   }
 
@@ -418,7 +528,9 @@ export function CampaignPackAnalyticsPanel({
                 {` `}
                 {Math.round(pack.benchmark.rewardEligibilityRateTarget * 100)}% eligibility, {Math.round(pack.benchmark.premiumConversionRateTarget * 100)}% premium,
                 {` `}
-                {pack.benchmark.averageWeeklyXpTarget} weekly XP. Status: {pack.benchmark.status}.
+                {pack.benchmark.averageWeeklyXpTarget} weekly XP. Status: {pack.benchmark.status}
+                {pack.benchmark.isOverridden ? " · custom pack override active" : " · lane default"}
+                {pack.benchmark.overrideReason ? ` · ${pack.benchmark.overrideReason}` : ""}.
               </p>
               <p className="form-note">
                 Premium upgrades after first pack touch: {pack.premiumUpgradeCount}
@@ -478,6 +590,85 @@ export function CampaignPackAnalyticsPanel({
                   onClick={() => void updateLifecycle(pack.packId, "live")}
                 >
                   {pendingPackId === pack.packId ? "Updating..." : "Live"}
+                </button>
+              </div>
+            ) : null}
+            {canManage ? (
+              <div className="review-bulk-actions">
+                <label className="field">
+                  <span>Wallet target</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={getBenchmarkDraft(pack).walletLinkRateTarget}
+                    onChange={(event) =>
+                      updateBenchmarkDraft(pack, { walletLinkRateTarget: Number(event.target.value) })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Eligibility target</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={getBenchmarkDraft(pack).rewardEligibilityRateTarget}
+                    onChange={(event) =>
+                      updateBenchmarkDraft(pack, { rewardEligibilityRateTarget: Number(event.target.value) })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Premium target</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={getBenchmarkDraft(pack).premiumConversionRateTarget}
+                    onChange={(event) =>
+                      updateBenchmarkDraft(pack, { premiumConversionRateTarget: Number(event.target.value) })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Weekly XP target</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={getBenchmarkDraft(pack).averageWeeklyXpTarget}
+                    onChange={(event) =>
+                      updateBenchmarkDraft(pack, { averageWeeklyXpTarget: Number(event.target.value) })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Override reason</span>
+                  <input
+                    value={getBenchmarkDraft(pack).reason}
+                    onChange={(event) => updateBenchmarkDraft(pack, { reason: event.target.value })}
+                    placeholder="Flagship partner pack, limited-time push…"
+                  />
+                </label>
+                <button
+                  className="button button--secondary button--small"
+                  type="button"
+                  disabled={benchmarkPendingPackId !== null}
+                  onClick={() => void saveBenchmarkOverride(pack)}
+                >
+                  {benchmarkPendingPackId === pack.packId ? "Saving..." : "Save override"}
+                </button>
+                <button
+                  className="button button--secondary button--small"
+                  type="button"
+                  disabled={benchmarkPendingPackId !== null || !pack.benchmark.isOverridden}
+                  onClick={() => void clearBenchmarkOverride(pack.packId)}
+                >
+                  {benchmarkPendingPackId === pack.packId ? "Clearing..." : "Clear override"}
                 </button>
               </div>
             ) : null}

@@ -1,4 +1,9 @@
-import type { CampaignPackBenchmarkConfig, CampaignSource, EconomySettings } from "@/lib/types";
+import type {
+  CampaignPackBenchmarkConfig,
+  CampaignPackBenchmarkOverride,
+  CampaignSource,
+  EconomySettings,
+} from "@/lib/types";
 
 export type CampaignPackBenchmark = {
   activeLane: CampaignSource | "direct";
@@ -38,7 +43,18 @@ export const defaultCampaignPackBenchmarks: Record<CampaignSource | "direct", Ca
 export function getCampaignPackBenchmark(
   settings: Pick<EconomySettings, "campaignPackBenchmarks">,
   activeLane: CampaignSource | "direct",
+  override?: CampaignPackBenchmarkOverride | null,
 ) {
+  if (override) {
+    return {
+      activeLane,
+      walletLinkRateTarget: override.walletLinkRateTarget,
+      rewardEligibilityRateTarget: override.rewardEligibilityRateTarget,
+      premiumConversionRateTarget: override.premiumConversionRateTarget,
+      averageWeeklyXpTarget: override.averageWeeklyXpTarget,
+    } satisfies CampaignPackBenchmark;
+  }
+
   const benchmarks = settings.campaignPackBenchmarks ?? defaultCampaignPackBenchmarks;
   const selected = benchmarks[activeLane] ?? benchmarks.direct ?? defaultCampaignPackBenchmarks.direct;
 
