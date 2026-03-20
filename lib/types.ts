@@ -408,6 +408,8 @@ export type DashboardData = {
     nextAction: string;
     sequenceReason: string;
     tierPhaseCopy: string;
+    priorityReason: string;
+    unlockPreview: string;
     rewardFocus: string;
     badgeLabel: string;
     leaderboardCallout: string;

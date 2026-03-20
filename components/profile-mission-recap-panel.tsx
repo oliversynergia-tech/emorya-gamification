@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { MissionLink } from "@/components/mission-link";
 import type { DashboardCampaignPack, DashboardCampaignPackHistory } from "@/lib/types";
 
 type MissionRecapView = "active" | "completed" | "reward";
@@ -82,19 +83,31 @@ export function ProfileMissionRecapPanel({
                   {pack.completedQuestCount}/{pack.totalQuestCount} missions complete. {pack.sequenceReason}
                 </p>
               </div>
-              <div className="achievement-card__side">
-                <span>{pack.badgeLabel}</span>
-                <span>{pack.weeklyGoal.targetXp} XP target</span>
-                <a className="text-link" href={pack.ctaHref ?? "#quest-board"}>
-                  {pack.ctaLabel}
-                </a>
-                {pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete" ? (
-                  <a className="text-link" href="/leaderboard#referral-board">
-                    Invite from this milestone
-                  </a>
-                ) : null}
-              </div>
-            </article>
+                <div className="achievement-card__side">
+                  <span>{pack.badgeLabel}</span>
+                  <span>{pack.weeklyGoal.targetXp} XP target</span>
+                  <MissionLink
+                    className="text-link"
+                    href={pack.ctaHref ?? "#quest-board"}
+                    packId={pack.packId}
+                    eventType="profile_recap_cta"
+                    ctaLabel={pack.ctaLabel}
+                  >
+                    {pack.ctaLabel}
+                  </MissionLink>
+                  {pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete" ? (
+                    <MissionLink
+                      className="text-link"
+                      href="/leaderboard#referral-board"
+                      packId={pack.packId}
+                      eventType="profile_referral_cta"
+                      ctaLabel="Invite from this milestone"
+                    >
+                      Invite from this milestone
+                    </MissionLink>
+                  ) : null}
+                </div>
+              </article>
           ))}
         </div>
       ) : null}

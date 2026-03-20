@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { DashboardData } from "@/lib/types";
+import { MissionLink } from "@/components/mission-link";
 
 export function CampaignMissionInboxPanel({
   notifications,
@@ -13,7 +14,36 @@ export function CampaignMissionInboxPanel({
   title?: string;
   eyebrow?: string;
 }) {
-  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
+  const storageKey = `campaign-mission-inbox:${title}`;
+  const [dismissedIds, setDismissedIds] = useState<string[]>(() => {
+    if (typeof window === "undefined") {
+      return [];
+    }
+
+    try {
+      const saved = window.localStorage.getItem(storageKey);
+      if (!saved) {
+        return [];
+      }
+
+      const parsed = JSON.parse(saved) as string[];
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch {
+      // Ignore broken local storage state.
+    }
+
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(dismissedIds));
+    } catch {
+      // Ignore storage failures.
+    }
+  }, [dismissedIds, storageKey]);
 
   const visibleNotifications = useMemo(
     () => notifications.filter((notification) => !dismissedIds.includes(notification.id)),
@@ -41,12 +71,15 @@ export function CampaignMissionInboxPanel({
               <p>{notification.detail}</p>
               {notification.ctaLabel ? (
                 <div className="hero__actions">
-                  <a
+                  <MissionLink
                     className="button button--secondary"
                     href={notification.ctaHref ?? (notification.ctaQuestId ? `#quest-action-${notification.ctaQuestId}` : "#quest-board")}
+                    packId={notification.packId}
+                    eventType="mission_inbox_cta"
+                    ctaLabel={notification.ctaLabel}
                   >
                     {notification.ctaLabel}
-                  </a>
+                  </MissionLink>
                 </div>
               ) : null}
             </div>

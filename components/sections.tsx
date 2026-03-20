@@ -431,6 +431,8 @@ export function DashboardSnapshot({
                     <p className="form-note">{pack.nextAction}</p>
                     <p className="form-note">{pack.sequenceReason}</p>
                     <p className="form-note">{pack.tierPhaseCopy}</p>
+                    <p className="form-note">{pack.priorityReason}</p>
+                    <p className="form-note">{pack.unlockPreview}</p>
                     <p className="form-note">{pack.leaderboardCallout}</p>
                     <p className="form-note">{pack.weeklyGoal.label}</p>
                     {pack.onboardingHint ? <p className="form-note">{pack.onboardingHint}</p> : null}
@@ -482,6 +484,8 @@ export function DashboardSnapshot({
                       ? pack.featuredTracks.map((track) => getTrackLabel(track)).join(", ")
                       : "Campaign"}
                   </small>
+                  <small>{pack.priorityReason}</small>
+                  <small>{pack.unlockPreview}</small>
                 </div>
               ))}
             </div>

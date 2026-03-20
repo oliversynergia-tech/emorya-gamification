@@ -1,3 +1,4 @@
+import { MissionLink } from "@/components/mission-link";
 import { LeaderboardSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
 import { getCampaignLaneVisualProfile, getCampaignSourceProfile } from "@/lib/campaign-source";
@@ -245,9 +246,15 @@ export default async function LeaderboardPage() {
               </div>
               <div className="achievement-card__side">
                 <span>{activeMissionPack.completedQuestCount}/{activeMissionPack.totalQuestCount} complete</span>
-                <a className="text-link" href={activeMissionPack.ctaHref ?? "/dashboard#campaign-mission"}>
+                <MissionLink
+                  className="text-link"
+                  href={activeMissionPack.ctaHref ?? "/dashboard#campaign-mission"}
+                  packId={activeMissionPack.packId}
+                  eventType="leaderboard_mission_cta"
+                  ctaLabel={activeMissionPack.ctaLabel}
+                >
                   {activeMissionPack.ctaLabel}
-                </a>
+                </MissionLink>
               </div>
             </article>
           ) : null}

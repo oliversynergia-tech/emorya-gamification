@@ -1117,6 +1117,62 @@ function getPackTierPhaseCopy(
   return `${packLabel} is still in the free phase. Focus on trust steps, wallet readiness, and clean mission clears before the heavier-value premium phase matters.`;
 }
 
+function getPackPriorityReason({
+  userProgressState,
+  rewardEligible,
+  activeLane,
+  attributionSource,
+}: {
+  userProgressState: UserProgressState;
+  rewardEligible: boolean;
+  activeLane: CampaignSource | "direct";
+  attributionSource: CampaignSource | "direct";
+}) {
+  if (!userProgressState.walletLinked) {
+    return "This mission is prioritized because wallet linking is still the gating step into the full reward path.";
+  }
+
+  if (!userProgressState.starterPathComplete) {
+    return "This mission is prioritized because Starter Path stability matters more than deeper reward steps right now.";
+  }
+
+  if (!rewardEligible) {
+    return "This mission is prioritized because it is the cleanest route toward reward eligibility and repeat trust signals.";
+  }
+
+  if (attributionSource !== activeLane) {
+    return `This mission is prioritized because your attributed source is still being bridged into the ${activeLane} experience lane.`;
+  }
+
+  return "This mission is prioritized because it is the strongest live route for your current weekly momentum and lane pressure.";
+}
+
+function getPackUnlockPreview({
+  questStatuses,
+  featuredTracks,
+  directRewardMetadata,
+}: {
+  questStatuses: Array<{ status: "available" | "in-progress" | "completed" | "rejected" }>;
+  featuredTracks: QuestTrack[];
+  directRewardMetadata: { asset: TokenAsset; amount: number } | null;
+}) {
+  const remainingQuestCount = questStatuses.filter((quest) => quest.status !== "completed").length;
+
+  if (remainingQuestCount <= 1 && directRewardMetadata) {
+    return `One more clean step can turn this mission into a ${directRewardMetadata.amount} ${directRewardMetadata.asset} direct reward route.`;
+  }
+
+  if (featuredTracks.includes("premium")) {
+    return "The next phase of this mission leans harder into premium-weighted quests and stronger XP yield.";
+  }
+
+  if (featuredTracks.includes("referral")) {
+    return "The next phase of this mission opens a stronger referral moment if you keep the pack moving.";
+  }
+
+  return `There are ${remainingQuestCount} mission step${remainingQuestCount === 1 ? "" : "s"} left in this pack, with the next unlock biased toward the current lane focus.`;
+}
+
 function resolvePackPrimaryCta({
   user,
   userProgressState,
@@ -1463,6 +1519,17 @@ async function getUserCampaignPackJourneys({
       (firstRow.template_kind ?? "mixed") as "bridge" | "feeder" | "mixed",
       experienceLane,
     );
+    const priorityReason = getPackPriorityReason({
+      userProgressState,
+      rewardEligible: user.rewardEligibility.eligible,
+      activeLane: experienceLane,
+      attributionSource,
+    });
+    const unlockPreview = getPackUnlockPreview({
+      questStatuses,
+      featuredTracks,
+      directRewardMetadata,
+    });
     const primaryCta = resolvePackPrimaryCta({
       user,
       userProgressState,
@@ -1494,6 +1561,8 @@ async function getUserCampaignPackJourneys({
       nextAction,
       sequenceReason,
       tierPhaseCopy,
+      priorityReason,
+      unlockPreview,
       rewardFocus,
       badgeLabel: packBadgeLabel(firstRow.template_kind, milestone.label),
       leaderboardCallout: `${experienceLane} currently adds ${(getCampaignLeaderboardMomentumMultiplier(economySettings, attributionSource === "direct" ? null : attributionSource) * 100 - 100).toFixed(0)}% leaderboard momentum, so this pack is helping shape your rank pressure now.`,
@@ -1544,6 +1613,8 @@ async function getUserCampaignPackJourneys({
       nextAction: pack.nextAction,
       sequenceReason: pack.sequenceReason,
       tierPhaseCopy: pack.tierPhaseCopy,
+      priorityReason: pack.priorityReason,
+      unlockPreview: pack.unlockPreview,
       rewardFocus: pack.rewardFocus,
       badgeLabel: pack.badgeLabel,
       leaderboardCallout: pack.leaderboardCallout,
