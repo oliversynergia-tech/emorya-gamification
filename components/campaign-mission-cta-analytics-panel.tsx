@@ -33,6 +33,26 @@ export function CampaignMissionCtaAnalyticsPanel({
       }),
     [entries, laneFilter, packSearch, variantFilter],
   );
+  const comparisonSummary = useMemo(() => {
+    const currentWindow = filtered.flatMap((entry) => entry.weeklyTrend.slice(-2));
+    const previousWindow = filtered.flatMap((entry) => entry.weeklyTrend.slice(-4, -2));
+    const currentClicks = currentWindow.reduce((sum, point) => sum + point.clickCount, 0);
+    const previousClicks = previousWindow.reduce((sum, point) => sum + point.clickCount, 0);
+    const currentUsers = filtered.reduce((sum, entry) => sum + entry.uniqueUserCount, 0);
+    const avgWalletRate =
+      filtered.length > 0 ? filtered.reduce((sum, entry) => sum + entry.walletLinkRate, 0) / filtered.length : 0;
+    const avgPremiumRate =
+      filtered.length > 0 ? filtered.reduce((sum, entry) => sum + entry.premiumConversionRate, 0) / filtered.length : 0;
+
+    return {
+      currentClicks,
+      previousClicks,
+      currentUsers,
+      avgWalletRate,
+      avgPremiumRate,
+      clickDelta: currentClicks - previousClicks,
+    };
+  }, [filtered]);
 
   function exportRows() {
     const lines = [
@@ -120,6 +140,31 @@ export function CampaignMissionCtaAnalyticsPanel({
             {variant}
           </button>
         ))}
+      </div>
+      <div className="info-grid">
+        <div className="info-card">
+          <span>Current vs previous</span>
+          <strong>
+            {comparisonSummary.clickDelta >= 0 ? "+" : ""}
+            {comparisonSummary.clickDelta} clicks
+          </strong>
+        </div>
+        <div className="info-card">
+          <span>Current-window clicks</span>
+          <strong>{comparisonSummary.currentClicks}</strong>
+        </div>
+        <div className="info-card">
+          <span>Current unique users</span>
+          <strong>{comparisonSummary.currentUsers}</strong>
+        </div>
+        <div className="info-card">
+          <span>Average wallet-link rate</span>
+          <strong>{(comparisonSummary.avgWalletRate * 100).toFixed(0)}%</strong>
+        </div>
+        <div className="info-card">
+          <span>Average premium rate</span>
+          <strong>{(comparisonSummary.avgPremiumRate * 100).toFixed(0)}%</strong>
+        </div>
       </div>
       <div className="achievement-list">
         {filtered.map((entry) => (

@@ -88,6 +88,72 @@ function getCampaignSourceLabel(source: "direct" | "zealy" | "galxe" | "taskon")
   }
 }
 
+function getDashboardPriorityAction(data: DashboardData) {
+  const walletGatePack = data.campaignPacks.find((pack) => pack.ctaVariant === "wallet_gate");
+  if (walletGatePack) {
+    return {
+      eyebrow: "Top action",
+      title: "Link your wallet to unlock the mission path",
+      detail: walletGatePack.nextAction,
+      supporting: walletGatePack.unlockPreview,
+      href: walletGatePack.ctaHref ?? "/profile#wallet-link-panel",
+      label: walletGatePack.ctaLabel,
+      packId: walletGatePack.packId,
+      ctaVariant: walletGatePack.ctaVariant,
+      packLabel: walletGatePack.label,
+    };
+  }
+
+  const premiumPack = data.campaignPacks.find(
+    (pack) => pack.ctaVariant === "free_to_monthly" || pack.ctaVariant === "monthly_to_annual",
+  );
+  if (premiumPack) {
+    return {
+      eyebrow: "Top action",
+      title: "This mission has reached a premium-heavy phase",
+      detail: premiumPack.premiumNudge ?? premiumPack.nextAction,
+      supporting: premiumPack.unlockPreview,
+      href: premiumPack.ctaHref ?? "/profile",
+      label: premiumPack.ctaLabel,
+      packId: premiumPack.packId,
+      ctaVariant: premiumPack.ctaVariant,
+      packLabel: premiumPack.label,
+    };
+  }
+
+  const returnPack = data.campaignPacks.find((pack) => pack.returnAction);
+  if (returnPack) {
+    return {
+      eyebrow: "Resume mission",
+      title: "One strong return move puts this pack back on pace",
+      detail: returnPack.returnAction ?? returnPack.nextAction,
+      supporting: returnPack.unlockPreview,
+      href: returnPack.ctaHref ?? "#quest-board",
+      label: returnPack.ctaLabel,
+      packId: returnPack.packId,
+      ctaVariant: returnPack.ctaVariant,
+      packLabel: returnPack.label,
+    };
+  }
+
+  const nextPack = data.campaignPacks[0] ?? null;
+  if (!nextPack) {
+    return null;
+  }
+
+  return {
+    eyebrow: "Top action",
+    title: "Keep the active mission moving",
+    detail: nextPack.nextAction,
+    supporting: nextPack.unlockPreview,
+    href: nextPack.ctaHref ?? "#quest-board",
+    label: nextPack.ctaLabel,
+    packId: nextPack.packId,
+    ctaVariant: nextPack.ctaVariant,
+    packLabel: nextPack.label,
+  };
+}
+
 function renderQuestCard(quest: Quest) {
   return (
     <article
@@ -213,7 +279,7 @@ export function DashboardSnapshot({
     .filter((achievement) => !achievement.unlocked)
     .sort((left, right) => right.progress - left.progress)
     .slice(0, 2);
-  const resumeMissionPack = data.campaignPacks.find((pack) => pack.returnAction) ?? null;
+  const priorityAction = getDashboardPriorityAction(data);
 
   return (
     <section className="grid grid--dashboard">
@@ -352,38 +418,35 @@ export function DashboardSnapshot({
             </div>
           </div>
         ) : null}
-        {resumeMissionPack && onMissionViewChange ? (
+        {priorityAction && onMissionViewChange ? (
           <div className="panel panel--glass">
             <div className="panel__header">
               <div>
-                <p className="eyebrow">Resume mission</p>
-                <h3>One strong return move puts this pack back on pace</h3>
+                <p className="eyebrow">{priorityAction.eyebrow}</p>
+                <h3>{priorityAction.title}</h3>
               </div>
-              <span className="badge badge--pink">{resumeMissionPack.label}</span>
+              <span className="badge badge--pink">{priorityAction.packLabel}</span>
             </div>
-            <p className="form-note">{resumeMissionPack.returnAction}</p>
-            <p className="form-note">{resumeMissionPack.unlockPreview}</p>
-            <p className="form-note">
-              Weekly mission gap: {resumeMissionPack.weeklyGoal.shortfallXp} XP remaining before this pack gets back to its current target.
-            </p>
+            <p className="form-note">{priorityAction.detail}</p>
+            <p className="form-note">{priorityAction.supporting}</p>
             <div className="hero__actions">
               <MissionLink
                 className="button button--primary"
-                href={resumeMissionPack.ctaHref ?? "#quest-board"}
-                packId={resumeMissionPack.packId}
-                eventType="dashboard_resume_cta"
-                ctaLabel={resumeMissionPack.ctaLabel}
-                ctaVariant={resumeMissionPack.ctaVariant}
+                href={priorityAction.href}
+                packId={priorityAction.packId}
+                eventType="dashboard_priority_cta"
+                ctaLabel={priorityAction.label}
+                ctaVariant={priorityAction.ctaVariant}
               >
-                {resumeMissionPack.ctaLabel}
+                {priorityAction.label}
               </MissionLink>
               <MissionLink
                 className="button button--secondary"
                 href="/profile#mission-recap"
-                packId={resumeMissionPack.packId}
-                eventType="dashboard_resume_profile_cta"
+                packId={priorityAction.packId}
+                eventType="dashboard_priority_profile_cta"
                 ctaLabel="Review mission recap"
-                ctaVariant="resume_profile"
+                ctaVariant="priority_profile"
               >
                 Review mission recap
               </MissionLink>
@@ -1408,7 +1471,11 @@ export function ProfileSection({ data }: { data: DashboardData }) {
       </div>
       <ProfileMissionRecapPanel activePacks={data.campaignPacks} packHistory={data.campaignPackHistory} />
       <CampaignMissionInboxPanel notifications={data.campaignNotifications} title="Mission inbox" eyebrow="Profile mission inbox" />
-      <MissionEventHistoryPanel entries={data.missionEventHistory} />
+      <MissionEventHistoryPanel
+        entries={data.missionEventHistory}
+        activePacks={data.campaignPacks}
+        packHistory={data.campaignPackHistory}
+      />
       <div className="panel">
         <div className="panel__header">
           <div>

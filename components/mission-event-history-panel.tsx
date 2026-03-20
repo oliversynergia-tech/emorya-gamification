@@ -3,11 +3,16 @@
 import { useMemo, useState } from "react";
 
 import type { DashboardData } from "@/lib/types";
+import { MissionLink } from "@/components/mission-link";
 
 export function MissionEventHistoryPanel({
   entries,
+  activePacks = [],
+  packHistory = [],
 }: {
   entries: DashboardData["missionEventHistory"];
+  activePacks?: DashboardData["campaignPacks"];
+  packHistory?: DashboardData["campaignPackHistory"];
 }) {
   const [selectedPackId, setSelectedPackId] = useState<"all" | string>("all");
   const packOptions = useMemo(() => {
@@ -27,6 +32,14 @@ export function MissionEventHistoryPanel({
   const filteredEntries = useMemo(
     () => entries.filter((entry) => selectedPackId === "all" || entry.packId === selectedPackId),
     [entries, selectedPackId],
+  );
+  const selectedActivePack = useMemo(
+    () => activePacks.find((pack) => pack.packId === selectedPackId) ?? null,
+    [activePacks, selectedPackId],
+  );
+  const selectedHistoryPack = useMemo(
+    () => packHistory.find((pack) => pack.packId === selectedPackId) ?? null,
+    [packHistory, selectedPackId],
   );
 
   if (entries.length === 0) {
@@ -62,6 +75,40 @@ export function MissionEventHistoryPanel({
             </button>
           ))}
         </div>
+      ) : null}
+      {selectedPackId !== "all" && (selectedActivePack || selectedHistoryPack) ? (
+        <article className="achievement-card achievement-card--progress">
+          <div>
+            <strong>{selectedActivePack?.label ?? selectedHistoryPack?.label ?? "Mission detail"}</strong>
+            <p>
+              {selectedActivePack
+                ? `${selectedActivePack.completedQuestCount}/${selectedActivePack.totalQuestCount} missions complete. ${selectedActivePack.sequenceReason}`
+                : selectedHistoryPack?.summary ?? "Completed mission path."}
+            </p>
+            {selectedActivePack ? (
+              <>
+                <p className="form-note">{selectedActivePack.unlockPreview}</p>
+                <p className="form-note">{selectedActivePack.rewardFocus}</p>
+              </>
+            ) : null}
+          </div>
+          <div className="achievement-card__side">
+            {selectedActivePack ? (
+              <MissionLink
+                className="button button--secondary"
+                href={selectedActivePack.ctaHref ?? "#quest-board"}
+                packId={selectedActivePack.packId}
+                eventType="mission_history_detail_cta"
+                ctaLabel={selectedActivePack.ctaLabel}
+                ctaVariant={selectedActivePack.ctaVariant}
+              >
+                {selectedActivePack.ctaLabel}
+              </MissionLink>
+            ) : (
+              <span>{selectedHistoryPack?.completedAt ? new Date(selectedHistoryPack.completedAt).toLocaleDateString() : "Completed"}</span>
+            )}
+          </div>
+        </article>
       ) : null}
       <div className="achievement-list">
         {filteredEntries.map((entry) => (

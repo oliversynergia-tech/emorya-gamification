@@ -556,6 +556,9 @@ export function CampaignPackAnalyticsPanel({
                 Clicker correlation: {(pack.missionCtaSummary.walletLinkRate * 100).toFixed(0)}% wallet-linked, {(pack.missionCtaSummary.rewardEligibilityRate * 100).toFixed(0)}% reward-ready, {(pack.missionCtaSummary.premiumConversionRate * 100).toFixed(0)}% premium.
               </p>
               <p className="form-note">
+                CTA to pack funnel: {pack.participantCount > 0 ? ((pack.missionCtaSummary.uniqueUsers / pack.participantCount) * 100).toFixed(0) : "0"}% of participants touched a mission CTA, {pack.missionCtaSummary.uniqueUsers > 0 ? ((pack.approvedCompletionCount / pack.missionCtaSummary.uniqueUsers) * 100).toFixed(0) : "0"}% approved completions per CTA user, and {pack.questCount > 0 ? ((pack.approvedCompletionCount / pack.questCount) * 100).toFixed(0) : "0"}% quest-to-approval density across the pack.
+              </p>
+              <p className="form-note">
                 Benchmark lane: {pack.benchmark.activeLane}. Targets: {Math.round(pack.benchmark.walletLinkRateTarget * 100)}% wallet,
                 {` `}
                 {Math.round(pack.benchmark.rewardEligibilityRateTarget * 100)}% eligibility, {Math.round(pack.benchmark.premiumConversionRateTarget * 100)}% premium,

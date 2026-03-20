@@ -1408,6 +1408,10 @@ function buildCampaignNotifications(
         detailParts.push(pack.directRewardState.label);
       }
 
+      if (pack.returnAction) {
+        detailParts.push(pack.returnAction);
+      }
+
       if (pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete") {
         detailParts.push("This is a strong moment to invite referrals into the same loop.");
       }
@@ -1454,6 +1458,20 @@ function buildCampaignNotifications(
     });
   }
 
+  const returnReminder = campaignPacks.find((pack) => Boolean(pack.returnAction));
+  if (returnReminder) {
+    notifications.unshift({
+      id: `pack-return-${returnReminder.packId}`,
+      tone: "warning",
+      title: `${returnReminder.label} needs a return move`,
+      detail: `${returnReminder.returnAction ?? returnReminder.nextAction} ${returnReminder.unlockPreview}`,
+      packId: returnReminder.packId,
+      ctaLabel: returnReminder.ctaLabel,
+      ctaQuestId: returnReminder.nextQuestId,
+      ctaHref: returnReminder.ctaHref,
+    });
+  }
+
   return notifications.slice(0, 5);
 }
 
@@ -1477,6 +1495,16 @@ function buildMissionActivityFeedItems(
         timeAgo: "just now",
         createdAt: nowIso,
       });
+      if (pack.returnAction) {
+        items.push({
+          id: `mission-return-${pack.packId}`,
+          actor: "Mission reminder",
+          action: "scheduled a mission return reminder",
+          detail: `${pack.label}: ${pack.returnAction}`,
+          timeAgo: "just now",
+          createdAt: nowIso,
+        });
+      }
     } else if (pack.weeklyGoal.shortfallXp === 0) {
       items.push({
         id: `mission-on-pace-${pack.packId}`,
@@ -1945,7 +1973,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   const missionActivityItems = buildMissionActivityFeedItems(campaignPacks);
   const mergedActivityFeed = [...missionActivityItems, ...activityFeed].slice(0, 8);
   const missionEventHistory = mergedActivityFeed
-    .filter((item) => item.action.includes("campaign pack") || item.actor === "Mission monitor" || item.action.includes("mission CTA"))
+    .filter((item) => item.action.includes("campaign pack") || item.actor === "Mission monitor" || item.actor === "Mission reminder" || item.action.includes("mission CTA"))
     .map((item) => {
       const matchedPack =
         campaignPacks.find((pack) => item.detail.includes(pack.label)) ??

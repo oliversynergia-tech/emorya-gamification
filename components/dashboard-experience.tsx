@@ -98,7 +98,7 @@ function updateCampaignPacks(
 function buildCampaignNotifications(
   campaignPacks: DashboardData["campaignPacks"],
 ): DashboardData["campaignNotifications"] {
-  return campaignPacks.slice(0, 4).map((pack) => {
+  const notifications = campaignPacks.slice(0, 4).map((pack) => {
     const detailParts: string[] = [];
     const tone =
       pack.milestone.tone === "success"
@@ -121,6 +121,10 @@ function buildCampaignNotifications(
 
     if (pack.directRewardState) {
       detailParts.push(pack.directRewardState.label);
+    }
+
+    if (pack.returnAction) {
+      detailParts.push(pack.returnAction);
     }
 
     if (pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete") {
@@ -150,6 +154,22 @@ function buildCampaignNotifications(
           : pack.ctaHref,
     };
   });
+
+  const returnReminder = campaignPacks.find((pack) => Boolean(pack.returnAction));
+  if (returnReminder) {
+    notifications.unshift({
+      id: `pack-return-${returnReminder.packId}`,
+      tone: "warning",
+      title: `${returnReminder.label} needs a return move`,
+      detail: `${returnReminder.returnAction ?? returnReminder.nextAction} ${returnReminder.unlockPreview}`,
+      packId: returnReminder.packId,
+      ctaLabel: returnReminder.ctaLabel,
+      ctaQuestId: returnReminder.nextQuestId,
+      ctaHref: returnReminder.ctaHref,
+    });
+  }
+
+  return notifications.slice(0, 5);
 }
 
 function updateCampaignPackHistory(
