@@ -194,6 +194,7 @@ export function CampaignMissionInboxPanel({
                     eventType="mission_inbox_cta"
                     ctaLabel={notification.ctaLabel}
                     ctaVariant="mission_inbox"
+                    missionView={missionView}
                   >
                     {notification.ctaLabel}
                   </MissionLink>

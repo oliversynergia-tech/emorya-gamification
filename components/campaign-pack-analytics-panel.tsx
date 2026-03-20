@@ -167,6 +167,8 @@ function exportPackAnalytics(
       "reminder_trend_current",
       "reminder_trend_previous",
       "reminder_trend_delta",
+      "zero_completion_risk_current",
+      "zero_completion_risk_shift",
       "recommendation_history_snapshot",
     ].join(","),
     ...entries.map((entry) =>
@@ -223,6 +225,14 @@ function exportPackAnalytics(
         entry.reminderEffectiveness.trend.currentCount,
         entry.reminderEffectiveness.trend.previousCount,
         entry.reminderEffectiveness.trend.delta,
+        (entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0) === 0 ? "at_risk" : "moving",
+        (entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0) === 0
+          ? (entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0) === 0
+            ? "steady"
+            : "rising"
+          : (entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0) === 0
+            ? "easing"
+            : "steady",
         JSON.stringify(toHistorySnapshot(entry.missionCtaSummary.recommendationHistory)),
       ].join(","),
     ),
@@ -273,6 +283,7 @@ function exportPartnerReporting(
       "operator_outcome_title",
       "operator_outcome_detail",
       "lifecycle_phase_summary",
+      "zero_completion_risk_trend_summary",
       "benchmark_override_impact_summary",
       "lifecycle_history_summary",
       "recommendation_history_snapshot",
@@ -297,6 +308,7 @@ function exportPartnerReporting(
         JSON.stringify(entry.operatorOutcomeTitle),
         JSON.stringify(entry.operatorOutcomeDetail),
         JSON.stringify(entry.lifecyclePhaseSummary),
+        JSON.stringify(entry.zeroCompletionRiskTrendSummary),
         JSON.stringify(entry.benchmarkOverrideImpactSummary),
         JSON.stringify(entry.lifecycleHistorySummary ?? ""),
         JSON.stringify(entry.recommendationHistorySnapshot),
@@ -503,6 +515,7 @@ function printPartnerReport(
       ${entry.benchmarkOverrideHistorySummary ? `<p style="margin:0 0 12px;color:#5e5035;">Benchmark change history: ${entry.benchmarkOverrideHistorySummary}</p>` : ""}
       ${entry.lifecycleHistorySummary ? `<p style="margin:0 0 12px;color:#5e5035;">Lifecycle history: ${entry.lifecycleHistorySummary}</p>` : ""}
       ${getPackControlChangeSummary(auditEntries, entry.packId) ? `<p style="margin:0 0 12px;color:#5e5035;">Recent control changes: ${getPackControlChangeSummary(auditEntries, entry.packId)}</p>` : ""}
+      ${getPackControlChangeSummary(auditEntries, entry.packId) ? `<p style="margin:0 0 12px;color:#5e5035;">Intervention note: ${entry.zeroCompletionRiskTrendSummary} Recent operator changes are listed above so the current risk read can be interpreted in context.</p>` : ""}
       ${entry.recommendationHistorySnapshot.length > 0 ? `<p style="margin:0 0 12px;color:#5e5035;">Recent operator shifts: ${entry.recommendationHistorySnapshot.join(" | ")}</p>` : ""}
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
         <div><strong>${entry.participantCount}</strong><div>Participants</div></div>
@@ -753,6 +766,22 @@ export function CampaignPackAnalyticsPanel({
           }
           const onTrackCount = kindEntries.filter((pack) => pack.benchmark.status === "on_track").length;
           return `${kind}: ${onTrackCount}/${kindEntries.length} on track`;
+        })
+        .filter((entry): entry is string => Boolean(entry))
+        .join(" · "),
+    [filteredPacks],
+  );
+  const filteredBenchmarkKindTrendSummary = useMemo(
+    () =>
+      (["bridge", "feeder", "mixed"] as const)
+        .map((kind) => {
+          const kindEntries = filteredPacks.filter((pack) => getPackKind(pack) === kind);
+          if (kindEntries.length === 0) {
+            return null;
+          }
+          const averageCompletionDelta =
+            kindEntries.reduce((sum, pack) => sum + pack.operatorOutcome.trend.completionDelta, 0) / kindEntries.length;
+          return `${kind}: ${averageCompletionDelta >= 0 ? "+" : ""}${averageCompletionDelta.toFixed(1)} avg completion delta`;
         })
         .filter((entry): entry is string => Boolean(entry))
         .join(" · "),
@@ -1048,6 +1077,7 @@ export function CampaignPackAnalyticsPanel({
             </div>
             <div className="achievement-card__side">
               <span>{filteredBenchmarkKindSummary}</span>
+              {filteredBenchmarkKindTrendSummary ? <span>{filteredBenchmarkKindTrendSummary}</span> : null}
             </div>
           </article>
         </div>

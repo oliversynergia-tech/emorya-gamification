@@ -156,6 +156,7 @@ export function MissionEventHistoryPanel({
                 eventType="mission_history_detail_cta"
                 ctaLabel={selectedActivePack.ctaLabel}
                 ctaVariant={selectedActivePack.ctaVariant}
+                missionView={missionView}
               >
                 {selectedActivePack.ctaLabel}
               </MissionLink>

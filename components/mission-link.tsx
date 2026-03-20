@@ -32,6 +32,7 @@ export function MissionLink({
   eventType,
   ctaLabel,
   ctaVariant,
+  missionView,
 }: {
   href: string;
   className?: string;
@@ -40,6 +41,7 @@ export function MissionLink({
   eventType: string;
   ctaLabel: string;
   ctaVariant?: string;
+  missionView?: "active" | "completed" | "all" | "reward";
 }) {
   const router = useRouter();
 
@@ -56,6 +58,11 @@ export function MissionLink({
       ctaVariant,
       href,
     });
+
+    if (missionView && typeof window !== "undefined") {
+      window.localStorage.setItem("emorya-dashboard-mission-view", missionView);
+      window.localStorage.setItem("emorya-profile-mission-view", missionView === "all" ? "active" : missionView);
+    }
 
     if (href.startsWith("/")) {
       router.push(href);

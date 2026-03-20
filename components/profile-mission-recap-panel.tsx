@@ -146,6 +146,7 @@ export function ProfileMissionRecapPanel({
                     eventType="profile_recap_cta"
                     ctaLabel={pack.ctaLabel}
                     ctaVariant={pack.ctaVariant}
+                    missionView={view}
                   >
                     {pack.ctaLabel}
                   </MissionLink>
@@ -157,6 +158,7 @@ export function ProfileMissionRecapPanel({
                       eventType="profile_referral_cta"
                       ctaLabel="Invite from this milestone"
                       ctaVariant="referral_milestone"
+                      missionView={view}
                     >
                       Invite from this milestone
                     </MissionLink>

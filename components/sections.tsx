@@ -89,6 +89,21 @@ function getCampaignSourceLabel(source: "direct" | "zealy" | "galxe" | "taskon")
   }
 }
 
+function getMissionCueForPack(pack: DashboardData["campaignPacks"][number]) {
+  if (pack.nextQuestActionable && pack.nextQuestTitle) {
+    return {
+      badge: "Exact quest ready",
+      note: `Resume exact quest: ${pack.nextQuestTitle} is ready now.`,
+      tone: "ready",
+    } as const;
+  }
+  return {
+    badge: "Review mission path",
+    note: "Review the mission path first to see what opens next before you jump back in.",
+    tone: "planning",
+  } as const;
+}
+
 function getDashboardPriorityAction(data: DashboardData) {
   const getFollowupLabelForHref = (href: string, fallback: string) => {
     if (href.includes("wallet-link-panel")) {
@@ -648,6 +663,9 @@ export function DashboardSnapshot({
             <p className="form-note">
               {priorityAction.followupLabel}: {priorityAction.followupValue}.
             </p>
+            <p className={`mission-cue mission-cue--${priorityAction.followupIntentLabel === "Immediate progress context" ? "ready" : "planning"}`}>
+              <strong>{priorityAction.followupCtaLabel}</strong> {priorityAction.followupIntentLabel}.
+            </p>
             <p className="form-note">{priorityAction.followupIntentLabel}.</p>
             <p className="form-note">
               {priorityAction.stateCategory === "Momentum recovery"
@@ -665,6 +683,7 @@ export function DashboardSnapshot({
                 eventType="dashboard_priority_cta"
                 ctaLabel={priorityAction.label}
                 ctaVariant={priorityAction.ctaVariant}
+                missionView={missionView}
               >
                 {priorityAction.label}
               </MissionLink>
@@ -675,6 +694,7 @@ export function DashboardSnapshot({
                 eventType="dashboard_priority_profile_cta"
                 ctaLabel={priorityAction.followupCtaLabel}
                 ctaVariant={priorityAction.followupCtaVariant}
+                missionView={missionView}
               >
                 {priorityAction.followupCtaLabel}
               </MissionLink>
@@ -707,6 +727,10 @@ export function DashboardSnapshot({
             <div className="achievement-list">
               {data.campaignPacks.map((pack) => (
                 <article key={pack.packId} className={`achievement-card ${pack.urgency ? "achievement-card--urgent" : ""}`}>
+                  {(() => {
+                    const cue = getMissionCueForPack(pack);
+                    return (
+                  <>
                   <div>
                     <strong>{pack.label}</strong>
                     <p>
@@ -791,6 +815,9 @@ export function DashboardSnapshot({
                       </p>
                     ) : null}
                     <p className="form-note">{pack.benchmarkNote}</p>
+                    <p className={`mission-cue mission-cue--${cue.tone}`}>
+                      <strong>{cue.badge}</strong> {cue.note}
+                    </p>
                     {pack.premiumNudge ? <p className="form-note">{pack.premiumNudge}</p> : null}
                     <div className="hero__actions">
                       <MissionLink
@@ -800,6 +827,7 @@ export function DashboardSnapshot({
                         eventType="dashboard_mission_cta"
                         ctaLabel={pack.ctaLabel}
                         ctaVariant={pack.ctaVariant}
+                        missionView={missionView}
                       >
                         {pack.ctaLabel}
                       </MissionLink>
@@ -811,6 +839,7 @@ export function DashboardSnapshot({
                           eventType="dashboard_referral_cta"
                           ctaLabel="Invite from this milestone"
                           ctaVariant="referral_milestone"
+                          missionView={missionView}
                         >
                           Invite from this milestone
                         </MissionLink>
@@ -823,7 +852,11 @@ export function DashboardSnapshot({
                     </span>
                     <span>{pack.inProgressQuestCount} in progress</span>
                     <span>{pack.openQuestCount} open</span>
+                    <span className={`mission-cue-badge mission-cue-badge--${cue.tone}`}>{cue.badge}</span>
                   </div>
+                  </>
+                    );
+                  })()}
                 </article>
               ))}
             </div>

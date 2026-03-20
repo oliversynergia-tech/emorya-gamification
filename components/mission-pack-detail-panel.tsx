@@ -328,6 +328,7 @@ export function MissionPackDetailPanel({
               eventType="mission_detail_cta"
               ctaLabel={selectedActivePack.ctaLabel}
               ctaVariant={selectedActivePack.ctaVariant}
+              missionView={missionView}
             >
               {selectedActivePack.ctaLabel}
             </MissionLink>
