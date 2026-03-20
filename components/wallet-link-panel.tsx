@@ -293,6 +293,9 @@ export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, ac
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={qrCodeDataUrl} alt="xPortal QR code" className="qr-card__image" />
           <small>Open xPortal, scan the QR code, then approve connect and sign requests.</small>
+          <p className="mission-cue mission-cue--planning">
+            <strong>Review mission path</strong> Reopen the mission path after approval if the wallet gate is still the current blocker.
+          </p>
         </div>
       ) : null}
       {challenge ? (
@@ -341,7 +344,7 @@ export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, ac
             </a>
             <a
               className="text-link"
-              href="#mission-recap"
+              href="/profile#mission-recap"
               onClick={() => {
                 window.localStorage.setItem("emorya-profile-mission-view", activeMissionView === "all" ? "active" : activeMissionView);
               }}

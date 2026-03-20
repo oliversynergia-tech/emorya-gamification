@@ -581,6 +581,31 @@ function printPartnerReport(
     `${entries.filter((entry) => entry.completionTrendDelta === 0).length} steady`,
     `${entries.filter((entry) => entry.completionTrendDelta < 0).length} slipping`,
   ].join(" · ");
+  const lifecycleOperatorOutcomeSummary = (["draft", "ready", "live"] as const)
+    .map((phase) => {
+      const phaseEntries = entries.filter((entry) => entry.lifecycleState === phase);
+      if (phaseEntries.length === 0) {
+        return null;
+      }
+      return `${phase}: ${phaseEntries.filter((entry) => entry.completionTrendDelta > 0).length} improving · ${
+        phaseEntries.filter((entry) => entry.completionTrendDelta === 0).length
+      } steady · ${phaseEntries.filter((entry) => entry.completionTrendDelta < 0).length} slipping`;
+    })
+    .filter((entry): entry is string => Boolean(entry))
+    .join(" | ");
+  const lifecycleZeroCompletionMixSummary = (["draft", "ready", "live"] as const)
+    .map((phase) => {
+      const phaseEntries = entries.filter((entry) => entry.lifecycleState === phase);
+      if (phaseEntries.length === 0) {
+        return null;
+      }
+      const rising = phaseEntries.filter((entry) => entry.zeroCompletionRiskTrendSummary.includes("just moved into")).length;
+      const easing = phaseEntries.filter((entry) => entry.zeroCompletionRiskTrendSummary.includes("eased out")).length;
+      const steady = phaseEntries.filter((entry) => entry.zeroCompletionRiskTrendSummary.includes("still in")).length;
+      return `${phase}: ${rising} rising · ${easing} easing · ${steady} steady risk`;
+    })
+    .filter((entry): entry is string => Boolean(entry))
+    .join(" | ");
   const benchmarkChangeSummary = entries
     .filter((entry) => entry.benchmarkOverrideHistorySummary)
     .slice(0, 4)
@@ -646,11 +671,13 @@ function printPartnerReport(
         </section>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
           <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Campaign status</p>
-          <p style="margin:0 0 8px;color:#5e5035;">Benchmark status: ${benchmarkSummary}</p>
-          <p style="margin:0 0 8px;color:#5e5035;">Lifecycle mix: ${lifecycleCompositionSummary}</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Benchmark status mix: ${benchmarkSummary}</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Lifecycle composition: ${lifecycleCompositionSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Benchmark by pack kind: ${benchmarkKindSummary || "No benchmark-by-kind mix available"}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Pack-kind movement: ${benchmarkKindTrendSummary || "No pack-kind movement available"}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Operator outcome mix: ${operatorOutcomeMixSummary}</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Operator outcome by lifecycle: ${lifecycleOperatorOutcomeSummary || "No lifecycle outcome mix available"}</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Zero-completion risk by lifecycle: ${lifecycleZeroCompletionMixSummary || "No lifecycle risk mix available"}</p>
           <p style="margin:0;color:#5e5035;">Alert pressure: ${alertPressureSummary}</p>
         </section>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
@@ -892,6 +919,22 @@ export function CampaignPackAnalyticsPanel({
         `${filteredPacks.filter((pack) => pack.operatorOutcome.trend.completionDelta === 0).length} steady`,
         `${filteredPacks.filter((pack) => pack.operatorOutcome.trend.completionDelta < 0).length} slipping`,
       ].join(" · "),
+    [filteredPacks],
+  );
+  const filteredLifecycleOperatorOutcomeSummary = useMemo(
+    () =>
+      (["draft", "ready", "live"] as const)
+        .map((phase) => {
+          const phaseEntries = filteredPacks.filter((pack) => pack.lifecycleState === phase);
+          if (phaseEntries.length === 0) {
+            return null;
+          }
+          return `${phase}: ${phaseEntries.filter((pack) => pack.operatorOutcome.trend.completionDelta > 0).length} improving · ${
+            phaseEntries.filter((pack) => pack.operatorOutcome.trend.completionDelta === 0).length
+          } steady · ${phaseEntries.filter((pack) => pack.operatorOutcome.trend.completionDelta < 0).length} slipping`;
+        })
+        .filter((entry): entry is string => Boolean(entry))
+        .join(" | "),
     [filteredPacks],
   );
 
@@ -1212,6 +1255,7 @@ export function CampaignPackAnalyticsPanel({
             </div>
             <div className="achievement-card__side">
               <span>{filteredOperatorOutcomeMixSummary}</span>
+              {filteredLifecycleOperatorOutcomeSummary ? <span>{filteredLifecycleOperatorOutcomeSummary}</span> : null}
             </div>
           </article>
         </div>

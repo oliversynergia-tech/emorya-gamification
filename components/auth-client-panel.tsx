@@ -71,8 +71,12 @@ export function AuthClientPanel({
       }
 
       setMessage(mode === "signin" ? "Signed in successfully." : "Account created successfully.");
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("emorya-dashboard-mission-view", "active");
+        window.localStorage.setItem("emorya-profile-mission-view", "active");
+      }
       router.refresh();
-      router.push("/dashboard");
+      router.push("/dashboard#campaign-mission");
     } catch {
       setError("Unable to reach the auth service.");
     } finally {
@@ -146,6 +150,11 @@ export function AuthClientPanel({
         </button>
       </form>
       {message ? <p className="status status--success">{message}</p> : null}
+      {message ? (
+        <p className="mission-cue mission-cue--ready">
+          <strong>Exact quest ready</strong> Your mission flow will reopen on the active campaign view after sign-in.
+        </p>
+      ) : null}
       {error ? <p className="status status--error">{error}</p> : null}
       {premiumOffer ? (
         <div className="achievement-list">
