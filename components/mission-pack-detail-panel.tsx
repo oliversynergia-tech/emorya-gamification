@@ -5,25 +5,48 @@ import { useEffect, useMemo, useState } from "react";
 import { MissionLink } from "@/components/mission-link";
 import type { DashboardData } from "@/lib/types";
 
+type MissionView = "active" | "completed" | "all" | "reward";
+
 export function MissionPackDetailPanel({
   activePacks,
   packHistory,
+  missionView = "all",
   title = "Mission detail",
   eyebrow = "Mission drill-in",
 }: {
   activePacks: DashboardData["campaignPacks"];
   packHistory: DashboardData["campaignPackHistory"];
+  missionView?: MissionView;
   title?: string;
   eyebrow?: string;
 }) {
+  const filteredActivePacks = useMemo(() => {
+    if (missionView === "reward") {
+      return activePacks.filter((pack) => Boolean(pack.directRewardSummary || pack.directRewardState || pack.premiumNudge));
+    }
+    if (missionView === "completed") {
+      return [];
+    }
+    return activePacks;
+  }, [activePacks, missionView]);
+  const filteredPackHistory = useMemo(() => {
+    if (missionView === "reward") {
+      return packHistory.filter((pack) => pack.premiumQuestCount > 0 || pack.referralQuestCount > 0);
+    }
+    if (missionView === "active") {
+      return [];
+    }
+    return packHistory;
+  }, [missionView, packHistory]);
+
   const initialPackId = (() => {
     if (typeof window === "undefined") {
-      return activePacks[0]?.packId ?? packHistory[0]?.packId ?? "none";
+      return filteredActivePacks[0]?.packId ?? filteredPackHistory[0]?.packId ?? "none";
     }
-    const stored = window.localStorage.getItem("emorya-mission-selected-pack");
-    return stored ?? activePacks[0]?.packId ?? packHistory[0]?.packId ?? "none";
+    const stored = window.localStorage.getItem(`emorya-mission-selected-pack-${missionView}`);
+    return stored ?? filteredActivePacks[0]?.packId ?? filteredPackHistory[0]?.packId ?? "none";
   })();
-  const [selectedPackId, setSelectedPackId] = useState(initialPackId);
+  const [preferredPackId, setPreferredPackId] = useState(initialPackId);
   const [expandedLadders, setExpandedLadders] = useState<Record<string, boolean>>(() => {
     if (typeof window === "undefined") {
       return {};
@@ -51,20 +74,25 @@ export function MissionPackDetailPanel({
     if (typeof window === "undefined") {
       return;
     }
-    window.localStorage.setItem("emorya-mission-selected-pack", selectedPackId);
-  }, [selectedPackId]);
+    window.localStorage.setItem(`emorya-mission-selected-pack-${missionView}`, preferredPackId);
+  }, [missionView, preferredPackId]);
+  const selectedPackId =
+    filteredActivePacks.some((pack) => pack.packId === preferredPackId) ||
+    filteredPackHistory.some((pack) => pack.packId === preferredPackId)
+      ? preferredPackId
+      : filteredActivePacks[0]?.packId ?? filteredPackHistory[0]?.packId ?? "none";
   const selectedActivePack = useMemo(
-    () => activePacks.find((pack) => pack.packId === selectedPackId) ?? null,
-    [activePacks, selectedPackId],
+    () => filteredActivePacks.find((pack) => pack.packId === selectedPackId) ?? null,
+    [filteredActivePacks, selectedPackId],
   );
   const selectedHistoryPack = useMemo(
-    () => packHistory.find((pack) => pack.packId === selectedPackId) ?? null,
-    [packHistory, selectedPackId],
+    () => filteredPackHistory.find((pack) => pack.packId === selectedPackId) ?? null,
+    [filteredPackHistory, selectedPackId],
   );
   const options = [
-    ...activePacks.map((pack) => ({ packId: pack.packId, label: `${pack.label} · active` })),
-    ...packHistory
-      .filter((pack) => !activePacks.some((activePack) => activePack.packId === pack.packId))
+    ...filteredActivePacks.map((pack) => ({ packId: pack.packId, label: `${pack.label} · active` })),
+    ...filteredPackHistory
+      .filter((pack) => !filteredActivePacks.some((activePack) => activePack.packId === pack.packId))
       .map((pack) => ({ packId: pack.packId, label: `${pack.label} · completed` })),
   ];
 
@@ -127,7 +155,7 @@ export function MissionPackDetailPanel({
             key={option.packId}
             className={`button ${selectedPackId === option.packId ? "button--primary" : "button--secondary"}`}
             type="button"
-            onClick={() => setSelectedPackId(option.packId)}
+            onClick={() => setPreferredPackId(option.packId)}
           >
             {option.label}
           </button>
@@ -273,7 +301,7 @@ export function MissionPackDetailPanel({
             <span>{selectedActivePack.milestone.label}</span>
             <MissionLink
               className="button button--secondary"
-              href={selectedActivePack.ctaHref ?? "#quest-board"}
+              href={selectedActivePack.nextQuestActionable && selectedActivePack.nextQuestId ? `/dashboard#quest-${selectedActivePack.nextQuestId}` : selectedActivePack.ctaHref ?? "#quest-board"}
               packId={selectedActivePack.packId}
               eventType="mission_detail_cta"
               ctaLabel={selectedActivePack.ctaLabel}

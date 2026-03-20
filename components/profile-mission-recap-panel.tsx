@@ -22,6 +22,19 @@ function getProfilePackHref(pack: DashboardCampaignPack) {
   return pack.ctaHref ?? "#quest-board";
 }
 
+function getProfilePackCue(pack: DashboardCampaignPack) {
+  if (pack.nextQuestActionable && pack.nextQuestTitle) {
+    return {
+      badge: "Exact quest ready",
+      note: `Resume exact quest: ${pack.nextQuestTitle} is ready now.`,
+    };
+  }
+  return {
+    badge: "Review mission path",
+    note: "Review the mission path to see what opens next before you jump back in.",
+  };
+}
+
 export function ProfileMissionRecapPanel({
   activePacks,
   packHistory,
@@ -113,14 +126,13 @@ export function ProfileMissionRecapPanel({
                 <p className="form-note">
                   {pack.completedQuestCount}/{pack.totalQuestCount} missions complete. {pack.sequenceReason}
                 </p>
-                {pack.nextQuestActionable && pack.nextQuestTitle ? (
-                  <p className="form-note">Resume exact quest: {pack.nextQuestTitle} is ready now.</p>
-                ) : null}
+                <p className="form-note">{getProfilePackCue(pack).note}</p>
                 {pack.returnAction ? <p className="form-note">{pack.returnAction}</p> : null}
               </div>
                 <div className="achievement-card__side">
                   <span>{pack.badgeLabel}</span>
                   <span>{pack.weeklyGoal.targetXp} XP target</span>
+                  <span>{getProfilePackCue(pack).badge}</span>
                   <MissionLink
                     className="text-link"
                     href={getProfilePackHref(pack)}

@@ -65,6 +65,28 @@ function slugifyForFilename(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "all";
 }
 
+function getPackKind(entry: Pick<PackAnalyticsItem, "bridgeCount" | "feederCount"> | PartnerReportItem) {
+  if ("bridgeCount" in entry) {
+    if (entry.bridgeCount > 0 && entry.feederCount === 0) {
+      return "bridge";
+    }
+    if (entry.feederCount > 0 && entry.bridgeCount === 0) {
+      return "feeder";
+    }
+    return "mixed";
+  }
+
+  const bridgeLike = entry.sources.includes(entry.benchmarkLane);
+  const feederLike = entry.sources.some((source) => source !== entry.benchmarkLane);
+  if (bridgeLike && !feederLike) {
+    return "bridge";
+  }
+  if (feederLike && !bridgeLike) {
+    return "feeder";
+  }
+  return "mixed";
+}
+
 function getPackControlChangeSummary(
   auditEntries: AdminOverviewData["campaignOperations"]["audit"],
   packId: string,
@@ -410,10 +432,10 @@ function printPartnerReport(
     .join(" · ");
   const packKindMixSummary = entries.reduce(
     (summary, entry) => {
-      const isBridgeOnly = entry.sources.length === 1 && entry.sources[0] === entry.benchmarkLane;
-      if (isBridgeOnly) {
+      const packKind = getPackKind(entry);
+      if (packKind === "bridge") {
         summary.bridge += 1;
-      } else if (entry.sources.some((source) => source !== entry.benchmarkLane)) {
+      } else if (packKind === "feeder") {
         summary.feeder += 1;
       } else {
         summary.mixed += 1;
@@ -427,6 +449,17 @@ function printPartnerReport(
     `${entries.filter((entry) => entry.sources.includes("zealy")).length} bridged`,
     `${entries.filter((entry) => entry.sources.some((source) => source === "galxe" || source === "taskon")).length} feeder-linked`,
   ].join(" · ");
+  const benchmarkKindSummary = ["bridge", "feeder", "mixed"]
+    .map((kind) => {
+      const kindEntries = entries.filter((entry) => getPackKind(entry) === kind);
+      if (kindEntries.length === 0) {
+        return null;
+      }
+      const onTrackCount = kindEntries.filter((entry) => entry.benchmarkStatus === "on_track").length;
+      return `${kind}: ${onTrackCount}/${kindEntries.length} on track`;
+    })
+    .filter((entry): entry is string => Boolean(entry))
+    .join(" · ");
   const benchmarkChangeSummary = entries
     .filter((entry) => entry.benchmarkOverrideHistorySummary)
     .slice(0, 4)
@@ -492,6 +525,7 @@ function printPartnerReport(
           <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Campaign status</p>
           <p style="margin:0 0 8px;color:#5e5035;">Benchmark status: ${benchmarkSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Lifecycle mix: ${lifecycleCompositionSummary}</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Benchmark by pack kind: ${benchmarkKindSummary || "No benchmark-by-kind mix available"}</p>
           <p style="margin:0;color:#5e5035;">Alert pressure: ${alertPressureSummary}</p>
         </section>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
@@ -1012,6 +1046,10 @@ export function CampaignPackAnalyticsPanel({
             matching.reduce((sum, pack) => sum + pack.engagedWeeklyXpRate, 0) / matching.length;
           const zeroCompletionRiskRate =
             matching.filter((pack) => (pack.weeklyTrend[pack.weeklyTrend.length - 1]?.completionCount ?? 0) === 0).length / matching.length;
+          const previousZeroCompletionRiskRate =
+            matching.filter((pack) => (pack.weeklyTrend[pack.weeklyTrend.length - 2]?.completionCount ?? 0) === 0).length /
+            matching.length;
+          const zeroCompletionRiskDelta = zeroCompletionRiskRate - previousZeroCompletionRiskRate;
           return (
             <article key={`lifecycle-compare-${lifecycleState}`} className="achievement-card">
               <div>
@@ -1098,6 +1136,10 @@ export function CampaignPackAnalyticsPanel({
                     )} pts
                   </span>
                 ) : null}
+                <span>
+                  zero-completion trend {zeroCompletionRiskDelta >= 0 ? "+" : ""}
+                  {Math.round(zeroCompletionRiskDelta * 100)} pts
+                </span>
                 <span>avg completion delta {averageCompletionDelta >= 0 ? "+" : ""}{averageCompletionDelta.toFixed(1)}</span>
               </div>
             </article>

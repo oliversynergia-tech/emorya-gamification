@@ -853,8 +853,10 @@ export function DashboardSnapshot({
           eyebrow="Campaign inbox"
         />
         <MissionPackDetailPanel
+          key={`mission-detail-${missionView}`}
           activePacks={data.campaignPacks}
           packHistory={data.campaignPackHistory}
+          missionView={missionView}
           title="Mission route detail"
           eyebrow="Campaign drill-in"
         />
@@ -1732,6 +1734,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
       <MissionPackDetailPanel
         activePacks={data.campaignPacks}
         packHistory={data.campaignPackHistory}
+        missionView="reward"
         title="Mission detail"
         eyebrow="Profile drill-in"
       />

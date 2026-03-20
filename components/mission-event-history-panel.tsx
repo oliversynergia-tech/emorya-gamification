@@ -1,9 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { DashboardData } from "@/lib/types";
 import { MissionLink } from "@/components/mission-link";
+
+function getHistoryPackHref(pack: NonNullable<DashboardData["campaignPacks"][number]>) {
+  if (pack.nextQuestActionable && pack.nextQuestId) {
+    return `/dashboard#quest-${pack.nextQuestId}`;
+  }
+  return pack.ctaHref ?? "#quest-board";
+}
 
 export function MissionEventHistoryPanel({
   entries,
@@ -16,51 +23,70 @@ export function MissionEventHistoryPanel({
   packHistory?: DashboardData["campaignPackHistory"];
   missionView?: "active" | "completed" | "all" | "reward";
 }) {
-  const [selectedPackId, setSelectedPackId] = useState<"all" | string>("all");
+  const [preferredPackId, setPreferredPackId] = useState<"all" | string>(() => {
+    if (typeof window === "undefined") {
+      return "all";
+    }
+    return window.localStorage.getItem(`emorya-mission-history-selected-pack-${missionView}`) ?? "all";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem(`emorya-mission-history-selected-pack-${missionView}`, preferredPackId);
+  }, [missionView, preferredPackId]);
+
+  const allowedPackIds = useMemo(() => {
+    if (missionView === "reward") {
+      return new Set([
+        ...activePacks
+          .filter((pack) => Boolean(pack.directRewardSummary || pack.directRewardState || pack.premiumNudge))
+          .map((pack) => pack.packId),
+        ...packHistory
+          .filter((pack) => pack.premiumQuestCount > 0 || pack.referralQuestCount > 0)
+          .map((pack) => pack.packId),
+      ]);
+    }
+    if (missionView === "active") {
+      return new Set(activePacks.map((pack) => pack.packId));
+    }
+    if (missionView === "completed") {
+      return new Set(packHistory.map((pack) => pack.packId));
+    }
+    return null;
+  }, [activePacks, missionView, packHistory]);
+
   const packOptions = useMemo(() => {
     const map = new Map<string, string>();
     for (const entry of entries) {
       if (entry.packId === "unknown") {
         continue;
       }
+      if (allowedPackIds && !allowedPackIds.has(entry.packId)) {
+        continue;
+      }
       if (!map.has(entry.packId)) {
         map.set(entry.packId, entry.packLabel);
       }
     }
-
     return Array.from(map.entries()).map(([packId, packLabel]) => ({ packId, packLabel }));
-  }, [entries]);
+  }, [allowedPackIds, entries]);
+  const selectedPackId =
+    preferredPackId === "all" || packOptions.some((pack) => pack.packId === preferredPackId) ? preferredPackId : "all";
 
   const filteredEntries = useMemo(
     () => {
-      const rewardPackIds = new Set(
-        activePacks
-          .filter((pack) => Boolean(pack.directRewardSummary || pack.directRewardState || pack.premiumNudge))
-          .map((pack) => pack.packId),
-      );
-      const rewardHistoryIds = new Set(
-        packHistory
-          .filter((pack) => pack.premiumQuestCount > 0 || pack.referralQuestCount > 0)
-          .map((pack) => pack.packId),
-      );
-
       return entries.filter((entry) => {
         if (selectedPackId !== "all" && entry.packId !== selectedPackId) {
           return false;
         }
-        if (missionView === "reward") {
-          return rewardPackIds.has(entry.packId) || rewardHistoryIds.has(entry.packId);
-        }
-        if (missionView === "active") {
-          return activePacks.some((pack) => pack.packId === entry.packId);
-        }
-        if (missionView === "completed") {
-          return packHistory.some((pack) => pack.packId === entry.packId);
+        if (allowedPackIds) {
+          return allowedPackIds.has(entry.packId);
         }
         return true;
       });
     },
-    [activePacks, entries, missionView, packHistory, selectedPackId],
+    [allowedPackIds, entries, selectedPackId],
   );
   const selectedActivePack = useMemo(
     () => activePacks.find((pack) => pack.packId === selectedPackId) ?? null,
@@ -89,7 +115,7 @@ export function MissionEventHistoryPanel({
           <button
             className={`button ${selectedPackId === "all" ? "button--primary" : "button--secondary"}`}
             type="button"
-            onClick={() => setSelectedPackId("all")}
+            onClick={() => setPreferredPackId("all")}
           >
             All packs
           </button>
@@ -98,7 +124,7 @@ export function MissionEventHistoryPanel({
               key={pack.packId}
               className={`button ${selectedPackId === pack.packId ? "button--primary" : "button--secondary"}`}
               type="button"
-              onClick={() => setSelectedPackId(pack.packId)}
+              onClick={() => setPreferredPackId(pack.packId)}
             >
               {pack.packLabel}
             </button>
@@ -125,7 +151,7 @@ export function MissionEventHistoryPanel({
             {selectedActivePack ? (
               <MissionLink
                 className="button button--secondary"
-                href={selectedActivePack.ctaHref ?? "#quest-board"}
+                href={getHistoryPackHref(selectedActivePack)}
                 packId={selectedActivePack.packId}
                 eventType="mission_history_detail_cta"
                 ctaLabel={selectedActivePack.ctaLabel}
