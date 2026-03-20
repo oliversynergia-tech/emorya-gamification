@@ -237,7 +237,7 @@ export function WalletLinkPanel({ walletAddresses }: WalletLinkPanelProps) {
   }
 
   return (
-    <section className="panel auth-panel">
+    <section className="panel auth-panel" id="wallet-link-panel">
       <div className="panel__header">
         <div>
           <p className="eyebrow">Wallet link</p>

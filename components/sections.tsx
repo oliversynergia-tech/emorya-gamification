@@ -428,6 +428,7 @@ export function DashboardSnapshot({
                     </div>
                     <p className="form-note">{pack.nextAction}</p>
                     <p className="form-note">{pack.sequenceReason}</p>
+                    <p className="form-note">{pack.tierPhaseCopy}</p>
                     <p className="form-note">{pack.leaderboardCallout}</p>
                     <p className="form-note">{pack.weeklyGoal.label}</p>
                     {pack.onboardingHint ? <p className="form-note">{pack.onboardingHint}</p> : null}
@@ -447,13 +448,7 @@ export function DashboardSnapshot({
                     <div className="hero__actions">
                       <a
                         className="button button--secondary"
-                        href={
-                          pack.nextQuestId
-                            ? pack.nextQuestActionable
-                              ? `#quest-action-${pack.nextQuestId}`
-                              : "#quest-board"
-                            : "#quest-board"
-                        }
+                        href={pack.ctaHref ?? "#quest-board"}
                       >
                         {pack.ctaLabel}
                       </a>
@@ -1385,6 +1380,58 @@ export function ProfileSection({ data }: { data: DashboardData }) {
             </div>
           ))}
         </div>
+      </div>
+      <div className="panel">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Mission recap</p>
+            <h3>Campaign progress outside the dashboard</h3>
+          </div>
+          <span className="badge badge--pink">
+            {data.campaignPacks.length > 0 ? `${data.campaignPacks.length} active` : `${data.campaignPackHistory.length} archived`}
+          </span>
+        </div>
+        {data.campaignPacks.length > 0 ? (
+          <div className="achievement-list">
+            {data.campaignPacks.map((pack) => (
+              <article key={`profile-pack-${pack.packId}`} className={`achievement-card ${pack.urgency ? "achievement-card--urgent" : ""}`}>
+                <div>
+                  <strong>{pack.label}</strong>
+                  <p>{pack.nextAction}</p>
+                  <p className="form-note">{pack.tierPhaseCopy}</p>
+                  <p className="form-note">
+                    {pack.completedQuestCount}/{pack.totalQuestCount} missions complete. {pack.sequenceReason}
+                  </p>
+                </div>
+                <div className="achievement-card__side">
+                  <span>{pack.badgeLabel}</span>
+                  <span>{pack.weeklyGoal.targetXp} XP target</span>
+                  <a className="text-link" href={pack.ctaHref ?? "#quest-board"}>
+                    {pack.ctaLabel}
+                  </a>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : data.campaignPackHistory.length > 0 ? (
+          <div className="achievement-list">
+            {data.campaignPackHistory.slice(0, 3).map((pack) => (
+              <article key={`profile-history-${pack.packId}`} className="achievement-card achievement-card--progress">
+                <div>
+                  <strong>{pack.label}</strong>
+                  <p>{pack.summary}</p>
+                </div>
+                <div className="achievement-card__side">
+                  <span>{pack.totalXpAwarded} XP</span>
+                  <span>{pack.referralQuestCount} referral</span>
+                  <span>{pack.premiumQuestCount} premium</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="form-note">No campaign mission recap yet. Your next active mission will show up here as soon as a live pack is available.</p>
+        )}
       </div>
       <div className="panel">
         <div className="panel__header">

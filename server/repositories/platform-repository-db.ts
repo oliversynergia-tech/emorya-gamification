@@ -955,21 +955,102 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
     return `${diffDays}d ago`;
   }
 
-  const result = await runQuery<ActivityRow>(
+  const [activityResult, packHistoryResult] = await Promise.all([
+    runQuery<ActivityRow>(
     `SELECT al.id, al.action_type, al.created_at, u.display_name, al.metadata
      FROM activity_log al
      INNER JOIN users u ON u.id = al.user_id
      ORDER BY created_at DESC
      LIMIT 8`,
-  );
+    ),
+    runQuery<{
+      pack_id: string;
+      pack_label: string | null;
+      completed_at: string | null;
+      display_name: string | null;
+      attribution_source: string | null;
+      experience_lane: string | null;
+    }>(
+      `SELECT pack_summary.pack_id,
+              pack_summary.pack_label,
+              pack_summary.completed_at,
+              u.display_name,
+              pack_summary.attribution_source,
+              pack_summary.experience_lane
+       FROM (
+         SELECT completion_summary.user_id,
+                completion_summary.pack_id,
+                completion_summary.pack_label,
+                completion_summary.attribution_source,
+                completion_summary.experience_lane,
+                completion_summary.completed_at
+         FROM (
+           SELECT qc.user_id,
+                  q.metadata->>'campaignPackId' AS pack_id,
+                  q.metadata->>'campaignPackLabel' AS pack_label,
+                  q.metadata->>'campaignAttributionSource' AS attribution_source,
+                  q.metadata->>'campaignExperienceLane' AS experience_lane,
+                  COUNT(DISTINCT q.id) AS approved_quest_count,
+                  MAX(qc.completed_at) AS completed_at
+           FROM quest_definitions q
+           INNER JOIN quest_completions qc
+             ON qc.quest_id = q.id
+            AND qc.status = 'approved'
+           WHERE q.metadata ? 'campaignPackId'
+           GROUP BY qc.user_id,
+                    q.metadata->>'campaignPackId',
+                    q.metadata->>'campaignPackLabel',
+                    q.metadata->>'campaignAttributionSource',
+                    q.metadata->>'campaignExperienceLane'
+         ) completion_summary
+         INNER JOIN (
+           SELECT q.metadata->>'campaignPackId' AS pack_id,
+                  COUNT(*) AS total_quest_count
+           FROM quest_definitions q
+           WHERE q.metadata ? 'campaignPackId'
+           GROUP BY q.metadata->>'campaignPackId'
+         ) pack_totals
+           ON pack_totals.pack_id = completion_summary.pack_id
+         WHERE completion_summary.approved_quest_count = pack_totals.total_quest_count
+       ) pack_summary
+       INNER JOIN users u ON u.id = pack_summary.user_id
+       WHERE pack_summary.completed_at IS NOT NULL
+       ORDER BY pack_summary.completed_at DESC
+       LIMIT 4`,
+    ),
+  ]);
 
-  return result.rows.map((row) => ({
+  const activityItems = activityResult.rows.map((row) => ({
     id: row.id,
     actor: row.metadata?.actor ?? row.display_name ?? "User",
     action: row.metadata?.action ?? row.action_type.replaceAll("-", " "),
     detail: row.metadata?.detail ?? "activity event",
     timeAgo: getRelativeTimeLabel(row.created_at),
+    createdAt: row.created_at,
   }));
+
+  const packItems = packHistoryResult.rows.map((row) => ({
+    id: `campaign-pack-complete-${row.pack_id}-${row.completed_at ?? "na"}`,
+    actor: row.display_name ?? "User",
+    action: "completed campaign pack",
+    detail:
+      row.attribution_source && row.experience_lane && row.attribution_source !== row.experience_lane
+        ? `${row.pack_label ?? "Campaign pack"} through ${row.attribution_source} into ${row.experience_lane}`
+        : row.pack_label ?? "Campaign pack",
+    timeAgo: getRelativeTimeLabel(row.completed_at ?? new Date().toISOString()),
+    createdAt: row.completed_at ?? new Date().toISOString(),
+  }));
+
+  return [...activityItems, ...packItems]
+    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+    .slice(0, 8)
+    .map((item) => ({
+      id: item.id,
+      actor: item.actor,
+      action: item.action,
+      detail: item.detail,
+      timeAgo: item.timeAgo,
+    }));
 }
 
 function dataUserWeeklyTarget(nextThreshold: number | null, currentThreshold: number) {
@@ -994,6 +1075,82 @@ function packBadgeLabel(templateKind: "bridge" | "feeder" | "mixed" | null, mile
   }
 
   return "Campaign mission";
+}
+
+function getPackTierPhaseCopy(
+  tier: SubscriptionTier,
+  packLabel: string,
+  packKind: "bridge" | "feeder" | "mixed",
+  activeLane: CampaignSource | "direct",
+) {
+  if (tier === "annual") {
+    return `${packLabel} is now in its high-yield phase for Annual. Keep momentum here to turn this ${activeLane} mission into stronger referral and reward outcomes.`;
+  }
+
+  if (tier === "monthly") {
+    return `${packLabel} is in the accelerated Monthly phase. You have the lift to push this ${packKind === "feeder" ? "feeder" : "mission"} pack through faster and compound the weekly XP loop.`;
+  }
+
+  return `${packLabel} is still in the free phase. Focus on trust steps, wallet readiness, and clean mission clears before the heavier-value premium phase matters.`;
+}
+
+function buildCampaignNotifications(
+  campaignPacks: DashboardData["campaignPacks"],
+): DashboardData["campaignNotifications"] {
+  return campaignPacks
+    .map((pack) => {
+      const detailParts: string[] = [];
+      const tone =
+        pack.milestone.tone === "success"
+          ? "success"
+          : pack.lifecycleState === "live"
+            ? "info"
+            : pack.directRewardState?.tone ?? "info";
+
+      if (pack.lifecycleState === "live") {
+        detailParts.push(
+          pack.kind === "feeder"
+            ? `${pack.attributionSource} is feeding into ${pack.activeLane} and this mission is live now.`
+            : `${pack.activeLane} is active and this mission is live now.`,
+        );
+      }
+
+      if (pack.milestone.tone === "success") {
+        detailParts.push(`${pack.completedQuestCount}/${pack.totalQuestCount} missions are complete.`);
+      }
+
+      if (pack.directRewardState) {
+        detailParts.push(pack.directRewardState.label);
+      }
+
+      if (pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete") {
+        detailParts.push("This is a strong moment to invite referrals into the same loop.");
+      }
+
+      return {
+        id: `pack-summary-${pack.packId}-${pack.lifecycleState}-${pack.milestone.label}`,
+        tone,
+        title:
+          pack.milestone.tone === "success"
+            ? `${pack.label}: ${pack.milestone.label}`
+            : `${pack.label} is active in your mission flow`,
+        detail: `${detailParts.join(" ")} ${pack.nextAction}`.trim(),
+        packId: pack.packId,
+        ctaLabel:
+          pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
+            ? "Open referral leaderboard"
+            : pack.ctaLabel,
+        ctaQuestId:
+          pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
+            ? null
+            : pack.nextQuestId,
+        ctaHref:
+          pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
+            ? "/leaderboard#referral-board"
+            : pack.ctaHref,
+      };
+    })
+    .slice(0, 5);
 }
 
 async function getUserCampaignPackJourneys({
@@ -1210,6 +1367,13 @@ async function getUserCampaignPackJourneys({
             ? `${experienceLane} is driving this mission directly. XP builds the core loop, then ${economySettings.payoutAsset} settles the reward rail.`
             : `${attributionSource} attribution is preserved, but this mission is currently flowing through the ${experienceLane} bridge into Emorya progression and ${economySettings.payoutAsset} rewards.`;
 
+    const tierPhaseCopy = getPackTierPhaseCopy(
+      user.tier,
+      firstRow.pack_label ?? "This mission",
+      (firstRow.template_kind ?? "mixed") as "bridge" | "feeder" | "mixed",
+      experienceLane,
+    );
+
     return {
       packId,
       label: firstRow.pack_label ?? "Campaign pack",
@@ -1227,8 +1391,17 @@ async function getUserCampaignPackJourneys({
       nextQuestTitle,
       nextQuestActionable,
       ctaLabel: nextQuestId ? (nextQuestActionable ? "Open next mission" : "View next mission") : "Review pack",
+      ctaHref:
+        !userProgressState.walletLinked
+          ? "/profile#wallet-link-panel"
+          : nextQuestId
+            ? nextQuestActionable
+              ? `#quest-action-${nextQuestId}`
+              : "#quest-board"
+            : "#quest-board",
       nextAction,
       sequenceReason,
+      tierPhaseCopy,
       rewardFocus,
       badgeLabel: packBadgeLabel(firstRow.template_kind, milestone.label),
       leaderboardCallout: `${experienceLane} currently adds ${(getCampaignLeaderboardMomentumMultiplier(economySettings, attributionSource === "direct" ? null : attributionSource) * 100 - 100).toFixed(0)}% leaderboard momentum, so this pack is helping shape your rank pressure now.`,
@@ -1275,8 +1448,10 @@ async function getUserCampaignPackJourneys({
       nextQuestTitle: pack.nextQuestTitle,
       nextQuestActionable: pack.nextQuestActionable,
       ctaLabel: pack.ctaLabel,
+      ctaHref: pack.ctaHref,
       nextAction: pack.nextAction,
       sequenceReason: pack.sequenceReason,
+      tierPhaseCopy: pack.tierPhaseCopy,
       rewardFocus: pack.rewardFocus,
       badgeLabel: pack.badgeLabel,
       leaderboardCallout: pack.leaderboardCallout,
@@ -1291,50 +1466,7 @@ async function getUserCampaignPackJourneys({
       questStatuses: pack.questStatuses,
     }));
 
-  const campaignNotifications = campaignPacks
-    .flatMap((pack) => {
-      const notifications: DashboardData["campaignNotifications"] = [];
-
-      if (pack.lifecycleState === "live") {
-        notifications.push({
-          id: `pack-live-${pack.packId}`,
-          tone: "info",
-          title: `${pack.label} is now live in your lane`,
-          detail: `${pack.kind === "feeder" ? `${pack.attributionSource} is feeding into ${pack.activeLane}` : `${pack.activeLane} is active`} and this pack is ready for user progression now.`,
-          packId: pack.packId,
-          ctaLabel: pack.ctaLabel,
-          ctaQuestId: pack.nextQuestId,
-        });
-      }
-
-      if (pack.milestone.tone === "success") {
-        notifications.push({
-          id: `pack-milestone-${pack.packId}-${pack.milestone.label}`,
-          tone: "success",
-          title: `${pack.label}: ${pack.milestone.label}`,
-          detail: `${pack.completedQuestCount}/${pack.totalQuestCount} missions are complete. ${pack.nextAction}`,
-          packId: pack.packId,
-          ctaLabel: pack.ctaLabel,
-          ctaQuestId: pack.nextQuestId,
-        });
-      }
-
-      if (pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete") {
-        notifications.push({
-          id: `pack-referral-${pack.packId}-${pack.milestone.label}`,
-          tone: "info",
-          title: `${pack.label}: referral moment unlocked`,
-          detail: "This is the right point to bring others in. Your pack progress now has enough momentum to turn invitations into a stronger bridge path.",
-          packId: pack.packId,
-          ctaLabel: "Open referral leaderboard",
-          ctaQuestId: null,
-          ctaHref: "/leaderboard#referral-board",
-        });
-      }
-
-      return notifications;
-    })
-    .slice(0, 5);
+  const campaignNotifications = buildCampaignNotifications(campaignPacks);
 
   const historyResult = await runQuery<CampaignPackHistoryRow>(
     `SELECT q.metadata->>'campaignPackId' AS pack_id,

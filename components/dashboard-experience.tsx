@@ -98,24 +98,58 @@ function updateCampaignPacks(
 function buildCampaignNotifications(
   campaignPacks: DashboardData["campaignPacks"],
 ): DashboardData["campaignNotifications"] {
-  return campaignPacks
-    .filter((pack) => pack.lifecycleState === "live" || pack.milestone.tone === "success")
-    .slice(0, 4)
-    .map((pack) => ({
+  return campaignPacks.slice(0, 4).map((pack) => {
+    const detailParts: string[] = [];
+    const tone =
+      pack.milestone.tone === "success"
+        ? "success"
+        : pack.lifecycleState === "live"
+          ? "info"
+          : pack.directRewardState?.tone ?? "info";
+
+    if (pack.lifecycleState === "live") {
+      detailParts.push(
+        pack.kind === "feeder"
+          ? `${pack.attributionSource} is feeding into ${pack.activeLane} and this mission is live now.`
+          : `${pack.activeLane} is active and this mission is live now.`,
+      );
+    }
+
+    if (pack.milestone.tone === "success") {
+      detailParts.push(`${pack.completedQuestCount}/${pack.totalQuestCount} missions are complete.`);
+    }
+
+    if (pack.directRewardState) {
+      detailParts.push(pack.directRewardState.label);
+    }
+
+    if (pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete") {
+      detailParts.push("This is a strong moment to invite referrals into the same loop.");
+    }
+
+    return {
       id: `pack-${pack.packId}-${pack.lifecycleState}-${pack.milestone.label}`,
-      tone: pack.lifecycleState === "live" ? ("info" as const) : pack.milestone.tone,
+      tone,
       title:
-        pack.lifecycleState === "live"
-          ? `${pack.label} is now live in your lane`
-          : `${pack.label}: ${pack.milestone.label}`,
-      detail:
-        pack.lifecycleState === "live"
-          ? `${pack.kind === "feeder" ? `${pack.attributionSource} is feeding into ${pack.activeLane}` : `${pack.activeLane} is active`} and this pack is ready for user progression now.`
-          : `${pack.completedQuestCount}/${pack.totalQuestCount} missions are complete. ${pack.nextAction}`,
+        pack.milestone.tone === "success"
+          ? `${pack.label}: ${pack.milestone.label}`
+          : `${pack.label} is active in your mission flow`,
+      detail: `${detailParts.join(" ")} ${pack.nextAction}`.trim(),
       packId: pack.packId,
-      ctaLabel: pack.ctaLabel,
-      ctaQuestId: pack.nextQuestId,
-    }));
+      ctaLabel:
+        pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
+          ? "Open referral leaderboard"
+          : pack.ctaLabel,
+      ctaQuestId:
+        pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
+          ? null
+          : pack.nextQuestId,
+      ctaHref:
+        pack.milestone.label === "Halfway complete" || pack.milestone.label === "Pack complete"
+          ? "/leaderboard#referral-board"
+          : pack.ctaHref,
+    };
+  });
 }
 
 function updateCampaignPackHistory(

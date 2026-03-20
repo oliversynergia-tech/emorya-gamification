@@ -401,8 +401,10 @@ export type DashboardData = {
     nextQuestTitle: string | null;
     nextQuestActionable: boolean;
     ctaLabel: string;
+    ctaHref: string | null;
     nextAction: string;
     sequenceReason: string;
+    tierPhaseCopy: string;
     rewardFocus: string;
     badgeLabel: string;
     leaderboardCallout: string;
