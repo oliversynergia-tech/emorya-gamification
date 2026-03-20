@@ -3898,7 +3898,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
               (auditEntry.action === "save_benchmark_override" || auditEntry.action === "clear_benchmark_override"),
           )
           .slice(0, 2)
-          .map((auditEntry) => auditEntry.detail)
+          .map((auditEntry) => `${auditEntry.createdAt.slice(0, 10)}: ${auditEntry.detail}`)
           .join(" | ") || null,
       recommendationHistorySnapshot: entry.missionCtaSummary.recommendationHistory
         .slice(0, 2)

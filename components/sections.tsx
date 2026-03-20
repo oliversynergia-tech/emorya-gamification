@@ -114,6 +114,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       followupCtaLabel: "Review what opens next",
       followupHref: "/profile#mission-recap",
       followupCtaVariant: "priority_followup_review",
+      followupIntentLabel: "Planning move",
     };
   }
 
@@ -143,6 +144,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       followupCtaLabel: "Review premium path",
       followupHref: "/profile#mission-recap",
       followupCtaVariant: "priority_followup_review",
+      followupIntentLabel: "Planning move",
     };
   }
 
@@ -260,6 +262,10 @@ function getDashboardPriorityAction(data: DashboardData) {
         returnPack.blockageState === "weekly_pace" || returnPack.blockageState === "ready"
           ? "priority_followup_review"
           : "priority_followup_gate",
+      followupIntentLabel:
+        returnPack.blockageState === "weekly_pace" || returnPack.blockageState === "ready"
+          ? "Planning move"
+          : "Immediate progress context",
     };
   }
 
@@ -290,6 +296,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     followupCtaLabel: "Review what opens next",
     followupHref: "/profile#mission-recap",
     followupCtaVariant: "priority_followup_review",
+    followupIntentLabel: "Planning move",
   };
 }
 
@@ -594,6 +601,7 @@ export function DashboardSnapshot({
             <p className="form-note">
               {priorityAction.followupLabel}: {priorityAction.followupValue}.
             </p>
+            <p className="form-note">{priorityAction.followupIntentLabel}.</p>
             <p className="form-note">
               {priorityAction.stateCategory === "Momentum recovery"
                 ? "This is a short-term recovery action. The pack is still open, it just needs pace restored."

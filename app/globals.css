@@ -1320,6 +1320,26 @@ a {
   text-align: right;
 }
 
+.mission-ladder-card {
+  border-left: 3px solid rgba(240, 80, 158, 0.24);
+  padding-left: 18px;
+}
+
+.mission-ladder-card--summary {
+  border-left-color: rgba(240, 214, 160, 0.38);
+  background: rgba(240, 214, 160, 0.06);
+}
+
+.mission-ladder-card__side {
+  min-width: 92px;
+}
+
+.mission-ladder-group {
+  border-style: dashed;
+  border-color: rgba(223, 182, 255, 0.24);
+  background: rgba(223, 182, 255, 0.04);
+}
+
 .achievement-progress {
   overflow: hidden;
   width: 100%;

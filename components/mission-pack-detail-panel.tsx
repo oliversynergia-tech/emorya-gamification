@@ -143,18 +143,18 @@ export function MissionPackDetailPanel({
                   </div>
                 </article>
                 {remainingQuestProgression.map((quest) => (
-                  <article key={`${selectedActivePack.packId}-progress-${quest.questId}`} className="achievement-card">
+                  <article key={`${selectedActivePack.packId}-progress-${quest.questId}`} className="achievement-card mission-ladder-card">
                     <div>
                       <strong>{quest.stage}: {quest.title}</strong>
                       <p>{quest.dependencyProgressLabel}</p>
                       <p className="form-note">{quest.nextClearLabel}</p>
                     </div>
-                    <div className="achievement-card__side">
-                      <span>{quest.stage}</span>
+                    <div className="achievement-card__side mission-ladder-card__side">
+                      <span className="badge">{quest.stage}</span>
                     </div>
                   </article>
                 ))}
-                <article className="achievement-card achievement-card--progress">
+                <article className="achievement-card achievement-card--progress mission-ladder-card mission-ladder-card--summary">
                   <div>
                     <strong>Mission ladder</strong>
                     <p>The ladder starts with the current quest, then moves through the next unlocks until the pack milestone clears.</p>
@@ -164,7 +164,7 @@ export function MissionPackDetailPanel({
                   </div>
                 </article>
                 {Array.from(dependencyGroups.entries()).map(([label, items]) => (
-                  <article key={`${selectedActivePack.packId}-group-${label}`} className="achievement-card">
+                  <article key={`${selectedActivePack.packId}-group-${label}`} className="achievement-card mission-ladder-group">
                     <div>
                       <strong>{label}</strong>
                       <p>{items.length} remaining step{items.length === 1 ? "" : "s"} in this dependency cluster.</p>

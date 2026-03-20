@@ -40,6 +40,27 @@ function getReminderExportModeLabel(mode: ReminderExportMode) {
   }
 }
 
+function getSourceFilterLabel(sourceFilter: "all" | CampaignSource) {
+  return sourceFilter === "all" ? "All sources" : sourceFilter;
+}
+
+function getStatusFilterLabel(statusFilter: "all" | "active" | "inactive") {
+  if (statusFilter === "active") {
+    return "Active only";
+  }
+  if (statusFilter === "inactive") {
+    return "Inactive only";
+  }
+  return "All statuses";
+}
+
+function getKindFilterLabel(kindFilter: "all" | "bridge" | "feeder" | "mixed") {
+  if (kindFilter === "all") {
+    return "All kinds";
+  }
+  return `${kindFilter} only`;
+}
+
 function exportPackAnalytics(entries: PackAnalyticsItem[]) {
   const lines = [
     [
@@ -222,9 +243,20 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
   URL.revokeObjectURL(url);
 }
 
-function exportReminderComparison(entries: PackAnalyticsItem[], mode: ReminderExportMode) {
+function exportReminderComparison(
+  entries: PackAnalyticsItem[],
+  mode: ReminderExportMode,
+  filters: {
+    source: "all" | CampaignSource;
+    status: "all" | "active" | "inactive";
+    kind: "all" | "bridge" | "feeder" | "mixed";
+  },
+) {
   const lines = [
     [`export_scope`, JSON.stringify(getReminderExportModeLabel(mode))].join(","),
+    [`source_filter`, JSON.stringify(getSourceFilterLabel(filters.source))].join(","),
+    [`status_filter`, JSON.stringify(getStatusFilterLabel(filters.status))].join(","),
+    [`kind_filter`, JSON.stringify(getKindFilterLabel(filters.kind))].join(","),
     "",
     [
       "pack_id",
@@ -646,7 +678,17 @@ export function CampaignPackAnalyticsPanel({
         <button className="button button--secondary" type="button" onClick={() => exportPackAnalytics(filteredPacks)}>
           Export CSV
         </button>
-        <button className="button button--secondary" type="button" onClick={() => exportReminderComparison(reminderExportEntries, reminderExportMode)}>
+        <button
+          className="button button--secondary"
+          type="button"
+          onClick={() =>
+            exportReminderComparison(reminderExportEntries, reminderExportMode, {
+              source: sourceFilter,
+              status: statusFilter,
+              kind: kindFilter,
+            })
+          }
+        >
           Export reminder comparison
         </button>
         <button className="button button--secondary" type="button" onClick={() => exportPartnerReporting(partnerReports)}>
@@ -664,11 +706,11 @@ export function CampaignPackAnalyticsPanel({
               <strong>Pack comparison view</strong>
               <p>Using {comparisonBasePack.label} as the current baseline for filtered pack deltas.</p>
             </div>
-            <div className="achievement-card__side">
-              <span>{Math.round(comparisonBasePack.premiumConversionRate * 100)}% premium</span>
-              <span>{Math.round(comparisonBasePack.walletLinkRate * 100)}% wallet linked</span>
-              <span>{Math.round(comparisonBasePack.rewardEligibilityRate * 100)}% eligible</span>
-            </div>
+              <div className="achievement-card__side">
+                <span>{Math.round(comparisonBasePack.premiumConversionRate * 100)}% premium</span>
+                <span>{Math.round(comparisonBasePack.walletLinkRate * 100)}% wallet linked</span>
+                <span>{Math.round(comparisonBasePack.rewardEligibilityRate * 100)}% eligible</span>
+              </div>
           </article>
           {comparisonRows.slice(0, 5).map((row) => (
             <article key={`${comparisonBasePack.packId}-${row.packId}`} className="achievement-card">
@@ -713,6 +755,21 @@ export function CampaignPackAnalyticsPanel({
               </div>
               <div className="achievement-card__side">
                 <span>{Math.round(averageHandledRate * 100)}% avg reminder handled</span>
+                <span>
+                  {Math.round(
+                    (matching.reduce((sum, pack) => sum + pack.walletLinkRate, 0) / matching.length) * 100,
+                  )}% avg wallet link
+                </span>
+                <span>
+                  {Math.round(
+                    (matching.reduce((sum, pack) => sum + pack.rewardEligibilityRate, 0) / matching.length) * 100,
+                  )}% avg eligible
+                </span>
+                <span>
+                  {Math.round(
+                    (matching.reduce((sum, pack) => sum + pack.premiumConversionRate, 0) / matching.length) * 100,
+                  )}% avg premium
+                </span>
                 <span>avg completion delta {averageCompletionDelta >= 0 ? "+" : ""}{averageCompletionDelta.toFixed(1)}</span>
               </div>
             </article>
