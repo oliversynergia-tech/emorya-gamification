@@ -114,7 +114,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       followupCtaLabel: "Review what opens next",
       followupHref: "/profile#wallet-link-panel",
       followupCtaVariant: "priority_followup_review",
-      followupIntentLabel: "Planning move",
+      followupIntentLabel: "Immediate progress context",
     };
   }
 
@@ -271,11 +271,15 @@ function getDashboardPriorityAction(data: DashboardData) {
                   : "See the gated path",
       followupHref:
         returnPack.blockageState === "weekly_pace"
-          ? "/dashboard"
+          ? "/dashboard#quest-board"
           : returnPack.blockageState === "ready"
-            ? "/dashboard"
+            ? "/dashboard#quest-board"
             : returnPack.blockageState === "wallet_connection"
               ? "/profile#wallet-link-panel"
+              : returnPack.blockageState === "starter_path"
+                ? "/dashboard#quest-board"
+                : returnPack.blockageState === "trust"
+                  ? "/dashboard#quest-board"
               : returnPack.blockageState === "premium_phase"
                 ? "/profile"
                 : "/profile#mission-recap",
@@ -315,7 +319,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     followupLabel: "What changes after this",
     followupValue: nextPack.unlockRewardPreview,
     followupCtaLabel: "Review what opens next",
-    followupHref: "/dashboard",
+    followupHref: "/dashboard#quest-board",
     followupCtaVariant: "priority_followup_review",
     followupIntentLabel: "Planning move",
   };

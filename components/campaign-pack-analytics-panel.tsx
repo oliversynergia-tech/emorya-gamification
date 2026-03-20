@@ -199,8 +199,21 @@ function exportPackAnalytics(
   URL.revokeObjectURL(url);
 }
 
-function exportPartnerReporting(entries: PartnerReportItem[]) {
+function exportPartnerReporting(
+  entries: PartnerReportItem[],
+  filters: {
+    search: string;
+    source: "all" | CampaignSource;
+    status: "all" | "active" | "inactive";
+    kind: "all" | "bridge" | "feeder" | "mixed";
+  },
+) {
   const lines = [
+    [`search_filter`, JSON.stringify(filters.search.trim() || "No search filter")].join(","),
+    [`source_filter`, JSON.stringify(getSourceFilterLabel(filters.source))].join(","),
+    [`status_filter`, JSON.stringify(getStatusFilterLabel(filters.status))].join(","),
+    [`kind_filter`, JSON.stringify(getKindFilterLabel(filters.kind))].join(","),
+    "",
     [
       "pack_id",
       "label",
@@ -255,7 +268,7 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "emorya-partner-pack-report.csv";
+  link.download = `emorya-partner-pack-report-${slugifyForFilename(filters.search || "all-packs")}-${slugifyForFilename(getSourceFilterLabel(filters.source))}-${slugifyForFilename(getStatusFilterLabel(filters.status))}-${slugifyForFilename(getKindFilterLabel(filters.kind))}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -334,6 +347,12 @@ function printPartnerReport(entries: PartnerReportItem[]) {
     .slice(0, 4)
     .map((entry) => `${entry.label}: ${entry.lifecycleHistorySummary}`)
     .join(" | ");
+  const benchmarkSummary = [
+    `${entries.filter((entry) => entry.benchmarkStatus === "on_track").length} on track`,
+    `${entries.filter((entry) => entry.benchmarkStatus === "mixed").length} mixed`,
+    `${entries.filter((entry) => entry.benchmarkStatus === "off_track").length} off track`,
+  ].join(" · ");
+  const alertPressureSummary = `${entries.filter((entry) => entry.benchmarkStatus !== "on_track").length} packs currently need closer monitoring.`;
 
   const cards = entries.map((entry) => `
     <article style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 16px;background:#fffaf1;">
@@ -373,6 +392,11 @@ function printPartnerReport(entries: PartnerReportItem[]) {
         <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Emorya Gamification</p>
         <h1>Partner Campaign Pack Report</h1>
         <p>This export is optimized for partner sharing and PDF save/export from the browser print dialog.</p>
+        <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
+          <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Campaign status</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Benchmark status: ${benchmarkSummary}</p>
+          <p style="margin:0;color:#5e5035;">Alert pressure: ${alertPressureSummary}</p>
+        </section>
         ${
           lifecycleOverview
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
@@ -555,6 +579,11 @@ export function CampaignPackAnalyticsPanel({
     });
   }, [filteredPacks, reminderExportMode]);
 
+  const filteredPartnerReports = useMemo(() => {
+    const allowedPackIds = new Set(filteredPacks.map((pack) => pack.packId));
+    return partnerReports.filter((entry) => allowedPackIds.has(entry.packId));
+  }, [filteredPacks, partnerReports]);
+
   async function updateLifecycle(packId: string, lifecycleState: "draft" | "ready" | "live") {
     setPendingPackId(packId);
     setError(null);
@@ -736,10 +765,21 @@ export function CampaignPackAnalyticsPanel({
         >
           Export reminder comparison
         </button>
-        <button className="button button--secondary" type="button" onClick={() => exportPartnerReporting(partnerReports)}>
+        <button
+          className="button button--secondary"
+          type="button"
+          onClick={() =>
+            exportPartnerReporting(filteredPartnerReports, {
+              search,
+              source: sourceFilter,
+              status: statusFilter,
+              kind: kindFilter,
+            })
+          }
+        >
           Export partner CSV
         </button>
-        <button className="button button--secondary" type="button" onClick={() => printPartnerReport(partnerReports)}>
+        <button className="button button--secondary" type="button" onClick={() => printPartnerReport(filteredPartnerReports)}>
           Print partner PDF
         </button>
       </div>
@@ -792,6 +832,19 @@ export function CampaignPackAnalyticsPanel({
             matching.reduce((sum, pack) => sum + pack.reminderEffectiveness.handledRate, 0) / matching.length;
           const averageCompletionDelta =
             matching.reduce((sum, pack) => sum + pack.operatorOutcome.trend.completionDelta, 0) / matching.length;
+          const totalPhaseClicks = matching.reduce((sum, pack) => sum + pack.missionCtaSummary.totalClicks, 0);
+          const averageCtaApprovalEfficiency =
+            totalPhaseClicks > 0
+              ? matching.reduce(
+                  (sum, pack) =>
+                    sum +
+                    pack.missionCtaSummary.variantBreakdown.reduce(
+                      (variantSum, variant) => variantSum + variant.approvedCompletionCount,
+                      0,
+                    ),
+                  0,
+                ) / totalPhaseClicks
+              : 0;
           const topVariantByPhase = Array.from(
             matching
               .flatMap((pack) => pack.missionCtaSummary.variantBreakdown)
@@ -840,6 +893,7 @@ export function CampaignPackAnalyticsPanel({
                   )}% avg premium
                 </span>
                 <span>top CTA {topVariantByPhase?.[0] ?? "n/a"}</span>
+                <span>{Math.round(averageCtaApprovalEfficiency * 100)}% CTA approval efficiency</span>
                 <span>avg completion delta {averageCompletionDelta >= 0 ? "+" : ""}{averageCompletionDelta.toFixed(1)}</span>
               </div>
             </article>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { MissionLink } from "@/components/mission-link";
 import type { DashboardData } from "@/lib/types";
@@ -18,7 +18,28 @@ export function MissionPackDetailPanel({
 }) {
   const initialPackId = activePacks[0]?.packId ?? packHistory[0]?.packId ?? "none";
   const [selectedPackId, setSelectedPackId] = useState(initialPackId);
-  const [expandedLadders, setExpandedLadders] = useState<Record<string, boolean>>({});
+  const [expandedLadders, setExpandedLadders] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") {
+      return {};
+    }
+    const stored = window.localStorage.getItem("emorya-mission-ladder-state");
+    if (!stored) {
+      return {};
+    }
+    try {
+      return JSON.parse(stored) as Record<string, boolean>;
+    } catch {
+      window.localStorage.removeItem("emorya-mission-ladder-state");
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem("emorya-mission-ladder-state", JSON.stringify(expandedLadders));
+  }, [expandedLadders]);
   const selectedActivePack = useMemo(
     () => activePacks.find((pack) => pack.packId === selectedPackId) ?? null,
     [activePacks, selectedPackId],
