@@ -109,6 +109,8 @@ function getDashboardPriorityAction(data: DashboardData) {
       stateMetricValue: "Connect xPortal",
       secondaryMetricLabel: "Mission pace",
       secondaryMetricValue: walletGatePack.weeklyGoal.label,
+      followupLabel: "What changes after this",
+      followupValue: walletGatePack.unlockRewardPreview,
     };
   }
 
@@ -133,6 +135,8 @@ function getDashboardPriorityAction(data: DashboardData) {
       stateMetricValue: "Premium phase push",
       secondaryMetricLabel: "Mission pace",
       secondaryMetricValue: premiumPack.weeklyGoal.label,
+      followupLabel: "What changes after this",
+      followupValue: premiumPack.unlockRewardPreview,
     };
   }
 
@@ -239,6 +243,8 @@ function getDashboardPriorityAction(data: DashboardData) {
       stateMetricValue: stateMetric.value,
       secondaryMetricLabel: secondaryMetric.label,
       secondaryMetricValue: secondaryMetric.value,
+      followupLabel: "What changes after this",
+      followupValue: returnPack.unlockRewardPreview,
     };
   }
 
@@ -264,6 +270,8 @@ function getDashboardPriorityAction(data: DashboardData) {
     stateMetricValue: nextPack.unlockPreview,
     secondaryMetricLabel: "Mission pace",
     secondaryMetricValue: nextPack.weeklyGoal.label,
+    followupLabel: "What changes after this",
+    followupValue: nextPack.unlockRewardPreview,
   };
 }
 
@@ -564,6 +572,9 @@ export function DashboardSnapshot({
             </p>
             <p className="form-note">
               {priorityAction.secondaryMetricLabel}: {priorityAction.secondaryMetricValue}.
+            </p>
+            <p className="form-note">
+              {priorityAction.followupLabel}: {priorityAction.followupValue}.
             </p>
             <p className="form-note">
               {priorityAction.stateCategory === "Momentum recovery"

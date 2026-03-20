@@ -3887,6 +3887,9 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
           : entry.lifecycleState === "ready"
             ? "Ready-state changes are now visible. This is the best phase for validating CTA and reminder choices before full live pressure."
             : "Live-state performance is now the main operator read. Trend movement here is the strongest signal for intervention or scaling.",
+      benchmarkOverrideImpactSummary: entry.benchmark.isOverridden
+        ? `This pack is using a custom benchmark override${entry.benchmark.overrideReason ? `: ${entry.benchmark.overrideReason}` : "."}`
+        : "This pack is still being judged against the default lane benchmark set.",
       recommendationHistorySnapshot: entry.missionCtaSummary.recommendationHistory
         .slice(0, 2)
         .map((historyEntry) => `${historyEntry.action.replaceAll("_", " ")}: ${historyEntry.detail}`),

@@ -131,6 +131,15 @@ export function MissionPackDetailPanel({
                     </div>
                   </article>
                 ))}
+                <article className="achievement-card achievement-card--progress">
+                  <div>
+                    <strong>Mission ladder</strong>
+                    <p>The ladder starts with the current quest, then moves through the next unlocks until the pack milestone clears.</p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{remainingQuestProgression.length} steps left</span>
+                  </div>
+                </article>
                 {selectedActivePack.questStatuses.map((quest) => (
                   <article key={quest.questId} className="achievement-card">
                     <div>

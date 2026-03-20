@@ -17,6 +17,8 @@ type BenchmarkDraft = {
   reason: string;
 };
 
+type ReminderExportMode = "filtered" | "live" | "bridge" | "feeder" | "live_bridge" | "live_feeder";
+
 function toHistorySnapshot(entries: PackAnalyticsItem["missionCtaSummary"]["recommendationHistory"]) {
   return entries.map((entry) => `${entry.action.replaceAll("_", " ")}: ${entry.detail}`);
 }
@@ -163,6 +165,7 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
       "operator_outcome_title",
       "operator_outcome_detail",
       "lifecycle_phase_summary",
+      "benchmark_override_impact_summary",
       "recommendation_history_snapshot",
     ].join(","),
     ...entries.map((entry) =>
@@ -185,6 +188,7 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
         JSON.stringify(entry.operatorOutcomeTitle),
         JSON.stringify(entry.operatorOutcomeDetail),
         JSON.stringify(entry.lifecyclePhaseSummary),
+        JSON.stringify(entry.benchmarkOverrideImpactSummary),
         JSON.stringify(entry.recommendationHistorySnapshot),
       ].join(","),
     ),
@@ -263,6 +267,7 @@ function printPartnerReport(entries: PartnerReportItem[]) {
       <p style="margin:0 0 12px;color:#5e5035;"><strong>${entry.partnerSummaryHeadline}</strong><br/>${entry.partnerSummaryDetail}</p>
       <p style="margin:0 0 12px;color:#5e5035;"><strong>${entry.operatorOutcomeTitle}</strong><br/>${entry.operatorOutcomeDetail}</p>
       <p style="margin:0 0 12px;color:#5e5035;">${entry.lifecyclePhaseSummary}</p>
+      <p style="margin:0 0 12px;color:#5e5035;">${entry.benchmarkOverrideImpactSummary}</p>
       ${entry.recommendationHistorySnapshot.length > 0 ? `<p style="margin:0 0 12px;color:#5e5035;">Recent operator shifts: ${entry.recommendationHistorySnapshot.join(" | ")}</p>` : ""}
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
         <div><strong>${entry.participantCount}</strong><div>Participants</div></div>
@@ -315,6 +320,7 @@ export function CampaignPackAnalyticsPanel({
   const [sourceFilter, setSourceFilter] = useState<"all" | CampaignSource>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [kindFilter, setKindFilter] = useState<"all" | "bridge" | "feeder" | "mixed">("all");
+  const [reminderExportMode, setReminderExportMode] = useState<ReminderExportMode>("filtered");
   const [comparisonPackId, setComparisonPackId] = useState<string>("all");
   const [historyFilter, setHistoryFilter] = useState<"all" | "lifecycle" | "benchmark" | "alerts">("all");
   const [pendingPackId, setPendingPackId] = useState<string | null>(null);
@@ -436,6 +442,32 @@ export function CampaignPackAnalyticsPanel({
       weakest: [...ranked].reverse().slice(0, 3),
     };
   }, [filteredPacks]);
+
+  const reminderExportEntries = useMemo(() => {
+    return filteredPacks.filter((pack) => {
+      const kind =
+        pack.bridgeCount > 0 && pack.feederCount === 0
+          ? "bridge"
+          : pack.feederCount > 0 && pack.bridgeCount === 0
+            ? "feeder"
+            : "mixed";
+
+      switch (reminderExportMode) {
+        case "live":
+          return pack.lifecycleState === "live";
+        case "bridge":
+          return kind === "bridge";
+        case "feeder":
+          return kind === "feeder";
+        case "live_bridge":
+          return pack.lifecycleState === "live" && kind === "bridge";
+        case "live_feeder":
+          return pack.lifecycleState === "live" && kind === "feeder";
+        default:
+          return true;
+      }
+    });
+  }, [filteredPacks, reminderExportMode]);
 
   async function updateLifecycle(packId: string, lifecycleState: "draft" | "ready" | "live") {
     setPendingPackId(packId);
@@ -580,10 +612,21 @@ export function CampaignPackAnalyticsPanel({
             ))}
           </select>
         </label>
+        <label className="field">
+          <span>Reminder export</span>
+          <select value={reminderExportMode} onChange={(event) => setReminderExportMode(event.target.value as ReminderExportMode)}>
+            <option value="filtered">Current filtered set</option>
+            <option value="live">Live packs only</option>
+            <option value="bridge">Bridge packs only</option>
+            <option value="feeder">Feeder packs only</option>
+            <option value="live_bridge">Live bridge packs</option>
+            <option value="live_feeder">Live feeder packs</option>
+          </select>
+        </label>
         <button className="button button--secondary" type="button" onClick={() => exportPackAnalytics(filteredPacks)}>
           Export CSV
         </button>
-        <button className="button button--secondary" type="button" onClick={() => exportReminderComparison(filteredPacks)}>
+        <button className="button button--secondary" type="button" onClick={() => exportReminderComparison(reminderExportEntries)}>
           Export reminder comparison
         </button>
         <button className="button button--secondary" type="button" onClick={() => exportPartnerReporting(partnerReports)}>
@@ -749,6 +792,11 @@ export function CampaignPackAnalyticsPanel({
                 Reminder trend: current {pack.reminderEffectiveness.trend.currentCount} vs previous {pack.reminderEffectiveness.trend.previousCount}. Delta {pack.reminderEffectiveness.trend.delta >= 0 ? "+" : ""}
                 {pack.reminderEffectiveness.trend.delta}.
               </p>
+              <p className="form-note">
+                Lifecycle delta: {pack.lifecycleState} phase, completions {pack.operatorOutcome.trend.currentCompletions} vs {pack.operatorOutcome.trend.previousCompletions}
+                {` `}({pack.operatorOutcome.trend.completionDelta >= 0 ? "+" : ""}{pack.operatorOutcome.trend.completionDelta}), participants {pack.operatorOutcome.trend.currentParticipants} vs {pack.operatorOutcome.trend.previousParticipants}
+                {` `}({pack.operatorOutcome.trend.participantDelta >= 0 ? "+" : ""}{pack.operatorOutcome.trend.participantDelta}).
+              </p>
               <div className="review-actions">
                 <button className={`button ${historyFilter === "all" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setHistoryFilter("all")}>
                   All history
@@ -861,6 +909,9 @@ export function CampaignPackAnalyticsPanel({
               </p>
               <p className="form-note">
                 {partnerReports.find((entry) => entry.packId === pack.packId)?.lifecyclePhaseSummary ?? ""}
+              </p>
+              <p className="form-note">
+                {partnerReports.find((entry) => entry.packId === pack.packId)?.benchmarkOverrideImpactSummary ?? ""}
               </p>
               {partnerReports.find((entry) => entry.packId === pack.packId)?.recommendationHistorySnapshot.length ? (
                 <p className="form-note">
