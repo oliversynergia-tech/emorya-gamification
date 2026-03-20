@@ -606,6 +606,20 @@ function printPartnerReport(
     })
     .filter((entry): entry is string => Boolean(entry))
     .join(" | ");
+  const lifecycleBenchmarkMovementSummary = (["draft", "ready", "live"] as const)
+    .map((phase) => {
+      const phaseEntries = entries.filter((entry) => entry.lifecycleState === phase);
+      if (phaseEntries.length === 0) {
+        return null;
+      }
+      const onTrackCount = phaseEntries.filter((entry) => entry.benchmarkStatus === "on_track").length;
+      const averageCompletionTrend = phaseEntries.reduce((sum, entry) => sum + entry.completionTrendDelta, 0) / phaseEntries.length;
+      return `${phase}: ${onTrackCount}/${phaseEntries.length} on track · ${
+        averageCompletionTrend >= 0 ? "+" : ""
+      }${averageCompletionTrend.toFixed(1)} completion momentum`;
+    })
+    .filter((entry): entry is string => Boolean(entry))
+    .join(" | ");
   const benchmarkChangeSummary = entries
     .filter((entry) => entry.benchmarkOverrideHistorySummary)
     .slice(0, 4)
@@ -663,7 +677,7 @@ function printPartnerReport(
       <body>
         <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Emorya Gamification</p>
         <h1>Partner Campaign Pack Report</h1>
-        <p>This export is optimized for partner sharing and PDF save/export from the browser print dialog.</p>
+        <p>This export is tuned for partner sharing and PDF save/export from the browser print dialog.</p>
         <section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
           <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Export scope</p>
           <p style="margin:0 0 8px;color:#5e5035;">Search: ${filters.search.trim() || "No search filter"}</p>
@@ -675,6 +689,7 @@ function printPartnerReport(
           <p style="margin:0 0 8px;color:#5e5035;">Lifecycle composition: ${lifecycleCompositionSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Benchmark by pack kind: ${benchmarkKindSummary || "No benchmark-by-kind mix available"}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Pack-kind movement: ${benchmarkKindTrendSummary || "No pack-kind movement available"}</p>
+          <p style="margin:0 0 8px;color:#5e5035;">Benchmark movement by lifecycle: ${lifecycleBenchmarkMovementSummary || "No lifecycle benchmark movement available"}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Operator outcome mix: ${operatorOutcomeMixSummary}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Operator outcome by lifecycle: ${lifecycleOperatorOutcomeSummary || "No lifecycle outcome mix available"}</p>
           <p style="margin:0 0 8px;color:#5e5035;">Zero-completion risk by lifecycle: ${lifecycleZeroCompletionMixSummary || "No lifecycle risk mix available"}</p>
@@ -697,7 +712,7 @@ function printPartnerReport(
         ${
           recommendationOverview
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
-                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Routing and copy shifts</p>
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Recent route and copy tuning</p>
                 <p style="margin:0;color:#5e5035;">${recommendationOverview}</p>
               </section>`
             : ""
@@ -705,7 +720,7 @@ function printPartnerReport(
         ${
           controlChangeOverview
             ? `<section style="border:1px solid #d8d1c3;border-radius:16px;padding:16px;margin:0 0 20px;background:#fff;">
-                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Recent control changes</p>
+                <p style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7d6f54;margin:0 0 8px;">Recent operating changes</p>
                 <p style="margin:0;color:#5e5035;">${controlChangeOverview}</p>
               </section>`
             : ""
@@ -919,6 +934,22 @@ export function CampaignPackAnalyticsPanel({
         `${filteredPacks.filter((pack) => pack.operatorOutcome.trend.completionDelta === 0).length} steady`,
         `${filteredPacks.filter((pack) => pack.operatorOutcome.trend.completionDelta < 0).length} slipping`,
       ].join(" · "),
+    [filteredPacks],
+  );
+  const filteredOperatorOutcomeKindSummary = useMemo(
+    () =>
+      (["bridge", "feeder", "mixed"] as const)
+        .map((kind) => {
+          const kindEntries = filteredPacks.filter((pack) => getPackKind(pack) === kind);
+          if (kindEntries.length === 0) {
+            return null;
+          }
+          return `${kind}: ${kindEntries.filter((pack) => pack.operatorOutcome.trend.completionDelta > 0).length} improving · ${
+            kindEntries.filter((pack) => pack.operatorOutcome.trend.completionDelta === 0).length
+          } steady · ${kindEntries.filter((pack) => pack.operatorOutcome.trend.completionDelta < 0).length} slipping`;
+        })
+        .filter((entry): entry is string => Boolean(entry))
+        .join(" | "),
     [filteredPacks],
   );
   const filteredLifecycleOperatorOutcomeSummary = useMemo(
@@ -1255,6 +1286,7 @@ export function CampaignPackAnalyticsPanel({
             </div>
             <div className="achievement-card__side">
               <span>{filteredOperatorOutcomeMixSummary}</span>
+              {filteredOperatorOutcomeKindSummary ? <span>{filteredOperatorOutcomeKindSummary}</span> : null}
               {filteredLifecycleOperatorOutcomeSummary ? <span>{filteredLifecycleOperatorOutcomeSummary}</span> : null}
             </div>
           </article>

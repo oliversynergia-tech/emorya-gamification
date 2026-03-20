@@ -196,6 +196,43 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
         </button>
       </form>
       {message ? <p className="status status--success">{message}</p> : null}
+      {message ? (
+        <div className="achievement-card achievement-card--progress">
+          <div>
+            <strong>Account changes saved</strong>
+            <p>Your mission surfaces will reopen with the same active lens, so you can jump back into the right next step.</p>
+            <p className="mission-cue mission-cue--planning">
+              <strong>Review mission path</strong> Recheck the mission path now that your account details are up to date.
+            </p>
+          </div>
+          <div className="achievement-card__side">
+            <a
+              className="text-link"
+              href="/dashboard#campaign-mission"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  const missionView = window.localStorage.getItem("emorya-dashboard-mission-view") ?? "active";
+                  window.localStorage.setItem("emorya-dashboard-mission-view", missionView);
+                }
+              }}
+            >
+              Return to mission
+            </a>
+            <a
+              className="text-link"
+              href="#mission-recap"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  const missionView = window.localStorage.getItem("emorya-profile-mission-view") ?? "active";
+                  window.localStorage.setItem("emorya-profile-mission-view", missionView);
+                }
+              }}
+            >
+              Review mission recap
+            </a>
+          </div>
+        </div>
+      ) : null}
       {error ? <p className="status status--error">{error}</p> : null}
     </section>
   );

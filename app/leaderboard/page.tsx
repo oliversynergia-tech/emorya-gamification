@@ -253,6 +253,7 @@ export default async function LeaderboardPage() {
                   eventType="leaderboard_mission_cta"
                   ctaLabel={activeMissionPack.ctaLabel}
                   ctaVariant={activeMissionPack.ctaVariant}
+                  missionView="active"
                 >
                   {activeMissionPack.ctaLabel}
                 </MissionLink>
