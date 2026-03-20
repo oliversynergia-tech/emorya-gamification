@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 import type { DashboardData } from "@/lib/types";
 
 export function CampaignMissionInboxPanel({
@@ -11,7 +13,14 @@ export function CampaignMissionInboxPanel({
   title?: string;
   eyebrow?: string;
 }) {
-  if (notifications.length === 0) {
+  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
+
+  const visibleNotifications = useMemo(
+    () => notifications.filter((notification) => !dismissedIds.includes(notification.id)),
+    [dismissedIds, notifications],
+  );
+
+  if (visibleNotifications.length === 0) {
     return null;
   }
 
@@ -22,10 +31,10 @@ export function CampaignMissionInboxPanel({
           <p className="eyebrow">{eyebrow}</p>
           <h3>{title}</h3>
         </div>
-        <span className="badge">{notifications.length} updates</span>
+        <span className="badge">{visibleNotifications.length} updates</span>
       </div>
       <div className="achievement-list">
-        {notifications.map((notification) => (
+        {visibleNotifications.map((notification) => (
           <article key={notification.id} className="achievement-card">
             <div>
               <strong>{notification.title}</strong>
@@ -45,6 +54,13 @@ export function CampaignMissionInboxPanel({
               <span className={`badge ${notification.tone === "success" ? "badge--pink" : ""}`}>
                 {notification.tone}
               </span>
+              <button
+                type="button"
+                className="button button--secondary"
+                onClick={() => setDismissedIds((current) => [...current, notification.id])}
+              >
+                Dismiss
+              </button>
             </div>
           </article>
         ))}

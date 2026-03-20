@@ -55,6 +55,35 @@ export function QuestActionsPanel({
   const [progressUpdate, setProgressUpdate] = useState<QuestProgressUpdate | null>(null);
   const [progressQuestTitle, setProgressQuestTitle] = useState<string | null>(null);
 
+  const missionCelebration = useMemo(() => {
+    if (!activeCampaignPack || !progressUpdate) {
+      return null;
+    }
+
+    if (activeCampaignPack.milestone.label === "Pack complete") {
+      return {
+        title: `${activeCampaignPack.label} is complete`,
+        detail: "That mission path is now closed out cleanly. This is the strongest moment to convert the momentum into referrals, premium lift, or another live pack.",
+      };
+    }
+
+    if (activeCampaignPack.milestone.label === "Halfway complete") {
+      return {
+        title: `${activeCampaignPack.label} just hit halfway`,
+        detail: "You now have enough mission momentum for the pack to start paying off more clearly in weekly pace, referrals, and premium pressure.",
+      };
+    }
+
+    if (activeCampaignPack.milestone.label === "First mission cleared") {
+      return {
+        title: `${activeCampaignPack.label} is underway`,
+        detail: "The first clean mission is in. That shifts this pack from intent into real progression.",
+      };
+    }
+
+    return null;
+  }, [activeCampaignPack, progressUpdate]);
+
   async function submitQuest(
     quest: Quest,
     payload: Record<string, unknown>,
@@ -343,6 +372,18 @@ export function QuestActionsPanel({
               <small className="form-note">
                 {activeCampaignPack.label}: {activeCampaignPack.milestone.label}. {activeCampaignPack.sequenceReason}
               </small>
+              {missionCelebration ? (
+                <div className="achievement-card achievement-card--progress">
+                  <div>
+                    <strong>{missionCelebration.title}</strong>
+                    <p>{missionCelebration.detail}</p>
+                  </div>
+                  <div className="achievement-card__side">
+                    <span>{activeCampaignPack.badgeLabel}</span>
+                    <span>{activeCampaignPack.completedQuestCount}/{activeCampaignPack.totalQuestCount}</span>
+                  </div>
+                </div>
+              ) : null}
               {activeCampaignPack.premiumNudge ? (
                 <small className="form-note">{activeCampaignPack.premiumNudge}</small>
               ) : null}

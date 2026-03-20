@@ -1117,10 +1117,56 @@ function getPackTierPhaseCopy(
   return `${packLabel} is still in the free phase. Focus on trust steps, wallet readiness, and clean mission clears before the heavier-value premium phase matters.`;
 }
 
+function resolvePackPrimaryCta({
+  user,
+  userProgressState,
+  nextQuestId,
+  nextQuestActionable,
+  premiumNudge,
+  completedQuestCount,
+  totalQuestCount,
+}: {
+  user: UserSnapshot;
+  userProgressState: UserProgressState;
+  nextQuestId: string | null;
+  nextQuestActionable: boolean;
+  premiumNudge: string | null;
+  completedQuestCount: number;
+  totalQuestCount: number;
+}) {
+  if (!userProgressState.walletLinked) {
+    return {
+      ctaLabel: "Link wallet to continue",
+      ctaHref: "/profile#wallet-link-panel",
+    };
+  }
+
+  const halfwayReached = totalQuestCount > 1 && completedQuestCount >= Math.ceil(totalQuestCount / 2);
+
+  if (premiumNudge && halfwayReached && user.tier === "free") {
+    return {
+      ctaLabel: "Review monthly upgrade",
+      ctaHref: "/profile",
+    };
+  }
+
+  if (premiumNudge && halfwayReached && user.tier === "monthly") {
+    return {
+      ctaLabel: "Review annual upgrade",
+      ctaHref: "/profile",
+    };
+  }
+
+  return {
+    ctaLabel: nextQuestId ? (nextQuestActionable ? "Open next mission" : "View next mission") : "Review pack",
+    ctaHref: nextQuestId ? (nextQuestActionable ? `#quest-action-${nextQuestId}` : "#quest-board") : "#quest-board",
+  };
+}
+
 function buildCampaignNotifications(
   campaignPacks: DashboardData["campaignPacks"],
 ): DashboardData["campaignNotifications"] {
-  return campaignPacks
+  const notifications = campaignPacks
     .map((pack) => {
       const detailParts: string[] = [];
       const tone =
@@ -1174,6 +1220,25 @@ function buildCampaignNotifications(
       };
     })
     .slice(0, 5);
+
+  const inactivityNotification = campaignPacks.find(
+    (pack) => pack.lifecycleState === "live" && pack.weeklyGoal.shortfallXp > Math.max(pack.weeklyGoal.targetXp * 0.4, 80),
+  );
+
+  if (inactivityNotification) {
+    notifications.unshift({
+      id: `pack-inactivity-${inactivityNotification.packId}`,
+      tone: "warning",
+      title: `${inactivityNotification.label} is cooling off`,
+      detail: `Weekly pace is slipping by ${inactivityNotification.weeklyGoal.shortfallXp} XP. A clean mission clear now will pull this pack back onto its current target.`,
+      packId: inactivityNotification.packId,
+      ctaLabel: inactivityNotification.ctaLabel,
+      ctaQuestId: inactivityNotification.nextQuestId,
+      ctaHref: inactivityNotification.ctaHref,
+    });
+  }
+
+  return notifications.slice(0, 5);
 }
 
 async function getUserCampaignPackJourneys({
@@ -1349,6 +1414,8 @@ async function getUserCampaignPackJourneys({
     const premiumNudge =
       user.tier === "free" && premiumTrackPressure && completedQuestCount >= Math.ceil(rows.length / 2)
         ? `${firstRow.pack_label ?? "This pack"} is moving into a premium-heavy phase. Monthly or Annual will increase XP yield and unlock stronger follow-on missions.`
+        : user.tier === "monthly" && premiumTrackPressure && completedQuestCount >= Math.ceil(rows.length / 2)
+          ? `${firstRow.pack_label ?? "This pack"} is now worth treating as an annual-scale mission. Annual sharpens the XP lift and direct reward upside at this stage.`
         : null;
     const weeklyGoalTarget = Math.max(dataUserWeeklyTarget(user.weeklyProgress.nextThreshold, user.weeklyProgress.currentThreshold) + Math.max(economySettings.campaignOverrides[experienceLane]?.weeklyTargetXpOffset ?? 0, 0), user.weeklyProgress.currentThreshold);
     const weeklyGoalShortfall = Math.max(weeklyGoalTarget - user.weeklyProgress.xp, 0);
@@ -1396,6 +1463,15 @@ async function getUserCampaignPackJourneys({
       (firstRow.template_kind ?? "mixed") as "bridge" | "feeder" | "mixed",
       experienceLane,
     );
+    const primaryCta = resolvePackPrimaryCta({
+      user,
+      userProgressState,
+      nextQuestId,
+      nextQuestActionable,
+      premiumNudge,
+      completedQuestCount,
+      totalQuestCount: rows.length,
+    });
 
     return {
       packId,
@@ -1413,15 +1489,8 @@ async function getUserCampaignPackJourneys({
       nextQuestId,
       nextQuestTitle,
       nextQuestActionable,
-      ctaLabel: nextQuestId ? (nextQuestActionable ? "Open next mission" : "View next mission") : "Review pack",
-      ctaHref:
-        !userProgressState.walletLinked
-          ? "/profile#wallet-link-panel"
-          : nextQuestId
-            ? nextQuestActionable
-              ? `#quest-action-${nextQuestId}`
-              : "#quest-board"
-            : "#quest-board",
+      ctaLabel: primaryCta.ctaLabel,
+      ctaHref: primaryCta.ctaHref,
       nextAction,
       sequenceReason,
       tierPhaseCopy,

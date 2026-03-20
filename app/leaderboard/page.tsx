@@ -18,6 +18,7 @@ export default async function LeaderboardPage() {
   const topEntry = data.leaderboard[0];
   const topReferralEntry = data.referralLeaderboard[0];
   const campaignPreset = data.economy.campaignPreset;
+  const activeMissionPack = data.campaignPacks[0] ?? null;
 
   return (
     <SiteShell eyebrow="Competitive pressure" currentUser={session?.user ?? null}>
@@ -91,6 +92,15 @@ export default async function LeaderboardPage() {
               Active lane {campaignPreset.source}, attribution {campaignPreset.attributionSource}, weekly shaping {campaignPreset.weeklyTargetOffset} XP, premium pressure {campaignPreset.premiumUpsellMultiplier.toFixed(2)}x, featured tracks {campaignPreset.featuredTracks.join(", ")}.
             </small>
           </div>
+          {activeMissionPack ? (
+            <div className="metric-card">
+              <span>Live mission carryover</span>
+              <strong>{activeMissionPack.label}</strong>
+              <small>
+                {activeMissionPack.leaderboardCallout} Next move: {activeMissionPack.ctaLabel.toLowerCase()}.
+              </small>
+            </div>
+          ) : null}
         </div>
       </section>
       <section className="grid">
@@ -226,6 +236,21 @@ export default async function LeaderboardPage() {
           <p className="form-note">
             Leaderboard pressure is only one layer. The stronger loop is weekly XP, referral quality, and xPortal-linked reward readiness, with tokens acting as configurable payout rails rather than the main progression currency.
           </p>
+          {activeMissionPack ? (
+            <article className="achievement-card achievement-card--progress">
+              <div>
+                <strong>{activeMissionPack.label} is your live competitive mission</strong>
+                <p>{activeMissionPack.tierPhaseCopy}</p>
+                <p>{activeMissionPack.leaderboardCallout}</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{activeMissionPack.completedQuestCount}/{activeMissionPack.totalQuestCount} complete</span>
+                <a className="text-link" href={activeMissionPack.ctaHref ?? "/dashboard#campaign-mission"}>
+                  {activeMissionPack.ctaLabel}
+                </a>
+              </div>
+            </article>
+          ) : null}
         </section>
       </section>
       <LeaderboardSection data={data} />
