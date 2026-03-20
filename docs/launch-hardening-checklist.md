@@ -2,6 +2,11 @@
 
 Use this checklist before treating the current app as a real production launch candidate.
 
+Supporting references:
+
+- [`docs/production-env-matrix.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/production-env-matrix.md)
+- [`docs/scheduler-ownership-matrix.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/scheduler-ownership-matrix.md)
+
 ## 1. Environment
 
 - [ ] `APP_URL` is set to the final production `https://` domain.

@@ -16,6 +16,8 @@ const releaseProcedureDoc = readFileSync(resolve(rootDir, "docs/release-procedur
 const launchHardeningChecklistDoc = readFileSync(resolve(rootDir, "docs/launch-hardening-checklist.md"), "utf8");
 const launchStatusDoc = readFileSync(resolve(rootDir, "docs/launch-status.md"), "utf8");
 const productionSmokeTestRunbookDoc = readFileSync(resolve(rootDir, "docs/production-smoke-test-runbook.md"), "utf8");
+const productionEnvMatrixDoc = readFileSync(resolve(rootDir, "docs/production-env-matrix.md"), "utf8");
+const schedulerOwnershipMatrixDoc = readFileSync(resolve(rootDir, "docs/scheduler-ownership-matrix.md"), "utf8");
 
 test("hosted operations docs reference the supported ops scripts", () => {
   const requiredScripts = [
@@ -75,6 +77,12 @@ test("launch hardening checklist is referenced from deploy docs", () => {
   assert.match(hostedOperationsDoc, /production-smoke-test-runbook\.md/);
   assert.match(previewAndDeployDoc, /production-smoke-test-runbook\.md/);
   assert.match(releaseProcedureDoc, /production-smoke-test-runbook\.md/);
+  assert.match(hostedOperationsDoc, /production-env-matrix\.md/);
+  assert.match(previewAndDeployDoc, /production-env-matrix\.md/);
+  assert.match(releaseProcedureDoc, /production-env-matrix\.md/);
+  assert.match(hostedOperationsDoc, /scheduler-ownership-matrix\.md/);
+  assert.match(previewAndDeployDoc, /scheduler-ownership-matrix\.md/);
+  assert.match(releaseProcedureDoc, /scheduler-ownership-matrix\.md/);
 });
 
 test("launch hardening checklist includes current production readiness items", () => {
@@ -112,5 +120,29 @@ test("production smoke test runbook covers core launch paths", () => {
     "admin",
   ]) {
     assert.match(productionSmokeTestRunbookDoc.toLowerCase(), new RegExp(text.replace(/[-:.]/g, "\\$&")));
+  }
+});
+
+test("production env matrix defines scheduler ownership envs", () => {
+  for (const text of [
+    "LEADERBOARD_SNAPSHOT_OWNER",
+    "CAMPAIGN_PACK_REPORT_OWNER",
+    "PAYOUT_AUTOMATION_OWNER",
+    "CRON_SNAPSHOTS_ENABLED",
+    "CAMPAIGN_PACK_REPORT_OUTPUT_DIR",
+  ]) {
+    assert.match(productionEnvMatrixDoc, new RegExp(text.replace(/[-:.]/g, "\\$&")));
+  }
+});
+
+test("scheduler ownership matrix covers all scheduled responsibilities", () => {
+  for (const text of [
+    "leaderboard snapshots",
+    "campaign-pack reports",
+    "payout automation",
+    "hosted",
+    "external",
+  ]) {
+    assert.match(schedulerOwnershipMatrixDoc.toLowerCase(), new RegExp(text.replace(/[-:.]/g, "\\$&")));
   }
 });

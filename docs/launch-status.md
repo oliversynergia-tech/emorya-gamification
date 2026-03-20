@@ -35,6 +35,17 @@ Use this as the live handoff/status board while preparing production launch.
 - Campaign-pack reports: [ ] hosted scheduler [ ] external scheduler [ ] disabled intentionally
 - Payout automation: [ ] hosted scheduler [ ] external scheduler [ ] manual/review-only mode
 
+## Launch Owner And Decision Log
+
+- Launch owner: [ ] assigned
+- Final go/no-go approver: [ ] assigned
+- Last checklist review date: [ ] recorded
+- Last smoke-test run date: [ ] recorded
+- Notes:
+  - [ ] blocker decision recorded for `APP_URL`
+  - [ ] blocker decision recorded for snapshot ownership
+  - [ ] blocker decision recorded for payout automation ownership
+
 ## Go / No-Go
 
 - [ ] release gate passes in the target environment
@@ -46,4 +57,6 @@ Use this as the live handoff/status board while preparing production launch.
 
 - [`docs/launch-hardening-checklist.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/launch-hardening-checklist.md)
 - [`docs/production-smoke-test-runbook.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/production-smoke-test-runbook.md)
+- [`docs/production-env-matrix.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/production-env-matrix.md)
+- [`docs/scheduler-ownership-matrix.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/scheduler-ownership-matrix.md)
 - [`docs/release-procedure.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/release-procedure.md)
