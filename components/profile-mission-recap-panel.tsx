@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { MissionLink } from "@/components/mission-link";
 import type { DashboardCampaignPack, DashboardCampaignPackHistory } from "@/lib/types";
@@ -22,7 +22,27 @@ export function ProfileMissionRecapPanel({
   activePacks: DashboardCampaignPack[];
   packHistory: DashboardCampaignPackHistory[];
 }) {
-  const [view, setView] = useState<MissionRecapView>("active");
+  const [view, setView] = useState<MissionRecapView>(() => {
+    if (typeof window === "undefined") {
+      return "active";
+    }
+    const stored = window.localStorage.getItem("emorya-dashboard-mission-view");
+    if (stored === "completed") {
+      return "completed";
+    }
+    if (stored === "all") {
+      return "active";
+    }
+    const recapStored = window.localStorage.getItem("emorya-profile-mission-view");
+    return recapStored === "completed" || recapStored === "reward" ? recapStored : "active";
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem("emorya-profile-mission-view", view);
+  }, [view]);
 
   const filtered = useMemo(() => {
     if (view === "completed") {
