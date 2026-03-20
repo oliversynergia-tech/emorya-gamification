@@ -105,6 +105,30 @@ function getPackControlChangeSummary(
     .join(" | ");
 }
 
+function getOperatorOutcomeMixSummary(entries: PackAnalyticsItem[]) {
+  return [
+    `${entries.filter((entry) => entry.operatorOutcome.trend.completionDelta > 0).length} improving`,
+    `${entries.filter((entry) => entry.operatorOutcome.trend.completionDelta === 0).length} steady`,
+    `${entries.filter((entry) => entry.operatorOutcome.trend.completionDelta < 0).length} slipping`,
+  ].join(" · ");
+}
+
+function getZeroCompletionRiskMixSummary(entries: PackAnalyticsItem[]) {
+  return [
+    `${entries.filter((entry) => (entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0) === 0).length} at risk`,
+    `${entries.filter((entry) => {
+      const latest = entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0;
+      const previous = entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0;
+      return latest === 0 && previous > 0;
+    }).length} rising`,
+    `${entries.filter((entry) => {
+      const latest = entry.weeklyTrend[entry.weeklyTrend.length - 1]?.completionCount ?? 0;
+      const previous = entry.weeklyTrend[entry.weeklyTrend.length - 2]?.completionCount ?? 0;
+      return latest > 0 && previous === 0;
+    }).length} easing`,
+  ].join(" · ");
+}
+
 function exportPackAnalytics(
   entries: PackAnalyticsItem[],
   filters: {
@@ -343,6 +367,8 @@ function exportOperatorOutcomes(
     [`source_filter`, JSON.stringify(getSourceFilterLabel(filters.source))].join(","),
     [`status_filter`, JSON.stringify(getStatusFilterLabel(filters.status))].join(","),
     [`kind_filter`, JSON.stringify(getKindFilterLabel(filters.kind))].join(","),
+    [`operator_outcome_mix`, JSON.stringify(getOperatorOutcomeMixSummary(entries))].join(","),
+    [`zero_completion_risk_mix`, JSON.stringify(getZeroCompletionRiskMixSummary(entries))].join(","),
     "",
     [
       "pack_id",
@@ -927,6 +953,25 @@ export function CampaignPackAnalyticsPanel({
         .join(" · "),
     [filteredPacks],
   );
+  const filteredBenchmarkKindMovementSummary = useMemo(
+    () =>
+      (["bridge", "feeder", "mixed"] as const)
+        .map((kind) => {
+          const kindEntries = filteredPacks.filter((pack) => getPackKind(pack) === kind);
+          if (kindEntries.length === 0) {
+            return null;
+          }
+          const onTrackCount = kindEntries.filter((pack) => pack.benchmark.status === "on_track").length;
+          const averageCompletionDelta =
+            kindEntries.reduce((sum, pack) => sum + pack.operatorOutcome.trend.completionDelta, 0) / kindEntries.length;
+          return `${kind}: ${onTrackCount}/${kindEntries.length} on track · ${
+            averageCompletionDelta >= 0 ? "+" : ""
+          }${averageCompletionDelta.toFixed(1)} completion momentum`;
+        })
+        .filter((entry): entry is string => Boolean(entry))
+        .join(" | "),
+    [filteredPacks],
+  );
   const filteredOperatorOutcomeMixSummary = useMemo(
     () =>
       [
@@ -1273,6 +1318,7 @@ export function CampaignPackAnalyticsPanel({
             <div className="achievement-card__side">
               <span>{filteredBenchmarkKindSummary}</span>
               {filteredBenchmarkKindTrendSummary ? <span>{filteredBenchmarkKindTrendSummary}</span> : null}
+              {filteredBenchmarkKindMovementSummary ? <span>{filteredBenchmarkKindMovementSummary}</span> : null}
             </div>
           </article>
         </div>

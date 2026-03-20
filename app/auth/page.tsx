@@ -52,7 +52,7 @@ export default async function AuthPage() {
             <a className="button button--primary" href="#auth-panel">
               Open auth form
             </a>
-            <a className="button button--secondary" href="/dashboard">
+            <a className="button button--secondary" href="/dashboard#campaign-mission">
               See dashboard
             </a>
           </div>
