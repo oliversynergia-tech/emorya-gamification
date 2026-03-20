@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
-import type { Quest, QuestProgressUpdate } from "@/lib/types";
+import type { DashboardData, Quest, QuestProgressUpdate } from "@/lib/types";
 
 type SubmissionState = Record<string, string>;
 
@@ -12,12 +12,14 @@ export function QuestActionsPanel({
   isAuthenticated,
   walletAddresses = [],
   highlightedQuestId = null,
+  activeCampaignPack = null,
   onQuestResult,
 }: {
   quests: Quest[];
   isAuthenticated: boolean;
   walletAddresses?: string[];
   highlightedQuestId?: string | null;
+  activeCampaignPack?: DashboardData["campaignPacks"][number] | null;
   onQuestResult?: (result: {
     questId: string;
     outcome: "approved" | "pending" | "rejected";
@@ -336,6 +338,16 @@ export function QuestActionsPanel({
           <small className="form-note">
             Total credited for this quest: {progressUpdate.xpAwarded} XP.
           </small>
+          {activeCampaignPack ? (
+            <>
+              <small className="form-note">
+                {activeCampaignPack.label}: {activeCampaignPack.milestone.label}. {activeCampaignPack.sequenceReason}
+              </small>
+              {activeCampaignPack.premiumNudge ? (
+                <small className="form-note">{activeCampaignPack.premiumNudge}</small>
+              ) : null}
+            </>
+          ) : null}
           {progressUpdate.unlockedAchievements?.length ? (
             <small className="form-note">
               Unlocked: {progressUpdate.unlockedAchievements.join(", ")}

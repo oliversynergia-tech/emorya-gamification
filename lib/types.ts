@@ -402,8 +402,10 @@ export type DashboardData = {
     nextQuestActionable: boolean;
     ctaLabel: string;
     nextAction: string;
+    sequenceReason: string;
     rewardFocus: string;
     benchmarkNote: string;
+    premiumNudge: string | null;
     milestone: {
       label: string;
       tone: "info" | "success" | "warning";
@@ -434,6 +436,10 @@ export type DashboardData = {
     activeLane: CampaignSource | "direct";
     kind: "bridge" | "feeder" | "mixed";
     summary: string;
+    totalXpAwarded: number;
+    approvedQuestCount: number;
+    premiumQuestCount: number;
+    referralQuestCount: number;
   }>;
   quests: Quest[];
   achievements: Achievement[];

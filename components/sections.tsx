@@ -187,7 +187,15 @@ export function HeroSection({ data }: { data: DashboardData }) {
   );
 }
 
-export function DashboardSnapshot({ data }: { data: DashboardData }) {
+export function DashboardSnapshot({
+  data,
+  missionView = "active",
+  onMissionViewChange,
+}: {
+  data: DashboardData;
+  missionView?: "active" | "completed" | "all";
+  onMissionViewChange?: (view: "active" | "completed" | "all") => void;
+}) {
   const progress = getLevelProgress(data.user.totalXp);
   const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
   const laneVisualProfile = getCampaignLaneVisualProfile(
@@ -347,6 +355,17 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
               </div>
               <span className="badge badge--pink">{data.campaignPacks.length} active</span>
             </div>
+            <div className="review-actions">
+              <button className={`button ${missionView === "active" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("active")}>
+                Active packs
+              </button>
+              <button className={`button ${missionView === "completed" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("completed")}>
+                Completed packs
+              </button>
+              <button className={`button ${missionView === "all" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("all")}>
+                All mission views
+              </button>
+            </div>
             <div className="achievement-list">
               {data.campaignPacks.map((pack) => (
                 <article key={pack.packId} className="achievement-card">
@@ -405,10 +424,12 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                             style={{ width: `${pack.totalQuestCount > 0 ? (pack.completedQuestCount / pack.totalQuestCount) * 100 : 0}%` }}
                           />
                         </div>
-                      </div>
+                    </div>
                     </div>
                     <p className="form-note">{pack.nextAction}</p>
+                    <p className="form-note">{pack.sequenceReason}</p>
                     <p className="form-note">{pack.benchmarkNote}</p>
+                    {pack.premiumNudge ? <p className="form-note">{pack.premiumNudge}</p> : null}
                     <div className="hero__actions">
                       <a
                         className="button button--secondary"
@@ -500,6 +521,19 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
               </div>
               <span className="badge badge--pink">{data.campaignPackHistory.length} archived</span>
             </div>
+            {data.campaignPacks.length === 0 ? (
+              <div className="review-actions">
+                <button className={`button ${missionView === "active" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("active")}>
+                  Active packs
+                </button>
+                <button className={`button ${missionView === "completed" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("completed")}>
+                  Completed packs
+                </button>
+                <button className={`button ${missionView === "all" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("all")}>
+                  All mission views
+                </button>
+              </div>
+            ) : null}
             <div className="achievement-list">
               {data.campaignPackHistory.map((pack) => (
                 <article key={`history-${pack.packId}`} className="achievement-card">
@@ -514,6 +548,9 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
                   </div>
                   <div className="achievement-card__side">
                     <span>{pack.totalQuestCount} missions</span>
+                    <span>{pack.totalXpAwarded} XP</span>
+                    <span>{pack.referralQuestCount} referral quests</span>
+                    <span>{pack.premiumQuestCount} premium quests</span>
                     <span>{pack.completedAt ? new Date(pack.completedAt).toLocaleDateString() : "Completed"}</span>
                   </div>
                 </article>
@@ -859,6 +896,7 @@ export function DashboardSnapshot({ data }: { data: DashboardData }) {
 export function PremiumFunnelSection({ data }: { data: DashboardData }) {
   const premiumOffer = getCampaignPremiumOffer(data.economy.campaignPreset.source);
   const campaignPreset = data.economy.campaignPreset;
+  const premiumRelevantPacks = data.campaignPacks.filter((pack) => pack.premiumNudge);
   const premiumJourney = getCampaignPremiumJourney(campaignPreset.source, {
     featuredTracks: campaignPreset.featuredTracks,
     premiumUpsellMultiplier: campaignPreset.premiumUpsellMultiplier,
@@ -920,6 +958,15 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
               </div>
             </article>
           ) : null}
+          {premiumRelevantPacks.map((pack) => (
+            <article key={`premium-pack-${pack.packId}`} className="achievement-card achievement-card--unlocked">
+              <div>
+                <strong>{pack.label} premium phase</strong>
+                <p>{pack.premiumNudge}</p>
+              </div>
+              <span className="badge badge--pink">{pack.kind === "feeder" ? "Bridge upsell" : "Pack upsell"}</span>
+            </article>
+          ))}
           <article className="achievement-card achievement-card--unlocked">
             <div>
               <strong>Recommended premium sequence</strong>

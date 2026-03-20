@@ -238,6 +238,9 @@ type CampaignPackHistoryRow = QueryResultRow & {
   template_kind: "bridge" | "feeder" | "mixed" | null;
   quest_count: string;
   approved_count: string;
+  total_xp_awarded: string;
+  premium_quest_count: string;
+  referral_quest_count: string;
   completed_at: string | null;
 };
 
@@ -1102,15 +1105,26 @@ async function getUserCampaignPackJourneys({
     }
 
     let nextAction = `Complete ${nextQuestTitle ?? "the next campaign quest"} to keep your pack momentum moving.`;
+    let sequenceReason = "The next mission is simply the first incomplete step in this pack.";
     if (!userProgressState.walletLinked) {
       nextAction = "Connect xPortal to move this campaign path into the full reward and payout flow.";
+      sequenceReason = "Wallet linking is the gating step that turns this pack from campaign traffic into reward-ready progression.";
     } else if (!userProgressState.starterPathComplete) {
       nextAction = "Finish your Starter Path so this campaign interest becomes an Emorya-native habit loop.";
+      sequenceReason = "Starter Path completion comes first because it stabilizes the account before the heavier-value steps matter.";
     } else if (!user.rewardEligibility.eligible) {
       nextAction = `Stay on the progression path: ${user.rewardEligibility.nextRequirement ?? "keep building XP and trust"}.`;
+      sequenceReason = "Reward eligibility is the current bottleneck, so the pack is biasing toward trust and repeat activity.";
     } else if (openQuestCount === 0 && inProgressQuestCount === 0) {
       nextAction = "This pack is complete. Keep weekly XP and referrals active so the reward rail stays valuable.";
+      sequenceReason = "There are no remaining quests in this pack, so the next value comes from the wider weekly and referral loop.";
     }
+
+    const premiumTrackPressure = featuredTracks.includes("premium") || rows.some((row) => row.is_premium_preview);
+    const premiumNudge =
+      user.tier === "free" && premiumTrackPressure && completedQuestCount >= Math.ceil(rows.length / 2)
+        ? `${firstRow.pack_label ?? "This pack"} is moving into a premium-heavy phase. Monthly or Annual will increase XP yield and unlock stronger follow-on missions.`
+        : null;
 
     const rewardFocus =
       firstRow.template_kind === "feeder"
@@ -1139,8 +1153,10 @@ async function getUserCampaignPackJourneys({
       nextQuestActionable,
       ctaLabel: nextQuestId ? (nextQuestActionable ? "Open next mission" : "View next mission") : "Review pack",
       nextAction,
+      sequenceReason,
       rewardFocus,
       benchmarkNote: `This lane is benchmarked toward ${(benchmark.walletLinkRateTarget * 100).toFixed(0)}% wallet link, ${(benchmark.rewardEligibilityRateTarget * 100).toFixed(0)}% reward eligibility, and ${(benchmark.premiumConversionRateTarget * 100).toFixed(0)}% premium conversion.`,
+      premiumNudge,
       milestone,
       questStatuses,
       sortScore:
@@ -1174,8 +1190,10 @@ async function getUserCampaignPackJourneys({
       nextQuestActionable: pack.nextQuestActionable,
       ctaLabel: pack.ctaLabel,
       nextAction: pack.nextAction,
+      sequenceReason: pack.sequenceReason,
       rewardFocus: pack.rewardFocus,
       benchmarkNote: pack.benchmarkNote,
+      premiumNudge: pack.premiumNudge,
       milestone: pack.milestone,
       questStatuses: pack.questStatuses,
     }));
@@ -1234,6 +1252,9 @@ async function getUserCampaignPackJourneys({
             q.metadata->>'campaignTemplateKind' AS template_kind,
             COUNT(q.id)::text AS quest_count,
             COUNT(*) FILTER (WHERE qc.status = 'approved')::text AS approved_count,
+            COALESCE(SUM(qc.awarded_xp), 0)::text AS total_xp_awarded,
+            COUNT(*) FILTER (WHERE q.is_premium_preview = TRUE AND qc.status = 'approved')::text AS premium_quest_count,
+            COUNT(*) FILTER (WHERE q.category = 'referral' AND qc.status = 'approved')::text AS referral_quest_count,
             MAX(qc.completed_at) AS completed_at
      FROM quest_definitions q
      LEFT JOIN LATERAL (
@@ -1270,6 +1291,10 @@ async function getUserCampaignPackJourneys({
       row.template_kind === "feeder"
         ? `Completed as a feeder pack into ${(row.experience_lane ?? "direct").toString()}.`
         : `Completed across ${Number(row.quest_count ?? 0)} mission${Number(row.quest_count ?? 0) === 1 ? "" : "s"}.`,
+    totalXpAwarded: Number(row.total_xp_awarded ?? 0),
+    approvedQuestCount: Number(row.approved_count ?? 0),
+    premiumQuestCount: Number(row.premium_quest_count ?? 0),
+    referralQuestCount: Number(row.referral_quest_count ?? 0),
   }));
 
   return {

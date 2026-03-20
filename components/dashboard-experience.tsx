@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { DashboardData, Quest, QuestProgressUpdate, QuestStatus } from "@/lib/types";
 import { DashboardSnapshot, PremiumFunnelSection, QuestBoardSection } from "@/components/sections";
 import { QuestActionsPanel } from "@/components/quest-actions-panel";
+
+type MissionView = "active" | "completed" | "all";
 
 function getQuestStatusFromOutcome(outcome: "approved" | "pending" | "rejected"): QuestStatus {
   switch (outcome) {
@@ -143,6 +145,10 @@ function updateCampaignPackHistory(
         pack.kind === "feeder"
           ? `Completed as a feeder pack into ${pack.activeLane}.`
           : `Completed across ${pack.totalQuestCount} mission${pack.totalQuestCount === 1 ? "" : "s"}.`,
+      totalXpAwarded: 0,
+      approvedQuestCount: pack.completedQuestCount,
+      premiumQuestCount: 0,
+      referralQuestCount: 0,
     });
   }
 
@@ -159,7 +165,37 @@ export function DashboardExperience({
   walletAddresses?: string[];
 }) {
   const [data, setData] = useState(initialData);
+  const [missionView, setMissionView] = useState<MissionView>("active");
   const highlightedQuestId = data.campaignPacks.find((pack) => pack.nextQuestActionable && pack.nextQuestId)?.nextQuestId ?? null;
+  const filteredData = useMemo<DashboardData>(() => {
+    const activePackIds = new Set(data.campaignPacks.map((pack) => pack.packId));
+    const completedPackIds = new Set(data.campaignPackHistory.map((pack) => pack.packId));
+
+    if (missionView === "active") {
+      return {
+        ...data,
+        quests:
+          activePackIds.size > 0
+            ? data.quests.filter((quest) => !quest.campaignPackId || activePackIds.has(quest.campaignPackId))
+            : data.quests,
+        campaignPackHistory: [],
+      };
+    }
+
+    if (missionView === "completed") {
+      return {
+        ...data,
+        quests:
+          completedPackIds.size > 0
+            ? data.quests.filter((quest) => quest.campaignPackId && completedPackIds.has(quest.campaignPackId))
+            : data.quests,
+        campaignPacks: [],
+        campaignNotifications: [],
+      };
+    }
+
+    return data;
+  }, [data, missionView]);
 
   function handleQuestResult({
     questId,
@@ -212,15 +248,17 @@ export function DashboardExperience({
   return (
     <>
       <DashboardSnapshot data={data} />
-      <QuestBoardSection data={data} />
+      <DashboardSnapshot data={filteredData} missionView={missionView} onMissionViewChange={setMissionView} />
+      <QuestBoardSection data={filteredData} />
       <QuestActionsPanel
-        quests={data.quests}
+        quests={filteredData.quests}
         isAuthenticated={isAuthenticated}
         walletAddresses={walletAddresses}
         highlightedQuestId={highlightedQuestId}
         onQuestResult={handleQuestResult}
+        activeCampaignPack={data.campaignPacks[0] ?? null}
       />
-      <PremiumFunnelSection data={data} />
+      <PremiumFunnelSection data={filteredData} />
     </>
   );
 }
