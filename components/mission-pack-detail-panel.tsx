@@ -92,7 +92,11 @@ export function MissionPackDetailPanel({
                       <p className="form-note">
                         {quest.track} track. {quest.rewardLabel}
                       </p>
+                      <p className="form-note">
+                        {quest.cadence} cadence. {quest.verificationType} verification.
+                      </p>
                       <p className="form-note">{quest.nextHint}</p>
+                      <p className="form-note">{quest.rewardTimingLabel}</p>
                     </div>
                     <div className="achievement-card__side">
                       <span>{quest.status.replace("-", " ")}</span>

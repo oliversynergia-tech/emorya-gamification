@@ -225,6 +225,7 @@ type CampaignPackJourneyRow = QueryResultRow & {
   category: Quest["category"];
   verification_type: VerificationType;
   is_premium_preview: boolean;
+  recurrence: "one-time" | "daily" | "weekly";
   metadata: Record<string, unknown>;
   completion_status: "pending" | "approved" | "rejected" | null;
 };
@@ -248,6 +249,16 @@ type MissionInboxStateRow = QueryResultRow & {
   notification_id: string;
   notification_status: "handled" | "snoozed";
   notification_until: string | null;
+};
+
+type MissionInboxHistoryRow = QueryResultRow & {
+  id: string;
+  display_name: string;
+  pack_id: string | null;
+  notification_status: "handled" | "snoozed" | null;
+  notification_until: string | null;
+  detail: string | null;
+  created_at: string;
 };
 
 type AchievementRow = QueryResultRow & {
@@ -1558,6 +1569,7 @@ async function getUserCampaignPackJourneys({
             q.category,
             q.verification_type,
             q.is_premium_preview,
+            q.recurrence,
             q.metadata,
             qc.status AS completion_status
      FROM quest_definitions q
@@ -1664,6 +1676,8 @@ async function getUserCampaignPackJourneys({
         questId: row.quest_id,
         title: row.quest_title,
         track,
+        cadence: row.recurrence,
+        verificationType: row.verification_type,
         status,
         actionable: ["quiz", "manual-review", "link-visit", "wallet-check"].includes(row.verification_type),
         nextHint:
@@ -1682,6 +1696,12 @@ async function getUserCampaignPackJourneys({
             : row.is_premium_preview
               ? "Premium progression step"
               : "XP-first progression step",
+        rewardTimingLabel:
+          directReward && typeof directReward.amount === "number"
+            ? "Direct reward follows the pack payout state once this mission path is approved."
+            : row.is_premium_preview
+              ? "This step influences the premium phase rather than immediate payout timing."
+              : "This step pays back mainly through XP progression timing.",
       };
     });
     const completedQuestCount = questStatuses.filter((quest) => quest.status === "completed").length;
@@ -2114,7 +2134,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends, campaignMissionSubmitAttempts, campaignMissionCtaByTier, campaignMissionApprovedByTier, campaignMissionApprovedByVariant] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends, campaignMissionSubmitAttempts, campaignMissionCtaByTier, campaignMissionApprovedByTier, campaignMissionApprovedByVariant, campaignMissionInboxHistory] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -2305,6 +2325,21 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         AND qc.user_id = clicks.user_id
         AND qc.status = 'approved'
        GROUP BY clicks.pack_id, clicks.cta_label, clicks.cta_variant`,
+    ),
+    runQuery<MissionInboxHistoryRow>(
+      `SELECT al.id::text AS id,
+              u.display_name,
+              al.metadata->>'packId' AS pack_id,
+              al.metadata->>'notificationStatus' AS notification_status,
+              NULLIF(al.metadata->>'notificationUntil', '') AS notification_until,
+              al.metadata->>'detail' AS detail,
+              al.created_at::text AS created_at
+       FROM activity_log al
+       INNER JOIN users u
+         ON u.id = al.user_id
+       WHERE al.action_type = 'campaign-mission-inbox-state'
+       ORDER BY al.created_at DESC
+       LIMIT 20`,
     ),
   ]);
 
@@ -2929,9 +2964,44 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         approvedCompletionCount: number;
         approvedUserCount: number;
         approvedUserRate: number;
+        laneBreakdown: Array<{
+          attributionSource: CampaignSource | "direct";
+          activeLane: CampaignSource | "direct";
+          uniqueUsers: number;
+        }>;
       }>;
     }
   >();
+  const missionCtaLaneMap = new Map<
+    string,
+    Array<{
+      attributionSource: CampaignSource | "direct";
+      activeLane: CampaignSource | "direct";
+      uniqueUsers: number;
+    }>
+  >();
+  for (const row of missionClickUsersResult.rows) {
+    if (!row.pack_id) {
+      continue;
+    }
+    const user = missionClickUserMap.get(row.user_id);
+    const attributionSource = (user?.attribution_source?.trim().toLowerCase() ?? "direct") as CampaignSource | "direct";
+    const normalizedSource = ["direct", "zealy", "galxe", "taskon"].includes(attributionSource) ? attributionSource : "direct";
+    const activeLane = resolveCampaignExperienceSource(economySettings, normalizedSource);
+    const key = `${row.pack_id}::${row.cta_label ?? "unknown"}::${row.cta_variant ?? "unknown"}`;
+    const current = missionCtaLaneMap.get(key) ?? [];
+    const existing = current.find((entry) => entry.attributionSource === normalizedSource && entry.activeLane === activeLane);
+    if (existing) {
+      existing.uniqueUsers += 1;
+    } else {
+      current.push({
+        attributionSource: normalizedSource,
+        activeLane,
+        uniqueUsers: 1,
+      });
+    }
+    missionCtaLaneMap.set(key, current);
+  }
   for (const entry of campaignMissionCtaAnalytics.rows) {
     if (!entry.pack_id) {
       continue;
@@ -2972,6 +3042,8 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       approvedCompletionCount: approvedSummary?.approvedCompletionCount ?? 0,
       approvedUserCount: approvedSummary?.approvedUserCount ?? 0,
       approvedUserRate: uniqueUserCount > 0 ? (approvedSummary?.approvedUserCount ?? 0) / uniqueUserCount : 0,
+      laneBreakdown:
+        missionCtaLaneMap.get(`${entry.pack_id}::${entry.cta_label ?? "unknown"}::${entry.cta_variant ?? "unknown"}`) ?? [],
     });
     missionCtaSummaryMap.set(entry.pack_id, current);
   }
@@ -3220,6 +3292,18 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
     previousCount: entry.previousCount,
     delta: entry.currentCount - entry.previousCount,
   }));
+  const missionInboxHistory: AdminOverviewData["campaignOperations"]["missionInboxHistory"] = campaignMissionInboxHistory.rows
+    .filter((row) => row.pack_id && row.notification_status)
+    .map((row) => ({
+      id: row.id,
+      displayName: row.display_name,
+      packId: row.pack_id ?? "unknown",
+      packLabel: packAnalyticsLookup.get(row.pack_id ?? "")?.label ?? "Unknown pack",
+      status: row.notification_status as "handled" | "snoozed",
+      until: row.notification_until,
+      detail: row.detail ?? "Updated mission inbox state.",
+      createdAt: row.created_at,
+    }));
 
   return {
     stats: [
@@ -3254,6 +3338,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       missionCtaByTier,
       returnWindowSummary,
       returnWindowTrend,
+      missionInboxHistory,
       packAnalytics,
       partnerReporting,
       alerts: visibleCampaignPackAlerts,

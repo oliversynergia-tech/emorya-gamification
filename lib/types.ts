@@ -442,10 +442,13 @@ export type DashboardData = {
       questId: string;
       title: string;
       track: QuestTrack;
+      cadence: "one-time" | "daily" | "weekly";
+      verificationType: VerificationType;
       status: "available" | "in-progress" | "completed" | "rejected";
       actionable: boolean;
       nextHint: string;
       rewardLabel: string;
+      rewardTimingLabel: string;
     }>;
   }>;
   campaignNotifications: Array<{
@@ -783,6 +786,16 @@ export type AdminOverviewData = {
       previousCount: number;
       delta: number;
     }>;
+    missionInboxHistory: Array<{
+      id: string;
+      displayName: string;
+      packId: string;
+      packLabel: string;
+      status: "handled" | "snoozed";
+      until: string | null;
+      detail: string;
+      createdAt: string;
+    }>;
     packAnalytics: Array<{
       packId: string;
       label: string;
@@ -864,6 +877,11 @@ export type AdminOverviewData = {
           approvedCompletionCount: number;
           approvedUserCount: number;
           approvedUserRate: number;
+          laneBreakdown: Array<{
+            attributionSource: CampaignSource | "direct";
+            activeLane: CampaignSource | "direct";
+            uniqueUsers: number;
+          }>;
         }>;
       };
       createdAt: string;

@@ -91,6 +91,7 @@ function getCampaignSourceLabel(source: "direct" | "zealy" | "galxe" | "taskon")
 
 function getDashboardPriorityAction(data: DashboardData) {
   const walletGatePack = data.campaignPacks.find((pack) => pack.ctaVariant === "wallet_gate");
+  const nextRequirement = data.user.rewardEligibility.nextRequirement?.toLowerCase() ?? "";
   if (walletGatePack) {
     return {
       eyebrow: "Top action",
@@ -130,7 +131,13 @@ function getDashboardPriorityAction(data: DashboardData) {
   if (returnPack) {
     const blockedStateLabel =
       returnPack.returnWindow === "wait_for_unlock"
-        ? "Blocked by eligibility and trust"
+        ? nextRequirement.includes("level 5")
+          ? "Blocked by level"
+          : nextRequirement.includes("trust")
+            ? "Blocked by trust"
+            : nextRequirement.includes("starter path")
+              ? "Blocked by starter path"
+              : "Blocked by eligibility"
         : returnPack.returnWindow === "this_week"
           ? "Blocked by weekly pace"
           : "Ready to resume";
@@ -2127,6 +2134,63 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
                 {entry.delta}
               </strong>
             </div>
+          ))}
+        </div>
+        <div className="achievement-list">
+          {data.campaignOperations.returnWindowTrend.map((entry) => {
+            const peak = Math.max(
+              ...data.campaignOperations.returnWindowTrend.map((item) => Math.max(item.currentCount, item.previousCount)),
+              1,
+            );
+            return (
+              <article key={`return-window-chart-${entry.window}`} className="achievement-card">
+                <div>
+                  <strong>
+                    {entry.window === "today"
+                      ? "Return today"
+                      : entry.window === "this_week"
+                        ? "Return this week"
+                        : "Wait for unlock"}
+                  </strong>
+                  <p>
+                    Current {entry.currentCount} vs previous {entry.previousCount}. Delta {entry.delta >= 0 ? "+" : ""}
+                    {entry.delta}.
+                  </p>
+                  <div className="reward-state-bars">
+                    <div>
+                      <span>Current</span>
+                      <div className="reward-state-bars__track">
+                        <div className="reward-state-bars__fill" style={{ width: `${(entry.currentCount / peak) * 100}%` }} />
+                      </div>
+                    </div>
+                    <div>
+                      <span>Previous</span>
+                      <div className="reward-state-bars__track">
+                        <div className="reward-state-bars__fill" style={{ width: `${(entry.previousCount / peak) * 100}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        <div className="achievement-list">
+          {data.campaignOperations.missionInboxHistory.map((entry) => (
+            <article key={entry.id} className="achievement-card">
+              <div>
+                <strong>{entry.displayName}</strong>
+                <p>
+                  {entry.status === "handled" ? "Handled" : "Snoozed"} a mission reminder for {entry.packLabel}.
+                </p>
+                <p className="form-note">{entry.detail}</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{entry.status}</span>
+                <span>{entry.until ? `until ${new Date(entry.until).toLocaleString()}` : "no expiry"}</span>
+                <span>{new Date(entry.createdAt).toLocaleString()}</span>
+              </div>
+            </article>
           ))}
         </div>
         <CampaignPackAuditPanel entries={data.campaignOperations.audit} />

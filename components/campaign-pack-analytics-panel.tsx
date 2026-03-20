@@ -565,6 +565,13 @@ export function CampaignPackAnalyticsPanel({
                         <p className="form-note">
                           {entry.approvedCompletionCount} approved completions from {entry.approvedUserCount} users after this CTA path.
                         </p>
+                        <p className="form-note">
+                          {entry.laneBreakdown.length > 0
+                            ? entry.laneBreakdown
+                              .map((lane) => `${lane.attributionSource} -> ${lane.activeLane}: ${lane.uniqueUsers}`)
+                              .join(", ")
+                            : "No lane-specific CTA mix recorded yet."}
+                        </p>
                       </div>
                       <div className="achievement-card__side">
                         <span>{entry.clickCount} clicks</span>
