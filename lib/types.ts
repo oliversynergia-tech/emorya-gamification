@@ -1063,6 +1063,7 @@ export type AdminOverviewData = {
       partnerSummaryDetail: string;
       operatorOutcomeTitle: string;
       operatorOutcomeDetail: string;
+      lifecyclePhaseSummary: string;
       recommendationHistorySnapshot: string[];
     }>;
     alerts: Array<{

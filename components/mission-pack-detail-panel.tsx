@@ -126,6 +126,9 @@ export function MissionPackDetailPanel({
                       <p>{quest.dependencyProgressLabel}</p>
                       <p className="form-note">{quest.nextClearLabel}</p>
                     </div>
+                    <div className="achievement-card__side">
+                      <span>{quest.stage}</span>
+                    </div>
                   </article>
                 ))}
                 {selectedActivePack.questStatuses.map((quest) => (

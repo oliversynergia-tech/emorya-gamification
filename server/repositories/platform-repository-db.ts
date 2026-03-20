@@ -3881,6 +3881,12 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         `${Math.round(entry.walletLinkRate * 100)}% wallet linked, ${Math.round(entry.rewardEligibilityRate * 100)}% reward eligible, ${Math.round(entry.premiumConversionRate * 100)}% premium conversion, and ${Math.round(entry.likelyPackCausedPremiumConversionRate * 100)}% likely pack-caused premium within 14 days.`,
       operatorOutcomeTitle: entry.operatorOutcome.title,
       operatorOutcomeDetail: entry.operatorOutcome.detail,
+      lifecyclePhaseSummary:
+        entry.lifecycleState === "draft"
+          ? "Still shaping in draft. Treat current outcome signals as directional rather than final."
+          : entry.lifecycleState === "ready"
+            ? "Ready-state changes are now visible. This is the best phase for validating CTA and reminder choices before full live pressure."
+            : "Live-state performance is now the main operator read. Trend movement here is the strongest signal for intervention or scaling.",
       recommendationHistorySnapshot: entry.missionCtaSummary.recommendationHistory
         .slice(0, 2)
         .map((historyEntry) => `${historyEntry.action.replaceAll("_", " ")}: ${historyEntry.detail}`),

@@ -162,6 +162,7 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
       "partner_summary_detail",
       "operator_outcome_title",
       "operator_outcome_detail",
+      "lifecycle_phase_summary",
       "recommendation_history_snapshot",
     ].join(","),
     ...entries.map((entry) =>
@@ -183,6 +184,7 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
         JSON.stringify(entry.partnerSummaryDetail),
         JSON.stringify(entry.operatorOutcomeTitle),
         JSON.stringify(entry.operatorOutcomeDetail),
+        JSON.stringify(entry.lifecyclePhaseSummary),
         JSON.stringify(entry.recommendationHistorySnapshot),
       ].join(","),
     ),
@@ -193,6 +195,54 @@ function exportPartnerReporting(entries: PartnerReportItem[]) {
   const link = document.createElement("a");
   link.href = url;
   link.download = "emorya-partner-pack-report.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportReminderComparison(entries: PackAnalyticsItem[]) {
+  const lines = [
+    [
+      "pack_id",
+      "label",
+      "lifecycle_state",
+      "kind",
+      "handled_rate",
+      "handled_count",
+      "snoozed_count",
+      "reminder_trend_delta",
+      "recommended_variant",
+      "operator_outcome_title",
+    ].join(","),
+    ...entries.map((entry) => {
+      const kind =
+        entry.bridgeCount > 0 && entry.feederCount === 0
+          ? "bridge"
+          : entry.feederCount > 0 && entry.bridgeCount === 0
+            ? "feeder"
+            : "mixed";
+
+      return [
+        entry.packId,
+        JSON.stringify(entry.label),
+        entry.lifecycleState,
+        kind,
+        entry.reminderEffectiveness.handledRate,
+        entry.reminderEffectiveness.handledCount,
+        entry.reminderEffectiveness.snoozedCount,
+        entry.reminderEffectiveness.trend.delta,
+        JSON.stringify(entry.missionCtaSummary.recommendedVariant ?? ""),
+        JSON.stringify(entry.operatorOutcome.title),
+      ].join(",");
+    }),
+  ].join("\n");
+
+  const blob = new Blob([lines], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "emorya-pack-reminder-comparison.csv";
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -212,6 +262,7 @@ function printPartnerReport(entries: PartnerReportItem[]) {
       <p style="margin:0 0 12px;color:#5e5035;">Sources: ${entry.sources.join(", ")}. Benchmark lane: ${entry.benchmarkLane}. Status: ${entry.benchmarkStatus}.</p>
       <p style="margin:0 0 12px;color:#5e5035;"><strong>${entry.partnerSummaryHeadline}</strong><br/>${entry.partnerSummaryDetail}</p>
       <p style="margin:0 0 12px;color:#5e5035;"><strong>${entry.operatorOutcomeTitle}</strong><br/>${entry.operatorOutcomeDetail}</p>
+      <p style="margin:0 0 12px;color:#5e5035;">${entry.lifecyclePhaseSummary}</p>
       ${entry.recommendationHistorySnapshot.length > 0 ? `<p style="margin:0 0 12px;color:#5e5035;">Recent operator shifts: ${entry.recommendationHistorySnapshot.join(" | ")}</p>` : ""}
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
         <div><strong>${entry.participantCount}</strong><div>Participants</div></div>
@@ -532,6 +583,9 @@ export function CampaignPackAnalyticsPanel({
         <button className="button button--secondary" type="button" onClick={() => exportPackAnalytics(filteredPacks)}>
           Export CSV
         </button>
+        <button className="button button--secondary" type="button" onClick={() => exportReminderComparison(filteredPacks)}>
+          Export reminder comparison
+        </button>
         <button className="button button--secondary" type="button" onClick={() => exportPartnerReporting(partnerReports)}>
           Export partner CSV
         </button>
@@ -804,6 +858,9 @@ export function CampaignPackAnalyticsPanel({
                 Partner-safe operator read: <strong>{partnerReports.find((entry) => entry.packId === pack.packId)?.operatorOutcomeTitle ?? "Outcome pending"}</strong>
                 {` `}
                 {partnerReports.find((entry) => entry.packId === pack.packId)?.operatorOutcomeDetail ?? ""}
+              </p>
+              <p className="form-note">
+                {partnerReports.find((entry) => entry.packId === pack.packId)?.lifecyclePhaseSummary ?? ""}
               </p>
               {partnerReports.find((entry) => entry.packId === pack.packId)?.recommendationHistorySnapshot.length ? (
                 <p className="form-note">

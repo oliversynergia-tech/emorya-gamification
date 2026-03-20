@@ -565,6 +565,13 @@ export function DashboardSnapshot({
             <p className="form-note">
               {priorityAction.secondaryMetricLabel}: {priorityAction.secondaryMetricValue}.
             </p>
+            <p className="form-note">
+              {priorityAction.stateCategory === "Momentum recovery"
+                ? "This is a short-term recovery action. The pack is still open, it just needs pace restored."
+                : priorityAction.stateCategory === "Soft block"
+                  ? "This is a lighter mission gate. One clean action should move the path forward."
+                  : "This is a harder progression gate. Clearing it changes what the mission can unlock next."}
+            </p>
             <p className="form-note">Best return window: {priorityAction.timing}.</p>
             <div className="hero__actions">
               <MissionLink
