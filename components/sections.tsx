@@ -16,6 +16,7 @@ import { CampaignMissionCtaAnalyticsPanel } from "@/components/campaign-mission-
 import { CampaignPackNotificationHistoryPanel } from "@/components/campaign-pack-notification-history-panel";
 import { MissionLink } from "@/components/mission-link";
 import { MissionEventHistoryPanel } from "@/components/mission-event-history-panel";
+import { MissionPackDetailPanel } from "@/components/mission-pack-detail-panel";
 import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
 import { ProfileMissionRecapPanel } from "@/components/profile-mission-recap-panel";
 import { SourceLaneReportPanel } from "@/components/source-lane-report-panel";
@@ -101,6 +102,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       packId: walletGatePack.packId,
       ctaVariant: walletGatePack.ctaVariant,
       packLabel: walletGatePack.label,
+      timing: "wait for unlock",
     };
   }
 
@@ -118,6 +120,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       packId: premiumPack.packId,
       ctaVariant: premiumPack.ctaVariant,
       packLabel: premiumPack.label,
+      timing: "this week",
     };
   }
 
@@ -133,6 +136,12 @@ function getDashboardPriorityAction(data: DashboardData) {
       packId: returnPack.packId,
       ctaVariant: returnPack.ctaVariant,
       packLabel: returnPack.label,
+      timing:
+        returnPack.returnWindow === "today"
+          ? "today"
+          : returnPack.returnWindow === "this_week"
+            ? "this week"
+            : "wait for unlock",
     };
   }
 
@@ -151,6 +160,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     packId: nextPack.packId,
     ctaVariant: nextPack.ctaVariant,
     packLabel: nextPack.label,
+    timing: "today",
   };
 }
 
@@ -429,6 +439,7 @@ export function DashboardSnapshot({
             </div>
             <p className="form-note">{priorityAction.detail}</p>
             <p className="form-note">{priorityAction.supporting}</p>
+            <p className="form-note">Best return window: {priorityAction.timing}.</p>
             <div className="hero__actions">
               <MissionLink
                 className="button button--primary"
@@ -539,6 +550,11 @@ export function DashboardSnapshot({
                     <p className="form-note">{pack.priorityReason}</p>
                     <p className="form-note">{pack.unlockPreview}</p>
                     {pack.returnAction ? <p className="form-note">{pack.returnAction}</p> : null}
+                    {pack.returnAction ? (
+                      <p className="form-note">
+                        Return window: {pack.returnWindow === "today" ? "today" : pack.returnWindow === "this_week" ? "this week" : "wait for next unlock"}.
+                      </p>
+                    ) : null}
                     <p className="form-note">{pack.leaderboardCallout}</p>
                     <p className="form-note">{pack.weeklyGoal.label}</p>
                     {pack.onboardingHint ? <p className="form-note">{pack.onboardingHint}</p> : null}
@@ -609,6 +625,12 @@ export function DashboardSnapshot({
           </div>
         ) : null}
         <CampaignMissionInboxPanel notifications={data.campaignNotifications} title="Live pack updates" eyebrow="Campaign inbox" />
+        <MissionPackDetailPanel
+          activePacks={data.campaignPacks}
+          packHistory={data.campaignPackHistory}
+          title="Mission route detail"
+          eyebrow="Campaign drill-in"
+        />
         {data.campaignPackHistory.length > 0 ? (
           <div className="panel panel--glass">
             <div className="panel__header">
@@ -1471,6 +1493,12 @@ export function ProfileSection({ data }: { data: DashboardData }) {
       </div>
       <ProfileMissionRecapPanel activePacks={data.campaignPacks} packHistory={data.campaignPackHistory} />
       <CampaignMissionInboxPanel notifications={data.campaignNotifications} title="Mission inbox" eyebrow="Profile mission inbox" />
+      <MissionPackDetailPanel
+        activePacks={data.campaignPacks}
+        packHistory={data.campaignPackHistory}
+        title="Mission detail"
+        eyebrow="Profile drill-in"
+      />
       <MissionEventHistoryPanel
         entries={data.missionEventHistory}
         activePacks={data.campaignPacks}
@@ -2057,7 +2085,10 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
           initialEntries={data.campaignOperations.notificationHistory}
           canManage={canManageCampaignPacks}
         />
-        <CampaignMissionCtaAnalyticsPanel entries={data.campaignOperations.missionCtaAnalytics} />
+        <CampaignMissionCtaAnalyticsPanel
+          entries={data.campaignOperations.missionCtaAnalytics}
+          tierEntries={data.campaignOperations.missionCtaByTier}
+        />
         <CampaignPackAuditPanel entries={data.campaignOperations.audit} />
         <CampaignPackAnalyticsPanel
           packs={data.campaignOperations.packAnalytics}

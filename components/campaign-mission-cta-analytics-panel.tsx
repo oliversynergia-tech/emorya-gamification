@@ -6,8 +6,10 @@ import type { AdminOverviewData } from "@/lib/types";
 
 export function CampaignMissionCtaAnalyticsPanel({
   entries,
+  tierEntries,
 }: {
   entries: AdminOverviewData["campaignOperations"]["missionCtaAnalytics"];
+  tierEntries: AdminOverviewData["campaignOperations"]["missionCtaByTier"];
 }) {
   const [laneFilter, setLaneFilter] = useState<"all" | AdminOverviewData["campaignOperations"]["missionCtaAnalytics"][number]["activeLane"]>("all");
   const [variantFilter, setVariantFilter] = useState("all");
@@ -53,6 +55,37 @@ export function CampaignMissionCtaAnalyticsPanel({
       clickDelta: currentClicks - previousClicks,
     };
   }, [filtered]);
+  const filteredTierEntries = useMemo(
+    () =>
+      tierEntries.filter((entry) => {
+        if (laneFilter !== "all" && entry.activeLane !== laneFilter) {
+          return false;
+        }
+
+        if (variantFilter !== "all" && entry.ctaVariant !== variantFilter) {
+          return false;
+        }
+
+        if (packSearch.trim()) {
+          const query = packSearch.trim().toLowerCase();
+          return entry.label.toLowerCase().includes(query) || entry.packId.toLowerCase().includes(query);
+        }
+
+        return true;
+      }),
+    [laneFilter, packSearch, tierEntries, variantFilter],
+  );
+  const tierSummary = useMemo(() => {
+    const summary = new Map<AdminOverviewData["campaignOperations"]["missionCtaByTier"][number]["subscriptionTier"], { clickCount: number; uniqueUserCount: number }>();
+    for (const entry of filteredTierEntries) {
+      const current = summary.get(entry.subscriptionTier) ?? { clickCount: 0, uniqueUserCount: 0 };
+      current.clickCount += entry.clickCount;
+      current.uniqueUserCount += entry.uniqueUserCount;
+      summary.set(entry.subscriptionTier, current);
+    }
+
+    return Array.from(summary.entries()).map(([tier, metrics]) => ({ tier, ...metrics }));
+  }, [filteredTierEntries]);
 
   function exportRows() {
     const lines = [
@@ -166,6 +199,22 @@ export function CampaignMissionCtaAnalyticsPanel({
           <strong>{(comparisonSummary.avgPremiumRate * 100).toFixed(0)}%</strong>
         </div>
       </div>
+      {tierSummary.length > 0 ? (
+        <div className="achievement-list">
+          {tierSummary.map((entry) => (
+            <article key={entry.tier} className="achievement-card achievement-card--progress">
+              <div>
+                <strong>{entry.tier}</strong>
+                <p>Mission CTA behavior for this subscription tier across the current filters.</p>
+              </div>
+              <div className="achievement-card__side">
+                <span>{entry.clickCount} clicks</span>
+                <span>{entry.uniqueUserCount} users</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
       <div className="achievement-list">
         {filtered.map((entry) => (
           <article key={`${entry.packId}-${entry.eventType}-${entry.ctaLabel}-${entry.ctaVariant}`} className="achievement-card">
@@ -198,6 +247,11 @@ export function CampaignMissionCtaAnalyticsPanel({
                 Correlation: {(entry.walletLinkRate * 100).toFixed(0)}% wallet-linked,{" "}
                 {(entry.rewardEligibilityRate * 100).toFixed(0)}% reward-ready,{" "}
                 {(entry.premiumConversionRate * 100).toFixed(0)}% premium among clickers.
+              </p>
+              <p className="form-note">
+                Submit-through: {entry.submitAttemptCount} submit attempts from {entry.submitAttemptUserCount} users.
+                {` `}
+                {(entry.submitAttemptRate * 100).toFixed(0)}% of CTA users reached a quest submit attempt.
               </p>
             </div>
             <div className="achievement-card__side">

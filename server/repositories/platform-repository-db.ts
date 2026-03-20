@@ -1742,9 +1742,23 @@ async function getUserCampaignPackJourneys({
       (firstRow.template_kind ?? "mixed") as "bridge" | "feeder" | "mixed",
       experienceLane,
     );
+    const returnWindow: DashboardData["campaignPacks"][number]["returnWindow"] =
+      !userProgressState.walletLinked || !user.rewardEligibility.eligible
+        ? "wait_for_unlock"
+        : weeklyGoalShortfall > Math.max(weeklyGoalTarget * 0.65, 140)
+          ? "today"
+          : weeklyGoalShortfall > 0
+            ? "this_week"
+            : "wait_for_unlock";
     const returnAction =
       user.rewardEligibility.eligible && weeklyGoalShortfall > Math.max(weeklyGoalTarget * 0.4, 80)
-        ? `You are still reward-eligible, but ${firstRow.pack_label ?? "this mission"} needs one strong return action now: ${nextQuestTitle ?? "clear the next mission"} and recover the weekly pace gap.`
+        ? `${
+            returnWindow === "today"
+              ? "Come back today"
+              : returnWindow === "this_week"
+                ? "Come back this week"
+                : "Wait for the next unlock"
+          }: ${firstRow.pack_label ?? "this mission"} needs ${nextQuestTitle ?? "the next mission"} to recover the current pace gap.`
         : null;
     const priorityReason = getPackPriorityReason({
       userProgressState,
@@ -1799,6 +1813,7 @@ async function getUserCampaignPackJourneys({
       priorityReason,
       unlockPreview,
       returnAction,
+      returnWindow,
       rewardFocus,
       badgeLabel: packBadgeLabel(firstRow.template_kind, milestone.label),
       leaderboardCallout: `${experienceLane} currently adds ${(getCampaignLeaderboardMomentumMultiplier(economySettings, attributionSource === "direct" ? null : attributionSource) * 100 - 100).toFixed(0)}% leaderboard momentum, so this pack is helping shape your rank pressure now.`,
@@ -1853,6 +1868,7 @@ async function getUserCampaignPackJourneys({
       priorityReason: pack.priorityReason,
       unlockPreview: pack.unlockPreview,
       returnAction: pack.returnAction,
+      returnWindow: pack.returnWindow,
       rewardFocus: pack.rewardFocus,
       badgeLabel: pack.badgeLabel,
       leaderboardCallout: pack.leaderboardCallout,
@@ -2030,7 +2046,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
 }
 
 export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
-  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends] = await Promise.all([
+  const [pendingReviews, usersByTier, weeklyActives, referralAnalytics, roleDirectory, adminDirectory, reviewQueue, reviewHistory, reviewerWorkload, reviewBreakdownByVerificationType, reviewerTypeMatrix, economySettings, economySettingsAudit, rewardAssets, rewardPrograms, tokenSettlementQueue, tokenSettlementAudit, settlementAnalytics, questDefinitionTemplates, questDefinitionDirectory, campaignPackBenchmarkOverrides, suppressionAnalytics, campaignPackAudit, campaignPackPerformance, campaignMissionCtaAnalytics, campaignMissionCtaTrends, campaignMissionSubmitAttempts, campaignMissionCtaByTier] = await Promise.all([
     runQuery<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM quest_completions WHERE status = 'pending'`,
     ),
@@ -2135,6 +2151,43 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
                 COALESCE(al.metadata->>'ctaVariant', 'unknown'),
                 DATE_TRUNC('week', al.created_at)::date
        ORDER BY bucket_start ASC`,
+    ),
+    runQuery<{
+      pack_id: string | null;
+      cta_variant: string | null;
+      submit_attempt_count: string;
+      submit_attempt_user_count: string;
+    }>(
+      `SELECT al.metadata->>'packId' AS pack_id,
+              COALESCE(al.metadata->>'ctaVariant', 'unknown') AS cta_variant,
+              COUNT(*)::text AS submit_attempt_count,
+              COUNT(DISTINCT al.user_id)::text AS submit_attempt_user_count
+       FROM activity_log al
+       WHERE al.action_type = 'campaign-quest-submit-attempt'
+       GROUP BY al.metadata->>'packId',
+                COALESCE(al.metadata->>'ctaVariant', 'unknown')`,
+    ),
+    runQuery<{
+      pack_id: string | null;
+      event_type: string | null;
+      cta_variant: string | null;
+      subscription_tier: SubscriptionTier;
+      click_count: string;
+      unique_user_count: string;
+    }>(
+      `SELECT al.metadata->>'packId' AS pack_id,
+              al.metadata->>'eventType' AS event_type,
+              COALESCE(al.metadata->>'ctaVariant', 'unknown') AS cta_variant,
+              u.subscription_tier,
+              COUNT(*)::text AS click_count,
+              COUNT(DISTINCT al.user_id)::text AS unique_user_count
+       FROM activity_log al
+       INNER JOIN users u ON u.id = al.user_id
+       WHERE al.action_type = 'campaign-cta-click'
+       GROUP BY al.metadata->>'packId',
+                al.metadata->>'eventType',
+                COALESCE(al.metadata->>'ctaVariant', 'unknown'),
+                u.subscription_tier`,
     ),
   ]);
 
@@ -2420,6 +2473,22 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       clickCount: Number(row.click_count ?? 0),
     });
     missionCtaTrendMap.set(key, current);
+  }
+  const missionSubmitAttemptMap = new Map<
+    string,
+    {
+      submitAttemptCount: number;
+      submitAttemptUserCount: number;
+    }
+  >();
+  for (const row of campaignMissionSubmitAttempts.rows) {
+    if (!row.pack_id) {
+      continue;
+    }
+    missionSubmitAttemptMap.set(`${row.pack_id}::${row.cta_variant ?? "unknown"}`, {
+      submitAttemptCount: Number(row.submit_attempt_count ?? 0),
+      submitAttemptUserCount: Number(row.submit_attempt_user_count ?? 0),
+    });
   }
 
   const monthlyCount = usersByTier.rows.find((row) => row.subscription_tier === "monthly")?.count ?? "0";
@@ -2877,6 +2946,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       const pack = packAnalyticsLookup.get(row.pack_id ?? "");
       const key = `${row.pack_id ?? "unknown"}::${row.event_type ?? "unknown"}::${row.cta_label ?? "unknown"}::${row.cta_variant ?? "unknown"}`;
       const correlation = missionCtaCorrelationMap.get(key);
+      const submitAttempts = missionSubmitAttemptMap.get(`${row.pack_id ?? "unknown"}::${row.cta_variant ?? "unknown"}`);
       const uniqueUserCount = Number(row.unique_user_count ?? 0);
 
       return {
@@ -2896,8 +2966,24 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         walletLinkRate: uniqueUserCount > 0 ? (correlation?.walletLinkedUserCount ?? 0) / uniqueUserCount : 0,
         rewardEligibilityRate: uniqueUserCount > 0 ? (correlation?.rewardEligibleUserCount ?? 0) / uniqueUserCount : 0,
         premiumConversionRate: uniqueUserCount > 0 ? (correlation?.premiumUserCount ?? 0) / uniqueUserCount : 0,
+        submitAttemptCount: submitAttempts?.submitAttemptCount ?? 0,
+        submitAttemptUserCount: submitAttempts?.submitAttemptUserCount ?? 0,
+        submitAttemptRate: uniqueUserCount > 0 ? (submitAttempts?.submitAttemptUserCount ?? 0) / uniqueUserCount : 0,
       };
     })
+    .sort((left, right) => right.clickCount - left.clickCount || right.uniqueUserCount - left.uniqueUserCount);
+  const missionCtaByTier: AdminOverviewData["campaignOperations"]["missionCtaByTier"] = campaignMissionCtaByTier.rows
+    .filter((row) => typeof row.pack_id === "string" && row.pack_id.length > 0)
+    .map((row) => ({
+      packId: row.pack_id ?? "unknown",
+      label: packAnalyticsLookup.get(row.pack_id ?? "")?.label ?? "Unknown pack",
+      activeLane: packAnalyticsLookup.get(row.pack_id ?? "")?.benchmark.activeLane ?? "direct",
+      subscriptionTier: row.subscription_tier,
+      eventType: row.event_type ?? "unknown",
+      ctaVariant: row.cta_variant ?? "unknown",
+      clickCount: Number(row.click_count ?? 0),
+      uniqueUserCount: Number(row.unique_user_count ?? 0),
+    }))
     .sort((left, right) => right.clickCount - left.clickCount || right.uniqueUserCount - left.uniqueUserCount);
 
   return {
@@ -2930,6 +3016,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       templateCounts,
       sourceTemplateCounts,
       missionCtaAnalytics,
+      missionCtaByTier,
       packAnalytics,
       partnerReporting,
       alerts: visibleCampaignPackAlerts,

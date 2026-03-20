@@ -20,13 +20,16 @@ export async function trackCampaignEvent({
     throw new Error("You must be signed in to track campaign events.");
   }
 
+  const actionType = eventType.includes("submit") ? "campaign-quest-submit-attempt" : "campaign-cta-click";
+  const actionLabel = eventType.includes("submit") ? "attempted mission quest submission" : "clicked mission CTA";
+
   await createActivityLogEntry({
     userId: currentUser.id,
-    actionType: "campaign-cta-click",
+    actionType,
     xpEarned: 0,
     metadata: {
       actor: currentUser.displayName,
-      action: "clicked mission CTA",
+      action: actionLabel,
       detail: `${ctaLabel} (${eventType})`,
       packId,
       eventType,

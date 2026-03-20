@@ -14,27 +14,28 @@ export function CampaignMissionInboxPanel({
   title?: string;
   eyebrow?: string;
 }) {
-  const storageKey = "campaign-mission-inbox:dismissed";
-  const [dismissedIds, setDismissedIds] = useState<string[]>(() => {
+  const storageKey = "campaign-mission-inbox:state";
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const [inboxState, setInboxState] = useState<Record<string, { status: "dismissed" | "handled" | "snoozed"; until?: string | null }>>(() => {
     if (typeof window === "undefined") {
-      return [];
+      return {};
     }
 
     try {
       const saved = window.localStorage.getItem(storageKey);
       if (!saved) {
-        return [];
+        return {};
       }
 
-      const parsed = JSON.parse(saved) as string[];
-      if (Array.isArray(parsed)) {
+      const parsed = JSON.parse(saved) as Record<string, { status: "dismissed" | "handled" | "snoozed"; until?: string | null }>;
+      if (parsed && typeof parsed === "object") {
         return parsed;
       }
     } catch {
       // Ignore broken local storage state.
     }
 
-    return [];
+    return {};
   });
 
   useEffect(() => {
@@ -44,9 +45,9 @@ export function CampaignMissionInboxPanel({
       }
 
       try {
-        const parsed = JSON.parse(event.newValue) as string[];
-        if (Array.isArray(parsed)) {
-          setDismissedIds(parsed);
+        const parsed = JSON.parse(event.newValue) as Record<string, { status: "dismissed" | "handled" | "snoozed"; until?: string | null }>;
+        if (parsed && typeof parsed === "object") {
+          setInboxState(parsed);
         }
       } catch {
         // Ignore malformed storage updates.
@@ -54,9 +55,9 @@ export function CampaignMissionInboxPanel({
     }
 
     function handleMissionInboxSync(event: Event) {
-      const detail = (event as CustomEvent<string[]>).detail;
-      if (Array.isArray(detail)) {
-        setDismissedIds(detail);
+      const detail = (event as CustomEvent<Record<string, { status: "dismissed" | "handled" | "snoozed"; until?: string | null }>>).detail;
+      if (detail && typeof detail === "object") {
+        setInboxState(detail);
       }
     }
 
@@ -70,17 +71,39 @@ export function CampaignMissionInboxPanel({
   }, []);
 
   useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
     try {
-      window.localStorage.setItem(storageKey, JSON.stringify(dismissedIds));
-      window.dispatchEvent(new CustomEvent("campaign-mission-inbox-sync", { detail: dismissedIds }));
+      window.localStorage.setItem(storageKey, JSON.stringify(inboxState));
+      window.dispatchEvent(new CustomEvent("campaign-mission-inbox-sync", { detail: inboxState }));
     } catch {
       // Ignore storage failures.
     }
-  }, [dismissedIds, storageKey]);
+  }, [inboxState, storageKey]);
 
   const visibleNotifications = useMemo(
-    () => notifications.filter((notification) => !dismissedIds.includes(notification.id)),
-    [dismissedIds, notifications],
+    () =>
+      notifications.filter((notification) => {
+        const state = inboxState[notification.id];
+        if (!state) {
+          return true;
+        }
+
+        if (state.status === "snoozed" && state.until) {
+          return new Date(state.until).getTime() <= currentTime;
+        }
+
+        return false;
+      }),
+    [currentTime, inboxState, notifications],
   );
 
   if (visibleNotifications.length === 0) {
@@ -124,9 +147,32 @@ export function CampaignMissionInboxPanel({
               <button
                 type="button"
                 className="button button--secondary"
-                onClick={() => setDismissedIds((current) => [...current, notification.id])}
+                onClick={() =>
+                  setInboxState((current) => ({
+                    ...current,
+                    [notification.id]: {
+                      status: "snoozed",
+                      until: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                    },
+                  }))
+                }
               >
-                Dismiss
+                Snooze 24h
+              </button>
+              <button
+                type="button"
+                className="button button--secondary"
+                onClick={() =>
+                  setInboxState((current) => ({
+                    ...current,
+                    [notification.id]: {
+                      status: "handled",
+                      until: null,
+                    },
+                  }))
+                }
+              >
+                Mark handled
               </button>
             </div>
           </article>

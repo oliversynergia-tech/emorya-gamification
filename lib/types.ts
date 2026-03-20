@@ -433,6 +433,7 @@ export type DashboardData = {
     benchmarkNote: string;
     premiumNudge: string | null;
     returnAction: string | null;
+    returnWindow: "today" | "this_week" | "wait_for_unlock";
     milestone: {
       label: string;
       tone: "info" | "success" | "warning";
@@ -748,6 +749,19 @@ export type AdminOverviewData = {
       walletLinkRate: number;
       rewardEligibilityRate: number;
       premiumConversionRate: number;
+      submitAttemptCount: number;
+      submitAttemptUserCount: number;
+      submitAttemptRate: number;
+    }>;
+    missionCtaByTier: Array<{
+      packId: string;
+      label: string;
+      activeLane: CampaignSource | "direct";
+      subscriptionTier: SubscriptionTier;
+      eventType: string;
+      ctaVariant: string;
+      clickCount: number;
+      uniqueUserCount: number;
     }>;
     packAnalytics: Array<{
       packId: string;

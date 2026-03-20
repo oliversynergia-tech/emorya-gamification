@@ -7,6 +7,27 @@ import type { DashboardData, Quest, QuestProgressUpdate } from "@/lib/types";
 
 type SubmissionState = Record<string, string>;
 
+async function trackMissionSubmitAttempt(payload: {
+  packId: string;
+  eventType: string;
+  ctaLabel: string;
+  ctaVariant?: string;
+  href: string;
+}) {
+  try {
+    await fetch("/api/campaign-events", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    });
+  } catch {
+    // Ignore tracking failures and continue with submission.
+  }
+}
+
 export function QuestActionsPanel({
   quests,
   isAuthenticated,
@@ -94,6 +115,19 @@ export function QuestActionsPanel({
     setError(null);
     setProgressUpdate(null);
     setProgressQuestTitle(null);
+
+    if (
+      activeCampaignPack &&
+      activeCampaignPack.questStatuses.some((packQuest) => packQuest.questId === quest.id)
+    ) {
+      void trackMissionSubmitAttempt({
+        packId: activeCampaignPack.packId,
+        eventType: "quest_submit_attempt",
+        ctaLabel: `Submit ${quest.title}`,
+        ctaVariant: activeCampaignPack.ctaVariant,
+        href: `#quest-action-${quest.id}`,
+      });
+    }
 
     try {
       const response = await fetch(`/api/quests/${quest.id}/submit`, {
