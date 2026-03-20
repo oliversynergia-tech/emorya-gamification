@@ -718,11 +718,25 @@ export type AdminOverviewData = {
     notificationHistory: Array<{
       id: string;
       channel: "inbox" | "webhook" | "email" | "slack" | "discord";
-      eventStatus: "armed" | "sent";
+      eventStatus: "armed" | "sent" | "acknowledged";
       destination: string;
       title: string;
       detail: string;
       createdAt: string;
+      acknowledgedAt: string | null;
+      acknowledgedByDisplayName: string | null;
+    }>;
+    suppressions: Array<{
+      id: string;
+      packId: string;
+      label: string;
+      title: string;
+      suppressedUntil: string;
+      reason: string | null;
+      createdAt: string;
+      createdByDisplayName: string | null;
+      clearedAt: string | null;
+      clearedByDisplayName: string | null;
     }>;
     packReady: boolean;
     activeLaneMode: "bridged" | "separate";

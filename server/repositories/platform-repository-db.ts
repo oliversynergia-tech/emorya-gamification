@@ -63,6 +63,7 @@ import {
   syncModerationNotificationHistory,
 } from "@/server/repositories/moderation-notification-repository";
 import {
+  listActiveCampaignPackAlertSuppressions,
   listRecentCampaignPackNotificationDeliveries,
   syncCampaignPackNotificationHistory,
 } from "@/server/repositories/campaign-pack-notification-repository";
@@ -1681,8 +1682,15 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       });
     }
   }
+  const activeCampaignPackSuppressions = await listActiveCampaignPackAlertSuppressions();
+  const suppressionKeySet = new Set(
+    activeCampaignPackSuppressions.map((suppression) => `${suppression.packId}|${suppression.title}`),
+  );
+  const visibleCampaignPackAlerts = alerts.filter(
+    (alert) => !suppressionKeySet.has(`${alert.packId}|${alert.title}`),
+  );
   const campaignPackNotifications = buildCampaignPackNotifications({
-    alerts,
+    alerts: visibleCampaignPackAlerts,
     channels: economySettings.campaignAlertChannels,
   });
   await syncCampaignPackNotificationHistory(campaignPackNotifications);
@@ -1721,9 +1729,10 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
       sourceTemplateCounts,
       packAnalytics,
       partnerReporting,
-      alerts,
+      alerts: visibleCampaignPackAlerts,
       notifications: campaignPackNotifications,
       notificationHistory: campaignPackNotificationHistory,
+      suppressions: activeCampaignPackSuppressions,
       packReady:
         ["Zealy bridge quest", "Galxe feeder quest", "TaskOn feeder quest"].every((label) =>
           questDefinitionTemplates.some((template) => template.label === label && template.isActive),

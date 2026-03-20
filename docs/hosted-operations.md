@@ -143,3 +143,9 @@ Recommended env for the wrapper:
 CAMPAIGN_PACK_REPORTS_ENABLED=true
 CAMPAIGN_PACK_REPORT_OUTPUT_DIR=/persistent/reports/campaign-packs
 ```
+
+If GitHub Actions is part of the ops setup, the repo also includes a weekly workflow:
+
+- [`.github/workflows/campaign-pack-reports.yml`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/.github/workflows/campaign-pack-reports.yml)
+
+That path expects `DATABASE_URL` and optional `DATABASE_SSL` as repository secrets and uploads the generated reports as workflow artifacts.

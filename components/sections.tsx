@@ -9,6 +9,7 @@ import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionTier } from "@/lib/types";
 import { CampaignPackAnalyticsPanel } from "@/components/campaign-pack-analytics-panel";
+import { CampaignPackAlertPanel } from "@/components/campaign-pack-alert-panel";
 import { CampaignPackNotificationHistoryPanel } from "@/components/campaign-pack-notification-history-panel";
 import { PayoutAuditTrailPanel } from "@/components/payout-audit-trail-panel";
 import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
@@ -1620,21 +1621,11 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
             </article>
           ))}
         </div>
-        {data.campaignOperations.alerts.length > 0 ? (
-          <div className="admin-alert-stack">
-            {data.campaignOperations.alerts.map((alert) => (
-              <article key={`${alert.packId}-${alert.title}`} className={`admin-alert-card admin-alert-card--${alert.severity}`}>
-                <div>
-                  <p className="eyebrow">{alert.label}</p>
-                  <strong>{alert.title}</strong>
-                </div>
-                <p>{alert.detail}</p>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="form-note">Live campaign packs are currently staying inside the baseline pack-performance thresholds.</p>
-        )}
+        <CampaignPackAlertPanel
+          alerts={data.campaignOperations.alerts}
+          suppressions={data.campaignOperations.suppressions}
+          canManage={canManageCampaignPacks}
+        />
         <div className="achievement-list">
           {data.campaignOperations.partnerReporting.map((entry) => (
             <article key={`partner-${entry.packId}`} className="achievement-card">
@@ -1665,7 +1656,10 @@ export function AdminSection({ data, canManageCampaignPacks = false }: { data: A
             </article>
           ))}
         </div>
-        <CampaignPackNotificationHistoryPanel entries={data.campaignOperations.notificationHistory} />
+        <CampaignPackNotificationHistoryPanel
+          initialEntries={data.campaignOperations.notificationHistory}
+          canManage={canManageCampaignPacks}
+        />
         <CampaignPackAnalyticsPanel
           packs={data.campaignOperations.packAnalytics}
           partnerReports={data.campaignOperations.partnerReporting}

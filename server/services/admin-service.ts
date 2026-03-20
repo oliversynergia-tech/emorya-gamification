@@ -21,6 +21,11 @@ import {
   updateActiveEconomySettings,
 } from "@/server/repositories/economy-settings-repository";
 import {
+  acknowledgeCampaignPackNotificationDelivery,
+  clearCampaignPackAlertSuppression,
+  createCampaignPackAlertSuppression,
+} from "@/server/repositories/campaign-pack-notification-repository";
+import {
   createRewardAsset,
   createRewardProgram,
   listRewardAssets,
@@ -495,6 +500,68 @@ export async function acknowledgeModerationNotification(deliveryId: string) {
   return acknowledgeModerationNotificationDelivery({
     deliveryId,
     acknowledgedBy: currentUser.id,
+  });
+}
+
+export async function acknowledgeCampaignPackNotification(deliveryId: string) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  if (!currentUser) {
+    throw new Error("You must be signed in to access admin controls.");
+  }
+
+  return acknowledgeCampaignPackNotificationDelivery({
+    deliveryId,
+    acknowledgedBy: currentUser.id,
+  });
+}
+
+export async function suppressCampaignPackAlert({
+  packId,
+  label,
+  title,
+  hours,
+  reason,
+}: {
+  packId: string;
+  label: string;
+  title: string;
+  hours: number;
+  reason?: string | null;
+}) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  if (!currentUser) {
+    throw new Error("You must be signed in to access admin controls.");
+  }
+
+  if (!packId.trim() || !label.trim() || !title.trim() || !Number.isFinite(hours) || hours <= 0) {
+    throw new Error("Campaign alert suppression requires packId, label, title, and a positive hour window.");
+  }
+
+  return createCampaignPackAlertSuppression({
+    packId: packId.trim(),
+    label: label.trim(),
+    title: title.trim(),
+    hours,
+    reason,
+    createdBy: currentUser.id,
+  });
+}
+
+export async function clearCampaignPackAlertSuppressionById(suppressionId: string) {
+  const currentUser = await getAuthenticatedUser();
+  await assertAdminUser(currentUser);
+
+  if (!currentUser) {
+    throw new Error("You must be signed in to access admin controls.");
+  }
+
+  return clearCampaignPackAlertSuppression({
+    suppressionId,
+    clearedBy: currentUser.id,
   });
 }
 

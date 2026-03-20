@@ -70,3 +70,16 @@ It reads:
 - `CAMPAIGN_PACK_REPORT_OUTPUT_DIR`
 
 So hosted ops can schedule one command and manage the output path in env/config instead of editing the cron line each time.
+
+## GitHub Actions option
+
+The repo now includes:
+
+- [`.github/workflows/campaign-pack-reports.yml`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/.github/workflows/campaign-pack-reports.yml)
+
+It runs weekly and on manual dispatch. To use it, set repository secrets for:
+
+- `DATABASE_URL`
+- optional `DATABASE_SSL`
+
+The workflow uploads the generated CSV/HTML files as build artifacts.

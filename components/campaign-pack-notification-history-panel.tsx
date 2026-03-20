@@ -7,13 +7,18 @@ import type { AdminOverviewData } from "@/lib/types";
 type CampaignPackNotificationEntry = AdminOverviewData["campaignOperations"]["notificationHistory"][number];
 
 export function CampaignPackNotificationHistoryPanel({
-  entries,
+  initialEntries,
+  canManage = false,
 }: {
-  entries: AdminOverviewData["campaignOperations"]["notificationHistory"];
+  initialEntries: AdminOverviewData["campaignOperations"]["notificationHistory"];
+  canManage?: boolean;
 }) {
+  const [entries, setEntries] = useState(initialEntries);
   const [channelFilter, setChannelFilter] = useState<"all" | CampaignPackNotificationEntry["channel"]>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | CampaignPackNotificationEntry["eventStatus"]>("all");
   const [destinationFilter, setDestinationFilter] = useState("");
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const filteredEntries = useMemo(
     () =>
@@ -38,6 +43,32 @@ export function CampaignPackNotificationHistoryPanel({
     [channelFilter, statusFilter, destinationFilter, entries],
   );
 
+  async function acknowledge(deliveryId: string) {
+    setPendingId(deliveryId);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/campaign-pack-notifications/${deliveryId}`, {
+        method: "PATCH",
+      });
+      const payload = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        history?: AdminOverviewData["campaignOperations"]["notificationHistory"];
+      };
+
+      if (!response.ok || !payload.ok || !payload.history) {
+        throw new Error(payload.error ?? "Unable to acknowledge campaign alert notification.");
+      }
+
+      setEntries(payload.history);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to acknowledge campaign alert notification.");
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   return (
     <div className="panel panel--glass admin-analytics">
       <div className="panel__header">
@@ -46,6 +77,7 @@ export function CampaignPackNotificationHistoryPanel({
           <h3>Filter routed campaign-pack deliveries</h3>
         </div>
       </div>
+      {error ? <p className="form-note form-note--error">{error}</p> : null}
       <div className="review-bulk-actions">
         <label className="field">
           <span>Channel</span>
@@ -64,6 +96,7 @@ export function CampaignPackNotificationHistoryPanel({
             <option value="all">All statuses</option>
             <option value="armed">Armed</option>
             <option value="sent">Sent</option>
+            <option value="acknowledged">Acknowledged</option>
           </select>
         </label>
         <label className="field">
@@ -82,11 +115,28 @@ export function CampaignPackNotificationHistoryPanel({
               <strong>{entry.title}</strong>
               <p>{entry.detail}</p>
               <p>{entry.destination}</p>
+              {entry.acknowledgedAt ? (
+                <small>
+                  {entry.acknowledgedByDisplayName
+                    ? `Ack by ${entry.acknowledgedByDisplayName}`
+                    : "Acknowledged"}
+                </small>
+              ) : null}
             </div>
             <div className="achievement-card__side">
               <span>{entry.channel}</span>
               <span>{entry.eventStatus}</span>
-              <span>{new Date(entry.createdAt).toLocaleString()}</span>
+              <span>{new Date(entry.acknowledgedAt ?? entry.createdAt).toLocaleString()}</span>
+              {entry.acknowledgedAt || !canManage ? null : (
+                <button
+                  className="button button--secondary button--small"
+                  disabled={pendingId === entry.id}
+                  onClick={() => acknowledge(entry.id)}
+                  type="button"
+                >
+                  {pendingId === entry.id ? "Saving..." : "Acknowledge"}
+                </button>
+              )}
             </div>
           </article>
         ))}

@@ -563,6 +563,108 @@ export async function handleModerationNotificationAcknowledgeRequest(
   }
 }
 
+export async function handleCampaignPackNotificationAcknowledgeRequest(
+  deliveryId: string,
+  acknowledgeNotification: (deliveryId: string) => Promise<unknown>,
+) {
+  if (!deliveryId) {
+    return {
+      status: 400,
+      body: { ok: false, error: "deliveryId is required." },
+    };
+  }
+
+  try {
+    const history = await acknowledgeNotification(deliveryId);
+
+    return {
+      status: 200,
+      body: { ok: true, history },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to acknowledge campaign notification.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleCampaignPackAlertSuppressionRequest(
+  body: {
+    packId?: string;
+    label?: string;
+    title?: string;
+    hours?: number;
+    reason?: string | null;
+  },
+  suppressAlert: (input: {
+    packId: string;
+    label: string;
+    title: string;
+    hours: number;
+    reason?: string | null;
+  }) => Promise<unknown>,
+) {
+  if (!body.packId || !body.label || !body.title || typeof body.hours !== "number") {
+    return {
+      status: 400,
+      body: { ok: false, error: "packId, label, title, and hours are required." },
+    };
+  }
+
+  try {
+    const suppressions = await suppressAlert({
+      packId: body.packId,
+      label: body.label,
+      title: body.title,
+      hours: body.hours,
+      reason: body.reason,
+    });
+
+    return {
+      status: 200,
+      body: { ok: true, suppressions },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to suppress campaign alert.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
+export async function handleCampaignPackAlertSuppressionClearRequest(
+  suppressionId: string,
+  clearSuppression: (suppressionId: string) => Promise<unknown>,
+) {
+  if (!suppressionId) {
+    return {
+      status: 400,
+      body: { ok: false, error: "suppressionId is required." },
+    };
+  }
+
+  try {
+    const suppressions = await clearSuppression(suppressionId);
+
+    return {
+      status: 200,
+      body: { ok: true, suppressions },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to clear campaign alert suppression.";
+
+    return {
+      status: getErrorStatus(message),
+      body: { ok: false, error: message },
+    };
+  }
+}
+
 export async function handleTokenSettlementRequest(
   {
     redemptionId,

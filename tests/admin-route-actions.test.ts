@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import test, { mock } from "node:test";
 
 import {
+  runCampaignPackAlertSuppressionClearRoute,
+  runCampaignPackAlertSuppressionRoute,
   runCampaignPackCreateRoute,
   runCampaignPackLifecycleRoute,
+  runCampaignPackNotificationAcknowledgeRoute,
   runEconomySettingsRoute,
   runEconomySettingsUpdateRoute,
   runQuestDefinitionCreateRoute,
@@ -97,6 +100,74 @@ test("runCampaignPackLifecycleRoute forwards lifecycle updates", async () => {
     ok: true,
     quests: [{ id: "quest-pack-1" }],
     packSummary: { packId: "pack-1", lifecycleState: "live", updatedCount: 3 },
+  });
+});
+
+test("runCampaignPackNotificationAcknowledgeRoute forwards the delivery id", async () => {
+  const services = {
+    acknowledgeCampaignPackNotification: mock.fn(async (deliveryId: string) => {
+      assert.equal(deliveryId, "delivery-1");
+      return [{ id: "delivery-1", eventStatus: "acknowledged" }];
+    }),
+  };
+
+  const result = await runCampaignPackNotificationAcknowledgeRoute("delivery-1", services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    history: [{ id: "delivery-1", eventStatus: "acknowledged" }],
+  });
+});
+
+test("runCampaignPackAlertSuppressionRoute forwards suppression input", async () => {
+  const services = {
+    suppressCampaignPackAlert: mock.fn(async (input: {
+      packId: string;
+      label: string;
+      title: string;
+      hours: number;
+      reason?: string | null;
+    }) => {
+      assert.equal(input.packId, "pack-1");
+      assert.equal(input.title, "Wallet-link rate is soft");
+      assert.equal(input.hours, 24);
+      return [{ id: "suppression-1" }];
+    }),
+  };
+
+  const result = await runCampaignPackAlertSuppressionRoute(
+    {
+      packId: "pack-1",
+      label: "March Bridge Pack",
+      title: "Wallet-link rate is soft",
+      hours: 24,
+      reason: "Investigating",
+    },
+    services,
+  );
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    suppressions: [{ id: "suppression-1" }],
+  });
+});
+
+test("runCampaignPackAlertSuppressionClearRoute forwards the suppression id", async () => {
+  const services = {
+    clearCampaignPackAlertSuppression: mock.fn(async (suppressionId: string) => {
+      assert.equal(suppressionId, "suppression-1");
+      return [];
+    }),
+  };
+
+  const result = await runCampaignPackAlertSuppressionClearRoute("suppression-1", services);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    ok: true,
+    suppressions: [],
   });
 });
 

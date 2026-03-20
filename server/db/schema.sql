@@ -281,11 +281,26 @@ CREATE TABLE moderation_notification_deliveries (
 CREATE TABLE campaign_pack_alert_deliveries (
   id UUID PRIMARY KEY,
   channel TEXT NOT NULL CHECK (channel IN ('inbox', 'webhook', 'email', 'slack', 'discord')),
-  event_status TEXT NOT NULL CHECK (event_status IN ('armed', 'sent')),
+  event_status TEXT NOT NULL CHECK (event_status IN ('armed', 'sent', 'acknowledged')),
   destination TEXT NOT NULL,
   title TEXT NOT NULL,
   detail TEXT NOT NULL,
   fingerprint TEXT NOT NULL,
+  acknowledged_at TIMESTAMPTZ,
+  acknowledged_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE campaign_pack_alert_suppressions (
+  id UUID PRIMARY KEY,
+  pack_id TEXT NOT NULL,
+  label TEXT NOT NULL,
+  title TEXT NOT NULL,
+  suppressed_until TIMESTAMPTZ NOT NULL,
+  reason TEXT,
+  created_by UUID REFERENCES users(id),
+  cleared_at TIMESTAMPTZ,
+  cleared_by UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -359,6 +374,7 @@ CREATE INDEX idx_reward_programs_active ON reward_programs(is_active, slug);
 CREATE INDEX idx_moderation_notification_deliveries_created_at ON moderation_notification_deliveries(created_at DESC);
 CREATE INDEX idx_campaign_pack_alert_deliveries_created_at ON campaign_pack_alert_deliveries(created_at DESC);
 CREATE INDEX idx_campaign_pack_alert_deliveries_fingerprint ON campaign_pack_alert_deliveries(channel, event_status, fingerprint);
+CREATE INDEX idx_campaign_pack_alert_suppressions_active ON campaign_pack_alert_suppressions(pack_id, title, suppressed_until DESC);
 CREATE UNIQUE INDEX idx_economy_settings_active_single ON economy_settings(is_active) WHERE is_active = TRUE;
 CREATE INDEX idx_economy_settings_audit_created_at ON economy_settings_audit(created_at DESC);
 CREATE INDEX idx_token_redemption_audit_created_at ON token_redemption_audit(created_at DESC);

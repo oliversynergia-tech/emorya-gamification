@@ -1,0 +1,37 @@
+name: Campaign Pack Reports
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * 1"
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_SSL: ${{ secrets.DATABASE_SSL }}
+      CAMPAIGN_PACK_REPORTS_ENABLED: "true"
+      CAMPAIGN_PACK_REPORT_OUTPUT_DIR: reports/campaign-packs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Export scheduled campaign pack report
+        run: npm run ops:campaign-packs:report:scheduled
+
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: campaign-pack-reports
+          path: reports/campaign-packs/

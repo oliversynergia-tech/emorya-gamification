@@ -1,6 +1,9 @@
 import {
+  handleCampaignPackAlertSuppressionClearRequest,
+  handleCampaignPackAlertSuppressionRequest,
   handleCampaignPackCreateRequest,
   handleCampaignPackLifecycleRequest,
+  handleCampaignPackNotificationAcknowledgeRequest,
   handleEconomySettingsRequest,
   handleEconomySettingsUpdateRequest,
   handleQuestDefinitionCreateRequest,
@@ -59,6 +62,15 @@ export type AdminRouteActionServices = {
     automationSettlementNote?: string | null;
     generateAutomationReceiptReference?: boolean;
   }) => Promise<unknown>;
+  acknowledgeCampaignPackNotification: (deliveryId: string) => Promise<unknown>;
+  suppressCampaignPackAlert: (input: {
+    packId: string;
+    label: string;
+    title: string;
+    hours: number;
+    reason?: string | null;
+  }) => Promise<unknown>;
+  clearCampaignPackAlertSuppression: (suppressionId: string) => Promise<unknown>;
 };
 
 export async function runQuestDefinitionDirectoryRoute(
@@ -86,6 +98,39 @@ export async function runCampaignPackLifecycleRoute(
   services: Pick<AdminRouteActionServices, "updateCampaignPackLifecycle">,
 ) {
   return handleCampaignPackLifecycleRequest(body, services.updateCampaignPackLifecycle);
+}
+
+export async function runCampaignPackNotificationAcknowledgeRoute(
+  deliveryId: string,
+  services: Pick<AdminRouteActionServices, "acknowledgeCampaignPackNotification">,
+) {
+  return handleCampaignPackNotificationAcknowledgeRequest(
+    deliveryId,
+    services.acknowledgeCampaignPackNotification,
+  );
+}
+
+export async function runCampaignPackAlertSuppressionRoute(
+  body: {
+    packId?: string;
+    label?: string;
+    title?: string;
+    hours?: number;
+    reason?: string | null;
+  },
+  services: Pick<AdminRouteActionServices, "suppressCampaignPackAlert">,
+) {
+  return handleCampaignPackAlertSuppressionRequest(body, services.suppressCampaignPackAlert);
+}
+
+export async function runCampaignPackAlertSuppressionClearRoute(
+  suppressionId: string,
+  services: Pick<AdminRouteActionServices, "clearCampaignPackAlertSuppression">,
+) {
+  return handleCampaignPackAlertSuppressionClearRequest(
+    suppressionId,
+    services.clearCampaignPackAlertSuppression,
+  );
 }
 
 export async function runQuestDefinitionUpdateRoute(
