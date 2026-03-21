@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
 
+import { getActiveBrandTheme } from "@/lib/brand-themes";
 import { SignOutButton } from "@/components/sign-out-button";
 import type { AuthUser } from "@/lib/types";
 
@@ -17,13 +18,15 @@ const navItems = [
 
 export function SiteShell({
   children,
-  eyebrow = "Emorya Gamification Platform",
+  eyebrow,
   currentUser = null,
 }: {
   children: ReactNode;
   eyebrow?: string;
   currentUser?: AuthUser | null;
 }) {
+  const activeBrandTheme = getActiveBrandTheme();
+
   return (
     <div className="shell">
       <div className="shell__glow shell__glow--left" />
@@ -31,18 +34,18 @@ export function SiteShell({
       <div className="shell__mesh" />
       <header className="topbar">
         <div className="brand-block">
-          <Link href="/" className="brand-link" aria-label="Emorya home">
+          <Link href="/" className="brand-link" aria-label={activeBrandTheme.brand.homeAriaLabel}>
             <Image
               className="brand-logo"
-              src="/brand/emorya-wordmark.svg"
-              alt="Emorya"
-              width={432}
-              height={96}
+              src={activeBrandTheme.brand.logoSrc}
+              alt={activeBrandTheme.brand.logoAlt}
+              width={activeBrandTheme.brand.logoWidth}
+              height={activeBrandTheme.brand.logoHeight}
             />
           </Link>
           <div className="brand-copy">
-            <p className="eyebrow">{eyebrow}</p>
-            <h1 className="brandmark">Healthy habits, real rewards</h1>
+            <p className="eyebrow">{eyebrow ?? activeBrandTheme.brand.defaultEyebrow}</p>
+            <h1 className="brandmark">{activeBrandTheme.brand.defaultTagline}</h1>
           </div>
         </div>
         <div className="topbar__controls">

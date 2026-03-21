@@ -18,6 +18,8 @@ const launchStatusDoc = readFileSync(resolve(rootDir, "docs/launch-status.md"), 
 const productionSmokeTestRunbookDoc = readFileSync(resolve(rootDir, "docs/production-smoke-test-runbook.md"), "utf8");
 const productionEnvMatrixDoc = readFileSync(resolve(rootDir, "docs/production-env-matrix.md"), "utf8");
 const schedulerOwnershipMatrixDoc = readFileSync(resolve(rootDir, "docs/scheduler-ownership-matrix.md"), "utf8");
+const uiStructureFreezeDoc = readFileSync(resolve(rootDir, "docs/ui-structure-freeze.md"), "utf8");
+const brandThemeArchitectureDoc = readFileSync(resolve(rootDir, "docs/brand-theme-architecture.md"), "utf8");
 
 test("hosted operations docs reference the supported ops scripts", () => {
   const requiredScripts = [
@@ -106,7 +108,7 @@ test("launch status doc tracks current hardening blockers and ownership", () => 
     "campaign-pack reports",
     "payout automation",
   ]) {
-    assert.match(launchStatusDoc, new RegExp(text.replace(/[-:.]/g, "\\$&")));
+    assert.match(launchStatusDoc.toLowerCase(), new RegExp(text.toLowerCase().replace(/[-:.]/g, "\\$&")));
   }
 });
 
@@ -121,6 +123,11 @@ test("production smoke test runbook covers core launch paths", () => {
   ]) {
     assert.match(productionSmokeTestRunbookDoc.toLowerCase(), new RegExp(text.replace(/[-:.]/g, "\\$&")));
   }
+});
+
+test("launch status links the structure freeze and theme architecture docs", () => {
+  assert.match(launchStatusDoc, /ui-structure-freeze\.md/);
+  assert.match(launchStatusDoc, /brand-theme-architecture\.md/);
 });
 
 test("production env matrix defines scheduler ownership envs", () => {
@@ -144,5 +151,23 @@ test("scheduler ownership matrix covers all scheduled responsibilities", () => {
     "external",
   ]) {
     assert.match(schedulerOwnershipMatrixDoc.toLowerCase(), new RegExp(text.replace(/[-:.]/g, "\\$&")));
+  }
+});
+
+test("theme docs lock structure while allowing token-based skinning", () => {
+  for (const text of [
+    "theme tokens",
+    "change page composition",
+    "button, card, nav, and input visual styling",
+  ]) {
+    assert.match(uiStructureFreezeDoc.toLowerCase(), new RegExp(text.toLowerCase().replace(/[-:.]/g, "\\$&")));
+  }
+
+  for (const text of [
+    "NEXT_PUBLIC_BRAND_THEME",
+    "brand metadata",
+    "shared tokens",
+  ]) {
+    assert.match(brandThemeArchitectureDoc, new RegExp(text.replace(/[-:.]/g, "\\$&")));
   }
 });

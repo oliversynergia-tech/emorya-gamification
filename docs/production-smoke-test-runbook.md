@@ -2,6 +2,8 @@
 
 Use this after the release gate passes and before calling the rollout complete.
 
+Record each real run in [`docs/launch-status.md`](/Users/olivermills/Documents/Emorya%20Gamify/emorya-gamification/docs/launch-status.md).
+
 ## 1. Access And Session
 
 1. Open the deployed app root.
