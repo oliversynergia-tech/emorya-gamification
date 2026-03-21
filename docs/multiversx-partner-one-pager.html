@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MultiversX x Emorya Gamify</title>
+    <style>
+      @font-face {
+        font-family: "Roobert";
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url("https://cdn.multiversx.com/fonts/roobert/regular.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Roobert";
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url("https://cdn.multiversx.com/fonts/roobert/semibold.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Roobert";
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: url("https://cdn.multiversx.com/fonts/roobert/bold.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Jersey 25";
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url("https://cdn.multiversx.com/webflow/fonts/Jersey25/Jersey25-Regular.woff2") format("woff2");
+      }
+
+      :root {
+        --bg: #080b0d;
+        --bg-soft: #0d1316;
+        --panel: rgba(14, 21, 25, 0.84);
+        --panel-strong: rgba(12, 18, 22, 0.96);
+        --line: rgba(97, 238, 213, 0.18);
+        --line-strong: rgba(97, 238, 213, 0.34);
+        --text: #ecf6f6;
+        --muted: #97a8ab;
+        --teal: #61eed5;
+        --teal-strong: #25d7bf;
+        --teal-deep: #12343a;
+        --accent: #dafaf6;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+        --radius: 26px;
+        --content: 1180px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Roobert", system-ui, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top right, rgba(97, 238, 213, 0.14), transparent 24rem),
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 22rem),
+          linear-gradient(180deg, #050709 0%, #091014 52%, #050709 100%);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page {
+        width: min(calc(100% - 40px), var(--content));
+        margin: 0 auto;
+        padding: 24px 0 72px;
+      }
+
+      .shell {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 34px;
+        background:
+          linear-gradient(180deg, rgba(11, 17, 20, 0.96), rgba(8, 11, 13, 0.96)),
+          linear-gradient(135deg, rgba(97, 238, 213, 0.08), transparent 60%);
+        box-shadow: var(--shadow);
+      }
+
+      .shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 15% 15%, rgba(97, 238, 213, 0.08), transparent 24rem),
+          linear-gradient(120deg, rgba(97, 238, 213, 0.04), transparent 45%, rgba(255, 255, 255, 0.03) 100%);
+        pointer-events: none;
+      }
+
+      .topbar,
+      .hero,
+      .section,
+      .footer {
+        position: relative;
+        z-index: 1;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 20px 24px;
+        border-bottom: 1px solid rgba(97, 238, 213, 0.08);
+        background: rgba(4, 8, 10, 0.44);
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .brand img {
+        height: 26px;
+      }
+
+      .brand span {
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .pill {
+        padding: 8px 14px;
+        border: 1px solid rgba(97, 238, 213, 0.16);
+        border-radius: 999px;
+        background: rgba(97, 238, 213, 0.06);
+        color: var(--accent);
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 28px;
+        padding: 44px 24px 32px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        color: var(--teal);
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 38px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--teal));
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.9rem, 5vw, 5.4rem);
+        line-height: 0.94;
+        letter-spacing: -0.05em;
+      }
+
+      .hero-accent {
+        font-family: "Jersey 25", sans-serif;
+        color: var(--teal);
+        letter-spacing: 0.02em;
+      }
+
+      .hero-copy {
+        margin: 22px 0 28px;
+        max-width: 44rem;
+        color: var(--muted);
+        font-size: 1.08rem;
+        line-height: 1.7;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 0 20px;
+        border-radius: 16px;
+        font-weight: 600;
+      }
+
+      .button--primary {
+        background: linear-gradient(180deg, #61eed5, #27d7bf);
+        color: #041012;
+        box-shadow: 0 18px 40px rgba(37, 215, 191, 0.24);
+      }
+
+      .button--secondary {
+        border: 1px solid var(--line-strong);
+        background: rgba(97, 238, 213, 0.04);
+        color: var(--text);
+      }
+
+      .hero-card {
+        padding: 24px;
+        border: 1px solid rgba(97, 238, 213, 0.16);
+        border-radius: 28px;
+        background:
+          linear-gradient(180deg, rgba(14, 22, 25, 0.95), rgba(9, 13, 16, 0.95)),
+          radial-gradient(circle at top right, rgba(97, 238, 213, 0.12), transparent 12rem);
+      }
+
+      .hero-card h2 {
+        margin: 0 0 14px;
+        font-size: 1.25rem;
+      }
+
+      .metric-grid,
+      .feature-grid,
+      .proof-grid,
+      .platform-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 22px;
+      }
+
+      .metric,
+      .card {
+        padding: 18px;
+        border: 1px solid rgba(97, 238, 213, 0.12);
+        border-radius: 22px;
+        background: rgba(8, 13, 15, 0.68);
+      }
+
+      .metric strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 1.6rem;
+        color: var(--teal);
+      }
+
+      .metric span,
+      .card p,
+      .card li {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .section {
+        padding: 18px 24px 32px;
+      }
+
+      .section-title {
+        margin: 0 0 16px;
+        font-size: 1.7rem;
+        letter-spacing: -0.03em;
+      }
+
+      .section-intro {
+        margin: 0 0 20px;
+        max-width: 48rem;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .feature-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .proof-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .card h3 {
+        margin: 0 0 10px;
+        font-size: 1.06rem;
+      }
+
+      .card ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .platform-surface {
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 30px;
+        background:
+          radial-gradient(circle at top right, rgba(97, 238, 213, 0.11), transparent 14rem),
+          linear-gradient(180deg, rgba(8, 13, 16, 0.96), rgba(5, 9, 11, 0.96));
+      }
+
+      .surface-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      .surface-nav {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .surface-chip {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .platform-grid {
+        grid-template-columns: 1.12fr 0.88fr;
+      }
+
+      .mission-card {
+        padding: 22px;
+        border: 1px solid rgba(97, 238, 213, 0.16);
+        border-radius: 24px;
+        background: rgba(11, 18, 21, 0.88);
+      }
+
+      .mission-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .mission-tag {
+        display: inline-flex;
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: rgba(97, 238, 213, 0.08);
+        color: var(--teal);
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .mission-progress {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+        margin: 14px 0 18px;
+      }
+
+      .mission-progress span {
+        display: block;
+        width: 68%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #61eed5, #23bfa9);
+      }
+
+      .quest-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .quest-row,
+      .mini-card {
+        padding: 14px 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .quest-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .quest-label strong,
+      .mini-card strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .quest-label span,
+      .mini-card span {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .quest-state {
+        color: var(--teal);
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 24px;
+        border-top: 1px solid rgba(97, 238, 213, 0.08);
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .powered {
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      @media (max-width: 980px) {
+        .hero,
+        .platform-grid,
+        .feature-grid,
+        .proof-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .topbar,
+        .footer,
+        .surface-header,
+        .mission-top {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .badge-row {
+          justify-content: flex-start;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          width: min(calc(100% - 24px), var(--content));
+        }
+
+        .hero,
+        .section,
+        .topbar,
+        .footer {
+          padding-left: 18px;
+          padding-right: 18px;
+        }
+
+        .metric-grid {
+          grid-template-columns: 1fr;
+        }
+
+        h1 {
+          font-size: 2.6rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="shell">
+        <header class="topbar">
+          <div class="brand">
+            <img src="https://cdn.multiversx.com/webflow/MultiversX-Logo_1.svg" alt="MultiversX" />
+            <span>campaign and retention layer proposal</span>
+          </div>
+          <div class="badge-row">
+            <span class="pill">Consumer utility</span>
+            <span class="pill">Token-ready</span>
+            <span class="pill">Brand-native</span>
+          </div>
+        </header>
+
+        <section class="hero">
+          <div>
+            <div class="eyebrow">The internet-scale engagement layer</div>
+            <h1>
+              A <span class="hero-accent">MultiversX-native</span> campaign platform that turns wallet-ready traffic into
+              trusted, returning users.
+            </h1>
+            <p class="hero-copy">
+              Emorya Gamify can become a branded MultiversX activation surface for onboarding, progression, rewards, referrals,
+              and repeat engagement. The platform is already built around wallet-linked identity, XP-first progression, campaign
+              packs, premium lanes, and configurable token payouts, so it can feel like a natural MultiversX ecosystem utility
+              rather than an external campaign microsite.
+            </p>
+            <div class="hero-actions">
+              <a class="button button--primary" href="#platform-slice">See the branded product slice</a>
+              <a class="button button--secondary" href="#fit">Why this fits MultiversX</a>
+            </div>
+          </div>
+
+          <aside class="hero-card">
+            <h2>Why this matters to MultiversX</h2>
+            <p>
+              This is a practical way to connect chain identity, partner campaigns, and repeated consumer behavior in one product
+              loop, while keeping token distribution tied to real activity rather than one-off hype.
+            </p>
+            <div class="metric-grid">
+              <div class="metric">
+                <strong>XP-first</strong>
+                <span>Retention and progression stay stable while rewards remain flexible.</span>
+              </div>
+              <div class="metric">
+                <strong>Wallet-ready</strong>
+                <span>xPortal and MultiversX identity sit naturally inside the activation path.</span>
+              </div>
+              <div class="metric">
+                <strong>Partner tokens</strong>
+                <span>EGLD, EMR, and partner assets can be used without rebuilding the system.</span>
+              </div>
+              <div class="metric">
+                <strong>Native trust</strong>
+                <span>Reskinning makes the experience feel familiar from the first touchpoint.</span>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section class="section" id="fit">
+          <h2 class="section-title">What the platform powers</h2>
+          <p class="section-intro">
+            The value is not just “gamification.” It is a structured growth and retention layer that can support ecosystem
+            onboarding, lifestyle use cases, partner activations, and reward distribution with a cleaner user journey.
+          </p>
+          <div class="feature-grid">
+            <article class="card">
+              <h3>Campaign-source onboarding</h3>
+              <p>Traffic from Zealy, Galxe, Layer3, direct community pushes, or partner funnels can land in campaign-specific paths.</p>
+            </article>
+            <article class="card">
+              <h3>Wallet-linked progression</h3>
+              <p>Users move from starter actions into xPortal connection, reward readiness, deeper trust, and richer campaign lanes.</p>
+            </article>
+            <article class="card">
+              <h3>Repeat utility, not one-off quests</h3>
+              <p>Weekly loops, progress states, referrals, and reward visibility create reasons to return after the first activation.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">Why this fits the MultiversX ecosystem</h2>
+          <div class="proof-grid">
+            <article class="card">
+              <h3>Chain-native presentation</h3>
+              <p>
+                The platform can be rendered directly inside MultiversX visual language, which lowers friction and makes the product
+                feel like part of the ecosystem rather than a disconnected external tool.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Token movement with context</h3>
+              <p>
+                Rewards can be tied to actual progression, partner milestones, and approved campaign moments, instead of token
+                distribution happening without behavioral signal behind it.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Builders and users both benefit</h3>
+              <p>
+                Projects get campaign infrastructure, users get clearer progression and trust, and MultiversX gets another branded
+                utility layer that points back into wallet and ecosystem relevance.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Configurable for partner growth</h3>
+              <p>
+                The platform is already token-ready and campaign-aware, so partner presets, reward changes, and different funnel
+                types can be supported without forking the product every time.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="platform-slice">
+          <h2 class="section-title">Sample platform slice inside MultiversX branding</h2>
+          <p class="section-intro">
+            This is the important proof point: not just a pitch, but a preview of how the product can look when it is rendered as a
+            native MultiversX experience. The structure stays the same, but the presentation feels chain-native from the first screen.
+          </p>
+          <div class="platform-surface">
+            <div class="surface-header">
+              <div class="brand">
+                <img src="https://cdn.multiversx.com/webflow/MultiversX-Logo_1.svg" alt="MultiversX" />
+                <span>Builders Hub Missions</span>
+              </div>
+              <div class="surface-nav">
+                <span class="surface-chip">Dashboard</span>
+                <span class="surface-chip">Partner Campaigns</span>
+                <span class="surface-chip">Rewards</span>
+                <span class="surface-chip">Leaderboard</span>
+              </div>
+            </div>
+            <div class="platform-grid">
+              <section class="mission-card">
+                <div class="mission-top">
+                  <div>
+                    <span class="mission-tag">Live pack</span>
+                    <h3>MultiversX Builder Activation</h3>
+                  </div>
+                  <div class="surface-chip">Wallet-linked progression</div>
+                </div>
+                <p class="section-intro">
+                  Guide new users from community traffic into trusted, reward-ready actions while keeping EGLD, xPortal and partner
+                  utility visible throughout the journey.
+                </p>
+                <div class="mission-progress"><span></span></div>
+                <div class="quest-list">
+                  <div class="quest-row">
+                    <div class="quest-label">
+                      <strong>Link xPortal</strong>
+                      <span>Unlock reward rail and higher-trust campaign eligibility</span>
+                    </div>
+                    <div class="quest-state">Ready now</div>
+                  </div>
+                  <div class="quest-row">
+                    <div class="quest-label">
+                      <strong>Complete weekly builders mission</strong>
+                      <span>Progress the active campaign pack and boost leaderboard pressure</span>
+                    </div>
+                    <div class="quest-state">Next</div>
+                  </div>
+                  <div class="quest-row">
+                    <div class="quest-label">
+                      <strong>Refer a premium convert</strong>
+                      <span>Open the stronger reward band for ambassador-style growth</span>
+                    </div>
+                    <div class="quest-state">High upside</div>
+                  </div>
+                </div>
+              </section>
+
+              <aside class="quest-list">
+                <div class="mini-card">
+                  <strong>Projected reward</strong>
+                  <span>EGLD / partner-token preset with approved settlement flow and wallet-ready payout state.</span>
+                </div>
+                <div class="mini-card">
+                  <strong>Weekly pressure</strong>
+                  <span>Leaderboard movement, mission inbox nudges, and partner-campaign reminders keep pace visible.</span>
+                </div>
+                <div class="mini-card">
+                  <strong>Operator control</strong>
+                  <span>Campaign packs, reward presets, approvals, reporting, and mission analytics are already built.</span>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">The partnership angle</h2>
+          <div class="proof-grid">
+            <article class="card">
+              <h3>Instant familiarity and trust</h3>
+              <p>
+                The reskinning layer matters because it creates immediate brand recognition. Users feel like they are still inside
+                the MultiversX ecosystem, which reduces friction and increases confidence from the first interaction.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Not just a campaign page</h3>
+              <p>
+                This can operate as an extra utility surface for the ecosystem: a place where onboarding, quests, rewards, partner
+                pushes, and retention loops can live together in a more durable way.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <footer class="footer">
+          <div>
+            Draft concept for partnership discussion. Brand cues translated from the saved MultiversX homepage reference.
+          </div>
+          <div class="powered">Powered by Emorya Gamification</div>
+        </footer>
+      </div>
+    </main>
+  </body>
+</html>
