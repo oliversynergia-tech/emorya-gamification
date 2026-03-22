@@ -59,6 +59,18 @@
         background:
           radial-gradient(circle at top right, rgba(172, 206, 247, 0.42), transparent 24rem),
           linear-gradient(180deg, #f7fbff 0%, #f2f5fb 100%);
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: -12rem;
+        background:
+          radial-gradient(circle at 78% 12%, rgba(216, 200, 255, 0.18), transparent 18rem),
+          radial-gradient(circle at 12% 18%, rgba(172, 206, 247, 0.22), transparent 16rem);
+        pointer-events: none;
+        animation: ambientDrift 20s ease-in-out infinite alternate;
       }
 
       a {
@@ -78,6 +90,18 @@
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 247, 252, 0.99));
         border: 1px solid rgba(12, 16, 24, 0.06);
         box-shadow: var(--shadow);
+        transform: translateZ(0);
+      }
+
+      .shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 82% 10%, rgba(172, 206, 247, 0.12), transparent 14rem),
+          radial-gradient(circle at 18% 0%, rgba(216, 200, 255, 0.1), transparent 16rem);
+        pointer-events: none;
+        animation: shellGlow 16s ease-in-out infinite alternate;
       }
 
       .topbar,
@@ -85,6 +109,7 @@
       .section,
       .footer {
         position: relative;
+        z-index: 1;
       }
 
       .topbar {
@@ -129,6 +154,11 @@
         font-size: 0.8rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
+        transition:
+          transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+          background-color 240ms ease,
+          border-color 240ms ease,
+          box-shadow 240ms ease;
       }
 
       .hero {
@@ -139,6 +169,21 @@
         background:
           linear-gradient(180deg, #040404 0%, #0f1015 54%, rgba(255, 255, 255, 0) 54%),
           linear-gradient(180deg, transparent 56%, #ffffff 56%);
+        isolation: isolate;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 30rem;
+        background:
+          radial-gradient(circle at 18% 24%, rgba(172, 206, 247, 0.18), transparent 14rem),
+          radial-gradient(circle at 72% 14%, rgba(216, 200, 255, 0.14), transparent 16rem);
+        opacity: 0.9;
+        pointer-events: none;
+        animation: heroGlow 14s ease-in-out infinite alternate;
+        z-index: -1;
       }
 
       .hero-copy-wrap {
@@ -194,12 +239,22 @@
         padding: 0 22px;
         border-radius: 18px;
         font-weight: 600;
+        transition:
+          transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+          box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
+          border-color 220ms ease,
+          background 220ms ease,
+          color 220ms ease;
       }
 
       .button--primary {
         background: linear-gradient(180deg, #ffffff, #e4f0ff);
         color: #090d15;
         box-shadow: 0 14px 28px rgba(172, 206, 247, 0.18);
+      }
+
+      .button:hover {
+        transform: translateY(-3px) scale(1.01);
       }
 
       .button--secondary {
@@ -216,6 +271,10 @@
         background:
           linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 248, 252, 0.98)),
           radial-gradient(circle at top right, rgba(172, 206, 247, 0.2), transparent 12rem);
+        transition:
+          transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+          box-shadow 360ms cubic-bezier(0.22, 1, 0.36, 1);
+        animation: cardFloat 8s ease-in-out infinite;
       }
 
       .hero-card h2 {
@@ -248,6 +307,19 @@
         border-radius: 22px;
         border: 1px solid rgba(12, 16, 24, 0.08);
         background: rgba(255, 255, 255, 0.9);
+        transition:
+          transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+          box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
+          border-color 220ms ease,
+          background-color 220ms ease;
+      }
+
+      .metric:hover,
+      .card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(172, 206, 247, 0.38);
+        box-shadow: 0 20px 42px rgba(21, 31, 46, 0.1);
+        background: rgba(255, 255, 255, 0.97);
       }
 
       .metric strong {
@@ -325,6 +397,16 @@
         background: rgba(255, 255, 255, 0.07);
         color: rgba(248, 251, 255, 0.7);
         font-size: 0.82rem;
+        transition:
+          transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+          background-color 220ms ease,
+          color 220ms ease;
+      }
+
+      .surface-chip:hover {
+        transform: translateY(-2px);
+        background: rgba(172, 206, 247, 0.18);
+        color: #f8fbff;
       }
 
       .platform-grid {
@@ -337,6 +419,16 @@
         border-radius: 24px;
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.045));
         border: 1px solid rgba(255, 255, 255, 0.08);
+        transition:
+          transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+          box-shadow 360ms cubic-bezier(0.22, 1, 0.36, 1),
+          border-color 240ms ease;
+      }
+
+      .mission-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(172, 206, 247, 0.26);
+        box-shadow: 0 28px 54px rgba(5, 8, 14, 0.22);
       }
 
       .mission-top {
@@ -372,6 +464,8 @@
         height: 100%;
         border-radius: inherit;
         background: linear-gradient(90deg, #ffffff, #accef7);
+        background-size: 180% 100%;
+        animation: progressShimmer 5s linear infinite;
       }
 
       .quest-list {
@@ -385,6 +479,10 @@
         border-radius: 18px;
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(255, 255, 255, 0.08);
+        transition:
+          transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+          border-color 220ms ease,
+          background-color 220ms ease;
       }
 
       .quest-row {
@@ -392,6 +490,13 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
+      }
+
+      .quest-row:hover,
+      .mini-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(172, 206, 247, 0.22);
+        background: rgba(255, 255, 255, 0.09);
       }
 
       .quest-label strong,
@@ -418,6 +523,16 @@
         border-radius: 18px;
         margin-bottom: 10px;
         border: 1px solid rgba(255, 255, 255, 0.08);
+        transform: translateZ(0);
+        transition:
+          transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+          filter 320ms ease;
+        animation: imageFloat 9s ease-in-out infinite;
+      }
+
+      .mini-card:hover img {
+        transform: scale(1.03) translateY(-2px);
+        filter: saturate(1.06);
       }
 
       .footer {
@@ -432,6 +547,136 @@
 
       .powered {
         color: var(--muted-strong);
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 820ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 820ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .reveal-delay-1 {
+        transition-delay: 80ms;
+      }
+
+      .reveal-delay-2 {
+        transition-delay: 160ms;
+      }
+
+      .reveal-delay-3 {
+        transition-delay: 240ms;
+      }
+
+      .stagger > * {
+        opacity: 0;
+        transform: translateY(20px);
+        transition:
+          opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .stagger.is-visible > *:nth-child(1) {
+        transition-delay: 40ms;
+      }
+
+      .stagger.is-visible > *:nth-child(2) {
+        transition-delay: 120ms;
+      }
+
+      .stagger.is-visible > *:nth-child(3) {
+        transition-delay: 200ms;
+      }
+
+      .stagger.is-visible > *:nth-child(4) {
+        transition-delay: 280ms;
+      }
+
+      .stagger.is-visible > * {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @keyframes ambientDrift {
+        0% {
+          transform: translate3d(-1.5%, -1%, 0) scale(1);
+        }
+        100% {
+          transform: translate3d(1.5%, 1%, 0) scale(1.05);
+        }
+      }
+
+      @keyframes shellGlow {
+        0% {
+          opacity: 0.72;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(10px);
+        }
+      }
+
+      @keyframes heroGlow {
+        0% {
+          transform: translate3d(0, 0, 0) scale(1);
+          opacity: 0.72;
+        }
+        100% {
+          transform: translate3d(0, 10px, 0) scale(1.04);
+          opacity: 1;
+        }
+      }
+
+      @keyframes cardFloat {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+
+      @keyframes imageFloat {
+        0%,
+        100% {
+          transform: translateY(0) scale(1);
+        }
+        50% {
+          transform: translateY(-6px) scale(1.012);
+        }
+      }
+
+      @keyframes progressShimmer {
+        0% {
+          background-position: 0% 50%;
+        }
+        100% {
+          background-position: 180% 50%;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+          scroll-behavior: auto !important;
+        }
+
+        .reveal,
+        .stagger > * {
+          opacity: 1 !important;
+          transform: none !important;
+        }
       }
 
       @media (max-width: 980px) {
@@ -477,7 +722,7 @@
   <body>
     <main class="page">
       <div class="shell">
-        <header class="topbar">
+        <header class="topbar reveal is-visible">
           <div class="brand">
             <img src="https://cdn.prod.website-files.com/6527c669d575da173bf65551/680a36b98a1d1b8a6fedc2a8_favicon.png" alt="xPortal" />
             <span>xPortal ecosystem growth layer proposal</span>
@@ -489,29 +734,29 @@
           </div>
         </header>
 
-        <section class="hero">
+        <section class="hero reveal is-visible reveal-delay-1">
           <div class="hero-copy-wrap">
-            <div class="eyebrow">The engagement surface for a super app audience</div>
-            <h1>Turn xPortal familiarity into deeper campaign participation, retention, and reward utility.</h1>
-            <p class="hero-copy">
+            <div class="eyebrow reveal is-visible reveal-delay-2">The engagement surface for a super app audience</div>
+            <h1 class="reveal is-visible reveal-delay-2">Turn xPortal familiarity into deeper campaign participation, retention, and reward utility.</h1>
+            <p class="hero-copy reveal is-visible reveal-delay-3">
               Emorya Gamify can become a branded xPortal-aligned mission layer for onboarding, progress loops, wallet-linked
               rewards, referrals, and premium-style conversion moments. The platform is already built around repeat user behavior,
               campaign packs, reward readiness, and flexible token rails, which makes it a strong fit for a product ecosystem that
               already understands investing, spending, and earning inside one mobile-first flow.
             </p>
-            <div class="hero-actions">
+            <div class="hero-actions reveal is-visible reveal-delay-3">
               <a class="button button--primary" href="#platform-slice">See the xPortal product slice</a>
               <a class="button button--secondary" href="#fit">Why this fits xPortal</a>
             </div>
           </div>
 
-          <aside class="hero-card">
+          <aside class="hero-card reveal is-visible reveal-delay-3">
             <h2>Why this matters to xPortal</h2>
             <p>
               This creates a campaign and retention layer that feels familiar to xPortal users from the start, while giving the
               ecosystem a more guided way to activate wallets, partner communities, reward behavior, and repeated check-ins.
             </p>
-            <div class="metric-grid">
+            <div class="metric-grid stagger is-visible">
               <div class="metric">
                 <strong>Super-app compatible</strong>
                 <span>Progression, rewards, referrals, and wallet actions can sit in one smooth user loop.</span>
@@ -532,13 +777,13 @@
           </aside>
         </section>
 
-        <section class="section" id="fit">
+        <section class="section reveal" id="fit">
           <h2 class="section-title">What the platform unlocks for xPortal</h2>
           <p class="section-intro">
             The opportunity is to add a campaign-ready mission layer that feels at home inside the xPortal product mood: cleaner,
             consumer-friendly, app-native, and built around real utility rather than one-off campaign mechanics.
           </p>
-          <div class="feature-grid">
+          <div class="feature-grid stagger">
             <article class="card">
               <h3>Wallet-linked onboarding</h3>
               <p>Users arrive from ecosystem campaigns or direct pushes and are moved into guided, trust-building steps quickly.</p>
@@ -554,9 +799,9 @@
           </div>
         </section>
 
-        <section class="section">
+        <section class="section reveal">
           <h2 class="section-title">Why this fits the xPortal ecosystem</h2>
-          <div class="proof-grid">
+          <div class="proof-grid stagger">
             <article class="card">
               <h3>Feels like an extension, not a bolt-on</h3>
               <p>
@@ -588,13 +833,13 @@
           </div>
         </section>
 
-        <section class="section" id="platform-slice">
+        <section class="section reveal" id="platform-slice">
           <h2 class="section-title">Sample platform slice inside xPortal branding</h2>
           <p class="section-intro">
             This is the preview that helps avoid surprises later: not just a value proposition, but a concrete view of how the
             platform could look when rendered like it belongs inside the xPortal ecosystem.
           </p>
-          <div class="platform-surface">
+          <div class="platform-surface reveal reveal-delay-1">
             <div class="surface-top">
               <div class="brand">
                 <img src="https://cdn.prod.website-files.com/6527c669d575da173bf65551/680a36b98a1d1b8a6fedc2a8_favicon.png" alt="xPortal" />
@@ -608,7 +853,7 @@
               </div>
             </div>
             <div class="platform-grid">
-              <section class="mission-card">
+              <section class="mission-card reveal reveal-delay-2">
                 <div class="mission-top">
                   <div>
                     <span class="mission-tag">Live mission pack</span>
@@ -645,7 +890,7 @@
                 </div>
               </section>
 
-              <aside class="quest-list">
+              <aside class="quest-list stagger reveal reveal-delay-3">
                 <div class="mini-card">
                   <img
                     src="https://cdn.prod.website-files.com/6527c669d575da173bf65551/68501aa645868ac1ee47f8a6_dd39e8d9af7a6b70877e6de3917b0d19_home_3-phone-xportal-2.avif"
@@ -667,9 +912,9 @@
           </div>
         </section>
 
-        <section class="section">
+        <section class="section reveal">
           <h2 class="section-title">The partnership angle</h2>
-          <div class="proof-grid">
+          <div class="proof-grid stagger">
             <article class="card">
               <h3>An extra ecosystem surface</h3>
               <p>
@@ -687,7 +932,7 @@
           </div>
         </section>
 
-        <footer class="footer">
+        <footer class="footer reveal">
           <div>
             Draft concept for partnership discussion. Brand cues translated from the saved xPortal homepage reference.
           </div>
@@ -695,5 +940,28 @@
         </footer>
       </div>
     </main>
+    <script>
+      const revealTargets = document.querySelectorAll(".reveal, .stagger");
+
+      const revealObserver = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add("is-visible");
+            revealObserver.unobserve(entry.target);
+          }
+        },
+        {
+          threshold: 0.18,
+          rootMargin: "0px 0px -8% 0px",
+        },
+      );
+
+      for (const target of revealTargets) {
+        if (!target.classList.contains("is-visible")) {
+          revealObserver.observe(target);
+        }
+      }
+    </script>
   </body>
 </html>
