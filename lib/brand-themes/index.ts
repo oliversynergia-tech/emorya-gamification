@@ -1,8 +1,10 @@
 import { emoryaTheme } from "./emorya.ts";
+import { multiversxTheme } from "./multiversx.ts";
 import type { BrandTheme, BrandThemeTokens } from "./types.ts";
 
 export const brandThemes = {
   emorya: emoryaTheme,
+  multiversx: multiversxTheme,
 } satisfies Record<string, BrandTheme>;
 
 export type BrandThemeId = keyof typeof brandThemes;

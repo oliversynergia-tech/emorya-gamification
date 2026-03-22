@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "emorya.com",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.multiversx.com",
+      },
     ],
   },
 };
