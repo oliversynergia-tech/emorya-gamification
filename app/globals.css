@@ -527,10 +527,8 @@ a {
 }
 
 .panel--glass {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)),
-    linear-gradient(180deg, rgba(70, 31, 110, 0.36), rgba(17, 9, 29, 0.9));
-  border-color: rgba(223, 182, 255, 0.18);
+  background: var(--panel-glass-surface, linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)), linear-gradient(180deg, rgba(70, 31, 110, 0.36), rgba(17, 9, 29, 0.9)));
+  border-color: var(--panel-glass-border, rgba(223, 182, 255, 0.18));
 }
 
 .lede,
@@ -589,10 +587,7 @@ a {
 }
 
 .admin-command-center {
-  background:
-    radial-gradient(circle at top right, rgba(143, 93, 255, 0.14), transparent 0 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.038), rgba(255, 255, 255, 0.014)),
-    rgba(20, 10, 33, 0.94);
+  background: var(--admin-command-center-surface, radial-gradient(circle at top right, rgba(143, 93, 255, 0.14), transparent 0 28%), linear-gradient(180deg, rgba(255, 255, 255, 0.038), rgba(255, 255, 255, 0.014)), rgba(20, 10, 33, 0.94));
 }
 
 .admin-focus-grid {
@@ -605,10 +600,8 @@ a {
 .admin-focus-card {
   padding: 18px;
   border-radius: var(--radius-card);
-  border: 1px solid rgba(223, 182, 255, 0.14);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
-    rgba(17, 9, 28, 0.9);
+  border: 1px solid var(--admin-focus-card-border, rgba(223, 182, 255, 0.14));
+  background: var(--admin-focus-card-bg, linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)), rgba(17, 9, 28, 0.9));
 }
 
 .admin-focus-card span {
@@ -796,9 +789,9 @@ a {
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--referral-item-border, var(--border));
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--referral-item-bg, rgba(255, 255, 255, 0.02));
 }
 
 .referral-item small {
@@ -950,9 +943,9 @@ a {
 .code-block {
   margin-top: 18px;
   padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--code-block-border, rgba(255, 255, 255, 0.08));
   border-radius: 24px;
-  background: rgba(8, 4, 20, 0.72);
+  background: var(--code-block-bg, rgba(8, 4, 20, 0.72));
 }
 
 .code-block pre {
@@ -961,7 +954,7 @@ a {
   word-break: break-word;
   font-size: 0.85rem;
   line-height: 1.55;
-  color: var(--text);
+  color: var(--code-block-text, var(--text));
 }
 
 .leaderboard--referral {
@@ -989,10 +982,8 @@ a {
 .economy-step-card {
   padding: 18px;
   border-radius: var(--radius-card);
-  border: 1px solid rgba(223, 182, 255, 0.16);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)),
-    rgba(18, 9, 30, 0.9);
+  border: 1px solid var(--economy-step-card-border, rgba(223, 182, 255, 0.16));
+  background: var(--economy-step-card-bg, linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)), rgba(18, 9, 30, 0.9));
 }
 
 .economy-step-card strong {
@@ -1007,23 +998,17 @@ a {
 }
 
 .economy-step-card--core {
-  border-color: rgba(100, 224, 194, 0.22);
-  background:
-    radial-gradient(circle at top right, rgba(100, 224, 194, 0.1), transparent 0 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)),
-    rgba(17, 14, 29, 0.92);
+  border-color: var(--economy-step-card-core-border, rgba(100, 224, 194, 0.22));
+  background: var(--economy-step-card-core-bg, radial-gradient(circle at top right, rgba(100, 224, 194, 0.1), transparent 0 36%), linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)), rgba(17, 14, 29, 0.92));
 }
 
 .economy-step-card--bridge {
-  border-color: rgba(223, 182, 255, 0.18);
+  border-color: var(--economy-step-card-bridge-border, rgba(223, 182, 255, 0.18));
 }
 
 .economy-step-card--rail {
-  border-color: rgba(240, 214, 160, 0.24);
-  background:
-    radial-gradient(circle at top right, rgba(240, 214, 160, 0.09), transparent 0 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)),
-    rgba(19, 11, 28, 0.92);
+  border-color: var(--economy-step-card-rail-border, rgba(240, 214, 160, 0.24));
+  background: var(--economy-step-card-rail-bg, radial-gradient(circle at top right, rgba(240, 214, 160, 0.09), transparent 0 34%), linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)), rgba(19, 11, 28, 0.92));
 }
 
 .economy-badge {
@@ -1035,26 +1020,26 @@ a {
   font-size: var(--text-caption);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--economy-badge-border, rgba(255, 255, 255, 0.14));
+  background: var(--economy-badge-bg, rgba(255, 255, 255, 0.06));
 }
 
 .economy-badge--core {
-  border-color: rgba(100, 224, 194, 0.26);
-  color: rgba(173, 255, 234, 0.96);
-  background: rgba(100, 224, 194, 0.1);
+  border-color: var(--economy-badge-core-border, rgba(100, 224, 194, 0.26));
+  color: var(--economy-badge-core-text, rgba(173, 255, 234, 0.96));
+  background: var(--economy-badge-core-bg, rgba(100, 224, 194, 0.1));
 }
 
 .economy-badge--bridge {
-  border-color: rgba(223, 182, 255, 0.24);
-  color: rgba(239, 220, 255, 0.96);
-  background: rgba(223, 182, 255, 0.08);
+  border-color: var(--economy-badge-bridge-border, rgba(223, 182, 255, 0.24));
+  color: var(--economy-badge-bridge-text, rgba(239, 220, 255, 0.96));
+  background: var(--economy-badge-bridge-bg, rgba(223, 182, 255, 0.08));
 }
 
 .economy-badge--rail {
-  border-color: rgba(240, 214, 160, 0.28);
-  color: rgba(255, 235, 194, 0.98);
-  background: rgba(240, 214, 160, 0.1);
+  border-color: var(--economy-badge-rail-border, rgba(240, 214, 160, 0.28));
+  color: var(--economy-badge-rail-text, rgba(255, 235, 194, 0.98));
+  background: var(--economy-badge-rail-bg, rgba(240, 214, 160, 0.1));
 }
 
 .reward-ladder,
@@ -1067,11 +1052,8 @@ a {
 .reward-visual-card {
   padding: 18px;
   border-radius: var(--radius-card);
-  border: 1px solid rgba(223, 182, 255, 0.16);
-  background:
-    radial-gradient(circle at top right, rgba(240, 80, 158, 0.08), transparent 0 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
-    rgba(19, 10, 32, 0.92);
+  border: 1px solid var(--reward-card-border, rgba(223, 182, 255, 0.16));
+  background: var(--reward-card-bg, radial-gradient(circle at top right, rgba(240, 80, 158, 0.08), transparent 0 34%), linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)), rgba(19, 10, 32, 0.92));
 }
 
 .reward-ladder__card strong,
@@ -1144,10 +1126,8 @@ a {
 }
 
 .achievement-card--urgent {
-  border: 1px solid rgba(240, 214, 160, 0.28);
-  background:
-    radial-gradient(circle at top right, rgba(240, 214, 160, 0.08), transparent 0 34%),
-    rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--achievement-card-urgent-border, rgba(240, 214, 160, 0.28));
+  background: var(--achievement-card-urgent-bg, radial-gradient(circle at top right, rgba(240, 214, 160, 0.08), transparent 0 34%), rgba(255, 255, 255, 0.04));
 }
 
 .quest-card__note {
@@ -1162,21 +1142,17 @@ a {
 }
 
 .quest-card--state-completed {
-  border-color: rgba(240, 214, 160, 0.28);
-  background:
-    linear-gradient(180deg, rgba(240, 214, 160, 0.08), rgba(255, 255, 255, 0.02)),
-    rgba(22, 11, 38, 0.9);
+  border-color: var(--quest-card-completed-border, rgba(240, 214, 160, 0.28));
+  background: var(--quest-card-completed-bg, linear-gradient(180deg, rgba(240, 214, 160, 0.08), rgba(255, 255, 255, 0.02)), rgba(22, 11, 38, 0.9));
 }
 
 .quest-card--state-in-progress {
-  border-color: rgba(223, 182, 255, 0.22);
+  border-color: var(--quest-card-in-progress-border, rgba(223, 182, 255, 0.22));
 }
 
 .quest-card--state-rejected {
-  border-color: rgba(240, 80, 158, 0.26);
-  background:
-    linear-gradient(180deg, rgba(240, 80, 158, 0.07), rgba(255, 255, 255, 0.02)),
-    rgba(22, 11, 38, 0.9);
+  border-color: var(--quest-card-rejected-border, rgba(240, 80, 158, 0.26));
+  background: var(--quest-card-rejected-bg, linear-gradient(180deg, rgba(240, 80, 158, 0.07), rgba(255, 255, 255, 0.02)), rgba(22, 11, 38, 0.9));
 }
 
 .quest-card--board {
@@ -1185,8 +1161,8 @@ a {
 
 .moment-item {
   padding: 16px 18px;
-  border-left: 3px solid rgba(240, 80, 158, 0.5);
-  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid var(--moment-item-line, rgba(240, 80, 158, 0.5));
+  background: var(--moment-item-bg, rgba(255, 255, 255, 0.03));
   border-radius: 18px;
   color: var(--muted);
 }
@@ -1205,6 +1181,8 @@ a {
 .reward-summary-card {
   min-height: 120px;
   justify-content: flex-start;
+  border-color: var(--reward-summary-card-border, var(--border));
+  background: var(--reward-summary-card-bg, var(--card-surface));
 }
 
 .reward-summary-card strong {
@@ -1215,6 +1193,8 @@ a {
 .reward-history-card,
 .reward-notification-card {
   align-items: flex-start;
+  border-color: var(--reward-detail-card-border, var(--achievement-card-border, var(--border)));
+  background: var(--reward-detail-card-bg, var(--achievement-card-bg, var(--surface)));
 }
 
 .reward-receipt-card__meta {
@@ -1308,7 +1288,7 @@ a {
 
 .lane-summary-card {
   margin: 16px 0 18px;
-  border-color: rgba(223, 182, 255, 0.18);
+  border-color: var(--lane-summary-card-border, rgba(223, 182, 255, 0.18));
 }
 
 .lane-summary-card.lane-theme--direct {
@@ -1578,8 +1558,8 @@ a {
 .admin-alert-card {
   padding: 16px 18px;
   border-radius: var(--radius-soft);
-  border: 1px solid rgba(223, 182, 255, 0.2);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--admin-alert-card-border, rgba(223, 182, 255, 0.2));
+  background: var(--admin-alert-card-bg, rgba(255, 255, 255, 0.03));
   box-shadow: var(--shadow-soft);
 }
 
@@ -1594,20 +1574,20 @@ a {
 }
 
 .admin-alert-card--warning {
-  border-color: rgba(240, 214, 160, 0.28);
-  background: linear-gradient(180deg, rgba(240, 214, 160, 0.1), rgba(255, 255, 255, 0.02));
+  border-color: var(--admin-alert-card-warning-border, rgba(240, 214, 160, 0.28));
+  background: var(--admin-alert-card-warning-bg, linear-gradient(180deg, rgba(240, 214, 160, 0.1), rgba(255, 255, 255, 0.02)));
 }
 
 .admin-alert-card--critical {
-  border-color: rgba(240, 80, 158, 0.32);
-  background: linear-gradient(180deg, rgba(240, 80, 158, 0.14), rgba(255, 255, 255, 0.02));
+  border-color: var(--admin-alert-card-critical-border, rgba(240, 80, 158, 0.32));
+  background: var(--admin-alert-card-critical-bg, linear-gradient(180deg, rgba(240, 80, 158, 0.14), rgba(255, 255, 255, 0.02)));
 }
 
 .review-outcome-card {
   padding: 18px;
   border-radius: var(--radius-soft);
-  border: 1px solid rgba(240, 214, 160, 0.18);
-  background: linear-gradient(180deg, rgba(240, 214, 160, 0.08), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--review-outcome-card-border, rgba(240, 214, 160, 0.18));
+  background: var(--review-outcome-card-bg, linear-gradient(180deg, rgba(240, 214, 160, 0.08), rgba(255, 255, 255, 0.02)));
   box-shadow: var(--shadow-soft);
 }
 
@@ -1619,8 +1599,8 @@ a {
   margin-top: 18px;
   padding: 18px;
   border-radius: var(--radius-soft);
-  border: 1px solid rgba(240, 214, 160, 0.18);
-  background: linear-gradient(180deg, rgba(240, 214, 160, 0.08), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--progress-feedback-border, rgba(240, 214, 160, 0.18));
+  background: var(--progress-feedback-bg, linear-gradient(180deg, rgba(240, 214, 160, 0.08), rgba(255, 255, 255, 0.02)));
 }
 
 .field {
@@ -1641,8 +1621,8 @@ a {
   min-height: 48px;
   padding: 0 14px;
   border-radius: var(--radius-control);
-  border: 1px solid rgba(223, 182, 255, 0.16);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--field-border, rgba(223, 182, 255, 0.16));
+  background: var(--field-bg, rgba(255, 255, 255, 0.04));
   color: var(--text);
   font: inherit;
 }
@@ -1651,8 +1631,8 @@ a {
   min-height: 140px;
   padding: 12px 14px;
   border-radius: var(--radius-control);
-  border: 1px solid rgba(223, 182, 255, 0.16);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--field-border, rgba(223, 182, 255, 0.16));
+  background: var(--field-bg, rgba(255, 255, 255, 0.04));
   color: var(--text);
   font: inherit;
   resize: vertical;
@@ -1660,11 +1640,11 @@ a {
 
 .field input::placeholder,
 .field select::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--field-placeholder, rgba(255, 255, 255, 0.35));
 }
 
 .field textarea::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--field-placeholder, rgba(255, 255, 255, 0.35));
 }
 
 .status {
@@ -1674,13 +1654,13 @@ a {
 }
 
 .status--success {
-  background: rgba(223, 182, 255, 0.12);
-  border: 1px solid rgba(223, 182, 255, 0.18);
+  background: var(--status-success-bg, rgba(223, 182, 255, 0.12));
+  border: 1px solid var(--status-success-border, rgba(223, 182, 255, 0.18));
 }
 
 .status--error {
-  background: rgba(240, 80, 158, 0.1);
-  border: 1px solid rgba(240, 80, 158, 0.2);
+  background: var(--status-error-bg, rgba(240, 80, 158, 0.1));
+  border: 1px solid var(--status-error-border, rgba(240, 80, 158, 0.2));
 }
 
 .form-note {
@@ -1690,7 +1670,7 @@ a {
 }
 
 .form-note--error {
-  color: #ffb8d6;
+  color: var(--form-note-error, #ffb8d6);
 }
 
 .wallet-list {
@@ -1707,8 +1687,9 @@ a {
 .wallet-pill {
   padding: 10px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(240, 214, 160, 0.28);
-  background: rgba(240, 214, 160, 0.08);
+  border: 1px solid var(--wallet-pill-border, rgba(240, 214, 160, 0.28));
+  background: var(--wallet-pill-bg, rgba(240, 214, 160, 0.08));
+  color: var(--wallet-pill-text, var(--text));
   font-size: 0.85rem;
   word-break: break-all;
 }
@@ -1717,8 +1698,8 @@ a {
   margin-top: 18px;
   padding: 18px;
   border-radius: var(--radius-soft);
-  border: 1px solid rgba(223, 182, 255, 0.18);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--qr-card-border, rgba(223, 182, 255, 0.18));
+  background: var(--qr-card-bg, rgba(255, 255, 255, 0.03));
 }
 
 .qr-card__image {
@@ -1727,38 +1708,274 @@ a {
   max-width: 100%;
   margin: 14px 0;
   border-radius: 16px;
-  border: 1px solid rgba(223, 182, 255, 0.16);
-  background: white;
+  border: 1px solid var(--qr-card-image-border, rgba(223, 182, 255, 0.16));
+  background: var(--qr-card-image-bg, white);
 }
 
 .challenge-card {
   margin-top: 18px;
   padding: 18px;
   border-radius: var(--radius-soft);
-  border: 1px solid rgba(143, 93, 255, 0.24);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--challenge-card-border, rgba(143, 93, 255, 0.24));
+  background: var(--challenge-card-bg, rgba(255, 255, 255, 0.03));
 }
 
 .challenge-card pre {
   margin: 12px 0;
   padding: 14px;
   border-radius: 14px;
-  background: rgba(7, 3, 12, 0.48);
-  color: var(--lavender);
+  background: var(--challenge-card-code-bg, rgba(7, 3, 12, 0.48));
+  color: var(--challenge-card-code-text, var(--lavender));
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .text-link {
-  color: var(--lavender);
+  color: var(--text-link, var(--lavender));
 }
 
 .activity-item span {
-  color: var(--lavender);
+  color: var(--activity-highlight-text, var(--lavender));
 }
 
 .connection-pill--on {
   background: rgba(223, 182, 255, 0.16);
+}
+
+@keyframes xportalFloatGlow {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: translate3d(12px, -18px, 0) scale(1.06);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(-8px, 10px, 0) scale(0.98);
+    opacity: 0.78;
+  }
+}
+
+@keyframes xportalRevealY {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes xportalRevealX {
+  from {
+    opacity: 0;
+    transform: translate3d(24px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes emoryaFloatGlow {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate3d(8px, -12px, 0) scale(1.04);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(-6px, 8px, 0) scale(0.99);
+    opacity: 0.66;
+  }
+}
+
+@keyframes emoryaReveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+body[data-brand-theme="emorya"] .shell__glow--left {
+  animation: emoryaFloatGlow 18s ease-in-out infinite;
+}
+
+body[data-brand-theme="emorya"] .shell__glow--right {
+  animation: emoryaFloatGlow 20s ease-in-out infinite reverse;
+}
+
+body[data-brand-theme="emorya"] .brand-logo {
+  width: 199px;
+}
+
+body[data-brand-theme="emorya"] .brand-copy {
+  display: none;
+}
+
+body[data-brand-theme="emorya"] .topbar {
+  background: rgba(13, 6, 22, 0.82);
+  backdrop-filter: blur(22px) saturate(132%);
+}
+
+body[data-brand-theme="emorya"] .page-hero > *:first-child {
+  animation: emoryaReveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body[data-brand-theme="emorya"] .page-hero > *:last-child {
+  animation: emoryaReveal 700ms cubic-bezier(0.22, 1, 0.36, 1) 110ms both;
+}
+
+body[data-brand-theme="xportal"] .shell__glow {
+  filter: blur(82px);
+}
+
+body[data-brand-theme="xportal"] .shell__glow--left {
+  animation: xportalFloatGlow 16s ease-in-out infinite;
+}
+
+body[data-brand-theme="xportal"] .shell__glow--right {
+  animation: xportalFloatGlow 18s ease-in-out infinite reverse;
+}
+
+body[data-brand-theme="xportal"] .topbar {
+  backdrop-filter: blur(24px);
+}
+
+body[data-brand-theme="xportal"] .page-hero > *:first-child {
+  animation: xportalRevealY 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body[data-brand-theme="xportal"] .page-hero > *:last-child {
+  animation: xportalRevealX 760ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+
+body[data-brand-theme="xportal"] .stats-row > *,
+body[data-brand-theme="xportal"] .info-grid > *,
+body[data-brand-theme="xportal"] .tier-grid > *,
+body[data-brand-theme="xportal"] .admin-grid > *,
+body[data-brand-theme="xportal"] .quest-grid > *,
+body[data-brand-theme="xportal"] .achievement-grid > *,
+body[data-brand-theme="xportal"] .achievement-list > *,
+body[data-brand-theme="xportal"] .reward-summary-grid > *,
+body[data-brand-theme="xportal"] .reward-ladder > *,
+body[data-brand-theme="xportal"] .reward-visual-grid > *,
+body[data-brand-theme="xportal"] .quest-action-grid > *,
+body[data-brand-theme="xportal"] .review-queue > * {
+  animation: xportalRevealY 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body[data-brand-theme="xportal"] .stats-row > *:nth-child(2),
+body[data-brand-theme="xportal"] .info-grid > *:nth-child(2),
+body[data-brand-theme="xportal"] .tier-grid > *:nth-child(2),
+body[data-brand-theme="xportal"] .admin-grid > *:nth-child(2),
+body[data-brand-theme="xportal"] .quest-grid > *:nth-child(2),
+body[data-brand-theme="xportal"] .achievement-grid > *:nth-child(2),
+body[data-brand-theme="xportal"] .achievement-list > *:nth-child(2),
+body[data-brand-theme="xportal"] .reward-summary-grid > *:nth-child(2),
+body[data-brand-theme="xportal"] .reward-ladder > *:nth-child(2),
+body[data-brand-theme="xportal"] .reward-visual-grid > *:nth-child(2),
+body[data-brand-theme="xportal"] .quest-action-grid > *:nth-child(2),
+body[data-brand-theme="xportal"] .review-queue > *:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+body[data-brand-theme="xportal"] .stats-row > *:nth-child(3),
+body[data-brand-theme="xportal"] .info-grid > *:nth-child(3),
+body[data-brand-theme="xportal"] .tier-grid > *:nth-child(3),
+body[data-brand-theme="xportal"] .admin-grid > *:nth-child(3),
+body[data-brand-theme="xportal"] .quest-grid > *:nth-child(3),
+body[data-brand-theme="xportal"] .achievement-grid > *:nth-child(3),
+body[data-brand-theme="xportal"] .achievement-list > *:nth-child(3),
+body[data-brand-theme="xportal"] .reward-summary-grid > *:nth-child(3),
+body[data-brand-theme="xportal"] .reward-ladder > *:nth-child(3),
+body[data-brand-theme="xportal"] .reward-visual-grid > *:nth-child(3),
+body[data-brand-theme="xportal"] .quest-action-grid > *:nth-child(3),
+body[data-brand-theme="xportal"] .review-queue > *:nth-child(3) {
+  animation-delay: 140ms;
+}
+
+body[data-brand-theme="xportal"] .button,
+body[data-brand-theme="xportal"] .nav__link,
+body[data-brand-theme="xportal"] .badge,
+body[data-brand-theme="xportal"] .tier-pill,
+body[data-brand-theme="xportal"] .connection-pill,
+body[data-brand-theme="xportal"] .toggle-chip {
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease,
+    color 220ms ease;
+}
+
+body[data-brand-theme="xportal"] .button:hover,
+body[data-brand-theme="xportal"] .nav__link:hover,
+body[data-brand-theme="xportal"] .toggle-chip:hover {
+  transform: translate3d(0, -2px, 0);
+}
+
+body[data-brand-theme="xportal"] .stat-card,
+body[data-brand-theme="xportal"] .metric-card,
+body[data-brand-theme="xportal"] .info-card,
+body[data-brand-theme="xportal"] .tier-card,
+body[data-brand-theme="xportal"] .admin-card,
+body[data-brand-theme="xportal"] .quest-card,
+body[data-brand-theme="xportal"] .achievement-card,
+body[data-brand-theme="xportal"] .leaderboard__row,
+body[data-brand-theme="xportal"] .reward-ladder__card,
+body[data-brand-theme="xportal"] .reward-visual-card {
+  backdrop-filter: blur(20px);
+}
+
+body[data-brand-theme="xportal"] .page-hero,
+body[data-brand-theme="xportal"] .panel,
+body[data-brand-theme="xportal"] .stat-card,
+body[data-brand-theme="xportal"] .metric-card,
+body[data-brand-theme="xportal"] .info-card,
+body[data-brand-theme="xportal"] .tier-card,
+body[data-brand-theme="xportal"] .admin-card,
+body[data-brand-theme="xportal"] .quest-card,
+body[data-brand-theme="xportal"] .achievement-card,
+body[data-brand-theme="xportal"] .leaderboard__row,
+body[data-brand-theme="xportal"] .reward-ladder__card,
+body[data-brand-theme="xportal"] .reward-visual-card {
+  border-radius: 24px;
+}
+
+body[data-brand-theme="xportal"] .button--primary {
+  box-shadow:
+    0 18px 34px rgba(112, 103, 255, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-brand-theme="emorya"] .shell__glow,
+  body[data-brand-theme="emorya"] .page-hero > *,
+  body[data-brand-theme="xportal"] .shell__glow,
+  body[data-brand-theme="xportal"] .page-hero > *,
+  body[data-brand-theme="xportal"] .stats-row > *,
+  body[data-brand-theme="xportal"] .info-grid > *,
+  body[data-brand-theme="xportal"] .tier-grid > *,
+  body[data-brand-theme="xportal"] .admin-grid > *,
+  body[data-brand-theme="xportal"] .quest-grid > *,
+  body[data-brand-theme="xportal"] .achievement-grid > *,
+  body[data-brand-theme="xportal"] .achievement-list > *,
+  body[data-brand-theme="xportal"] .reward-summary-grid > *,
+  body[data-brand-theme="xportal"] .reward-ladder > *,
+  body[data-brand-theme="xportal"] .reward-visual-grid > *,
+  body[data-brand-theme="xportal"] .quest-action-grid > *,
+  body[data-brand-theme="xportal"] .review-queue > * {
+    animation: none !important;
+  }
 }
 
 @media (max-width: 960px) {

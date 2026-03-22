@@ -29,6 +29,7 @@ export async function SiteShell({
 }) {
   const cookieStore = await cookies();
   const activeBrandTheme = getBrandTheme(cookieStore.get(brandThemeCookieName)?.value ?? process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME);
+  const showBrandCopy = activeBrandTheme.id === "emorya";
 
   return (
     <div className="shell">
@@ -46,10 +47,12 @@ export async function SiteShell({
               height={activeBrandTheme.brand.logoHeight}
             />
           </Link>
-          <div className="brand-copy">
-            <p className="eyebrow">{eyebrow ?? activeBrandTheme.brand.defaultEyebrow}</p>
-            <h1 className="brandmark">{activeBrandTheme.brand.defaultTagline}</h1>
-          </div>
+          {showBrandCopy ? (
+            <div className="brand-copy">
+              <p className="eyebrow">{eyebrow ?? activeBrandTheme.brand.defaultEyebrow}</p>
+              <h1 className="brandmark">{activeBrandTheme.brand.defaultTagline}</h1>
+            </div>
+          ) : null}
         </div>
         <div className="topbar__controls">
           <nav className="nav">

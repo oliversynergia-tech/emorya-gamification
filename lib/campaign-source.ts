@@ -1,6 +1,9 @@
+import { getActiveBrandTheme } from "./brand-themes/index.ts";
 import type { CampaignEconomyOverride, QuestTrack, UserSnapshot } from "@/lib/types";
 
 export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"]) {
+  const activeThemeId = getActiveBrandTheme().id;
+
   switch (source) {
     case "zealy":
       return {
@@ -32,7 +35,12 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
     default:
       return {
         label: "Direct entrant",
-        title: "Guide users from first quest to premium and token readiness.",
+        title:
+          activeThemeId === "xportal"
+            ? "From crypto newbie to super app native, one quest at a time."
+            : activeThemeId === "multiversx"
+              ? "Turn curious users into stakers, builders, and believers."
+              : "Guide users from first quest to premium and token readiness.",
         description:
           "This lane focuses on early gratification, wallet adoption, weekly progress, and referral-driven growth.",
         accent: "Direct-to-growth",
