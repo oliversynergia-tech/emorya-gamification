@@ -58,10 +58,10 @@
         font-family: "Roobert", system-ui, sans-serif;
         color: var(--text);
         background:
-          radial-gradient(circle at 8% 22%, rgba(65, 123, 255, 0.22), transparent 16rem),
-          radial-gradient(circle at 14% 28%, rgba(164, 78, 255, 0.18), transparent 18rem),
-          radial-gradient(circle at 86% 20%, rgba(44, 230, 214, 0.14), transparent 20rem),
-          linear-gradient(180deg, #090909 0%, #050505 100%);
+          radial-gradient(circle at 8% 22%, rgba(80, 102, 255, 0.1), transparent 14rem),
+          radial-gradient(circle at 14% 28%, rgba(164, 78, 255, 0.08), transparent 16rem),
+          radial-gradient(circle at 86% 20%, rgba(44, 230, 214, 0.06), transparent 18rem),
+          linear-gradient(180deg, #080808 0%, #050505 100%);
       }
 
       a {
@@ -89,10 +89,23 @@
         position: absolute;
         inset: 0;
         background:
-          radial-gradient(circle at -4% 38%, rgba(97, 122, 255, 0.28), transparent 18rem),
-          radial-gradient(circle at 102% 26%, rgba(44, 230, 214, 0.12), transparent 18rem),
+          radial-gradient(circle at -4% 34%, rgba(97, 122, 255, 0.14), transparent 16rem),
+          radial-gradient(circle at 102% 22%, rgba(44, 230, 214, 0.08), transparent 16rem),
           linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.01) 100%);
         pointer-events: none;
+      }
+
+      .shell::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at -2% 58%, rgba(242, 214, 163, 0.06), transparent 18rem),
+          radial-gradient(circle at 102% 48%, rgba(255, 188, 76, 0.08), transparent 16rem),
+          radial-gradient(circle at 100% 46%, rgba(255, 255, 255, 0.05), transparent 12rem);
+        pointer-events: none;
+        mix-blend-mode: screen;
+        opacity: 0.9;
       }
 
       .topbar,
@@ -121,6 +134,13 @@
         letter-spacing: 0.02em;
       }
 
+      .brand--locked {
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
       .brand img {
         height: 26px;
       }
@@ -140,10 +160,10 @@
 
       .pill {
         padding: 11px 18px;
-        border: 1px solid rgba(44, 230, 214, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 999px;
-        background: rgba(8, 30, 29, 0.52);
-        color: #e9ffff;
+        background: rgba(255, 255, 255, 0.02);
+        color: #d4d4d4;
         font-size: 0.82rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -154,6 +174,46 @@
         grid-template-columns: 1.15fr 0.85fr;
         gap: 28px;
         padding: 52px 28px 34px;
+        min-height: 26rem;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        left: -8rem;
+        bottom: -10rem;
+        width: 23rem;
+        height: 23rem;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 38% 38%, rgba(255, 255, 255, 0.4), transparent 12%),
+          repeating-radial-gradient(circle at 50% 50%, rgba(255, 238, 210, 0.84) 0 2px, rgba(10, 10, 10, 0) 10px 18px),
+          radial-gradient(circle at 50% 50%, rgba(41, 219, 202, 0.12), transparent 62%);
+        opacity: 0.55;
+        filter: blur(0.2px);
+        pointer-events: none;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -9rem;
+        top: 1rem;
+        width: 28rem;
+        height: 28rem;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 58% 50%, rgba(255, 255, 255, 0.48), transparent 11%),
+          radial-gradient(circle at 53% 52%, rgba(21, 209, 195, 0.24), transparent 19%),
+          radial-gradient(circle at 68% 56%, rgba(255, 202, 84, 0.18), transparent 18%),
+          radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.03), transparent 72%);
+        box-shadow:
+          inset 0 0 0 2px rgba(107, 168, 255, 0.32),
+          inset 0 0 0 6px rgba(157, 93, 255, 0.18),
+          inset 0 0 0 12px rgba(255, 187, 73, 0.18);
+        filter: blur(0.2px);
+        opacity: 0.82;
+        pointer-events: none;
       }
 
       .eyebrow {
@@ -161,17 +221,17 @@
         align-items: center;
         gap: 10px;
         margin-bottom: 18px;
-        color: var(--teal);
-        font-size: 0.84rem;
+        color: #b8b8b8;
+        font-size: 0.8rem;
         text-transform: uppercase;
-        letter-spacing: 0.16em;
+        letter-spacing: 0.14em;
       }
 
       .eyebrow::before {
         content: "";
         width: 38px;
         height: 1px;
-        background: linear-gradient(90deg, transparent, var(--teal));
+        background: linear-gradient(90deg, transparent, #7b7b7b);
       }
 
       h1 {
@@ -221,7 +281,7 @@
 
       .button--secondary {
         border: 1px solid rgba(255, 255, 255, 0.06);
-        background: #202020;
+        background: #2a2a2a;
         color: var(--text);
       }
 
@@ -229,12 +289,19 @@
         padding: 24px;
         border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 28px;
-        background: linear-gradient(180deg, rgba(18, 18, 18, 0.96), rgba(14, 14, 14, 0.96));
+        background: linear-gradient(180deg, rgba(20, 20, 20, 0.96), rgba(16, 16, 16, 0.96));
+        backdrop-filter: blur(6px);
       }
 
       .hero-card h2 {
         margin: 0 0 14px;
         font-size: 1.25rem;
+      }
+
+      .hero-card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.66;
       }
 
       .metric-grid,
@@ -261,7 +328,7 @@
       .metric strong {
         display: block;
         margin-bottom: 6px;
-        font-size: 1.5rem;
+        font-size: 1.42rem;
         color: var(--teal);
       }
 
@@ -278,7 +345,7 @@
 
       .section-title {
         margin: 0 0 16px;
-        font-size: 1.65rem;
+        font-size: 1.72rem;
         letter-spacing: -0.03em;
         font-weight: 600;
       }
@@ -312,7 +379,7 @@
         padding: 24px;
         border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 30px;
-        background: linear-gradient(180deg, rgba(10, 10, 10, 0.98), rgba(8, 8, 8, 0.98));
+        background: linear-gradient(180deg, rgba(13, 13, 13, 0.98), rgba(9, 9, 9, 0.98));
       }
 
       .surface-header {
@@ -332,7 +399,7 @@
       .surface-chip {
         padding: 9px 13px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.06);
         color: var(--muted);
         font-size: 0.82rem;
@@ -346,7 +413,7 @@
         padding: 22px;
         border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 24px;
-        background: rgba(20, 20, 20, 0.94);
+        background: rgba(22, 22, 22, 0.95);
       }
 
       .mission-top {
@@ -394,7 +461,7 @@
         padding: 14px 16px;
         border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, 0.06);
-        background: rgba(255, 255, 255, 0.025);
+        background: rgba(255, 255, 255, 0.02);
       }
 
       .quest-row {
@@ -479,6 +546,11 @@
         h1 {
           font-size: 2.6rem;
         }
+
+        .hero::before,
+        .hero::after {
+          opacity: 0.45;
+        }
       }
     </style>
   </head>
@@ -486,7 +558,7 @@
     <main class="page">
       <div class="shell">
         <header class="topbar">
-          <div class="brand">
+          <div class="brand brand--locked">
             <img src="https://cdn.multiversx.com/webflow/MultiversX-Logo_1.svg" alt="MultiversX" />
             <span>campaign and retention layer proposal</span>
           </div>
