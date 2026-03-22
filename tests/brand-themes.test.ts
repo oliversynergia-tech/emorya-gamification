@@ -40,3 +40,10 @@ test("brand theme registry exposes the default brand entry", () => {
   assert.equal(brandThemes.emorya.id, "emorya");
   assert.equal(brandThemes.emorya.label, "Emorya");
 });
+
+test("brand theme registry exposes flagship partner themes", () => {
+  assert.ok(brandThemes.multiversx);
+  assert.ok(brandThemes.xportal);
+  assert.equal(brandThemes.multiversx.label, "MultiversX");
+  assert.equal(brandThemes.xportal.label, "xPortal");
+});

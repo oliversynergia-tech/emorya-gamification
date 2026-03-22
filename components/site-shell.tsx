@@ -1,9 +1,11 @@
 import Image from "next/image";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { ReactNode } from "react";
 
-import { getActiveBrandTheme } from "@/lib/brand-themes";
+import { brandThemeCookieName, getBrandTheme, type BrandThemeId } from "@/lib/brand-themes";
 import { SignOutButton } from "@/components/sign-out-button";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import type { AuthUser } from "@/lib/types";
 
 const navItems = [
@@ -16,7 +18,7 @@ const navItems = [
   { href: "/admin", label: "Admin" },
 ];
 
-export function SiteShell({
+export async function SiteShell({
   children,
   eyebrow,
   currentUser = null,
@@ -25,7 +27,8 @@ export function SiteShell({
   eyebrow?: string;
   currentUser?: AuthUser | null;
 }) {
-  const activeBrandTheme = getActiveBrandTheme();
+  const cookieStore = await cookies();
+  const activeBrandTheme = getBrandTheme(cookieStore.get(brandThemeCookieName)?.value ?? process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME);
 
   return (
     <div className="shell">
@@ -56,6 +59,7 @@ export function SiteShell({
               </Link>
             ))}
           </nav>
+          <ThemeSwitcher activeTheme={activeBrandTheme.id as BrandThemeId} />
           <div className="session-chip">
             {currentUser ? (
               <>

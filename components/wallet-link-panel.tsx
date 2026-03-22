@@ -7,7 +7,7 @@ import { Message } from "@multiversx/sdk-core/out/core/message";
 import { WalletConnectV2Provider } from "@multiversx/sdk-wallet-connect-provider";
 import QRCode from "qrcode";
 
-import { getActiveBrandTheme } from "@/lib/brand-themes";
+import { getBrandTheme } from "@/lib/brand-themes";
 
 type WalletLinkPanelProps = {
   walletAddresses: string[];
@@ -29,8 +29,6 @@ type ChallengeResponse = {
 
 const walletConnectProjectId = process.env.NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID;
 const chainId = process.env.NEXT_PUBLIC_MULTIVERSX_CHAIN === "devnet" ? "D" : "1";
-const activeBrandTheme = getActiveBrandTheme();
-
 let providerPromise: Promise<WalletConnectV2Provider> | null = null;
 
 function bytesToHex(bytes: Uint8Array) {
@@ -43,6 +41,11 @@ async function getWalletProvider() {
   if (!walletConnectProjectId) {
     throw new Error("Missing NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID.");
   }
+
+  const activeBrandTheme =
+    typeof document !== "undefined"
+      ? getBrandTheme(document.body.dataset.brandTheme)
+      : getBrandTheme(process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME);
 
   if (!providerPromise) {
     const provider = new WalletConnectV2Provider(

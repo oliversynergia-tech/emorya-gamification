@@ -245,6 +245,44 @@ a {
   align-items: center;
 }
 
+.theme-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--nav-link-border);
+  background: var(--nav-link-bg);
+}
+
+.theme-switcher__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  color: var(--nav-link-text);
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.theme-switcher__link:hover,
+.theme-switcher__link--active {
+  color: var(--nav-link-hover-text);
+  background: var(--nav-link-hover-bg);
+}
+
+.theme-switcher__link--active {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
 .panel--priority-hard {
   border-color: var(--priority-hard-border);
   box-shadow: var(--priority-hard-shadow);
@@ -1199,33 +1237,25 @@ a {
   gap: 16px;
   padding: 18px;
   border-radius: var(--radius-card);
-  border: 1px solid rgba(223, 182, 255, 0.12);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.012)),
-    rgba(18, 9, 30, 0.88);
+  border: 1px solid var(--reward-timeline-border, rgba(223, 182, 255, 0.12));
+  background: var(--reward-timeline-bg, linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.012)), rgba(18, 9, 30, 0.88));
 }
 
 .reward-timeline__step--complete {
-  border-color: rgba(223, 182, 255, 0.2);
+  border-color: var(--reward-timeline-complete-border, rgba(223, 182, 255, 0.2));
 }
 
 .reward-timeline__step--active {
-  border-color: rgba(240, 80, 158, 0.3);
-  box-shadow: 0 0 0 1px rgba(240, 80, 158, 0.1), var(--shadow-soft);
-  background:
-    radial-gradient(circle at top right, rgba(240, 80, 158, 0.08), transparent 0 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)),
-    rgba(19, 10, 32, 0.92);
+  border-color: var(--reward-timeline-active-border, rgba(240, 80, 158, 0.3));
+  box-shadow: var(--reward-timeline-active-shadow, 0 0 0 1px rgba(240, 80, 158, 0.1), var(--shadow-soft));
+  background: var(--reward-timeline-active-bg, radial-gradient(circle at top right, rgba(240, 80, 158, 0.08), transparent 0 36%), linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)), rgba(19, 10, 32, 0.92));
 }
 
 .referral-campaign-card {
   padding: 20px;
   border-radius: 24px;
-  border: 1px solid rgba(240, 80, 158, 0.16);
-  background:
-    radial-gradient(circle at top right, rgba(240, 80, 158, 0.12), transparent 0 34%),
-    linear-gradient(180deg, rgba(223, 182, 255, 0.06), rgba(255, 255, 255, 0.015)),
-    rgba(20, 10, 35, 0.94);
+  border: 1px solid var(--referral-campaign-border, rgba(240, 80, 158, 0.16));
+  background: var(--referral-campaign-bg, radial-gradient(circle at top right, rgba(240, 80, 158, 0.12), transparent 0 34%), linear-gradient(180deg, rgba(223, 182, 255, 0.06), rgba(255, 255, 255, 0.015)), rgba(20, 10, 35, 0.94));
 }
 
 .referral-campaign-card p {
@@ -1234,11 +1264,11 @@ a {
 }
 
 .leaderboard__row--annual {
-  border-color: rgba(240, 214, 160, 0.35);
+  border-color: var(--leaderboard-row-annual-border, rgba(240, 214, 160, 0.35));
 }
 
 .leaderboard__row--monthly {
-  border-color: rgba(240, 80, 158, 0.4);
+  border-color: var(--leaderboard-row-monthly-border, rgba(240, 80, 158, 0.4));
 }
 
 .achievement-group {
@@ -1251,34 +1281,29 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border: 1px solid rgba(223, 182, 255, 0.14);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
-    rgba(19, 10, 32, 0.92);
+  border: 1px solid var(--achievement-card-border, rgba(223, 182, 255, 0.14));
+  background: var(--achievement-card-bg, linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)), rgba(19, 10, 32, 0.92));
 }
 
 .achievement-card--unlocked {
-  border-color: rgba(240, 214, 160, 0.34);
-  background:
-    radial-gradient(circle at top right, rgba(240, 214, 160, 0.12), transparent 0 36%),
-    linear-gradient(180deg, rgba(240, 214, 160, 0.08), rgba(255, 255, 255, 0.02)),
-    rgba(20, 11, 33, 0.95);
+  border-color: var(--achievement-card-unlocked-border, rgba(240, 214, 160, 0.34));
+  background: var(--achievement-card-unlocked-bg, radial-gradient(circle at top right, rgba(240, 214, 160, 0.12), transparent 0 36%), linear-gradient(180deg, rgba(240, 214, 160, 0.08), rgba(255, 255, 255, 0.02)), rgba(20, 11, 33, 0.95));
 }
 
 .achievement-card--progress {
-  border-color: rgba(223, 182, 255, 0.18);
+  border-color: var(--achievement-card-progress-border, rgba(223, 182, 255, 0.18));
 }
 
 .achievement-card--notification-info {
-  border-color: rgba(223, 182, 255, 0.28);
+  border-color: var(--achievement-card-info-border, rgba(223, 182, 255, 0.28));
 }
 
 .achievement-card--notification-success {
-  border-color: rgba(240, 214, 160, 0.34);
+  border-color: var(--achievement-card-success-border, rgba(240, 214, 160, 0.34));
 }
 
 .achievement-card--notification-warning {
-  border-color: rgba(240, 80, 158, 0.34);
+  border-color: var(--achievement-card-warning-border, rgba(240, 80, 158, 0.34));
 }
 
 .lane-summary-card {
@@ -1312,13 +1337,13 @@ a {
 }
 
 .mission-ladder-card {
-  border-left: 3px solid rgba(240, 80, 158, 0.24);
+  border-left: 3px solid var(--mission-ladder-line, rgba(240, 80, 158, 0.24));
   padding-left: 18px;
 }
 
 .mission-ladder-card--summary {
-  border-left-color: rgba(240, 214, 160, 0.38);
-  background: rgba(240, 214, 160, 0.06);
+  border-left-color: var(--mission-ladder-summary-line, rgba(240, 214, 160, 0.38));
+  background: var(--mission-ladder-summary-bg, rgba(240, 214, 160, 0.06));
 }
 
 .mission-ladder-card__side {
@@ -1327,8 +1352,8 @@ a {
 
 .mission-ladder-group {
   border-style: dashed;
-  border-color: rgba(223, 182, 255, 0.24);
-  background: rgba(223, 182, 255, 0.04);
+  border-color: var(--mission-ladder-group-border, rgba(223, 182, 255, 0.24));
+  background: var(--mission-ladder-group-bg, rgba(223, 182, 255, 0.04));
 }
 
 .achievement-progress {
@@ -1363,8 +1388,8 @@ a {
 .social-editor__item {
   padding: 16px;
   border-radius: var(--radius-soft);
-  border: 1px solid rgba(223, 182, 255, 0.14);
-  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--social-editor-item-border, rgba(223, 182, 255, 0.14));
+  background: var(--social-editor-item-bg, rgba(255, 255, 255, 0.025));
 }
 
 .social-editor__meta {
@@ -1410,17 +1435,17 @@ a {
   min-height: 40px;
   padding: 0 14px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(223, 182, 255, 0.16);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--muted);
+  border: 1px solid var(--toggle-chip-border, rgba(223, 182, 255, 0.16));
+  background: var(--toggle-chip-bg, rgba(255, 255, 255, 0.03));
+  color: var(--toggle-chip-text, var(--muted));
   font-family: var(--font-display), sans-serif;
   cursor: pointer;
 }
 
 .toggle-chip--active {
-  color: var(--text);
-  border-color: rgba(240, 80, 158, 0.36);
-  background: rgba(240, 80, 158, 0.14);
+  color: var(--toggle-chip-active-text, var(--text));
+  border-color: var(--toggle-chip-active-border, rgba(240, 80, 158, 0.36));
+  background: var(--toggle-chip-active-bg, rgba(240, 80, 158, 0.14));
 }
 
 .form-stack {
@@ -1446,16 +1471,14 @@ a {
 .review-item {
   padding: 18px;
   border-radius: var(--radius-soft);
-  border: 1px solid rgba(223, 182, 255, 0.14);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--quest-action-card-border, rgba(223, 182, 255, 0.14));
+  background: var(--quest-action-card-bg, rgba(255, 255, 255, 0.03));
 }
 
 .quest-action-card--highlighted {
-  border-color: rgba(240, 80, 158, 0.34);
-  box-shadow: 0 0 0 1px rgba(240, 80, 158, 0.2), 0 18px 40px rgba(240, 80, 158, 0.12);
-  background:
-    radial-gradient(circle at top right, rgba(240, 80, 158, 0.09), transparent 0 34%),
-    rgba(255, 255, 255, 0.04);
+  border-color: var(--quest-action-card-highlight-border, rgba(240, 80, 158, 0.34));
+  box-shadow: var(--quest-action-card-highlight-shadow, 0 0 0 1px rgba(240, 80, 158, 0.2), 0 18px 40px rgba(240, 80, 158, 0.12));
+  background: var(--quest-action-card-highlight-bg, radial-gradient(circle at top right, rgba(240, 80, 158, 0.09), transparent 0 34%), rgba(255, 255, 255, 0.04));
 }
 
 .review-item h4,
@@ -1467,8 +1490,8 @@ a {
   margin: 14px 0;
   padding: 12px;
   border-radius: 14px;
-  background: rgba(7, 10, 20, 0.78);
-  border: 1px solid rgba(223, 182, 255, 0.1);
+  background: var(--review-payload-bg, rgba(7, 10, 20, 0.78));
+  border: 1px solid var(--review-payload-border, rgba(223, 182, 255, 0.1));
   color: var(--muted);
   overflow-x: auto;
   font-size: 0.8rem;
@@ -1762,6 +1785,11 @@ a {
   .session-chip,
   .grid--auth {
     width: 100%;
+  }
+
+  .theme-switcher {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   .brand-block {
