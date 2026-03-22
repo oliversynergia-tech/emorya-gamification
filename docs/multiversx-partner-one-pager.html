@@ -29,29 +29,23 @@
         src: url("https://cdn.multiversx.com/fonts/roobert/bold.woff2") format("woff2");
       }
 
-      @font-face {
-        font-family: "Jersey 25";
-        font-style: normal;
-        font-weight: 400;
-        font-display: swap;
-        src: url("https://cdn.multiversx.com/webflow/fonts/Jersey25/Jersey25-Regular.woff2") format("woff2");
-      }
-
       :root {
-        --bg: #080b0d;
-        --bg-soft: #0d1316;
-        --panel: rgba(14, 21, 25, 0.84);
-        --panel-strong: rgba(12, 18, 22, 0.96);
-        --line: rgba(97, 238, 213, 0.18);
-        --line-strong: rgba(97, 238, 213, 0.34);
-        --text: #ecf6f6;
-        --muted: #97a8ab;
-        --teal: #61eed5;
-        --teal-strong: #25d7bf;
-        --teal-deep: #12343a;
-        --accent: #dafaf6;
-        --shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
-        --radius: 26px;
+        --bg: #060606;
+        --bg-soft: #0e0e0e;
+        --bg-panel: #171717;
+        --panel: rgba(23, 23, 23, 0.94);
+        --panel-soft: rgba(20, 20, 20, 0.82);
+        --line: rgba(255, 255, 255, 0.08);
+        --line-soft: rgba(255, 255, 255, 0.04);
+        --text: #f5f5f5;
+        --muted: #8d8d8d;
+        --muted-soft: #6e6e6e;
+        --teal: #2ce6d6;
+        --teal-strong: #21e0d0;
+        --teal-soft: rgba(44, 230, 214, 0.16);
+        --accent: #ffffff;
+        --shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+        --radius: 28px;
         --content: 1180px;
       }
 
@@ -64,9 +58,10 @@
         font-family: "Roobert", system-ui, sans-serif;
         color: var(--text);
         background:
-          radial-gradient(circle at top right, rgba(97, 238, 213, 0.14), transparent 24rem),
-          radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 22rem),
-          linear-gradient(180deg, #050709 0%, #091014 52%, #050709 100%);
+          radial-gradient(circle at 8% 22%, rgba(65, 123, 255, 0.22), transparent 16rem),
+          radial-gradient(circle at 14% 28%, rgba(164, 78, 255, 0.18), transparent 18rem),
+          radial-gradient(circle at 86% 20%, rgba(44, 230, 214, 0.14), transparent 20rem),
+          linear-gradient(180deg, #090909 0%, #050505 100%);
       }
 
       a {
@@ -83,11 +78,9 @@
       .shell {
         position: relative;
         overflow: hidden;
-        border: 1px solid var(--line);
-        border-radius: 34px;
-        background:
-          linear-gradient(180deg, rgba(11, 17, 20, 0.96), rgba(8, 11, 13, 0.96)),
-          linear-gradient(135deg, rgba(97, 238, 213, 0.08), transparent 60%);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 38px;
+        background: linear-gradient(180deg, rgba(8, 8, 8, 0.98), rgba(6, 6, 6, 0.98));
         box-shadow: var(--shadow);
       }
 
@@ -96,8 +89,9 @@
         position: absolute;
         inset: 0;
         background:
-          radial-gradient(circle at 15% 15%, rgba(97, 238, 213, 0.08), transparent 24rem),
-          linear-gradient(120deg, rgba(97, 238, 213, 0.04), transparent 45%, rgba(255, 255, 255, 0.03) 100%);
+          radial-gradient(circle at -4% 38%, rgba(97, 122, 255, 0.28), transparent 18rem),
+          radial-gradient(circle at 102% 26%, rgba(44, 230, 214, 0.12), transparent 18rem),
+          linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.01) 100%);
         pointer-events: none;
       }
 
@@ -114,10 +108,9 @@
         align-items: center;
         justify-content: space-between;
         gap: 20px;
-        padding: 20px 24px;
-        border-bottom: 1px solid rgba(97, 238, 213, 0.08);
-        background: rgba(4, 8, 10, 0.44);
-        backdrop-filter: blur(18px);
+        padding: 20px 28px;
+        border-bottom: 1px solid var(--line-soft);
+        background: rgba(6, 6, 6, 0.82);
       }
 
       .brand {
@@ -134,7 +127,8 @@
 
       .brand span {
         color: var(--muted);
-        font-size: 0.94rem;
+        font-size: 0.95rem;
+        font-weight: 500;
       }
 
       .badge-row {
@@ -145,12 +139,12 @@
       }
 
       .pill {
-        padding: 8px 14px;
-        border: 1px solid rgba(97, 238, 213, 0.16);
+        padding: 11px 18px;
+        border: 1px solid rgba(44, 230, 214, 0.18);
         border-radius: 999px;
-        background: rgba(97, 238, 213, 0.06);
-        color: var(--accent);
-        font-size: 0.78rem;
+        background: rgba(8, 30, 29, 0.52);
+        color: #e9ffff;
+        font-size: 0.82rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
       }
@@ -159,7 +153,7 @@
         display: grid;
         grid-template-columns: 1.15fr 0.85fr;
         gap: 28px;
-        padding: 44px 24px 32px;
+        padding: 52px 28px 34px;
       }
 
       .eyebrow {
@@ -168,9 +162,9 @@
         gap: 10px;
         margin-bottom: 18px;
         color: var(--teal);
-        font-size: 0.82rem;
+        font-size: 0.84rem;
         text-transform: uppercase;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.16em;
       }
 
       .eyebrow::before {
@@ -182,23 +176,23 @@
 
       h1 {
         margin: 0;
-        font-size: clamp(2.9rem, 5vw, 5.4rem);
-        line-height: 0.94;
-        letter-spacing: -0.05em;
+        font-size: clamp(3rem, 5.2vw, 5.55rem);
+        line-height: 0.93;
+        letter-spacing: -0.055em;
+        font-weight: 600;
       }
 
       .hero-accent {
-        font-family: "Jersey 25", sans-serif;
         color: var(--teal);
-        letter-spacing: 0.02em;
+        font-weight: 600;
       }
 
       .hero-copy {
         margin: 22px 0 28px;
         max-width: 44rem;
         color: var(--muted);
-        font-size: 1.08rem;
-        line-height: 1.7;
+        font-size: 1.06rem;
+        line-height: 1.78;
       }
 
       .hero-actions {
@@ -212,31 +206,30 @@
         align-items: center;
         justify-content: center;
         gap: 10px;
-        min-height: 48px;
-        padding: 0 20px;
-        border-radius: 16px;
+        min-height: 58px;
+        padding: 0 28px;
+        border-radius: 18px;
         font-weight: 600;
+        font-size: 1rem;
       }
 
       .button--primary {
-        background: linear-gradient(180deg, #61eed5, #27d7bf);
-        color: #041012;
-        box-shadow: 0 18px 40px rgba(37, 215, 191, 0.24);
+        background: var(--teal);
+        color: #060606;
+        box-shadow: 0 16px 34px rgba(44, 230, 214, 0.2);
       }
 
       .button--secondary {
-        border: 1px solid var(--line-strong);
-        background: rgba(97, 238, 213, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: #202020;
         color: var(--text);
       }
 
       .hero-card {
         padding: 24px;
-        border: 1px solid rgba(97, 238, 213, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 28px;
-        background:
-          linear-gradient(180deg, rgba(14, 22, 25, 0.95), rgba(9, 13, 16, 0.95)),
-          radial-gradient(circle at top right, rgba(97, 238, 213, 0.12), transparent 12rem);
+        background: linear-gradient(180deg, rgba(18, 18, 18, 0.96), rgba(14, 14, 14, 0.96));
       }
 
       .hero-card h2 {
@@ -260,15 +253,15 @@
       .metric,
       .card {
         padding: 18px;
-        border: 1px solid rgba(97, 238, 213, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 22px;
-        background: rgba(8, 13, 15, 0.68);
+        background: rgba(24, 24, 24, 0.92);
       }
 
       .metric strong {
         display: block;
         margin-bottom: 6px;
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         color: var(--teal);
       }
 
@@ -280,13 +273,14 @@
       }
 
       .section {
-        padding: 18px 24px 32px;
+        padding: 20px 28px 34px;
       }
 
       .section-title {
         margin: 0 0 16px;
-        font-size: 1.7rem;
+        font-size: 1.65rem;
         letter-spacing: -0.03em;
+        font-weight: 600;
       }
 
       .section-intro {
@@ -316,11 +310,9 @@
 
       .platform-surface {
         padding: 24px;
-        border: 1px solid var(--line);
+        border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 30px;
-        background:
-          radial-gradient(circle at top right, rgba(97, 238, 213, 0.11), transparent 14rem),
-          linear-gradient(180deg, rgba(8, 13, 16, 0.96), rgba(5, 9, 11, 0.96));
+        background: linear-gradient(180deg, rgba(10, 10, 10, 0.98), rgba(8, 8, 8, 0.98));
       }
 
       .surface-header {
@@ -338,7 +330,7 @@
       }
 
       .surface-chip {
-        padding: 8px 12px;
+        padding: 9px 13px;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.04);
         border: 1px solid rgba(255, 255, 255, 0.06);
@@ -352,9 +344,9 @@
 
       .mission-card {
         padding: 22px;
-        border: 1px solid rgba(97, 238, 213, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 24px;
-        background: rgba(11, 18, 21, 0.88);
+        background: rgba(20, 20, 20, 0.94);
       }
 
       .mission-top {
@@ -369,7 +361,7 @@
         display: inline-flex;
         padding: 7px 11px;
         border-radius: 999px;
-        background: rgba(97, 238, 213, 0.08);
+        background: rgba(44, 230, 214, 0.12);
         color: var(--teal);
         font-size: 0.76rem;
         text-transform: uppercase;
@@ -379,7 +371,7 @@
       .mission-progress {
         height: 8px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.08);
         overflow: hidden;
         margin: 14px 0 18px;
       }
@@ -389,7 +381,7 @@
         width: 68%;
         height: 100%;
         border-radius: inherit;
-        background: linear-gradient(90deg, #61eed5, #23bfa9);
+        background: linear-gradient(90deg, #2ce6d6, #26d5c7);
       }
 
       .quest-list {
@@ -402,7 +394,7 @@
         padding: 14px 16px;
         border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, 0.06);
-        background: rgba(255, 255, 255, 0.03);
+        background: rgba(255, 255, 255, 0.025);
       }
 
       .quest-row {
@@ -429,14 +421,15 @@
         font-size: 0.82rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
+        font-weight: 600;
       }
 
       .footer {
         display: flex;
         justify-content: space-between;
         gap: 18px;
-        padding: 24px;
-        border-top: 1px solid rgba(97, 238, 213, 0.08);
+        padding: 24px 28px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
         color: var(--muted);
         font-size: 0.92rem;
       }
