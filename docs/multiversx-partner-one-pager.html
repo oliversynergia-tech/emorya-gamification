@@ -362,12 +362,119 @@
       }
 
       .proof-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       .card h3 {
         margin: 0 0 10px;
         font-size: 1.06rem;
+      }
+
+      .ecosystem-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 52px;
+        margin-bottom: 26px;
+        padding: 0 18px;
+        border-radius: 18px;
+        background: #2a2a2a;
+        color: #f0f0f0;
+        font-weight: 600;
+        font-size: 0.98rem;
+      }
+
+      .ecosystem-button svg {
+        width: 19px;
+        height: 19px;
+        fill: currentColor;
+      }
+
+      .ecosystem-card {
+        position: relative;
+        min-height: 21rem;
+        padding: 22px 26px 22px;
+        overflow: hidden;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: linear-gradient(180deg, rgba(24, 24, 24, 0.96), rgba(18, 18, 18, 0.96));
+      }
+
+      .ecosystem-card::before {
+        content: attr(data-mark);
+        position: absolute;
+        left: -0.02em;
+        bottom: -0.08em;
+        font-size: 12rem;
+        line-height: 0.85;
+        font-weight: 600;
+        letter-spacing: -0.08em;
+        color: rgba(255, 255, 255, 0.04);
+        pointer-events: none;
+      }
+
+      .ecosystem-card::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 42%;
+        background: radial-gradient(circle at 50% 100%, rgba(41, 219, 202, 0.14), transparent 70%);
+        pointer-events: none;
+      }
+
+      .ecosystem-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .ecosystem-icon {
+        width: 44px;
+        height: 44px;
+        margin-bottom: 7.75rem;
+        color: var(--teal);
+      }
+
+      .ecosystem-icon svg {
+        width: 100%;
+        height: 100%;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .ecosystem-card h3 {
+        margin: 0 0 10px;
+        font-size: 1.22rem;
+        font-weight: 600;
+      }
+
+      .ecosystem-card p {
+        margin: 0;
+        max-width: 14rem;
+        color: #9a9a9a;
+        font-size: 0.98rem;
+        line-height: 1.55;
+      }
+
+      .ecosystem-arrow {
+        position: absolute;
+        right: 24px;
+        bottom: 22px;
+        width: 34px;
+        height: 34px;
+        color: var(--teal);
+      }
+
+      .ecosystem-arrow svg {
+        width: 100%;
+        height: 100%;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       .card ul {
@@ -639,34 +746,92 @@
 
         <section class="section">
           <h2 class="section-title">Why this fits the MultiversX ecosystem</h2>
+          <a class="ecosystem-button" href="#platform-slice">
+            Explore the Ecosystem
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M2 4.5 8.5 2v13.5L2 13V4.5Z"></path>
+              <path d="M8.5 2 18 4.5V18l-9.5-2.5V2Z"></path>
+            </svg>
+          </a>
           <div class="proof-grid">
-            <article class="card">
-              <h3>Chain-native presentation</h3>
-              <p>
-                The platform can be rendered directly inside MultiversX visual language, which lowers friction and makes the product
-                feel like part of the ecosystem rather than a disconnected external tool.
-              </p>
+            <article class="ecosystem-card" data-mark="23">
+              <div class="ecosystem-icon">
+                <svg viewBox="0 0 48 48" aria-hidden="true">
+                  <rect x="8" y="8" width="12" height="12" rx="3"></rect>
+                  <rect x="28" y="8" width="12" height="12" rx="3"></rect>
+                  <rect x="8" y="28" width="12" height="12" rx="3"></rect>
+                  <rect x="28" y="28" width="12" height="12" rx="3"></rect>
+                </svg>
+              </div>
+              <h3>Brand-native</h3>
+              <p>Rendered directly in MultiversX visual language to feel familiar from the first touchpoint.</p>
+              <div class="ecosystem-arrow">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <path d="M6 16h18"></path>
+                  <path d="m17 7 9 9-9 9"></path>
+                </svg>
+              </div>
             </article>
-            <article class="card">
-              <h3>Token movement with context</h3>
-              <p>
-                Rewards can be tied to actual progression, partner milestones, and approved campaign moments, instead of token
-                distribution happening without behavioral signal behind it.
-              </p>
+            <article class="ecosystem-card" data-mark="06">
+              <div class="ecosystem-icon">
+                <svg viewBox="0 0 48 48" aria-hidden="true">
+                  <circle cx="12" cy="20" r="6"></circle>
+                  <circle cx="30" cy="10" r="6"></circle>
+                  <circle cx="34" cy="28" r="6"></circle>
+                  <path d="M17 18 25 13"></path>
+                  <path d="M15 24 29 26"></path>
+                  <path d="M31 15 33 22"></path>
+                </svg>
+              </div>
+              <h3>Partner-ready</h3>
+              <p>Connected to campaigns, partner tokens, and ecosystem activations without rebuilding the product.</p>
+              <div class="ecosystem-arrow">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <path d="M6 16h18"></path>
+                  <path d="m17 7 9 9-9 9"></path>
+                </svg>
+              </div>
             </article>
-            <article class="card">
-              <h3>Builders and users both benefit</h3>
-              <p>
-                Projects get campaign infrastructure, users get clearer progression and trust, and MultiversX gets another branded
-                utility layer that points back into wallet and ecosystem relevance.
-              </p>
+            <article class="ecosystem-card" data-mark="75">
+              <div class="ecosystem-icon">
+                <svg viewBox="0 0 48 48" aria-hidden="true">
+                  <circle cx="18" cy="24" r="12"></circle>
+                  <circle cx="30" cy="24" r="12"></circle>
+                </svg>
+              </div>
+              <h3>Reward-linked</h3>
+              <p>Secure the network effect with wallet-ready rewards, mission progression, and repeat participation.</p>
+              <div class="ecosystem-arrow">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <path d="M6 16h18"></path>
+                  <path d="m17 7 9 9-9 9"></path>
+                </svg>
+              </div>
             </article>
-            <article class="card">
-              <h3>Configurable for partner growth</h3>
-              <p>
-                The platform is already token-ready and campaign-aware, so partner presets, reward changes, and different funnel
-                types can be supported without forking the product every time.
-              </p>
+            <article class="ecosystem-card" data-mark="31">
+              <div class="ecosystem-icon">
+                <svg viewBox="0 0 48 48" aria-hidden="true">
+                  <path d="M24 8v6"></path>
+                  <path d="M24 34v6"></path>
+                  <path d="m12.7 12.7 4.2 4.2"></path>
+                  <path d="m31.1 31.1 4.2 4.2"></path>
+                  <path d="M8 24h6"></path>
+                  <path d="M34 24h6"></path>
+                  <path d="m12.7 35.3 4.2-4.2"></path>
+                  <path d="m31.1 16.9 4.2-4.2"></path>
+                  <path d="M20 16h8l4 4-4 12h-8l-4-4 4-12Z"></path>
+                  <path d="m20 16 4 4"></path>
+                  <path d="m28 16-4 4"></path>
+                </svg>
+              </div>
+              <h3>Operator control</h3>
+              <p>Give teams campaign infrastructure, reporting, approvals, and reward controls in one system.</p>
+              <div class="ecosystem-arrow">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <path d="M6 16h18"></path>
+                  <path d="m17 7 9 9-9 9"></path>
+                </svg>
+              </div>
             </article>
           </div>
         </section>
