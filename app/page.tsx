@@ -10,7 +10,7 @@ export default async function HomePage() {
   const data = await loadDashboardOverview(session?.user ?? null);
 
   return (
-    <SiteShell eyebrow="Fresh scaffold from the Emorya build brief" currentUser={session?.user ?? null}>
+    <SiteShell currentUser={session?.user ?? null}>
       <HeroSection data={data} />
       <DashboardSnapshot data={data} />
       <PremiumFunnelSection data={data} />

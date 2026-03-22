@@ -66,7 +66,7 @@ export default async function AdminPage() {
           <p className="eyebrow">Operating view</p>
           <h2>Moderate quests, watch live progression effects, and steer campaign pressure from one control surface.</h2>
           <p className="lede">
-            This area now carries the same Emorya atmosphere as the player experience, while keeping the review queue
+            This area now carries the same atmosphere as the player experience, while keeping the review queue
             front and center.
           </p>
         </div>

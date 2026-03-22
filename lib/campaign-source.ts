@@ -5,7 +5,7 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
     case "zealy":
       return {
         label: "Zealy entrant",
-        title: "Turn quest hunters into xPortal-linked Emorya members.",
+        title: "Turn quest hunters into wallet-linked returning members.",
         description:
           "This lane should feel like a fast bridge from campaign XP to wallet identity, weekly progress, and referral momentum.",
         accent: "Quest-to-wallet",
@@ -14,7 +14,7 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
     case "galxe":
       return {
         label: "Galxe entrant",
-        title: "Move discovery users into the Zealy bridge and then into recurring Emorya reward behavior.",
+        title: "Move discovery users into the Zealy bridge and then into recurring reward behavior.",
         description:
           "This source is usually routed through the Zealy bridge first, so the product should emphasize campaign completion, token readiness, and premium conversion instead of one-off participation.",
         accent: "Discovery-to-retention",
@@ -23,7 +23,7 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
     case "taskon":
       return {
         label: "TaskOn entrant",
-        title: "Convert TaskOn participants into the Zealy bridge and then into high-intent Emorya operators.",
+        title: "Convert TaskOn participants into the Zealy bridge and then into high-intent returning operators.",
         description:
           "This source is usually routed through the Zealy bridge first. Separate TaskOn-specific funnel behavior is available, but only when platform differentiation is enabled.",
         accent: "Tasks-to-loyalty",
@@ -82,7 +82,7 @@ export function getCampaignLaneVisualProfile(
   return {
     themeClass: "lane-theme--direct",
     label: "Direct lane",
-    emphasis: "Direct users should feel the core Emorya ladder first: starter momentum, premium lift, and reward readiness.",
+    emphasis: "Direct users should feel the core mission ladder first: starter momentum, premium lift, and reward readiness.",
     chips: ["Direct entry", "Core ladder", "Premium ramp"],
   };
 }
@@ -121,7 +121,7 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
       };
     default:
       return {
-        title: "Use premium to accelerate the core Emorya ladder",
+        title: "Use premium to accelerate the core mission ladder",
         summary: "Direct entrants should see premium as faster progression, better rewards, and stronger referral economics.",
         hooks: [
           "Monthly premium unlocks higher-yield quests and lifts XP and token conversion value.",
@@ -191,7 +191,7 @@ export function getCampaignPremiumJourney(
     default:
       return {
         recommendedTier: "monthly" as const,
-        nextAction: "Use premium as the faster route through the core Emorya progression ladder.",
+        nextAction: "Use premium as the faster route through the core progression ladder.",
         monthlyReason: "Monthly is the best first step for direct users because it immediately improves XP yield and quest value without a heavy commitment.",
         annualReason: "Annual should be presented as the high-conviction choice once referrals, streaks, and direct-token moments are already proving out.",
         pathSteps: [

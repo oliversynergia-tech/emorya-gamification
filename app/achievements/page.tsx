@@ -20,7 +20,7 @@ export default async function AchievementsPage() {
           <p className="eyebrow">Prestige surface</p>
           <h2>Turn progression into something players can admire, chase, and show off.</h2>
           <p className="lede">
-            This page pulls achievements out of supporting panels and gives them a dedicated Emorya destination,
+            This page pulls achievements out of supporting panels and gives them a dedicated destination,
             anchored to streaks, referral pull, and premium identity.
           </p>
         </div>

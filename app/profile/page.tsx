@@ -36,7 +36,7 @@ export default async function ProfilePage() {
           <p className="eyebrow">Identity surface</p>
           <h2>Shape the public face of your account, referral loop, and linked wallet access.</h2>
           <p className="lede">
-            Profile, achievements, and wallet management now sit inside the same softer Emorya shell as the core
+            Profile, achievements, and wallet management now sit inside the same softer shell as the core
             dashboard, with the referral story visible beside your connection state.
           </p>
           <div className="lane-chip-row">

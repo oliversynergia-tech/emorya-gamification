@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getCampaignPremiumJourney } from "../lib/campaign-source.ts";
+import { getCampaignPremiumJourney, getCampaignSourceProfile } from "../lib/campaign-source.ts";
 
 test("getCampaignPremiumJourney recommends annual first for taskon lanes", () => {
   const journey = getCampaignPremiumJourney("taskon", {
@@ -24,4 +24,11 @@ test("getCampaignPremiumJourney recommends monthly first for zealy lanes", () =>
 
   assert.equal(journey.recommendedTier, "monthly");
   assert.equal(journey.pathSteps.length, 3);
+});
+
+test("default campaign source profile stays brand-safe for partner skins", () => {
+  const profile = getCampaignSourceProfile("direct");
+
+  assert.doesNotMatch(profile.title, /Emorya/i);
+  assert.doesNotMatch(profile.description, /Emorya/i);
 });

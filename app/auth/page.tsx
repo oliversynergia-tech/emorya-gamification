@@ -83,7 +83,7 @@ export default async function AuthPage() {
                 ? data.user.campaignSource === activeCampaignLane
                   ? `This account is currently running through the ${activeCampaignLane} experience lane.`
                   : `This account is attributed to ${data.user.campaignSource}, but the live onboarding path is currently routed through the ${activeCampaignLane} bridge lane.`
-                : "Direct onboarding uses the default Emorya starter ladder."}
+                : "Direct onboarding uses the default starter ladder."}
             </small>
           </div>
           <div className="metric-card">
