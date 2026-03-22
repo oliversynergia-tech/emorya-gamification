@@ -108,8 +108,8 @@ export default async function LeaderboardPage() {
         <section className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Reward ladder</p>
-              <h3>Why climbing the board matters in an XP-first economy</h3>
+              <p className="eyebrow">Competitive loop</p>
+              <h3>Why climbing the board matters in a performance-driven reward loop</h3>
             </div>
           </div>
           <div className="economy-stack">
@@ -235,7 +235,7 @@ export default async function LeaderboardPage() {
             </article>
           </div>
           <p className="form-note">
-            Leaderboard pressure is only one layer. The stronger loop is weekly XP, referral quality, and xPortal-linked reward readiness, with tokens acting as configurable payout rails rather than the main progression currency.
+            Leaderboard pressure is only one layer. The stronger loop is weekly XP, referral quality, and wallet-linked reward readiness, with tokens acting as configurable payout rails rather than the main progression currency.
           </p>
           {activeMissionPack ? (
             <article className="achievement-card achievement-card--progress">

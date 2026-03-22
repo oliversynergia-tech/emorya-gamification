@@ -671,10 +671,10 @@ a {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
-  width: 3px;
+  width: var(--metric-card-accent-width, 3px);
   border-radius: 999px;
   background: var(--metric-card-accent);
-  opacity: 0.72;
+  opacity: var(--metric-card-accent-opacity, 0.72);
 }
 
 .page-hero--auth .panel--hero,
@@ -725,30 +725,19 @@ a {
 }
 
 .lane-theme--direct {
-  background:
-    radial-gradient(circle at top right, rgba(240, 214, 160, 0.12), transparent 0 28%),
-    linear-gradient(180deg, rgba(72, 40, 88, 0.46), rgba(17, 9, 29, 0.95));
+  background: var(--lane-surface-direct);
 }
 
 .lane-theme--bridge {
-  background:
-    radial-gradient(circle at top right, rgba(143, 93, 255, 0.2), transparent 0 28%),
-    radial-gradient(circle at 22% 12%, rgba(240, 80, 158, 0.12), transparent 0 18%),
-    linear-gradient(180deg, rgba(55, 27, 92, 0.56), rgba(15, 8, 28, 0.96));
+  background: var(--lane-surface-bridge);
 }
 
 .lane-theme--feeder {
-  background:
-    radial-gradient(circle at top right, rgba(240, 214, 160, 0.16), transparent 0 28%),
-    radial-gradient(circle at 16% 18%, rgba(143, 93, 255, 0.1), transparent 0 22%),
-    linear-gradient(180deg, rgba(67, 35, 88, 0.54), rgba(16, 9, 28, 0.95));
+  background: var(--lane-surface-feeder);
 }
 
 .lane-theme--task {
-  background:
-    radial-gradient(circle at top right, rgba(240, 80, 158, 0.14), transparent 0 28%),
-    radial-gradient(circle at 14% 20%, rgba(240, 214, 160, 0.12), transparent 0 24%),
-    linear-gradient(180deg, rgba(69, 29, 72, 0.56), rgba(16, 8, 24, 0.96));
+  background: var(--lane-surface-task);
 }
 
 .referral-summary {
@@ -1298,19 +1287,19 @@ a {
 }
 
 .lane-summary-card.lane-theme--direct {
-  border-color: rgba(240, 214, 160, 0.24);
+  border-color: var(--lane-summary-border-direct);
 }
 
 .lane-summary-card.lane-theme--bridge {
-  border-color: rgba(143, 93, 255, 0.28);
+  border-color: var(--lane-summary-border-bridge);
 }
 
 .lane-summary-card.lane-theme--feeder {
-  border-color: rgba(240, 214, 160, 0.24);
+  border-color: var(--lane-summary-border-feeder);
 }
 
 .lane-summary-card.lane-theme--task {
-  border-color: rgba(240, 80, 158, 0.24);
+  border-color: var(--lane-summary-border-task);
 }
 
 .lane-pressure-card {

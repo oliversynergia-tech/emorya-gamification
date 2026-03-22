@@ -60,7 +60,7 @@ function getTrackDescription(track: QuestTrack) {
     case "social":
       return "Community and distribution actions that unlock stronger growth lanes.";
     case "wallet":
-      return "xPortal-linked actions that move users toward token-ready status.";
+      return "Wallet-linked actions that move users toward token-ready status.";
     case "referral":
       return "Team-building milestones with the strongest long-term upside.";
     case "premium":
@@ -592,7 +592,7 @@ export function DashboardSnapshot({
               <article className="achievement-card">
                 <div>
                   <strong>Arrival captured</strong>
-                  <p>Emorya now recognizes this account as a {data.user.campaignSource} entrant.</p>
+                  <p>This account is now recognized as a {data.user.campaignSource} entrant.</p>
                 </div>
                 <span className="badge badge--pink">Done</span>
               </article>
@@ -608,7 +608,7 @@ export function DashboardSnapshot({
               <article className="achievement-card">
                 <div>
                   <strong>Complete Starter Path</strong>
-                  <p>Turns campaign curiosity into an Emorya-native habit and referral-ready account.</p>
+                  <p>Turns campaign curiosity into a stable habit loop and referral-ready account.</p>
                 </div>
                 <span className={data.user.starterPath.complete ? "badge badge--pink" : "badge"}>
                   {data.user.starterPath.complete ? "Done" : "Open"}
@@ -1848,7 +1848,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
         <p className="form-note">
           {data.user.campaignSource
             ? `Campaign source detected: ${data.user.campaignSource}. Matching campaign-track quests and referral bonuses will surface ahead of general quests.`
-            : "Direct Emorya onboarding. Campaign-track quests will appear when you join a partner activation."}
+            : "Direct onboarding. Campaign-track quests will appear when you join a partner activation."}
         </p>
       </div>
       <div className="panel">

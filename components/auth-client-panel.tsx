@@ -205,7 +205,7 @@ export function AuthClientPanel({
         </div>
       ) : null}
       <p className="form-note">
-        Sign-up requires a password of at least 10 characters. Referral codes are optional, issue rewards to the inviter automatically, and feed into the monthly and annual premium reward ladder.
+        Sign-up requires a password of at least 10 characters. Referral codes are optional, issue rewards to the inviter automatically, and feed into the monthly and annual premium reward path.
       </p>
       {premiumOffer ? <p className="form-note">{premiumOffer.cta}</p> : null}
     </section>

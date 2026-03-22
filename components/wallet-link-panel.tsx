@@ -7,6 +7,8 @@ import { Message } from "@multiversx/sdk-core/out/core/message";
 import { WalletConnectV2Provider } from "@multiversx/sdk-wallet-connect-provider";
 import QRCode from "qrcode";
 
+import { getActiveBrandTheme } from "@/lib/brand-themes";
+
 type WalletLinkPanelProps = {
   walletAddresses: string[];
   activeMissionLabel?: string | null;
@@ -27,6 +29,7 @@ type ChallengeResponse = {
 
 const walletConnectProjectId = process.env.NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID;
 const chainId = process.env.NEXT_PUBLIC_MULTIVERSX_CHAIN === "devnet" ? "D" : "1";
+const activeBrandTheme = getActiveBrandTheme();
 
 let providerPromise: Promise<WalletConnectV2Provider> | null = null;
 
@@ -53,8 +56,8 @@ async function getWalletProvider() {
       walletConnectProjectId,
       {
         metadata: {
-          name: "Emorya Gamification",
-          description: "Emorya account wallet linking",
+          name: activeBrandTheme.brand.platformName,
+          description: `${activeBrandTheme.brand.platformName} account wallet linking`,
           url: typeof window !== "undefined" ? window.location.origin : "http://localhost:3000",
           icons: [],
         },
