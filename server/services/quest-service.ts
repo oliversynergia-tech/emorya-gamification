@@ -31,6 +31,15 @@ function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function isSameUtcMonth(timestamp: string, referenceTimestamp: string) {
+  const timestampDate = new Date(timestamp);
+  const referenceDate = new Date(referenceTimestamp);
+  return (
+    timestampDate.getUTCFullYear() === referenceDate.getUTCFullYear() &&
+    timestampDate.getUTCMonth() === referenceDate.getUTCMonth()
+  );
+}
+
 async function logQuestActivity({
   userId,
   actor,
@@ -92,11 +101,17 @@ export async function submitQuest({
 
   const existingCompletion = await getQuestCompletionForUser(currentUser.id, questId);
 
-  if (existingCompletion?.status === "approved" && quest.recurrence === "one-time") {
-    throw new Error("This quest has already been completed.");
-  }
-
   const submittedAt = new Date().toISOString();
+
+  if (existingCompletion?.status === "approved") {
+    if (quest.recurrence === "one-time") {
+      throw new Error("This quest has already been completed.");
+    }
+
+    if (quest.recurrence === "monthly" && existingCompletion.completedAt && isSameUtcMonth(existingCompletion.completedAt, submittedAt)) {
+      throw new Error("This quest is only available once per month.");
+    }
+  }
 
   if (quest.verification_type === "quiz") {
     const totalQuestions = Number(quest.metadata.totalQuestions ?? 5);

@@ -2,6 +2,8 @@ import { AuthClientPanel } from "@/components/auth-client-panel";
 import { MissionLink } from "@/components/mission-link";
 import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
+import { getActiveBrandTheme } from "@/lib/brand-themes";
+import { getBrandCopyProfile } from "@/lib/brand-copy";
 import {
   getCampaignLaneVisualProfile,
   getCampaignPremiumJourney,
@@ -17,6 +19,7 @@ export default async function AuthPage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
   const activeCampaignLane = data.economy.campaignPreset.source;
+  const brandCopy = getBrandCopyProfile(getActiveBrandTheme().id);
   const campaignProfile = getCampaignSourceProfile(activeCampaignLane);
   const laneVisualProfile = getCampaignLaneVisualProfile(
     data.user.campaignSource ?? activeCampaignLane,
@@ -65,7 +68,7 @@ export default async function AuthPage() {
           </div>
           <div className="metric-card">
             <span>Wallet linking</span>
-            <strong>xPortal path live</strong>
+            <strong>{brandCopy.walletProduct} path live</strong>
             <small>Signed users can attach MultiversX identity without splitting their profile.</small>
           </div>
           <div className="metric-card">

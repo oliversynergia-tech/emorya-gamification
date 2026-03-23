@@ -214,7 +214,7 @@ type QuestRow = QueryResultRow & {
   required_level: number;
   required_tier: SubscriptionTier;
   is_premium_preview: boolean;
-  recurrence: "one-time" | "daily" | "weekly";
+  recurrence: "one-time" | "daily" | "weekly" | "monthly";
   metadata: Record<string, unknown>;
   completion_status: "pending" | "approved" | "rejected" | null;
 };
@@ -232,7 +232,7 @@ type CampaignPackJourneyRow = QueryResultRow & {
   category: Quest["category"];
   verification_type: VerificationType;
   is_premium_preview: boolean;
-  recurrence: "one-time" | "daily" | "weekly";
+  recurrence: "one-time" | "daily" | "weekly" | "monthly";
   metadata: Record<string, unknown>;
   completion_status: "pending" | "approved" | "rejected" | null;
 };

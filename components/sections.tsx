@@ -4,6 +4,8 @@ import {
   getCampaignPremiumOffer,
   getCampaignSourceProfile,
 } from "@/lib/campaign-source";
+import { getActiveBrandTheme } from "@/lib/brand-themes";
+import { getBrandCopyProfile } from "@/lib/brand-copy";
 import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
@@ -25,6 +27,8 @@ import { TokenReceiptHistoryPanel } from "@/components/token-receipt-history-pan
 function tierClass(tier: SubscriptionTier) {
   return `tier-pill tier-pill--${tier}`;
 }
+
+const activeBrandCopy = getBrandCopyProfile(getActiveBrandTheme().id);
 
 function getTrackLabel(track: QuestTrack) {
   switch (track) {
@@ -598,8 +602,8 @@ export function DashboardSnapshot({
               </article>
               <article className="achievement-card">
                 <div>
-                  <strong>Bridge into xPortal</strong>
-                  <p>Wallet linking moves this sourced user into the full token and campaign path.</p>
+                  <strong>Bridge into the reward path</strong>
+                  <p>{`Wallet linking moves this sourced user into the full ${activeBrandCopy.walletProduct} and campaign path.`}</p>
                 </div>
                 <span className={data.user.starterPath.steps.some((step) => step.label === "Connect xPortal" && step.complete) ? "badge badge--pink" : "badge"}>
                   {data.user.starterPath.steps.some((step) => step.label === "Connect xPortal" && step.complete) ? "Done" : "Next"}
@@ -608,7 +612,7 @@ export function DashboardSnapshot({
               <article className="achievement-card">
                 <div>
                   <strong>Complete Starter Path</strong>
-                  <p>Turns campaign curiosity into a stable habit loop and referral-ready account.</p>
+                  <p>Turns campaign curiosity into a stable return loop and referral-ready account.</p>
                 </div>
                 <span className={data.user.starterPath.complete ? "badge badge--pink" : "badge"}>
                   {data.user.starterPath.complete ? "Done" : "Open"}
@@ -1833,9 +1837,9 @@ export function ProfileSection({ data }: { data: DashboardData }) {
               <div>
                 <strong>{bonus.label}</strong>
                 <p>
-                  Signup {bonus.signupXp} XP, monthly {bonus.monthlyPremiumXp} XP, annual {bonus.annualPremiumXp} XP.
-                </p>
-              </div>
+                    Signup {bonus.signupXp} XP, monthly {bonus.monthlyPremiumXp} XP, annual {bonus.annualPremiumXp} XP.
+                  </p>
+                </div>
               <div className="achievement-card__side">
                 <span>{bonus.source}</span>
                 <span>

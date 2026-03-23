@@ -35,7 +35,7 @@ export type DashboardQuestRow = {
   required_level: number;
   required_tier: SubscriptionTier;
   is_premium_preview: boolean;
-  recurrence: "one-time" | "daily" | "weekly";
+  recurrence: "one-time" | "daily" | "weekly" | "monthly";
   metadata: Record<string, unknown>;
   completion_status: "pending" | "approved" | "rejected" | null;
 };

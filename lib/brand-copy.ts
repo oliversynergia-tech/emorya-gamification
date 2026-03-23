@@ -41,6 +41,10 @@ export function getActiveBrandCopyProfile() {
   return brandCopyProfiles[themeId] ?? brandCopyProfiles.emorya;
 }
 
+export function getBrandCopyProfile(themeId: string | null | undefined) {
+  return brandCopyProfiles[themeId ?? ""] ?? brandCopyProfiles.emorya;
+}
+
 export function getBrandDisplayReferralCode(referralCode: string) {
   const profile = getActiveBrandCopyProfile();
   const suffix = referralCode.replace(/^[A-Z]+-/, "");
@@ -86,4 +90,3 @@ export function getBrandSafeOnboardingHint() {
 export function getBrandSafeRewardFocus(attributionSource: string, experienceLane: string, payoutAsset: string) {
   return `${attributionSource} attribution is preserved, but this mission is currently flowing through the ${experienceLane} bridge into product progression and ${payoutAsset} rewards.`;
 }
-

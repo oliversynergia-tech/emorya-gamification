@@ -308,11 +308,12 @@ export function inferQuestTrack({
   return inferTrackFromCategory(category);
 }
 
-export function mapQuestCadence(recurrence: "one-time" | "daily" | "weekly", metadata: Record<string, unknown>): QuestCadence {
+export function mapQuestCadence(recurrence: "one-time" | "daily" | "weekly" | "monthly", metadata: Record<string, unknown>): QuestCadence {
   if (
     metadata.cadence === "one_time" ||
     metadata.cadence === "daily" ||
     metadata.cadence === "weekly" ||
+    metadata.cadence === "monthly" ||
     metadata.cadence === "campaign_limited"
   ) {
     return metadata.cadence;

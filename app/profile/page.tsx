@@ -4,6 +4,8 @@ import { ProfileEditor } from "@/components/profile-editor";
 import { ProfileSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
+import { getActiveBrandTheme } from "@/lib/brand-themes";
+import { getBrandCopyProfile } from "@/lib/brand-copy";
 import { getCampaignLaneVisualProfile, getCampaignPremiumJourney, getCampaignPremiumOffer } from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { getCurrentProfile } from "@/server/services/profile-service";
@@ -23,6 +25,8 @@ export default async function ProfilePage() {
     data.user.campaignSource,
   );
   const premiumOffer = getCampaignPremiumOffer(activeCampaignLane);
+  const activeTheme = getActiveBrandTheme();
+  const brandCopy = getBrandCopyProfile(activeTheme.id);
   const premiumJourney = getCampaignPremiumJourney(activeCampaignLane, {
     featuredTracks: data.economy.campaignPreset.featuredTracks,
     premiumUpsellMultiplier: data.economy.campaignPreset.premiumUpsellMultiplier,
@@ -52,12 +56,16 @@ export default async function ProfilePage() {
           <div className="metric-card">
             <span>Connected wallets</span>
             <strong>{walletCount}</strong>
-            <small>{walletCount > 0 ? "Identity link is active." : "Attach a wallet to unlock chain-aware quests."}</small>
+            <small>
+              {walletCount > 0
+                ? "Identity link is active."
+                : `Attach ${brandCopy.walletProduct} to unlock the next mission gate.`}
+            </small>
           </div>
           <div className="metric-card">
             <span>Current referral code</span>
             <strong>{data.user.referralCode}</strong>
-            <small>Share this code to grow invite XP and premium conversions.</small>
+            <small>Share this code to grow invite XP, return visits, and stronger conversions.</small>
           </div>
           <div className="metric-card">
             <span>Active lane</span>
@@ -88,6 +96,7 @@ export default async function ProfilePage() {
             walletAddresses={session.walletAddresses}
             activeMissionLabel={data.campaignPacks[0]?.label ?? null}
             activeMissionView="reward"
+            walletProductLabel={brandCopy.walletProduct}
           />
         </>
       ) : (

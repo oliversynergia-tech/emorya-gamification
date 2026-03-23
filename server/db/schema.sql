@@ -10,7 +10,7 @@ CREATE TYPE verification_type AS ENUM (
   'link-visit',
   'text-submission'
 );
-CREATE TYPE quest_recurrence AS ENUM ('one-time', 'daily', 'weekly');
+CREATE TYPE quest_recurrence AS ENUM ('one-time', 'daily', 'weekly', 'monthly');
 CREATE TYPE completion_status AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE app_role AS ENUM ('super_admin', 'admin', 'reviewer');
 

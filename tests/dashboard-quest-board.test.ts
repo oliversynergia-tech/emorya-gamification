@@ -24,7 +24,7 @@ const baseUserState = {
   starterQuestCount: 3,
   wellnessQuestCount: 1,
   socialQuestCount: 2,
-  completedQuestSlugs: ["complete-welcome-setup"],
+  completedQuestSlugs: ["create-emorya-account"],
   ambassadorCandidate: false,
   ambassadorActive: false,
   campaignSource: "zealy" as const,
@@ -34,7 +34,7 @@ test("buildDashboardQuestBoard returns a mixed active board with locked previews
   const quests = [
     {
       id: "starter-1",
-      slug: "complete-welcome-setup",
+      slug: "create-emorya-account",
       title: "Welcome setup",
       description: "Starter",
       category: "app" as const,
@@ -50,8 +50,8 @@ test("buildDashboardQuestBoard returns a mixed active board with locked previews
     },
     {
       id: "daily-1",
-      slug: "daily-recovery-check-in",
-      title: "Daily recovery",
+      slug: "play-emoryan-adventure-game",
+      title: "Adventure game",
       description: "Daily",
       category: "app" as const,
       xp_reward: 28,

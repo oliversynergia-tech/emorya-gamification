@@ -13,7 +13,7 @@ export type QuestTrack =
   | "quiz"
   | "creative"
   | "campaign";
-export type QuestCadence = "one_time" | "daily" | "weekly" | "campaign_limited";
+export type QuestCadence = "one_time" | "daily" | "weekly" | "monthly" | "campaign_limited";
 export type TokenEffect = "none" | "eligibility_progress" | "token_bonus" | "direct_token_reward";
 export type TrustScoreBand = "low" | "medium" | "high";
 export type UserJourneyState =
@@ -145,7 +145,7 @@ export type QuestDefinitionRecord = {
   xpReward: number;
   difficulty: "easy" | "medium" | "hard";
   verificationType: VerificationType;
-  recurrence: "one-time" | "daily" | "weekly";
+  recurrence: "one-time" | "daily" | "weekly" | "monthly";
   requiredTier: SubscriptionTier;
   requiredLevel: number;
   isPremiumPreview: boolean;
@@ -461,7 +461,7 @@ export type DashboardData = {
       questId: string;
       title: string;
       track: QuestTrack;
-      cadence: "one-time" | "daily" | "weekly";
+      cadence: "one-time" | "daily" | "weekly" | "monthly";
       verificationType: VerificationType;
       status: "available" | "in-progress" | "completed" | "rejected";
       actionable: boolean;
@@ -1472,7 +1472,7 @@ export type QuestDefinitionAdminItem = {
   category: QuestCategory;
   difficulty: "easy" | "medium" | "hard";
   verificationType: VerificationType;
-  recurrence: "one-time" | "daily" | "weekly";
+  recurrence: "one-time" | "daily" | "weekly" | "monthly";
   requiredTier: SubscriptionTier;
   requiredLevel: number;
   xpReward: number;
@@ -1491,7 +1491,7 @@ export type QuestDefinitionTemplateItem = {
     category: QuestCategory;
     difficulty: "easy" | "medium" | "hard";
     verificationType: VerificationType;
-    recurrence: "one-time" | "daily" | "weekly";
+    recurrence: "one-time" | "daily" | "weekly" | "monthly";
     requiredTier: SubscriptionTier;
     requiredLevel: number;
     xpReward: number;

@@ -1035,7 +1035,7 @@ export function QuestDefinitionManagementPanel({
         <label className="field">
           <span>Recurrence</span>
           <select value={form.recurrence} onChange={(event) => setForm((current) => ({ ...current, recurrence: event.target.value }))}>
-            {["one-time", "daily", "weekly"].map((value) => (
+            {["one-time", "daily", "weekly", "monthly"].map((value) => (
               <option key={value} value={value}>{value}</option>
             ))}
           </select>

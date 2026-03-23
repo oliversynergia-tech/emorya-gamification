@@ -8,11 +8,13 @@ import { WalletConnectV2Provider } from "@multiversx/sdk-wallet-connect-provider
 import QRCode from "qrcode";
 
 import { getBrandTheme } from "@/lib/brand-themes";
+import { getBrandCopyProfile } from "@/lib/brand-copy";
 
 type WalletLinkPanelProps = {
   walletAddresses: string[];
   activeMissionLabel?: string | null;
   activeMissionView?: "active" | "completed" | "all" | "reward";
+  walletProductLabel?: string;
 };
 
 type ChallengeResponse = {
@@ -73,8 +75,17 @@ async function getWalletProvider() {
   return providerPromise;
 }
 
-export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, activeMissionView = "active" }: WalletLinkPanelProps) {
+export function WalletLinkPanel({
+  walletAddresses,
+  activeMissionLabel = null,
+  activeMissionView = "active",
+  walletProductLabel,
+}: WalletLinkPanelProps) {
   const router = useRouter();
+  const activeThemeId =
+    typeof document !== "undefined" ? document.body.dataset.brandTheme ?? process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME : process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME;
+  const brandCopy = getBrandCopyProfile(activeThemeId);
+  const walletLabel = walletProductLabel ?? brandCopy.walletProduct;
   const [walletAddress, setWalletAddress] = useState("");
   const [challenge, setChallenge] = useState<ChallengeResponse["challenge"] | null>(null);
   const [signature, setSignature] = useState("");
@@ -168,17 +179,17 @@ export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, ac
 
       if (uri) {
         setQrCodeDataUrl(await QRCode.toDataURL(uri, { margin: 1, width: 240 }));
-        setWalletStatus("Scan the QR code with xPortal, then approve the connection.");
+        setWalletStatus(`Scan the QR code with ${walletLabel}, then approve the connection.`);
       }
 
       const account = await provider.login({ approval });
 
       if (!account?.address) {
-        throw new Error("xPortal did not return a wallet address.");
+        throw new Error(`${walletLabel} did not return a wallet address.`);
       }
 
       setWalletAddress(account.address);
-      setWalletStatus(`Connected wallet ${account.address}`);
+      setWalletStatus(`Connected ${walletLabel} wallet ${account.address}`);
 
       const challengeResponse = await fetch("/api/auth/wallet/challenge", {
         method: "POST",
@@ -194,7 +205,7 @@ export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, ac
 
       const issuedChallenge = challengeResult.challenge;
       setChallenge(issuedChallenge);
-      setMessage("Challenge issued. Confirm the signing request in xPortal.");
+      setMessage(`Challenge issued. Confirm the signing request in ${walletLabel}.`);
 
       const signedMessage = await provider.signMessage(
         new Message({
@@ -204,7 +215,7 @@ export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, ac
       );
 
       if (!signedMessage.signature) {
-        throw new Error("xPortal did not return a message signature.");
+        throw new Error(`${walletLabel} did not return a message signature.`);
       }
 
       const generatedSignature = bytesToHex(signedMessage.signature);
@@ -232,13 +243,13 @@ export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, ac
       }
 
       setMessage(completeResult.result?.verificationNote ?? "Wallet linked.");
-      setWalletStatus("Wallet linked through xPortal.");
+      setWalletStatus(`Wallet linked through ${walletLabel}.`);
       setChallenge(null);
       setSignature("");
       setQrCodeDataUrl(null);
       router.refresh();
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "xPortal linking failed.");
+      setError(caughtError instanceof Error ? caughtError.message : `${walletLabel} linking failed.`);
     } finally {
       setPending(false);
     }
@@ -295,10 +306,10 @@ export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, ac
       {walletStatus ? <p className="status status--success">{walletStatus}</p> : null}
       {qrCodeDataUrl ? (
         <div className="qr-card">
-          <strong>xPortal QR</strong>
+          <strong>{walletLabel} QR</strong>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={qrCodeDataUrl} alt="xPortal QR code" className="qr-card__image" />
-          <small>Open xPortal, scan the QR code, then approve connect and sign requests.</small>
+          <small>Open {walletLabel}, scan the QR code, then approve connect and sign requests.</small>
           <p className="mission-cue mission-cue--planning">
             <strong>Review mission path</strong> Reopen the mission path after approval if the wallet gate is still the current blocker.
           </p>
@@ -314,7 +325,7 @@ export function WalletLinkPanel({ walletAddresses, activeMissionLabel = null, ac
             <textarea
               value={signature}
               onChange={(event) => setSignature(event.target.value)}
-              placeholder="Paste the signature generated by your MultiversX wallet"
+              placeholder={`Paste the signature generated by ${walletLabel}`}
               required
             />
           </label>

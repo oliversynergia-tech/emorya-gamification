@@ -34,7 +34,7 @@ test("deriveUserProgressState marks starter path and reward eligibility when thr
         isPremiumPreview: false,
       },
       {
-        slug: "log-8000-steps",
+        slug: "convert-2000-calories-to-emrs",
         category: "app",
         verificationType: "manual-review",
         requiredLevel: 3,
@@ -97,7 +97,7 @@ test("resolveUserJourneyState prioritizes ambassador and premium tiers", () => {
     annualPremiumReferralCount: 1,
     approvedQuests: [
       {
-        slug: "log-8000-steps",
+        slug: "convert-2000-calories-to-emrs",
         category: "app",
         verificationType: "manual-review",
         requiredLevel: 3,

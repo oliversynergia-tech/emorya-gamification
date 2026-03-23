@@ -3,11 +3,15 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { getBrandCopyProfile, getBrandDisplayReferralCode } from "@/lib/brand-copy";
 import { defaultConnectionRewards, socialPlatformMeta, validateSocialHandle } from "@/lib/social-platforms";
 import type { ProfileData, SocialConnectionState } from "@/lib/types";
 
 export function ProfileEditor({ profile }: { profile: ProfileData }) {
   const router = useRouter();
+  const activeThemeId =
+    typeof document !== "undefined" ? document.body.dataset.brandTheme ?? process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME : process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME;
+  const brandCopy = getBrandCopyProfile(activeThemeId);
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl ?? "");
   const [attributionSource, setAttributionSource] = useState(profile.attributionSource ?? "");
@@ -126,7 +130,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
           </div>
           <div className="info-card">
             <span>Referral code</span>
-            <strong>{profile.referralCode}</strong>
+            <strong>{getBrandDisplayReferralCode(profile.referralCode)}</strong>
           </div>
         </div>
         <div className="panel panel--glass social-editor">
@@ -151,7 +155,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
                     <small>
                       {connection.verified
                         ? "Connected in profile state"
-                        : `Mark as connected to reflect +${defaultConnectionRewards[connection.platform as keyof typeof defaultConnectionRewards] ?? 15} XP path`}
+                        : `Mark as connected to reflect +${defaultConnectionRewards[connection.platform as keyof typeof defaultConnectionRewards] ?? 15} XP on the ${brandCopy.nativeLoop}`}
                     </small>
                   </div>
                   <label className="toggle-switch">

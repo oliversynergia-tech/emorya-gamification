@@ -24,7 +24,7 @@ type QuestDefinitionRow = QueryResultRow & {
   title: string;
   xp_reward: number;
   verification_type: VerificationType;
-  recurrence: "one-time" | "daily" | "weekly";
+  recurrence: "one-time" | "daily" | "weekly" | "monthly";
   required_level: number;
   required_tier: SubscriptionTier;
   metadata: Record<string, string | number | boolean | null>;
