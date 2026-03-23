@@ -17,7 +17,7 @@ INSERT INTO users (
   (
     '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
     'oliver@emorya.com',
-    '$2b$12$replace.with.real.hash.before.prod',
+    'scrypt:ebb3c86565a214bb0825099169095108:f116fc2e57cd835d1d47022289c1663bdc096468eab4d6149639906218c04d94d6ff773b18a18b7b9c1ab48dbf8b6e9a21d921db368fa278b9435f06d99efbe9',
     'Oliver',
     NULL,
     'zealy',
@@ -33,7 +33,7 @@ INSERT INTO users (
   (
     '2196480b-b0fc-4e15-8837-e1d02177c7ed',
     'lina@emorya.com',
-    NULL,
+    'scrypt:d7e07bbf6effc2427264688c379aa587:06e824dab6967fa7cae5d82dc026f16254fc3bcb6d0b5afc758a5dd17e5c559a34ec5703c4d18c54370ae3ac5ffc18b17f45c1643f7133f2d5d6c455031c1281',
     'Lina',
     NULL,
     'social',
@@ -110,7 +110,19 @@ INSERT INTO users (
     '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
     NOW() - INTERVAL '18 days'
   )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  email = EXCLUDED.email,
+  password_hash = EXCLUDED.password_hash,
+  display_name = EXCLUDED.display_name,
+  avatar_url = EXCLUDED.avatar_url,
+  attribution_source = EXCLUDED.attribution_source,
+  level = EXCLUDED.level,
+  total_xp = EXCLUDED.total_xp,
+  current_streak = EXCLUDED.current_streak,
+  longest_streak = EXCLUDED.longest_streak,
+  subscription_tier = EXCLUDED.subscription_tier,
+  referral_code = EXCLUDED.referral_code,
+  referred_by = EXCLUDED.referred_by;
 
 INSERT INTO user_roles (user_id, role, granted_by) VALUES
   ('6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'super_admin'::app_role, NULL),
