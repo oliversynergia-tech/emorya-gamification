@@ -11,6 +11,13 @@ import {
   getXpTierMultiplier,
   resolveCampaignExperienceSource,
 } from "@/lib/economy-settings";
+import {
+  getBrandDisplayReferralCode,
+  getBrandSafeOnboardingHint,
+  getBrandSafeRewardFocus,
+  getBrandSafeStarterPathPrompt,
+  getBrandSafeWalletLinkPrompt,
+} from "@/lib/brand-copy";
 import { getCampaignPackBenchmark } from "@/lib/campaign-pack-benchmarks";
 import { getCampaignFeaturedTracks } from "@/lib/campaign-source";
 import {
@@ -701,7 +708,7 @@ async function getUserSnapshot(
     journeyState,
     campaignSource: progressState.campaignSource,
     rank: rankResult,
-    referralCode: user.referral_code,
+    referralCode: getBrandDisplayReferralCode(user.referral_code),
     starterPath: buildStarterPathProgress(progressState),
     rewardEligibility: {
       eligible: progressState.rewardEligible,
@@ -2327,10 +2334,10 @@ async function getUserCampaignPackJourneys({
     let nextAction = `Complete ${nextQuestTitle ?? "the next campaign quest"} to keep your pack momentum moving.`;
     let sequenceReason = "The next mission is simply the first incomplete step in this pack.";
     if (!userProgressState.walletLinked) {
-      nextAction = "Connect xPortal to move this campaign path into the full reward and payout flow.";
+      nextAction = getBrandSafeWalletLinkPrompt();
       sequenceReason = "Wallet linking is the gating step that turns this pack from campaign traffic into reward-ready progression.";
     } else if (!userProgressState.starterPathComplete) {
-      nextAction = "Finish your Starter Path so this campaign interest becomes an Emorya-native habit loop.";
+      nextAction = getBrandSafeStarterPathPrompt();
       sequenceReason = "Starter Path completion comes first because it stabilizes the account before the heavier-value steps matter.";
     } else if (!user.rewardEligibility.eligible) {
       nextAction = `Stay on the progression path: ${user.rewardEligibility.nextRequirement ?? "keep building XP and trust"}.`;
@@ -2351,7 +2358,7 @@ async function getUserCampaignPackJourneys({
     const weeklyGoalShortfall = Math.max(weeklyGoalTarget - user.weeklyProgress.xp, 0);
     const onboardingHint =
       user.journeyState === "signed_up_free" && completedQuestCount === 0
-        ? `Start here: clear one mission, connect xPortal, and keep the weekly XP loop alive. That is the shortest path from campaign arrival to real Emorya progression.`
+        ? getBrandSafeOnboardingHint()
         : null;
     const scheduledDirectMatch = directRewardMetadata
       ? user.tokenProgram.scheduledDirectRewards.find(
@@ -2385,7 +2392,7 @@ async function getUserCampaignPackJourneys({
           ? `${experienceLane} is the live bridge lane for this mission. XP momentum, starter-path completion, and wallet trust are what turn this into reward-bearing progress.`
           : attributionSource === experienceLane
             ? `${experienceLane} is driving this mission directly. XP builds the core loop, then ${economySettings.payoutAsset} settles the reward rail.`
-            : `${attributionSource} attribution is preserved, but this mission is currently flowing through the ${experienceLane} bridge into Emorya progression and ${economySettings.payoutAsset} rewards.`;
+            : getBrandSafeRewardFocus(attributionSource, experienceLane, economySettings.payoutAsset);
 
     const tierPhaseCopy = getPackTierPhaseCopy(
       user.tier,

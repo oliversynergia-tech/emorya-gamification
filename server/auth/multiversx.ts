@@ -4,6 +4,7 @@ import { Address } from "@multiversx/sdk-core/out/core/address";
 import { Message, MessageComputer } from "@multiversx/sdk-core/out/core/message";
 import { UserVerifier } from "@multiversx/sdk-core/out/wallet/userVerifier";
 
+import { getActiveBrandCopyProfile } from "@/lib/brand-copy";
 import type { AuthUser } from "@/lib/types";
 
 const MULTIVERSX_ADDRESS_REGEX = /^erd1[0-9a-z]{58}$/;
@@ -35,12 +36,14 @@ export function buildWalletChallengeMessage({
   walletAddress: string;
   nonce: string;
 }) {
+  const profile = getActiveBrandCopyProfile();
+
   return [
-    "Emorya wallet linking request",
+    "Wallet linking request",
     `User: ${displayName}`,
     `Wallet: ${walletAddress}`,
     `Nonce: ${nonce}`,
-    "Purpose: link this MultiversX wallet to your Emorya account.",
+    `Purpose: link this MultiversX wallet to your account for ${profile.progressionLabel}.`,
     "If you did not request this, do not sign.",
   ].join("\n");
 }

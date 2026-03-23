@@ -8,6 +8,7 @@ import {
   mapQuestCadence,
 } from "../../lib/progression-rules.ts";
 import { getCampaignFeaturedTracks } from "../../lib/campaign-source.ts";
+import { getBrandSafeQuestDescription, getBrandSafeQuestTitle } from "../../lib/brand-copy.ts";
 import type {
   EconomySettings,
   EvaluatedQuest,
@@ -66,8 +67,8 @@ function mapEvaluatedQuestToQuest({
 }): Quest {
   return {
     id: quest.id,
-    title: quest.title,
-    description: quest.description,
+    title: getBrandSafeQuestTitle(quest.title),
+    description: getBrandSafeQuestDescription(quest.description),
     category: quest.category,
     track: evaluatedQuest.track,
     cadence,

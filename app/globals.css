@@ -1779,6 +1779,32 @@ a {
   }
 }
 
+@keyframes multiversxReveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes multiversxGlowPulse {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.66;
+  }
+  50% {
+    transform: translate3d(6px, -8px, 0) scale(1.03);
+    opacity: 0.82;
+  }
+  100% {
+    transform: translate3d(-4px, 6px, 0) scale(0.99);
+    opacity: 0.72;
+  }
+}
+
 @keyframes emoryaFloatGlow {
   0% {
     transform: translate3d(0, 0, 0) scale(1);
@@ -1832,6 +1858,24 @@ body[data-brand-theme="emorya"] .page-hero > *:first-child {
 
 body[data-brand-theme="emorya"] .page-hero > *:last-child {
   animation: emoryaReveal 700ms cubic-bezier(0.22, 1, 0.36, 1) 110ms both;
+}
+
+body[data-brand-theme="multiversx"] .shell__glow--left,
+body[data-brand-theme="multiversx"] .shell__glow--right {
+  animation: multiversxGlowPulse 18s ease-in-out infinite;
+}
+
+body[data-brand-theme="multiversx"] .shell__glow--right {
+  animation-direction: reverse;
+}
+
+body[data-brand-theme="multiversx"] .page-hero > *:first-child,
+body[data-brand-theme="multiversx"] .page-hero > *:last-child {
+  animation: multiversxReveal 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body[data-brand-theme="multiversx"] .page-hero > *:last-child {
+  animation-delay: 60ms;
 }
 
 body[data-brand-theme="xportal"] .shell__glow {
@@ -1960,6 +2004,8 @@ body[data-brand-theme="xportal"] .button--primary {
 @media (prefers-reduced-motion: reduce) {
   body[data-brand-theme="emorya"] .shell__glow,
   body[data-brand-theme="emorya"] .page-hero > *,
+  body[data-brand-theme="multiversx"] .shell__glow,
+  body[data-brand-theme="multiversx"] .page-hero > *,
   body[data-brand-theme="xportal"] .shell__glow,
   body[data-brand-theme="xportal"] .page-hero > *,
   body[data-brand-theme="xportal"] .stats-row > *,
