@@ -1,4 +1,9 @@
-import type { CompletionStatus, ManualReviewSubmission, QuestTaskSubmission } from "../../lib/types.ts";
+import type {
+  CompletionStatus,
+  ManualReviewSubmission,
+  QuestTaskSubmission,
+  TextSubmission,
+} from "../../lib/types.ts";
 
 function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -133,7 +138,7 @@ function countRequiredTaskBlocks(metadata?: Record<string, unknown>) {
 }
 
 export function mergeModerationIntoSubmission(
-  submissionData: Record<string, string | number | boolean | null>,
+  submissionData: Record<string, unknown>,
   moderationNote: string | undefined,
   moderatedAt: string,
 ): ManualReviewSubmission {
@@ -156,5 +161,25 @@ export function mergeModerationIntoSubmission(
       typeof submissionData.submittedAt === "string" ? submissionData.submittedAt : moderatedAt,
     moderationNote: normalizeText(moderationNote) || null,
     moderatedAt,
+  };
+}
+
+export function normalizeTextSubmission(
+  payload: Record<string, unknown>,
+  submittedAt: string,
+): TextSubmission {
+  const response = normalizeText(payload.response);
+  const referenceUrl = normalizeText(payload.referenceUrl);
+  const platform = normalizeText(payload.platform);
+
+  if (!response) {
+    throw new Error("Text submission quests require a written response.");
+  }
+
+  return {
+    response,
+    referenceUrl: referenceUrl || null,
+    platform: platform || null,
+    submittedAt,
   };
 }

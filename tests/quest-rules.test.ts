@@ -5,6 +5,7 @@ import {
   evaluateQuizSubmission,
   mergeModerationIntoSubmission,
   normalizeManualReviewSubmission,
+  normalizeTextSubmission,
 } from "../server/services/quest-rules.ts";
 
 test("evaluateQuizSubmission approves passing scores and preserves quiz metadata", () => {
@@ -177,4 +178,29 @@ test("mergeModerationIntoSubmission attaches moderation details without losing s
     moderationNote: "Great submission, approved.",
     moderatedAt,
   });
+});
+
+test("normalizeTextSubmission requires a written response and preserves optional fields", () => {
+  const submittedAt = "2026-03-13T12:00:00.000Z";
+
+  const result = normalizeTextSubmission(
+    {
+      response: "  Referred two teammates and explained the flow. ",
+      referenceUrl: " https://example.com/referral-proof ",
+      platform: " referral ",
+    },
+    submittedAt,
+  );
+
+  assert.deepEqual(result, {
+    response: "Referred two teammates and explained the flow.",
+    referenceUrl: "https://example.com/referral-proof",
+    platform: "referral",
+    submittedAt,
+  });
+
+  assert.throws(
+    () => normalizeTextSubmission({ response: "   " }, submittedAt),
+    /require a written response/,
+  );
 });

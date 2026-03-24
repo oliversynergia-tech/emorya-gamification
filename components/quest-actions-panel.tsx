@@ -55,7 +55,7 @@ export function QuestActionsPanel({
   const actionableQuests = useMemo(
     () =>
       quests.filter((quest) =>
-        ["quiz", "manual-review", "link-visit", "wallet-check", "api-check"].includes(quest.verificationType),
+        ["quiz", "manual-review", "link-visit", "wallet-check", "api-check", "text-submission"].includes(quest.verificationType),
       ).sort((left, right) => {
         if (highlightedQuestId && left.id === highlightedQuestId) {
           return -1;
@@ -376,6 +376,19 @@ export function QuestActionsPanel({
     );
   }
 
+  function handleTextSubmit(event: FormEvent<HTMLFormElement>, quest: Quest) {
+    event.preventDefault();
+    void submitQuest(
+      quest,
+      {
+        response: notes[quest.id] ?? "",
+        referenceUrl: contentUrls[quest.id] ?? "",
+        platform: platforms[quest.id] ?? "",
+      },
+      "Text submission sent.",
+    );
+  }
+
   return (
     <section className="panel" id="quest-actions">
       <div className="panel__header">
@@ -385,7 +398,7 @@ export function QuestActionsPanel({
         </div>
       </div>
       {!isAuthenticated ? (
-        <p className="form-note">Sign in to submit quests and send manual-review or API-check items into the queue.</p>
+        <p className="form-note">Sign in to submit quests and send review-based items into the queue.</p>
       ) : null}
       <div className="quest-action-grid">
         {actionableQuests.map((quest) => {
@@ -703,6 +716,45 @@ export function QuestActionsPanel({
                   </label>
                   <button className="button button--primary" type="submit" disabled={disabled || pending}>
                     {pending ? "Verifying..." : "Run external verification"}
+                  </button>
+                </form>
+              ) : null}
+              {quest.verificationType === "text-submission" ? (
+                <form className="form-stack" onSubmit={(event) => handleTextSubmit(event, quest)}>
+                  <label className="field">
+                    <span>Platform</span>
+                    <input
+                      value={platforms[quest.id] ?? ""}
+                      onChange={(event) =>
+                        setPlatforms((current) => ({ ...current, [quest.id]: event.target.value }))
+                      }
+                      placeholder="Referral, X, Discord, App Store..."
+                      disabled={disabled || pending}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Reference URL</span>
+                    <input
+                      value={contentUrls[quest.id] ?? ""}
+                      onChange={(event) =>
+                        setContentUrls((current) => ({ ...current, [quest.id]: event.target.value }))
+                      }
+                      placeholder="Optional https://..."
+                      disabled={disabled || pending}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Your response</span>
+                    <textarea
+                      rows={4}
+                      value={notes[quest.id] ?? ""}
+                      onChange={(event) => setNotes((current) => ({ ...current, [quest.id]: event.target.value }))}
+                      placeholder="Write your answer, summary, proof explanation, or referral details..."
+                      disabled={disabled || pending}
+                    />
+                  </label>
+                  <button className="button button--primary" type="submit" disabled={disabled || pending}>
+                    {pending ? "Submitting..." : "Send text submission"}
                   </button>
                 </form>
               ) : null}

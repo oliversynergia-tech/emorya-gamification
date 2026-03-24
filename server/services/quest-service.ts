@@ -11,6 +11,7 @@ import {
   evaluateQuizSubmission,
   mergeModerationIntoSubmission,
   normalizeManualReviewSubmission,
+  normalizeTextSubmission,
 } from "@/server/services/quest-rules";
 import {
   executeApiQuestVerification,
@@ -243,6 +244,37 @@ export async function submitQuest({
       outcome: "pending" as const,
       progressUpdate: null,
       message: "Submission sent for review.",
+    };
+  }
+
+  if (quest.verification_type === "text-submission") {
+    const submissionData = normalizeTextSubmission(payload, submittedAt);
+
+    const completion = await upsertQuestCompletionForUser({
+      userId: currentUser.id,
+      questId,
+      status: "pending",
+      awardedXp: existingCompletion?.awardedXp ?? 0,
+      reviewedBy: null,
+      completedAt: null,
+      submissionData,
+    });
+
+    await logQuestActivity({
+      userId: currentUser.id,
+      actor: currentUser.displayName,
+      actionType: "quest-submitted",
+      action: "submitted a text response",
+      detail: `${quest.title} is waiting for review`,
+      questId,
+      questTitle: quest.title,
+    });
+
+    return {
+      completion,
+      outcome: "pending" as const,
+      progressUpdate: null,
+      message: "Text submission sent for review.",
     };
   }
 

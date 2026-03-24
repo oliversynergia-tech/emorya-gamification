@@ -1493,6 +1493,15 @@ export type ManualReviewSubmission = {
   moderatedAt?: string | null;
 };
 
+export type TextSubmission = {
+  response: string;
+  referenceUrl?: string | null;
+  platform?: string | null;
+  submittedAt: string;
+  moderationNote?: string | null;
+  moderatedAt?: string | null;
+};
+
 export type QuestProgressUpdate = {
   xpAwarded: number;
   deltaXp: number;
