@@ -67,7 +67,7 @@ test("buildDashboardQuestBoard returns a mixed active board with locked previews
     {
       id: "social-1",
       slug: "share-the-movement-reset",
-      title: "Share social",
+      title: "Share your Emorya progress",
       description: "Social",
       category: "social" as const,
       xp_reward: 30,
