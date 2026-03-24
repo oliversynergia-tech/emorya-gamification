@@ -8,11 +8,13 @@ import {
   defaultEconomySettings,
   normalizeTokenAsset,
 } from "@/lib/economy-settings";
+import { resolveBrandThemeId } from "@/lib/brand-themes";
 import type { EconomySettings, EconomySettingsAuditEntry } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
 
 type EconomySettingsRow = QueryResultRow & {
   id: string;
+  published_brand_theme: string | null;
   payout_asset: string;
   payout_mode: string;
   redemption_enabled: boolean;
@@ -73,6 +75,7 @@ type EconomyAuditRow = QueryResultRow & {
 function mapEconomySettings(row: EconomySettingsRow): EconomySettings {
   return {
     id: row.id,
+    publishedBrandTheme: resolveBrandThemeId(row.published_brand_theme),
     payoutAsset: normalizeTokenAsset(row.payout_asset),
     payoutMode:
       row.payout_mode === "review_required" || row.payout_mode === "automation_ready" ? row.payout_mode : "manual",
@@ -147,7 +150,7 @@ function mapEconomySettings(row: EconomySettingsRow): EconomySettings {
 
 export async function getActiveEconomySettings() {
   const result = await runQuery<EconomySettingsRow>(
-    `SELECT id, payout_asset, payout_mode, redemption_enabled, settlement_processing_enabled,
+    `SELECT id, published_brand_theme, payout_asset, payout_mode, redemption_enabled, settlement_processing_enabled,
             direct_reward_queue_enabled, settlement_notes_required, direct_rewards_enabled,
             direct_annual_referral_enabled, direct_premium_flash_enabled, direct_ambassador_enabled,
             differentiate_upstream_campaign_sources,
@@ -200,7 +203,7 @@ export async function updateActiveEconomySettings({
 
   await runQuery(
     `INSERT INTO economy_settings (
-       id, is_active, payout_asset, payout_mode, redemption_enabled, settlement_processing_enabled,
+       id, is_active, published_brand_theme, payout_asset, payout_mode, redemption_enabled, settlement_processing_enabled,
        direct_reward_queue_enabled, settlement_notes_required, direct_rewards_enabled,
        direct_annual_referral_enabled, direct_premium_flash_enabled, direct_ambassador_enabled,
        differentiate_upstream_campaign_sources,
@@ -212,9 +215,10 @@ export async function updateActiveEconomySettings({
        campaign_alert_channels, campaign_pack_benchmarks, campaign_overrides, updated_at
      ) VALUES (
        $1, TRUE, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-       $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25::jsonb, $26::jsonb, $27::jsonb, NOW()
+       $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26::jsonb, $27::jsonb, $28::jsonb, NOW()
      )
      ON CONFLICT (id) DO UPDATE SET
+       published_brand_theme = EXCLUDED.published_brand_theme,
        payout_asset = EXCLUDED.payout_asset,
        payout_mode = EXCLUDED.payout_mode,
        redemption_enabled = EXCLUDED.redemption_enabled,
@@ -244,6 +248,7 @@ export async function updateActiveEconomySettings({
        updated_at = NOW()`,
     [
       id,
+      next.publishedBrandTheme,
       next.payoutAsset,
       next.payoutMode,
       next.redemptionEnabled,

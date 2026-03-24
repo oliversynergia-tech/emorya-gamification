@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { brandThemeCookieName, resolveBrandThemeId } from "@/lib/brand-themes";
-import { isAdminUser } from "@/server/auth/admin";
+import { resolveBrandThemeId } from "@/lib/brand-themes";
+import { assertSuperAdminUser } from "@/server/auth/admin";
 import { resolveCurrentUser } from "@/server/auth/current-user";
+import { getActiveEconomySettings, updateActiveEconomySettings } from "@/server/repositories/economy-settings-repository";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const theme = resolveBrandThemeId(request.nextUrl.searchParams.get("theme"));
@@ -12,15 +15,24 @@ export async function GET(request: NextRequest) {
   const response = NextResponse.redirect(new URL(destination, request.url));
   const currentUser = await resolveCurrentUser();
 
-  if (!(await isAdminUser(currentUser))) {
+  try {
+    await assertSuperAdminUser(currentUser);
+  } catch {
     return response;
   }
 
-  response.cookies.set(brandThemeCookieName, theme, {
-    httpOnly: false,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
+  if (!currentUser) {
+    return response;
+  }
+
+  const currentSettings = await getActiveEconomySettings();
+  await updateActiveEconomySettings({
+    changedBy: currentUser.id,
+    next: {
+      ...currentSettings,
+      publishedBrandTheme: theme,
+    },
   });
+
   return response;
 }

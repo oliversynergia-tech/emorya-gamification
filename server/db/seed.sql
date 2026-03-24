@@ -1032,6 +1032,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO economy_settings (
   id,
   is_active,
+  published_brand_theme,
   payout_asset,
   payout_mode,
   redemption_enabled,
@@ -1060,6 +1061,7 @@ INSERT INTO economy_settings (
 ) VALUES (
   'ce246eca-e256-487d-849c-769dbd5f366c',
   TRUE,
+  'emorya',
   'EMR',
   'manual',
   FALSE,

@@ -1272,6 +1272,7 @@ export type CampaignPackBenchmarkOverride = CampaignPackBenchmarkConfig & {
 
 export type EconomySettings = {
   id: string;
+  publishedBrandTheme: "emorya" | "multiversx" | "xportal";
   payoutAsset: TokenAsset;
   payoutMode: PayoutOperationsMode;
   redemptionEnabled: boolean;

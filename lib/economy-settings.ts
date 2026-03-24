@@ -18,6 +18,7 @@ export const defaultCampaignAlertChannels: CampaignAlertChannelConfig = {
 
 export const defaultEconomySettings: EconomySettings = {
   id: "default",
+  publishedBrandTheme: "emorya",
   payoutAsset: "EMR",
   payoutMode: "manual",
   redemptionEnabled: false,

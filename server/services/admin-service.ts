@@ -1,4 +1,5 @@
 import { normalizeTokenAsset } from "@/lib/economy-settings";
+import { resolveBrandThemeId } from "@/lib/brand-themes";
 import { validateCampaignPackTemplates } from "@/lib/campaign-pack";
 import { assertAdminUser, assertSuperAdminUser } from "@/server/auth/admin";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
@@ -833,6 +834,7 @@ function normalizeEconomySettingsInput(input: Partial<Omit<EconomySettings, "id"
       : "manual";
 
   return {
+    publishedBrandTheme: resolveBrandThemeId(input.publishedBrandTheme),
     payoutAsset: normalizeTokenAsset(input.payoutAsset),
     payoutMode,
     redemptionEnabled: input.redemptionEnabled ?? false,

@@ -342,6 +342,7 @@ CREATE TABLE campaign_pack_audit (
 CREATE TABLE economy_settings (
   id UUID PRIMARY KEY,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  published_brand_theme TEXT NOT NULL DEFAULT 'emorya',
   payout_asset TEXT NOT NULL CHECK (payout_asset IN ('EMR', 'EGLD', 'PARTNER')),
   payout_mode TEXT NOT NULL DEFAULT 'manual' CHECK (payout_mode IN ('manual', 'review_required', 'automation_ready')),
   redemption_enabled BOOLEAN NOT NULL DEFAULT FALSE,
