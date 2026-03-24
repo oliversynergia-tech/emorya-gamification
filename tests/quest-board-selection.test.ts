@@ -225,3 +225,41 @@ test("selectQuestBoard honors explicit launch order when present", () => {
     ["starter-early", "daily-mid", "premium-mid", "social-late"],
   );
 });
+
+test("selectQuestBoard applies launch order to locked previews too", () => {
+  const result = selectQuestBoard({
+    quests: [
+      {
+        id: "annual-locked",
+        title: "Upgrade annual",
+        track: "premium" as const,
+        launchOrder: 15,
+        status: "locked" as const,
+        visible: true,
+        lockedReason: "Requirements not met yet.",
+        unlockHint: "Complete Starter Path",
+        projectedReward: { xp: 1200, tokenEffect: "direct_token_reward" as const, directTokenReward: { asset: "EMR", amount: 25 } },
+        sortScore: 1200,
+      },
+      {
+        id: "monthly-locked",
+        title: "Upgrade monthly",
+        track: "premium" as const,
+        launchOrder: 11,
+        status: "locked" as const,
+        visible: true,
+        lockedReason: "Requirements not met yet.",
+        unlockHint: "Complete Starter Path",
+        projectedReward: { xp: 350, tokenEffect: "token_bonus" as const },
+        sortScore: 350,
+      },
+    ],
+    journeyState: "signed_up_free",
+    campaignSource: null,
+  });
+
+  assert.deepEqual(
+    result.lockedPreviews.map((quest) => quest.id),
+    ["monthly-locked", "annual-locked"],
+  );
+});

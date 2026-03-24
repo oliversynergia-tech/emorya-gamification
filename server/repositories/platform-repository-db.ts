@@ -428,12 +428,12 @@ function buildStarterPathProgress(progressState: UserProgressState) {
       detail: `${Math.min(progressState.starterQuestCount, starterPathRequirements.starterQuestCount)} / ${starterPathRequirements.starterQuestCount}`,
     },
     {
-      label: "Complete 1 wellness quest",
+      label: "Complete 1 activity quest",
       complete: progressState.wellnessQuestCount >= starterPathRequirements.wellnessQuestCount,
       detail: `${Math.min(progressState.wellnessQuestCount, starterPathRequirements.wellnessQuestCount)} / ${starterPathRequirements.wellnessQuestCount}`,
     },
     {
-      label: "Complete 1 social quest",
+      label: "Complete 1 community quest",
       complete: progressState.socialQuestCount >= starterPathRequirements.socialQuestCount,
       detail: `${Math.min(progressState.socialQuestCount, starterPathRequirements.socialQuestCount)} / ${starterPathRequirements.socialQuestCount}`,
     },

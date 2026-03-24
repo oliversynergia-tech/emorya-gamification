@@ -180,7 +180,7 @@ export function selectQuestBoard({
 
   const lockedPreviews = quests
     .filter((quest) => quest.visible && quest.status === "locked")
-    .sort((left, right) => right.sortScore - left.sortScore)
+    .sort((left, right) => compareQuestPriority(left, right, journeyState, campaignSource, featuredTracks))
     .slice(0, 5);
 
   return {
