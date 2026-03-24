@@ -475,6 +475,17 @@ function getGuidedQuestBlueprint(platform: GuidedPlatform, questType: GuidedQues
   }
 }
 
+function getGuidedTemplateDefaults(platform: GuidedPlatform, questType: GuidedQuestType) {
+  const platformLabel = getGuidedPlatformLabel(platform);
+  const questTypeLabel =
+    guidedQuestTypeOptions.find((option) => option.value === questType)?.label ?? questType;
+
+  return {
+    label: `${platformLabel} ${questTypeLabel}`,
+    description: `Reusable ${questTypeLabel.toLowerCase()} template for ${platformLabel}.`,
+  };
+}
+
 function parseMetadata(metadataText: string) {
   try {
     const parsed = JSON.parse(metadataText) as Record<string, unknown>;
@@ -1228,6 +1239,83 @@ export function QuestDefinitionManagementPanel({
     }));
   }
 
+  function prefillGuidedTemplate(platform: GuidedPlatform, questType: GuidedQuestType) {
+    const defaults = getGuidedTemplateDefaults(platform, questType);
+    setTemplateForm((current) => ({
+      ...current,
+      label: defaults.label,
+      description: defaults.description,
+      isActive: true,
+    }));
+  }
+
+  async function saveGuidedSetupAsTemplate() {
+    applyGuidedSetup(guidedPlatform, guidedQuestType);
+    const defaults = getGuidedTemplateDefaults(guidedPlatform, guidedQuestType);
+    const blueprint = getGuidedQuestBlueprint(guidedPlatform, guidedQuestType);
+    const nextMetadata = {
+      ...(metadataState.parsed ?? {}),
+      ...blueprint.metadata,
+    } as Record<string, unknown>;
+
+    setPending("guided-template");
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/quest-definition-templates", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          label: defaults.label,
+          description: defaults.description,
+          isActive: true,
+          form: {
+            category: blueprint.form.category ?? form.category,
+            difficulty: blueprint.form.difficulty ?? form.difficulty,
+            verificationType: blueprint.form.verificationType ?? form.verificationType,
+            recurrence: blueprint.form.recurrence ?? form.recurrence,
+            requiredTier: form.requiredTier,
+            requiredLevel: form.requiredLevel,
+            xpReward: form.xpReward,
+            isPremiumPreview: form.isPremiumPreview,
+            isActive: form.isActive,
+          },
+          metadata: nextMetadata,
+        }),
+      });
+      const result = (await response.json()) as QuestDefinitionTemplateResponse;
+
+      if (!response.ok || !result.ok || !result.templates) {
+        setError(result.error ?? "Unable to save guided template.");
+        return;
+      }
+
+      setTemplates(result.templates);
+      setTemplateForm({
+        label: defaults.label,
+        description: defaults.description,
+        isActive: true,
+      });
+      setForm((current) => ({
+        ...current,
+        category: blueprint.form.category ?? current.category,
+        difficulty: blueprint.form.difficulty ?? current.difficulty,
+        verificationType: blueprint.form.verificationType ?? current.verificationType,
+        recurrence: blueprint.form.recurrence ?? current.recurrence,
+        metadataText: JSON.stringify(nextMetadata, null, 2),
+      }));
+      setMessage("Guided setup saved as a reusable template.");
+      router.refresh();
+    } catch {
+      setError("Unable to reach the quest template service.");
+    } finally {
+      setPending(null);
+    }
+  }
+
   function applyTemplate(template: QuestTemplate) {
     setForm((current) => ({
       ...current,
@@ -1810,6 +1898,21 @@ export function QuestDefinitionManagementPanel({
             onClick={() => applyGuidedSetup(guidedPlatform, guidedQuestType)}
           >
             Apply guided setup
+          </button>
+          <button
+            className="button button--secondary button--small"
+            type="button"
+            onClick={() => prefillGuidedTemplate(guidedPlatform, guidedQuestType)}
+          >
+            Prefill template details
+          </button>
+          <button
+            className="button button--secondary button--small"
+            type="button"
+            disabled={pending !== null}
+            onClick={saveGuidedSetupAsTemplate}
+          >
+            {pending === "guided-template" ? "Saving..." : "Save guided setup as template"}
           </button>
         </div>
       </section>
