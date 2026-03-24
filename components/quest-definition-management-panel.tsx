@@ -222,6 +222,259 @@ type TemplateFilterState = {
   status: "all" | "active" | "inactive";
 };
 
+type GuidedPlatform =
+  | "website"
+  | "x"
+  | "discord"
+  | "telegram"
+  | "app-store"
+  | "google-play"
+  | "zealy"
+  | "galxe"
+  | "taskon"
+  | "wallet"
+  | "custom";
+
+type GuidedQuestType =
+  | "visit-link"
+  | "community-join"
+  | "social-share"
+  | "review-proof"
+  | "written-response"
+  | "proof-upload"
+  | "api-verification"
+  | "wallet-verification"
+  | "quiz-check";
+
+const guidedPlatformOptions: Array<{ value: GuidedPlatform; label: string }> = [
+  { value: "website", label: "Website" },
+  { value: "x", label: "X" },
+  { value: "discord", label: "Discord" },
+  { value: "telegram", label: "Telegram" },
+  { value: "app-store", label: "App Store" },
+  { value: "google-play", label: "Google Play" },
+  { value: "zealy", label: "Zealy" },
+  { value: "galxe", label: "Galxe" },
+  { value: "taskon", label: "TaskOn" },
+  { value: "wallet", label: "Wallet" },
+  { value: "custom", label: "Custom" },
+];
+
+const guidedQuestTypeOptions: Array<{ value: GuidedQuestType; label: string }> = [
+  { value: "visit-link", label: "Visit link" },
+  { value: "community-join", label: "Join / follow" },
+  { value: "social-share", label: "Share / repost" },
+  { value: "review-proof", label: "Rating / review proof" },
+  { value: "written-response", label: "Written response" },
+  { value: "proof-upload", label: "File / screenshot proof" },
+  { value: "api-verification", label: "API verification" },
+  { value: "wallet-verification", label: "Wallet verification" },
+  { value: "quiz-check", label: "Quiz / check" },
+];
+
+function getGuidedPlatformLabel(platform: GuidedPlatform) {
+  switch (platform) {
+    case "x":
+      return "X";
+    case "discord":
+      return "Discord";
+    case "telegram":
+      return "Telegram";
+    case "app-store":
+      return "App Store";
+    case "google-play":
+      return "Google Play";
+    case "zealy":
+      return "Zealy";
+    case "galxe":
+      return "Galxe";
+    case "taskon":
+      return "TaskOn";
+    case "wallet":
+      return "Wallet";
+    case "custom":
+      return "Custom";
+    default:
+      return "Website";
+  }
+}
+
+function getGuidedQuestBlueprint(platform: GuidedPlatform, questType: GuidedQuestType) {
+  const platformLabel = getGuidedPlatformLabel(platform);
+  const defaultTargetUrl =
+    platform === "x"
+      ? "https://x.com/"
+      : platform === "discord"
+        ? "https://discord.gg/"
+        : platform === "telegram"
+          ? "https://t.me/"
+          : platform === "app-store"
+            ? "https://apps.apple.com/app/"
+            : platform === "google-play"
+              ? "https://play.google.com/store/apps/details?id="
+              : platform === "zealy"
+                ? "https://zealy.io/c/example/quest-board"
+                : platform === "galxe"
+                  ? "https://app.galxe.com/quest/example"
+                  : platform === "taskon"
+                    ? "https://taskon.xyz/campaign/detail/"
+                    : "https://example.com/";
+
+  switch (questType) {
+    case "community-join":
+      return {
+        form: {
+          category: "social",
+          difficulty: "easy",
+          verificationType: "manual-review",
+          recurrence: "one-time",
+        },
+        metadata: {
+          track: "social",
+          platformLabel,
+          ctaLabel: platform === "x" ? "Open profile" : platform === "discord" ? "Open invite" : "Open link",
+          targetUrl: defaultTargetUrl,
+          proofType: "screenshot",
+          proofInstructions: `Join or follow on ${platformLabel}, then upload proof or paste a public reference.`,
+        },
+      };
+    case "social-share":
+      return {
+        form: {
+          category: "social",
+          difficulty: "easy",
+          verificationType: "manual-review",
+          recurrence: "weekly",
+        },
+        metadata: {
+          track: "social",
+          platformLabel,
+          ctaLabel: `Open ${platformLabel} task`,
+          targetUrl: defaultTargetUrl,
+          proofType: "url",
+          proofInstructions: `Complete the share task on ${platformLabel} and submit the public post URL.`,
+        },
+      };
+    case "review-proof":
+      return {
+        form: {
+          category: "social",
+          difficulty: "medium",
+          verificationType: "manual-review",
+          recurrence: "one-time",
+        },
+        metadata: {
+          track: "social",
+          platformLabel,
+          ctaLabel: "Open listing",
+          targetUrl: defaultTargetUrl,
+          proofType: "screenshot",
+          proofInstructions: `Leave a genuine rating or review on ${platformLabel}, then upload proof.`,
+        },
+      };
+    case "written-response":
+      return {
+        form: {
+          category: "learn",
+          difficulty: "medium",
+          verificationType: "text-submission",
+          recurrence: "monthly",
+        },
+        metadata: {
+          track: "learn",
+          platformLabel,
+          proofType: "text",
+          proofInstructions: "Submit a written response with optional reference link.",
+        },
+      };
+    case "proof-upload":
+      return {
+        form: {
+          category: "app",
+          difficulty: "medium",
+          verificationType: "manual-review",
+          recurrence: "weekly",
+        },
+        metadata: {
+          track: "daily",
+          platformLabel,
+          ctaLabel: "Open task",
+          targetUrl: defaultTargetUrl,
+          proofType: "file-upload",
+          proofInstructions: "Complete the action, then upload proof or attach a screenshot.",
+        },
+      };
+    case "api-verification":
+      return {
+        form: {
+          category: "app",
+          difficulty: "medium",
+          verificationType: "api-check",
+          recurrence: "one-time",
+        },
+        metadata: {
+          track: platform === "zealy" || platform === "galxe" || platform === "taskon" ? "campaign" : "app",
+          platformLabel,
+          ctaLabel: `Open ${platformLabel} task`,
+          targetUrl: defaultTargetUrl,
+          proofType: "url",
+          proofInstructions: "Complete the external task, then submit a reference URL or completion id for verification.",
+          apiVerification: {
+            endpointUrl: "https://example.com/api/verify",
+            method: "POST",
+            failureMode: "pending-review",
+          },
+        },
+      };
+    case "wallet-verification":
+      return {
+        form: {
+          category: "staking",
+          difficulty: "medium",
+          verificationType: "wallet-check",
+          recurrence: "weekly",
+        },
+        metadata: {
+          track: "wallet",
+          platformLabel,
+          proofType: "wallet",
+          proofInstructions: "Select a linked wallet and verify it against this quest rule.",
+        },
+      };
+    case "quiz-check":
+      return {
+        form: {
+          category: "learn",
+          difficulty: "medium",
+          verificationType: "quiz",
+          recurrence: "one-time",
+        },
+        metadata: {
+          track: "quiz",
+          proofType: "quiz",
+          proofInstructions: "Submit the score or pass result for this quiz.",
+        },
+      };
+    default:
+      return {
+        form: {
+          category: "app",
+          difficulty: "easy",
+          verificationType: "link-visit",
+          recurrence: "one-time",
+        },
+        metadata: {
+          track: "starter",
+          platformLabel,
+          ctaLabel: "Open quest",
+          targetUrl: defaultTargetUrl,
+          proofType: "link",
+          proofInstructions: "Open the linked destination and record the visit.",
+        },
+      };
+  }
+}
+
 function parseMetadata(metadataText: string) {
   try {
     const parsed = JSON.parse(metadataText) as Record<string, unknown>;
@@ -326,6 +579,8 @@ export function QuestDefinitionManagementPanel({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [templateWarningAcknowledged, setTemplateWarningAcknowledged] = useState(false);
+  const [guidedPlatform, setGuidedPlatform] = useState<GuidedPlatform>("website");
+  const [guidedQuestType, setGuidedQuestType] = useState<GuidedQuestType>("visit-link");
   const [templateFilters, setTemplateFilters] = useState<TemplateFilterState>({
     search: "",
     kind: "all",
@@ -956,6 +1211,23 @@ export function QuestDefinitionManagementPanel({
     }));
   }
 
+  function applyGuidedSetup(platform: GuidedPlatform, questType: GuidedQuestType) {
+    const blueprint = getGuidedQuestBlueprint(platform, questType);
+    const nextMetadata = {
+      ...(metadataState.parsed ?? {}),
+      ...blueprint.metadata,
+    } as Record<string, unknown>;
+
+    setForm((current) => ({
+      ...current,
+      category: blueprint.form.category ?? current.category,
+      difficulty: blueprint.form.difficulty ?? current.difficulty,
+      verificationType: blueprint.form.verificationType ?? current.verificationType,
+      recurrence: blueprint.form.recurrence ?? current.recurrence,
+      metadataText: JSON.stringify(nextMetadata, null, 2),
+    }));
+  }
+
   function applyTemplate(template: QuestTemplate) {
     setForm((current) => ({
       ...current,
@@ -1503,6 +1775,44 @@ export function QuestDefinitionManagementPanel({
           </article>
         ))}
       </div>
+      <section className="panel panel--glass">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Guided builder</p>
+            <h3>Choose a platform and quest type first</h3>
+          </div>
+        </div>
+        <p className="form-note">
+          This is the quickest way to start a custom quest. It sets the recommended verification type, CTA pattern, and proof guidance, then you can refine everything below.
+        </p>
+        <div className="profile-grid">
+          <label className="field">
+            <span>Platform</span>
+            <select value={guidedPlatform} onChange={(event) => setGuidedPlatform(event.target.value as GuidedPlatform)}>
+              {guidedPlatformOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Quest type</span>
+            <select value={guidedQuestType} onChange={(event) => setGuidedQuestType(event.target.value as GuidedQuestType)}>
+              {guidedQuestTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="review-bulk-actions">
+          <button
+            className="button button--secondary button--small"
+            type="button"
+            onClick={() => applyGuidedSetup(guidedPlatform, guidedQuestType)}
+          >
+            Apply guided setup
+          </button>
+        </div>
+      </section>
       <section className="panel panel--glass">
         <div className="panel__header">
           <div>
