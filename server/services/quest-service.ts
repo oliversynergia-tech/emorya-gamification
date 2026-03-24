@@ -12,6 +12,10 @@ import {
   mergeModerationIntoSubmission,
   normalizeManualReviewSubmission,
 } from "@/server/services/quest-rules";
+import {
+  executeApiQuestVerification,
+  parseApiQuestVerificationConfig,
+} from "@/server/services/api-quest-verification";
 import { createActivityLogEntry, getUserProgressById } from "@/server/repositories/progression-repository";
 import { applyQuestRewardTransition } from "@/server/services/progression-service";
 import { resolveWalletQuestVerification } from "@/server/services/wallet-quest-rules";
@@ -239,6 +243,79 @@ export async function submitQuest({
       outcome: "pending" as const,
       progressUpdate: null,
       message: "Submission sent for review.",
+    };
+  }
+
+  if (quest.verification_type === "api-check") {
+    const config = parseApiQuestVerificationConfig(quest.metadata);
+    if (!config) {
+      throw new Error("API verification quests require a valid apiVerification config.");
+    }
+
+    const verificationResult = await executeApiQuestVerification({
+      config,
+      quest: {
+        id: quest.id,
+        title: quest.title,
+        verificationType: quest.verification_type,
+      },
+      user: {
+        id: currentUser.id,
+        email: currentUser.email,
+        displayName: currentUser.displayName,
+      },
+      payload,
+      submittedAt,
+    });
+
+    const completion = await upsertQuestCompletionForUser({
+      userId: currentUser.id,
+      questId,
+      status: verificationResult.status,
+      awardedXp: existingCompletion?.awardedXp ?? 0,
+      reviewedBy: verificationResult.status === "approved" || verificationResult.status === "rejected" ? currentUser.id : null,
+      completedAt: verificationResult.status === "approved" ? submittedAt : null,
+      submissionData: verificationResult.submissionData,
+    });
+
+    let progressUpdate: QuestProgressUpdate | null = null;
+    if (verificationResult.status === "approved") {
+      progressUpdate = await applyQuestRewardTransition({
+        userId: currentUser.id,
+        completionId: completion.id,
+        questId,
+        questTitle: quest.title,
+        questXpReward: quest.xp_reward,
+        previousAwardedXp: existingCompletion?.awardedXp ?? 0,
+        shouldBeApproved: true,
+      });
+    } else if (verificationResult.status === "pending") {
+      await logQuestActivity({
+        userId: currentUser.id,
+        actor: currentUser.displayName,
+        actionType: "quest-submitted",
+        action: "submitted a quest",
+        detail: `${quest.title} is waiting for review`,
+        questId,
+        questTitle: quest.title,
+      });
+    } else {
+      await logQuestActivity({
+        userId: currentUser.id,
+        actor: currentUser.displayName,
+        actionType: "quest-rejected",
+        action: "failed an external verification",
+        detail: `${quest.title} did not pass the external verification`,
+        questId,
+        questTitle: quest.title,
+      });
+    }
+
+    return {
+      completion,
+      outcome: verificationResult.status,
+      progressUpdate,
+      message: verificationResult.message,
     };
   }
 

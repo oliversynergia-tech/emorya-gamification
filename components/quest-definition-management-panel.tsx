@@ -148,6 +148,11 @@ type MetadataBuilderState = {
   directTokenAsset: string;
   directTokenAmount: number;
   rewardProgramId: string;
+  apiEndpointUrl: string;
+  apiMethod: string;
+  apiAuthHeaderName: string;
+  apiAuthHeaderValue: string;
+  apiFailureMode: string;
 };
 
 function slugifyTaskLabel(value: string) {
@@ -399,6 +404,26 @@ export function QuestDefinitionManagementPanel({
           : availableAssets[0]?.symbol ?? "EMR",
       directTokenAmount: Number(directTokenReward.amount ?? 0),
       rewardProgramId: typeof metadata.rewardProgramId === "string" ? metadata.rewardProgramId : "",
+      apiEndpointUrl:
+        typeof (metadata.apiVerification as Record<string, unknown> | undefined)?.endpointUrl === "string"
+          ? String((metadata.apiVerification as Record<string, unknown>).endpointUrl)
+          : "",
+      apiMethod:
+        typeof (metadata.apiVerification as Record<string, unknown> | undefined)?.method === "string"
+          ? String((metadata.apiVerification as Record<string, unknown>).method).toUpperCase()
+          : "POST",
+      apiAuthHeaderName:
+        typeof (metadata.apiVerification as Record<string, unknown> | undefined)?.authHeaderName === "string"
+          ? String((metadata.apiVerification as Record<string, unknown>).authHeaderName)
+          : "",
+      apiAuthHeaderValue:
+        typeof (metadata.apiVerification as Record<string, unknown> | undefined)?.authHeaderValue === "string"
+          ? String((metadata.apiVerification as Record<string, unknown>).authHeaderValue)
+          : "",
+      apiFailureMode:
+        typeof (metadata.apiVerification as Record<string, unknown> | undefined)?.failureMode === "string"
+          ? String((metadata.apiVerification as Record<string, unknown>).failureMode)
+          : "reject",
     };
   }, [availableAssets, metadataState.parsed]);
   const questTemplates = useMemo<QuestTemplate[]>(() => {
@@ -852,6 +877,17 @@ export function QuestDefinitionManagementPanel({
     } else {
       delete nextMetadata.rewardProgramId;
     }
+    if (next.apiEndpointUrl.trim()) {
+      nextMetadata.apiVerification = {
+        endpointUrl: next.apiEndpointUrl.trim(),
+        method: next.apiMethod === "GET" ? "GET" : "POST",
+        failureMode: next.apiFailureMode === "pending-review" ? "pending-review" : "reject",
+        ...(next.apiAuthHeaderName.trim() ? { authHeaderName: next.apiAuthHeaderName.trim() } : {}),
+        ...(next.apiAuthHeaderValue.trim() ? { authHeaderValue: next.apiAuthHeaderValue.trim() } : {}),
+      };
+    } else {
+      delete nextMetadata.apiVerification;
+    }
     nextMetadata.rewardConfig = rewardConfig;
     if (next.previewLabel.trim()) {
       previewConfig.label = next.previewLabel.trim();
@@ -1181,7 +1217,7 @@ export function QuestDefinitionManagementPanel({
         <label className="field">
           <span>Verification</span>
           <select value={form.verificationType} onChange={(event) => setForm((current) => ({ ...current, verificationType: event.target.value }))}>
-            {["social-oauth", "wallet-check", "quiz", "manual-review", "link-visit", "text-submission"].map((value) => (
+            {["social-oauth", "wallet-check", "quiz", "manual-review", "link-visit", "api-check", "text-submission"].map((value) => (
               <option key={value} value={value}>{value}</option>
             ))}
           </select>
@@ -1593,6 +1629,45 @@ export function QuestDefinitionManagementPanel({
           <label className="field field--checkbox">
             <span>Wallet required</span>
             <input type="checkbox" checked={metadataBuilder.walletLinked} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, walletLinked: event.target.checked }))} />
+          </label>
+          <label className="field">
+            <span>API endpoint URL</span>
+            <input
+              value={metadataBuilder.apiEndpointUrl}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, apiEndpointUrl: event.target.value }))}
+              placeholder="https://verifier.example.com/quest-check"
+            />
+          </label>
+          <label className="field">
+            <span>API method</span>
+            <select value={metadataBuilder.apiMethod} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, apiMethod: event.target.value }))}>
+              {["POST", "GET"].map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Auth header name</span>
+            <input
+              value={metadataBuilder.apiAuthHeaderName}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, apiAuthHeaderName: event.target.value }))}
+              placeholder="x-api-key"
+            />
+          </label>
+          <label className="field">
+            <span>Auth header value</span>
+            <input
+              value={metadataBuilder.apiAuthHeaderValue}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, apiAuthHeaderValue: event.target.value }))}
+              placeholder="secret value"
+            />
+          </label>
+          <label className="field">
+            <span>API failure mode</span>
+            <select value={metadataBuilder.apiFailureMode} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, apiFailureMode: event.target.value }))}>
+              <option value="reject">Reject</option>
+              <option value="pending-review">Send to review</option>
+            </select>
           </label>
         </div>
       </section>

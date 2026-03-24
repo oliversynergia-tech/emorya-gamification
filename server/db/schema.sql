@@ -8,6 +8,7 @@ CREATE TYPE verification_type AS ENUM (
   'quiz',
   'manual-review',
   'link-visit',
+  'api-check',
   'text-submission'
 );
 CREATE TYPE quest_recurrence AS ENUM ('one-time', 'daily', 'weekly', 'monthly');

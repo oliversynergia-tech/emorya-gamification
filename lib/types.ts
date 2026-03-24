@@ -33,6 +33,7 @@ export type VerificationType =
   | "quiz"
   | "manual-review"
   | "link-visit"
+  | "api-check"
   | "text-submission";
 
 export type QuestTaskBlock = {

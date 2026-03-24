@@ -55,7 +55,7 @@ export function QuestActionsPanel({
   const actionableQuests = useMemo(
     () =>
       quests.filter((quest) =>
-        ["quiz", "manual-review", "link-visit", "wallet-check"].includes(quest.verificationType),
+        ["quiz", "manual-review", "link-visit", "wallet-check", "api-check"].includes(quest.verificationType),
       ).sort((left, right) => {
         if (highlightedQuestId && left.id === highlightedQuestId) {
           return -1;
@@ -363,6 +363,19 @@ export function QuestActionsPanel({
     );
   }
 
+  function handleApiCheckSubmit(event: FormEvent<HTMLFormElement>, quest: Quest) {
+    event.preventDefault();
+    void submitQuest(
+      quest,
+      {
+        contentUrl: contentUrls[quest.id] ?? "",
+        platform: platforms[quest.id] ?? "",
+        note: notes[quest.id] ?? "",
+      },
+      "Verification submitted.",
+    );
+  }
+
   return (
     <section className="panel" id="quest-actions">
       <div className="panel__header">
@@ -372,7 +385,7 @@ export function QuestActionsPanel({
         </div>
       </div>
       {!isAuthenticated ? (
-        <p className="form-note">Sign in to submit quests and send manual-review items into the queue.</p>
+        <p className="form-note">Sign in to submit quests and send manual-review or API-check items into the queue.</p>
       ) : null}
       <div className="quest-action-grid">
         {actionableQuests.map((quest) => {
@@ -654,6 +667,44 @@ export function QuestActionsPanel({
                     <small className="form-note">Link a MultiversX wallet in Profile or Auth before submitting this quest.</small>
                   ) : null}
                 </div>
+              ) : null}
+              {quest.verificationType === "api-check" ? (
+                <form className="form-stack" onSubmit={(event) => handleApiCheckSubmit(event, quest)}>
+                  <label className="field">
+                    <span>Platform</span>
+                    <input
+                      value={platforms[quest.id] ?? ""}
+                      onChange={(event) =>
+                        setPlatforms((current) => ({ ...current, [quest.id]: event.target.value }))
+                      }
+                      placeholder="X, Discord, App Store..."
+                      disabled={disabled || pending}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Reference URL or identifier</span>
+                    <input
+                      value={contentUrls[quest.id] ?? ""}
+                      onChange={(event) =>
+                        setContentUrls((current) => ({ ...current, [quest.id]: event.target.value }))
+                      }
+                      placeholder="https://... or external submission id"
+                      disabled={disabled || pending}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Verification note</span>
+                    <input
+                      value={notes[quest.id] ?? ""}
+                      onChange={(event) => setNotes((current) => ({ ...current, [quest.id]: event.target.value }))}
+                      placeholder="Optional context for the verifier"
+                      disabled={disabled || pending}
+                    />
+                  </label>
+                  <button className="button button--primary" type="submit" disabled={disabled || pending}>
+                    {pending ? "Verifying..." : "Run external verification"}
+                  </button>
+                </form>
               ) : null}
               {disabled ? (
                 <small className="form-note">
