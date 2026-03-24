@@ -163,3 +163,65 @@ test("selectQuestBoard prioritizes featured tracks from the active campaign pres
     ["premium-1", "wallet-1"],
   );
 });
+
+test("selectQuestBoard honors explicit launch order when present", () => {
+  const result = selectQuestBoard({
+    quests: [
+      {
+        id: "social-late",
+        title: "Share progress",
+        track: "social" as const,
+        launchOrder: 19,
+        status: "active" as const,
+        visible: true,
+        lockedReason: null,
+        unlockHint: null,
+        projectedReward: { xp: 90, tokenEffect: "none" as const },
+        sortScore: 1090,
+      },
+      {
+        id: "starter-early",
+        title: "Join Telegram",
+        track: "social" as const,
+        launchOrder: 1,
+        status: "active" as const,
+        visible: true,
+        lockedReason: null,
+        unlockHint: null,
+        projectedReward: { xp: 20, tokenEffect: "none" as const },
+        sortScore: 20,
+      },
+      {
+        id: "premium-mid",
+        title: "Upgrade monthly",
+        track: "premium" as const,
+        launchOrder: 11,
+        status: "active" as const,
+        visible: true,
+        lockedReason: null,
+        unlockHint: null,
+        projectedReward: { xp: 350, tokenEffect: "token_bonus" as const },
+        sortScore: 350,
+      },
+      {
+        id: "daily-mid",
+        title: "Wheel spin",
+        track: "daily" as const,
+        launchOrder: 6,
+        status: "active" as const,
+        visible: true,
+        lockedReason: null,
+        unlockHint: null,
+        projectedReward: { xp: 35, tokenEffect: "none" as const },
+        sortScore: 35,
+      },
+    ],
+    journeyState: "signed_up_free",
+    campaignSource: null,
+  });
+
+  assert.deepEqual(
+    result.active.map((quest) => quest.id),
+    ["starter-early", "daily-mid", "premium-mid", "social-late"],
+  );
+});

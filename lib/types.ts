@@ -1393,6 +1393,7 @@ export type EvaluatedQuest = {
   id: string;
   title: string;
   track: QuestTrack;
+  launchOrder?: number;
   status: "active" | "locked" | "completed" | "in_progress" | "cooldown" | "rejected";
   visible: boolean;
   lockedReason: string | null;

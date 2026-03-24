@@ -17,6 +17,7 @@ export function evaluateQuest({
   id,
   title,
   track,
+  launchOrder,
   completionStatus,
   rewardConfig,
   unlockRules,
@@ -29,6 +30,7 @@ export function evaluateQuest({
   id: string;
   title: string;
   track: EvaluatedQuest["track"];
+  launchOrder?: number;
   completionStatus: QuestStatus;
   rewardConfig: RewardConfig;
   unlockRules: UnlockRuleGroup;
@@ -86,6 +88,7 @@ export function evaluateQuest({
     id,
     title,
     track,
+    launchOrder,
     status,
     visible: status !== "completed" || track === "daily",
     lockedReason: status === "locked" ? "Requirements not met yet." : null,

@@ -40,6 +40,35 @@ export type DashboardQuestRow = {
   completion_status: "pending" | "approved" | "rejected" | null;
 };
 
+const EMORYA_LAUNCH_ORDER = new Map<string, number>([
+  ["join-emorya-telegram", 1],
+  ["follow-emorya-on-x", 2],
+  ["download-the-emorya-app", 3],
+  ["open-the-app-for-the-first-time", 4],
+  ["create-emorya-account", 5],
+  ["complete-daily-wheel-spin", 6],
+  ["play-emoryan-adventure-game", 7],
+  ["connect-your-xportal-wallet", 8],
+  ["view-your-emrs-reward-path", 9],
+  ["convert-your-first-calories", 10],
+  ["upgrade-to-premium-monthly", 11],
+  ["500-in-24", 12],
+  ["weekly-warrior", 13],
+  ["convert-2000-calories-to-emrs", 14],
+  ["upgrade-to-annual", 15],
+  ["emorya-marathon", 16],
+  ["rate-emorya-on-the-app-store", 17],
+  ["leave-your-first-emorya-review", 18],
+  ["share-your-verified-progress-screenshot", 19],
+  ["invite-your-first-accountability-partner", 20],
+  ["refer-one-user-who-converts-calories", 21],
+  ["this-weeks-ugc-challenge", 22],
+  ["create-an-emorya-progress-reel", 23],
+  ["join-emorya-discord", 24],
+  ["like-this-weeks-emorya-post", 25],
+  ["share-an-emorya-post", 26],
+]);
+
 function deriveCompletionStatus(quest: DashboardQuestRow): Quest["status"] {
   if (quest.completion_status === "approved") {
     return "completed";
@@ -180,6 +209,7 @@ export function buildDashboardQuestBoard({
         id: quest.id,
         title: quest.title,
         track,
+        launchOrder: EMORYA_LAUNCH_ORDER.get(quest.slug),
         completionStatus,
         rewardConfig,
         unlockRules,

@@ -1,5 +1,28 @@
 import type { EvaluatedQuest, UserJourneyState, UserProgressState } from "@/lib/types";
 
+function compareQuestPriority(
+  left: EvaluatedQuest,
+  right: EvaluatedQuest,
+  journeyState: UserJourneyState,
+  campaignSource: UserProgressState["campaignSource"],
+  featuredTracks?: string[],
+) {
+  const leftLaunchOrder = typeof left.launchOrder === "number" ? left.launchOrder : Number.POSITIVE_INFINITY;
+  const rightLaunchOrder = typeof right.launchOrder === "number" ? right.launchOrder : Number.POSITIVE_INFINITY;
+  if (leftLaunchOrder !== rightLaunchOrder) {
+    return leftLaunchOrder - rightLaunchOrder;
+  }
+
+  const priorityDelta =
+    computeTrackPriority(left.track, journeyState, campaignSource, featuredTracks) -
+    computeTrackPriority(right.track, journeyState, campaignSource, featuredTracks);
+  if (priorityDelta !== 0) {
+    return priorityDelta;
+  }
+
+  return right.sortScore - left.sortScore;
+}
+
 function injectCampaignPriority(order: string[], campaignSource: UserProgressState["campaignSource"]) {
   if (!campaignSource || campaignSource === "direct") {
     return order;
@@ -114,32 +137,30 @@ export function selectQuestBoard({
 }) {
   const activePool = quests
     .filter((quest) => quest.visible && (quest.status === "active" || quest.status === "in_progress" || quest.status === "rejected"))
-    .sort((left, right) => {
-      const priorityDelta =
-        computeTrackPriority(left.track, journeyState, campaignSource, featuredTracks) -
-        computeTrackPriority(right.track, journeyState, campaignSource, featuredTracks);
-      if (priorityDelta !== 0) {
-        return priorityDelta;
-      }
-
-      return right.sortScore - left.sortScore;
-    });
+    .sort((left, right) => compareQuestPriority(left, right, journeyState, campaignSource, featuredTracks));
   const selectedActive = new Map<string, EvaluatedQuest>();
   const targetTracks = getTargetTracks(journeyState, campaignSource, featuredTracks);
+  const launchOrderedActive = activePool.filter((quest) => typeof quest.launchOrder === "number");
 
-  for (const track of targetTracks) {
-    if (selectedActive.size >= 15) {
-      break;
+  if (launchOrderedActive.length > 0) {
+    for (const quest of launchOrderedActive.slice(0, 15)) {
+      selectedActive.set(quest.id, quest);
     }
-
-    const perTrack = activePool.filter((quest) => quest.track === track).slice(0, 3);
-
-    for (const quest of perTrack) {
+  } else {
+    for (const track of targetTracks) {
       if (selectedActive.size >= 15) {
         break;
       }
 
-      selectedActive.set(quest.id, quest);
+      const perTrack = activePool.filter((quest) => quest.track === track).slice(0, 3);
+
+      for (const quest of perTrack) {
+        if (selectedActive.size >= 15) {
+          break;
+        }
+
+        selectedActive.set(quest.id, quest);
+      }
     }
   }
 
@@ -154,14 +175,7 @@ export function selectQuestBoard({
   }
 
   const active = Array.from(selectedActive.values()).sort((left, right) => {
-    const priorityDelta =
-      computeTrackPriority(left.track, journeyState, campaignSource, featuredTracks) -
-      computeTrackPriority(right.track, journeyState, campaignSource, featuredTracks);
-    if (priorityDelta !== 0) {
-      return priorityDelta;
-    }
-
-    return right.sortScore - left.sortScore;
+    return compareQuestPriority(left, right, journeyState, campaignSource, featuredTracks);
   });
 
   const lockedPreviews = quests
