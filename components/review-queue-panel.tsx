@@ -319,6 +319,14 @@ export function ReviewQueuePanel({
                   {item.userDisplayName}
                   {item.userEmail ? ` · ${item.userEmail}` : ""}
                 </p>
+                {item.submissionData.proofFileUrl ? (
+                  <p className="form-note">
+                    Proof file:{" "}
+                    <a href={String(item.submissionData.proofFileUrl)} target="_blank" rel="noreferrer">
+                      {String(item.submissionData.proofFileName ?? "Open uploaded proof")}
+                    </a>
+                  </p>
+                ) : null}
                 <div className="review-history__meta">
                   <span>Reviewer: {item.reviewerDisplayName ?? "Unknown"}</span>
                   <span>XP: {item.awardedXp}</span>
@@ -421,6 +429,14 @@ export function ReviewQueuePanel({
               {item.userDisplayName}
               {item.userEmail ? ` · ${item.userEmail}` : ""}
             </p>
+            {item.submissionData.proofFileUrl ? (
+              <p className="form-note">
+                Proof file:{" "}
+                <a href={String(item.submissionData.proofFileUrl)} target="_blank" rel="noreferrer">
+                  {String(item.submissionData.proofFileName ?? "Open uploaded proof")}
+                </a>
+              </p>
+            ) : null}
             <pre className="review-payload">{JSON.stringify(item.submissionData, null, 2)}</pre>
             <label className="field">
               <span>Moderation note</span>

@@ -131,8 +131,15 @@ const emptyForm: QuestDefinitionFormState = {
 
 type MetadataBuilderState = {
   track: string;
+  platformLabel: string;
   tokenEffect: string;
   previewLabel: string;
+  ctaLabel: string;
+  targetUrl: string;
+  helpUrl: string;
+  verificationReferenceUrl: string;
+  proofType: string;
+  proofInstructions: string;
   minLevel: number;
   successfulReferrals: number;
   walletLinked: boolean;
@@ -297,8 +304,11 @@ export function QuestDefinitionManagementPanel({
 
     return {
       track: typeof metadata.track === "string" ? metadata.track : "unassigned",
+      platformLabel: typeof metadata.platformLabel === "string" ? metadata.platformLabel : null,
       tokenEffect: typeof rewardConfig.tokenEffect === "string" ? rewardConfig.tokenEffect : "none",
       previewLabel: typeof previewConfig.label === "string" ? previewConfig.label : null,
+      ctaLabel: typeof metadata.ctaLabel === "string" ? metadata.ctaLabel : null,
+      proofType: typeof metadata.proofType === "string" ? metadata.proofType : null,
       unlockRuleCount: (unlockRules.all?.length ?? 0) + (unlockRules.any?.length ?? 0),
       directTokenReward:
         directTokenReward?.asset && typeof directTokenReward.amount === "number"
@@ -316,11 +326,19 @@ export function QuestDefinitionManagementPanel({
 
     return {
       track: typeof metadata.track === "string" ? metadata.track : "starter",
+      platformLabel: typeof metadata.platformLabel === "string" ? metadata.platformLabel : "",
       tokenEffect: typeof rewardConfig.tokenEffect === "string" ? rewardConfig.tokenEffect : "none",
       previewLabel:
         typeof (metadata.previewConfig as Record<string, unknown> | undefined)?.label === "string"
           ? String((metadata.previewConfig as Record<string, unknown>).label)
           : "",
+      ctaLabel: typeof metadata.ctaLabel === "string" ? metadata.ctaLabel : "",
+      targetUrl: typeof metadata.targetUrl === "string" ? metadata.targetUrl : "",
+      helpUrl: typeof metadata.helpUrl === "string" ? metadata.helpUrl : "",
+      verificationReferenceUrl:
+        typeof metadata.verificationReferenceUrl === "string" ? metadata.verificationReferenceUrl : "",
+      proofType: typeof metadata.proofType === "string" ? metadata.proofType : "",
+      proofInstructions: typeof metadata.proofInstructions === "string" ? metadata.proofInstructions : "",
       minLevel: Number(allRules.find((rule) => rule.type === "min_level")?.value ?? 0),
       successfulReferrals: Number(allRules.find((rule) => rule.type === "successful_referrals")?.value ?? 0),
       walletLinked: Boolean(allRules.find((rule) => rule.type === "wallet_linked")?.value),
@@ -744,6 +762,41 @@ export function QuestDefinitionManagementPanel({
     }
 
     nextMetadata.track = next.track;
+    if (next.platformLabel.trim()) {
+      nextMetadata.platformLabel = next.platformLabel.trim();
+    } else {
+      delete nextMetadata.platformLabel;
+    }
+    if (next.ctaLabel.trim()) {
+      nextMetadata.ctaLabel = next.ctaLabel.trim();
+    } else {
+      delete nextMetadata.ctaLabel;
+    }
+    if (next.targetUrl.trim()) {
+      nextMetadata.targetUrl = next.targetUrl.trim();
+    } else {
+      delete nextMetadata.targetUrl;
+    }
+    if (next.helpUrl.trim()) {
+      nextMetadata.helpUrl = next.helpUrl.trim();
+    } else {
+      delete nextMetadata.helpUrl;
+    }
+    if (next.verificationReferenceUrl.trim()) {
+      nextMetadata.verificationReferenceUrl = next.verificationReferenceUrl.trim();
+    } else {
+      delete nextMetadata.verificationReferenceUrl;
+    }
+    if (next.proofType.trim()) {
+      nextMetadata.proofType = next.proofType.trim();
+    } else {
+      delete nextMetadata.proofType;
+    }
+    if (next.proofInstructions.trim()) {
+      nextMetadata.proofInstructions = next.proofInstructions.trim();
+    } else {
+      delete nextMetadata.proofInstructions;
+    }
     if (next.rewardProgramId) {
       nextMetadata.rewardProgramId = next.rewardProgramId;
     } else {
@@ -1333,6 +1386,14 @@ export function QuestDefinitionManagementPanel({
             </select>
           </label>
           <label className="field">
+            <span>Platform label</span>
+            <input
+              value={metadataBuilder.platformLabel}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, platformLabel: event.target.value }))}
+              placeholder="X, Discord, App Store, Website..."
+            />
+          </label>
+          <label className="field">
             <span>Token effect</span>
             <select value={metadataBuilder.tokenEffect} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, tokenEffect: event.target.value }))}>
               {["none", "eligibility_progress", "token_bonus", "direct_token_reward"].map((value) => (
@@ -1343,6 +1404,55 @@ export function QuestDefinitionManagementPanel({
           <label className="field">
             <span>Preview label</span>
             <input value={metadataBuilder.previewLabel} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, previewLabel: event.target.value }))} />
+          </label>
+          <label className="field">
+            <span>Primary CTA label</span>
+            <input
+              value={metadataBuilder.ctaLabel}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, ctaLabel: event.target.value }))}
+              placeholder="Open quest, Join server, View task..."
+            />
+          </label>
+          <label className="field">
+            <span>Target URL</span>
+            <input
+              value={metadataBuilder.targetUrl}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, targetUrl: event.target.value }))}
+              placeholder="https://..."
+            />
+          </label>
+          <label className="field">
+            <span>Help URL</span>
+            <input
+              value={metadataBuilder.helpUrl}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, helpUrl: event.target.value }))}
+              placeholder="Optional guide or explainer"
+            />
+          </label>
+          <label className="field">
+            <span>Verification reference URL</span>
+            <input
+              value={metadataBuilder.verificationReferenceUrl}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, verificationReferenceUrl: event.target.value }))}
+              placeholder="Optional submission example or rules page"
+            />
+          </label>
+          <label className="field">
+            <span>Proof type</span>
+            <select value={metadataBuilder.proofType} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, proofType: event.target.value }))}>
+              <option value="">No proof guidance</option>
+              {["link", "text", "url", "screenshot", "file-upload", "wallet", "social-oauth", "quiz", "manual-review"].map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Proof instructions</span>
+            <input
+              value={metadataBuilder.proofInstructions}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, proofInstructions: event.target.value }))}
+              placeholder="Paste a post URL, upload proof, connect wallet..."
+            />
           </label>
           <label className="field">
             <span>Minimum level unlock</span>
@@ -1405,6 +1515,9 @@ export function QuestDefinitionManagementPanel({
             <p>
               Track: {preview.track}. Token effect: {preview.tokenEffect}. Unlock rules: {preview.unlockRuleCount}.
               {preview.previewLabel ? ` Preview label: ${preview.previewLabel}.` : ""}
+              {preview.platformLabel ? ` Platform: ${preview.platformLabel}.` : ""}
+              {preview.ctaLabel ? ` CTA: ${preview.ctaLabel}.` : ""}
+              {preview.proofType ? ` Proof: ${preview.proofType}.` : ""}
             </p>
           </div>
           <div className="achievement-card__side">

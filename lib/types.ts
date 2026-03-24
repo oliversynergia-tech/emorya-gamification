@@ -71,7 +71,13 @@ export type Quest = {
   requiredTier: SubscriptionTier;
   premiumPreview?: boolean;
   timebox?: string;
+  platformLabel?: string;
+  ctaLabel?: string;
   targetUrl?: string;
+  helpUrl?: string;
+  verificationReferenceUrl?: string;
+  proofType?: string;
+  proofInstructions?: string;
   campaignPackId?: string;
   campaignPackLabel?: string;
 };
@@ -1451,6 +1457,9 @@ export type ReviewHistoryItem = {
 export type ManualReviewSubmission = {
   contentUrl: string;
   screenshotUrl: string | null;
+  proofFileUrl?: string | null;
+  proofFileName?: string | null;
+  proofFileType?: string | null;
   platform: string | null;
   note: string | null;
   submittedAt: string;

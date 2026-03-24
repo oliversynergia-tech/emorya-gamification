@@ -47,6 +47,9 @@ export function normalizeManualReviewSubmission(
 ): ManualReviewSubmission {
   const contentUrl = normalizeText(payload.contentUrl);
   const screenshotUrl = normalizeText(payload.screenshotUrl);
+  const proofFileUrl = normalizeText(payload.proofFileUrl);
+  const proofFileName = normalizeText(payload.proofFileName);
+  const proofFileType = normalizeText(payload.proofFileType);
   const platform = normalizeText(payload.platform);
   const note = normalizeText(payload.note);
 
@@ -57,6 +60,9 @@ export function normalizeManualReviewSubmission(
   return {
     contentUrl,
     screenshotUrl: screenshotUrl || null,
+    proofFileUrl: proofFileUrl || null,
+    proofFileName: proofFileName || null,
+    proofFileType: proofFileType || null,
     platform: platform || null,
     note: note || null,
     submittedAt,
@@ -72,6 +78,12 @@ export function mergeModerationIntoSubmission(
     contentUrl: typeof submissionData.contentUrl === "string" ? submissionData.contentUrl : "",
     screenshotUrl:
       typeof submissionData.screenshotUrl === "string" ? submissionData.screenshotUrl : null,
+    proofFileUrl:
+      typeof submissionData.proofFileUrl === "string" ? submissionData.proofFileUrl : null,
+    proofFileName:
+      typeof submissionData.proofFileName === "string" ? submissionData.proofFileName : null,
+    proofFileType:
+      typeof submissionData.proofFileType === "string" ? submissionData.proofFileType : null,
     platform: typeof submissionData.platform === "string" ? submissionData.platform : null,
     note: typeof submissionData.note === "string" ? submissionData.note : null,
     submittedAt:

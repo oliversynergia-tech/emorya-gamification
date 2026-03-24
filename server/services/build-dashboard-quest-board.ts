@@ -127,7 +127,14 @@ function mapEvaluatedQuestToQuest({
     requiredTier: quest.required_tier,
     premiumPreview: quest.is_premium_preview,
     timebox: typeof quest.metadata?.timebox === "string" ? quest.metadata.timebox : undefined,
+    platformLabel: typeof quest.metadata?.platformLabel === "string" ? quest.metadata.platformLabel : undefined,
+    ctaLabel: typeof quest.metadata?.ctaLabel === "string" ? quest.metadata.ctaLabel : undefined,
     targetUrl: typeof quest.metadata?.targetUrl === "string" ? quest.metadata.targetUrl : undefined,
+    helpUrl: typeof quest.metadata?.helpUrl === "string" ? quest.metadata.helpUrl : undefined,
+    verificationReferenceUrl:
+      typeof quest.metadata?.verificationReferenceUrl === "string" ? quest.metadata.verificationReferenceUrl : undefined,
+    proofType: typeof quest.metadata?.proofType === "string" ? quest.metadata.proofType : undefined,
+    proofInstructions: typeof quest.metadata?.proofInstructions === "string" ? quest.metadata.proofInstructions : undefined,
     campaignPackId: typeof quest.metadata?.campaignPackId === "string" ? quest.metadata.campaignPackId : undefined,
     campaignPackLabel: typeof quest.metadata?.campaignPackLabel === "string" ? quest.metadata.campaignPackLabel : undefined,
   };

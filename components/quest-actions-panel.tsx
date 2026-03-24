@@ -6,6 +6,7 @@ import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { DashboardData, Quest, QuestProgressUpdate } from "@/lib/types";
 
 type SubmissionState = Record<string, string>;
+type ProofFileState = Record<string, File | null>;
 
 async function trackMissionSubmitAttempt(payload: {
   packId: string;
@@ -67,6 +68,7 @@ export function QuestActionsPanel({
   const [answersCorrect, setAnswersCorrect] = useState<SubmissionState>({});
   const [contentUrls, setContentUrls] = useState<SubmissionState>({});
   const [screenshotUrls, setScreenshotUrls] = useState<SubmissionState>({});
+  const [proofFiles, setProofFiles] = useState<ProofFileState>({});
   const [platforms, setPlatforms] = useState<SubmissionState>({});
   const [notes, setNotes] = useState<SubmissionState>({});
   const [walletSelections, setWalletSelections] = useState<SubmissionState>({});
@@ -199,17 +201,67 @@ export function QuestActionsPanel({
 
   function handleManualSubmit(event: FormEvent<HTMLFormElement>, quest: Quest) {
     event.preventDefault();
+    void (async () => {
+      let uploadedProof:
+        | {
+            url: string;
+            name: string;
+            type: string;
+          }
+        | null = null;
 
-    void submitQuest(
-      quest,
-      {
-        contentUrl: contentUrls[quest.id] ?? "",
-        screenshotUrl: screenshotUrls[quest.id] ?? "",
-        platform: platforms[quest.id] ?? "",
-        note: notes[quest.id] ?? "",
-      },
-      "Manual review submitted.",
-    );
+      const selectedProofFile = proofFiles[quest.id];
+      if (selectedProofFile) {
+        setPendingQuestId(quest.id);
+        setMessage(null);
+        setError(null);
+        const uploadForm = new FormData();
+        uploadForm.append("file", selectedProofFile);
+
+        try {
+          const uploadResponse = await fetch("/api/uploads/quest-proof", {
+            method: "POST",
+            body: uploadForm,
+          });
+          const uploadResult = (await uploadResponse.json()) as {
+            ok: boolean;
+            error?: string;
+            file?: {
+              url: string;
+              name: string;
+              type: string;
+            };
+          };
+
+          if (!uploadResponse.ok || !uploadResult.ok || !uploadResult.file) {
+            setError(uploadResult.error ?? "Unable to upload proof file.");
+            setPendingQuestId(null);
+            return;
+          }
+
+          uploadedProof = uploadResult.file;
+          setProofFiles((current) => ({ ...current, [quest.id]: null }));
+        } catch {
+          setError("Unable to upload the proof file.");
+          setPendingQuestId(null);
+          return;
+        }
+      }
+
+      await submitQuest(
+        quest,
+        {
+          contentUrl: contentUrls[quest.id] ?? "",
+          screenshotUrl: screenshotUrls[quest.id] ?? "",
+          proofFileUrl: uploadedProof?.url ?? "",
+          proofFileName: uploadedProof?.name ?? "",
+          proofFileType: uploadedProof?.type ?? "",
+          platform: platforms[quest.id] ?? "",
+          note: notes[quest.id] ?? "",
+        },
+        "Manual review submitted.",
+      );
+    })();
   }
 
   function handleLinkVisit(quest: Quest) {
@@ -260,7 +312,41 @@ export function QuestActionsPanel({
               </div>
               <h4>{quest.title}</h4>
               <p>{quest.description}</p>
+              {quest.platformLabel || quest.proofType ? (
+                <p className="form-note">
+                  {quest.platformLabel ? `${quest.platformLabel}` : "Custom quest"}
+                  {quest.platformLabel && quest.proofType ? " · " : ""}
+                  {quest.proofType ? `Proof: ${quest.proofType}` : ""}
+                </p>
+              ) : null}
+              {quest.proofInstructions ? <p className="form-note">{quest.proofInstructions}</p> : null}
               <small className="quest-card__note">{getQuestStatusNote(quest.status)}</small>
+              {quest.targetUrl || quest.helpUrl || quest.verificationReferenceUrl ? (
+                <div className="form-stack">
+                  {quest.targetUrl ? (
+                    <a className="button button--secondary" href={quest.targetUrl} target="_blank" rel="noreferrer">
+                      {quest.ctaLabel ?? "Open quest"}
+                    </a>
+                  ) : null}
+                  <div className="button-row">
+                    {quest.helpUrl ? (
+                      <a className="button button--secondary button--small" href={quest.helpUrl} target="_blank" rel="noreferrer">
+                        Open help
+                      </a>
+                    ) : null}
+                    {quest.verificationReferenceUrl ? (
+                      <a
+                        className="button button--secondary button--small"
+                        href={quest.verificationReferenceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Verification guide
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
               {quest.verificationType === "quiz" ? (
                 <form className="form-stack" onSubmit={(event) => handleQuizSubmit(event, quest)}>
                   <label className="field">
@@ -317,6 +403,23 @@ export function QuestActionsPanel({
                     />
                   </label>
                   <label className="field">
+                    <span>Proof file</span>
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf,text/plain,video/mp4,video/quicktime"
+                      onChange={(event) =>
+                        setProofFiles((current) => ({
+                          ...current,
+                          [quest.id]: event.target.files?.[0] ?? null,
+                        }))
+                      }
+                      disabled={disabled || pending}
+                    />
+                  </label>
+                  {proofFiles[quest.id] ? (
+                    <p className="form-note">Selected proof: {proofFiles[quest.id]?.name}</p>
+                  ) : null}
+                  <label className="field">
                     <span>Reviewer note</span>
                     <input
                       value={notes[quest.id] ?? ""}
@@ -332,18 +435,13 @@ export function QuestActionsPanel({
               ) : null}
               {quest.verificationType === "link-visit" ? (
                 <div className="form-stack">
-                  {quest.targetUrl ? (
-                    <a className="button button--secondary" href={quest.targetUrl} target="_blank" rel="noreferrer">
-                      Open link
-                    </a>
-                  ) : null}
                   <button
                     className="button button--primary"
                     type="button"
                     onClick={() => handleLinkVisit(quest)}
                     disabled={disabled || pending}
                   >
-                    {pending ? "Submitting..." : "Record visit"}
+                    {pending ? "Submitting..." : `Record ${quest.ctaLabel?.toLowerCase() ?? "visit"}`}
                   </button>
                 </div>
               ) : null}
