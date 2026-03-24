@@ -155,7 +155,7 @@ export async function upsertQuestCompletionForUser({
   userId: string;
   questId: string;
   status: CompletionStatus;
-  submissionData: Record<string, string | number | boolean | null>;
+  submissionData: Record<string, unknown>;
   awardedXp?: number;
   reviewedBy?: string | null;
   completedAt?: string | null;

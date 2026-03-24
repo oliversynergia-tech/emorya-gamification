@@ -212,7 +212,7 @@ export async function submitQuest({
   }
 
   if (quest.verification_type === "manual-review") {
-    const submissionData = normalizeManualReviewSubmission(payload, submittedAt);
+    const submissionData = normalizeManualReviewSubmission(payload, submittedAt, quest.metadata);
 
     const completion = await upsertQuestCompletionForUser({
       userId: currentUser.id,

@@ -56,14 +56,96 @@ test("normalizeManualReviewSubmission enforces contentUrl and normalizes optiona
   assert.deepEqual(result, {
     contentUrl: "https://x.com/emorya/status/123",
     screenshotUrl: "https://cdn.emorya.app/proof.png",
+    proofFileUrl: null,
+    proofFileName: null,
+    proofFileType: null,
     platform: "x",
     note: "Posted a recap thread.",
+    taskSubmissions: undefined,
     submittedAt,
   });
 
   assert.throws(
     () => normalizeManualReviewSubmission({ note: "missing url" }, submittedAt),
     /require a content URL/,
+  );
+});
+
+test("normalizeManualReviewSubmission accepts task-level evidence for multi-step quests", () => {
+  const submittedAt = "2026-03-13T12:00:00.000Z";
+  const result = normalizeManualReviewSubmission(
+    {
+      taskSubmissions: [
+        {
+          taskId: "join-discord",
+          contentUrl: " https://discord.gg/emorya ",
+          note: " Joined the server ",
+        },
+        {
+          taskId: "share-post",
+          proofFileUrl: "/uploads/quest-proofs/proof.png",
+          proofFileName: "proof.png",
+          proofFileType: "image/png",
+        },
+      ],
+    },
+    submittedAt,
+    {
+      taskBlocks: [
+        { id: "join-discord", label: "Join Discord" },
+        { id: "share-post", label: "Share a post" },
+      ],
+    },
+  );
+
+  assert.deepEqual(result, {
+    contentUrl: "",
+    screenshotUrl: null,
+    proofFileUrl: null,
+    proofFileName: null,
+    proofFileType: null,
+    platform: null,
+    note: null,
+    taskSubmissions: [
+      {
+        taskId: "join-discord",
+        contentUrl: "https://discord.gg/emorya",
+        note: "Joined the server",
+        proofFileUrl: null,
+        proofFileName: null,
+        proofFileType: null,
+      },
+      {
+        taskId: "share-post",
+        contentUrl: null,
+        note: null,
+        proofFileUrl: "/uploads/quest-proofs/proof.png",
+        proofFileName: "proof.png",
+        proofFileType: "image/png",
+      },
+    ],
+    submittedAt,
+  });
+});
+
+test("normalizeManualReviewSubmission requires all required multi-step tasks", () => {
+  const submittedAt = "2026-03-13T12:00:00.000Z";
+
+  assert.throws(
+    () =>
+      normalizeManualReviewSubmission(
+        {
+          taskSubmissions: [{ taskId: "join-discord", contentUrl: "https://discord.gg/emorya" }],
+        },
+        submittedAt,
+        {
+          taskBlocks: [
+            { id: "join-discord", label: "Join Discord" },
+            { id: "share-post", label: "Share a post" },
+          ],
+        },
+      ),
+    /Complete all required quest tasks/,
   );
 });
 
@@ -75,6 +157,7 @@ test("mergeModerationIntoSubmission attaches moderation details without losing s
       screenshotUrl: "https://cdn.emorya.app/proof.png",
       platform: "x",
       note: "Initial submission note",
+      taskSubmissions: [{ taskId: "join-discord", contentUrl: "https://discord.gg/emorya", note: null }],
       submittedAt: "2026-03-13T12:00:00.000Z",
     },
     "  Great submission, approved.  ",
@@ -84,8 +167,12 @@ test("mergeModerationIntoSubmission attaches moderation details without losing s
   assert.deepEqual(result, {
     contentUrl: "https://x.com/emorya/status/123",
     screenshotUrl: "https://cdn.emorya.app/proof.png",
+    proofFileUrl: null,
+    proofFileName: null,
+    proofFileType: null,
     platform: "x",
     note: "Initial submission note",
+    taskSubmissions: [{ taskId: "join-discord", contentUrl: "https://discord.gg/emorya", note: null }],
     submittedAt: "2026-03-13T12:00:00.000Z",
     moderationNote: "Great submission, approved.",
     moderatedAt,

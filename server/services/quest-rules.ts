@@ -1,4 +1,4 @@
-import type { CompletionStatus, ManualReviewSubmission } from "../../lib/types.ts";
+import type { CompletionStatus, ManualReviewSubmission, QuestTaskSubmission } from "../../lib/types.ts";
 
 function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -44,6 +44,7 @@ export function evaluateQuizSubmission({
 export function normalizeManualReviewSubmission(
   payload: Record<string, unknown>,
   submittedAt: string,
+  metadata?: Record<string, unknown>,
 ): ManualReviewSubmission {
   const contentUrl = normalizeText(payload.contentUrl);
   const screenshotUrl = normalizeText(payload.screenshotUrl);
@@ -52,9 +53,15 @@ export function normalizeManualReviewSubmission(
   const proofFileType = normalizeText(payload.proofFileType);
   const platform = normalizeText(payload.platform);
   const note = normalizeText(payload.note);
+  const taskSubmissions = normalizeTaskSubmissions(payload.taskSubmissions);
+  const requiredTaskCount = countRequiredTaskBlocks(metadata);
 
-  if (!contentUrl) {
+  if (!contentUrl && taskSubmissions.length === 0) {
     throw new Error("Manual review quests require a content URL.");
+  }
+
+  if (requiredTaskCount > 0 && taskSubmissions.length < requiredTaskCount) {
+    throw new Error("Complete all required quest tasks before submitting for review.");
   }
 
   return {
@@ -65,8 +72,64 @@ export function normalizeManualReviewSubmission(
     proofFileType: proofFileType || null,
     platform: platform || null,
     note: note || null,
+    taskSubmissions: taskSubmissions.length > 0 ? taskSubmissions : undefined,
     submittedAt,
   };
+}
+
+function normalizeTaskSubmissions(value: unknown): QuestTaskSubmission[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.reduce<QuestTaskSubmission[]>((taskSubmissions, rawSubmission) => {
+    if (!rawSubmission || typeof rawSubmission !== "object") {
+      return taskSubmissions;
+    }
+
+    const submission = rawSubmission as Record<string, unknown>;
+    const taskId = normalizeText(submission.taskId);
+    const contentUrl = normalizeText(submission.contentUrl);
+    const note = normalizeText(submission.note);
+    const proofFileUrl = normalizeText(submission.proofFileUrl);
+    const proofFileName = normalizeText(submission.proofFileName);
+    const proofFileType = normalizeText(submission.proofFileType);
+
+    if (!taskId || (!contentUrl && !note && !proofFileUrl)) {
+      return taskSubmissions;
+    }
+
+    taskSubmissions.push({
+      taskId,
+      contentUrl: contentUrl || null,
+      note: note || null,
+      proofFileUrl: proofFileUrl || null,
+      proofFileName: proofFileName || null,
+      proofFileType: proofFileType || null,
+    });
+
+    return taskSubmissions;
+  }, []);
+}
+
+function countRequiredTaskBlocks(metadata?: Record<string, unknown>) {
+  if (!metadata || !Array.isArray(metadata.taskBlocks)) {
+    return 0;
+  }
+
+  return metadata.taskBlocks.reduce((count, rawTask) => {
+    if (!rawTask || typeof rawTask !== "object") {
+      return count;
+    }
+
+    const task = rawTask as Record<string, unknown>;
+    const label = typeof task.label === "string" ? task.label.trim() : "";
+    if (!label) {
+      return count;
+    }
+
+    return count + (task.required === false ? 0 : 1);
+  }, 0);
 }
 
 export function mergeModerationIntoSubmission(
@@ -86,6 +149,9 @@ export function mergeModerationIntoSubmission(
       typeof submissionData.proofFileType === "string" ? submissionData.proofFileType : null,
     platform: typeof submissionData.platform === "string" ? submissionData.platform : null,
     note: typeof submissionData.note === "string" ? submissionData.note : null,
+    taskSubmissions: Array.isArray(submissionData.taskSubmissions)
+      ? (submissionData.taskSubmissions as QuestTaskSubmission[])
+      : undefined,
     submittedAt:
       typeof submissionData.submittedAt === "string" ? submissionData.submittedAt : moderatedAt,
     moderationNote: normalizeText(moderationNote) || null,

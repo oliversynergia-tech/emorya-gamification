@@ -15,6 +15,7 @@ import type {
   Quest,
   QuestCadence,
   QuestCategory,
+  QuestTaskBlock,
   SubscriptionTier,
   UserJourneyState,
   UserProgressState,
@@ -68,6 +69,47 @@ const EMORYA_LAUNCH_ORDER = new Map<string, number>([
   ["like-this-weeks-emorya-post", 25],
   ["share-an-emorya-post", 26],
 ]);
+
+function normalizeQuestTaskBlocks(metadata: Record<string, unknown>): QuestTaskBlock[] | undefined {
+  const rawTaskBlocks = metadata.taskBlocks;
+  if (!Array.isArray(rawTaskBlocks)) {
+    return undefined;
+  }
+
+  const taskBlocks = rawTaskBlocks.reduce<QuestTaskBlock[]>((allTasks, rawTask, index) => {
+    if (!rawTask || typeof rawTask !== "object") {
+      return allTasks;
+    }
+
+    const task = rawTask as Record<string, unknown>;
+    const label = typeof task.label === "string" ? task.label.trim() : "";
+    if (!label) {
+      return allTasks;
+    }
+
+    allTasks.push({
+      id:
+        typeof task.id === "string" && task.id.trim().length > 0
+          ? task.id.trim()
+          : `task-${index + 1}`,
+      label,
+      description: typeof task.description === "string" ? task.description : undefined,
+      platformLabel: typeof task.platformLabel === "string" ? task.platformLabel : undefined,
+      ctaLabel: typeof task.ctaLabel === "string" ? task.ctaLabel : undefined,
+      targetUrl: typeof task.targetUrl === "string" ? task.targetUrl : undefined,
+      helpUrl: typeof task.helpUrl === "string" ? task.helpUrl : undefined,
+      verificationReferenceUrl:
+        typeof task.verificationReferenceUrl === "string" ? task.verificationReferenceUrl : undefined,
+      proofType: typeof task.proofType === "string" ? task.proofType : undefined,
+      proofInstructions: typeof task.proofInstructions === "string" ? task.proofInstructions : undefined,
+      required: typeof task.required === "boolean" ? task.required : true,
+    });
+
+    return allTasks;
+  }, []);
+
+  return taskBlocks.length > 0 ? taskBlocks : undefined;
+}
 
 function deriveCompletionStatus(quest: DashboardQuestRow): Quest["status"] {
   if (quest.completion_status === "approved") {
@@ -135,6 +177,7 @@ function mapEvaluatedQuestToQuest({
       typeof quest.metadata?.verificationReferenceUrl === "string" ? quest.metadata.verificationReferenceUrl : undefined,
     proofType: typeof quest.metadata?.proofType === "string" ? quest.metadata.proofType : undefined,
     proofInstructions: typeof quest.metadata?.proofInstructions === "string" ? quest.metadata.proofInstructions : undefined,
+    taskBlocks: normalizeQuestTaskBlocks(quest.metadata),
     campaignPackId: typeof quest.metadata?.campaignPackId === "string" ? quest.metadata.campaignPackId : undefined,
     campaignPackLabel: typeof quest.metadata?.campaignPackLabel === "string" ? quest.metadata.campaignPackLabel : undefined,
   };

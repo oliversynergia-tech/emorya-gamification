@@ -8,6 +8,10 @@ import type { DashboardData, Quest, QuestProgressUpdate } from "@/lib/types";
 type SubmissionState = Record<string, string>;
 type ProofFileState = Record<string, File | null>;
 
+function getTaskProofKey(questId: string, taskId: string) {
+  return `${questId}::${taskId}`;
+}
+
 async function trackMissionSubmitAttempt(payload: {
   packId: string;
   eventType: string;
@@ -69,6 +73,9 @@ export function QuestActionsPanel({
   const [contentUrls, setContentUrls] = useState<SubmissionState>({});
   const [screenshotUrls, setScreenshotUrls] = useState<SubmissionState>({});
   const [proofFiles, setProofFiles] = useState<ProofFileState>({});
+  const [taskContentUrls, setTaskContentUrls] = useState<SubmissionState>({});
+  const [taskNotes, setTaskNotes] = useState<SubmissionState>({});
+  const [taskProofFiles, setTaskProofFiles] = useState<ProofFileState>({});
   const [platforms, setPlatforms] = useState<SubmissionState>({});
   const [notes, setNotes] = useState<SubmissionState>({});
   const [walletSelections, setWalletSelections] = useState<SubmissionState>({});
@@ -211,6 +218,12 @@ export function QuestActionsPanel({
         | null = null;
 
       const selectedProofFile = proofFiles[quest.id];
+      const uploadedTaskProofs: Array<{
+        taskId: string;
+        url: string;
+        name: string;
+        type: string;
+      }> = [];
       if (selectedProofFile) {
         setPendingQuestId(quest.id);
         setMessage(null);
@@ -248,6 +261,71 @@ export function QuestActionsPanel({
         }
       }
 
+      if (quest.taskBlocks?.length) {
+        for (const task of quest.taskBlocks) {
+          const proofKey = getTaskProofKey(quest.id, task.id);
+          const selectedTaskProofFile = taskProofFiles[proofKey];
+          if (!selectedTaskProofFile) {
+            continue;
+          }
+
+          setPendingQuestId(quest.id);
+          setMessage(null);
+          setError(null);
+          const uploadForm = new FormData();
+          uploadForm.append("file", selectedTaskProofFile);
+
+          try {
+            const uploadResponse = await fetch("/api/uploads/quest-proof", {
+              method: "POST",
+              body: uploadForm,
+            });
+            const uploadResult = (await uploadResponse.json()) as {
+              ok: boolean;
+              error?: string;
+              file?: {
+                url: string;
+                name: string;
+                type: string;
+              };
+            };
+
+            if (!uploadResponse.ok || !uploadResult.ok || !uploadResult.file) {
+              setError(uploadResult.error ?? `Unable to upload proof for ${task.label}.`);
+              setPendingQuestId(null);
+              return;
+            }
+
+            uploadedTaskProofs.push({
+              taskId: task.id,
+              url: uploadResult.file.url,
+              name: uploadResult.file.name,
+              type: uploadResult.file.type,
+            });
+            setTaskProofFiles((current) => ({ ...current, [proofKey]: null }));
+          } catch {
+            setError(`Unable to upload proof for ${task.label}.`);
+            setPendingQuestId(null);
+            return;
+          }
+        }
+      }
+
+      const taskSubmissions =
+        quest.taskBlocks?.map((task) => {
+          const proofKey = getTaskProofKey(quest.id, task.id);
+          const uploadedTaskProof = uploadedTaskProofs.find((proof) => proof.taskId === task.id);
+
+          return {
+            taskId: task.id,
+            contentUrl: taskContentUrls[proofKey] ?? "",
+            note: taskNotes[proofKey] ?? "",
+            proofFileUrl: uploadedTaskProof?.url ?? "",
+            proofFileName: uploadedTaskProof?.name ?? "",
+            proofFileType: uploadedTaskProof?.type ?? "",
+          };
+        }) ?? [];
+
       await submitQuest(
         quest,
         {
@@ -258,6 +336,7 @@ export function QuestActionsPanel({
           proofFileType: uploadedProof?.type ?? "",
           platform: platforms[quest.id] ?? "",
           note: notes[quest.id] ?? "",
+          taskSubmissions,
         },
         "Manual review submitted.",
       );
@@ -347,6 +426,50 @@ export function QuestActionsPanel({
                   </div>
                 </div>
               ) : null}
+              {quest.taskBlocks?.length ? (
+                <div className="form-stack">
+                  <p className="form-note">
+                    {quest.taskBlocks.length} task step{quest.taskBlocks.length === 1 ? "" : "s"} in this quest.
+                  </p>
+                  {quest.taskBlocks.map((task, index) => (
+                    <article key={task.id} className="info-card">
+                      <div className="quest-card__meta">
+                        <span>Step {index + 1}</span>
+                        <span>{task.required === false ? "optional" : "required"}</span>
+                      </div>
+                      <strong>{task.label}</strong>
+                      {task.description ? <p>{task.description}</p> : null}
+                      {task.platformLabel || task.proofType ? (
+                        <p className="form-note">
+                          {task.platformLabel ? task.platformLabel : "Custom task"}
+                          {task.platformLabel && task.proofType ? " · " : ""}
+                          {task.proofType ? `Proof: ${task.proofType}` : ""}
+                        </p>
+                      ) : null}
+                      {task.proofInstructions ? <p className="form-note">{task.proofInstructions}</p> : null}
+                      {task.targetUrl || task.helpUrl || task.verificationReferenceUrl ? (
+                        <div className="button-row">
+                          {task.targetUrl ? (
+                            <a className="button button--secondary button--small" href={task.targetUrl} target="_blank" rel="noreferrer">
+                              {task.ctaLabel ?? "Open step"}
+                            </a>
+                          ) : null}
+                          {task.helpUrl ? (
+                            <a className="button button--secondary button--small" href={task.helpUrl} target="_blank" rel="noreferrer">
+                              Open help
+                            </a>
+                          ) : null}
+                          {task.verificationReferenceUrl ? (
+                            <a className="button button--secondary button--small" href={task.verificationReferenceUrl} target="_blank" rel="noreferrer">
+                              Verification guide
+                            </a>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              ) : null}
               {quest.verificationType === "quiz" ? (
                 <form className="form-stack" onSubmit={(event) => handleQuizSubmit(event, quest)}>
                   <label className="field">
@@ -391,6 +514,61 @@ export function QuestActionsPanel({
                       disabled={disabled || pending}
                     />
                   </label>
+                  {quest.taskBlocks?.length ? (
+                    <div className="form-stack">
+                      <p className="form-note">
+                        Add proof per task step. The main content URL can stay empty if the task submissions contain the evidence.
+                      </p>
+                      {quest.taskBlocks.map((task) => {
+                        const proofKey = getTaskProofKey(quest.id, task.id);
+
+                        return (
+                          <article key={task.id} className="info-card">
+                            <strong>{task.label}</strong>
+                            <label className="field">
+                              <span>Task URL or proof link</span>
+                              <input
+                                value={taskContentUrls[proofKey] ?? ""}
+                                onChange={(event) =>
+                                  setTaskContentUrls((current) => ({ ...current, [proofKey]: event.target.value }))
+                                }
+                                placeholder="https://..."
+                                disabled={disabled || pending}
+                              />
+                            </label>
+                            <label className="field">
+                              <span>Task note</span>
+                              <input
+                                value={taskNotes[proofKey] ?? ""}
+                                onChange={(event) =>
+                                  setTaskNotes((current) => ({ ...current, [proofKey]: event.target.value }))
+                                }
+                                placeholder="Optional context for this step"
+                                disabled={disabled || pending}
+                              />
+                            </label>
+                            <label className="field">
+                              <span>Task proof file</span>
+                              <input
+                                type="file"
+                                accept="image/*,application/pdf,text/plain,video/mp4,video/quicktime"
+                                onChange={(event) =>
+                                  setTaskProofFiles((current) => ({
+                                    ...current,
+                                    [proofKey]: event.target.files?.[0] ?? null,
+                                  }))
+                                }
+                                disabled={disabled || pending}
+                              />
+                            </label>
+                            {taskProofFiles[proofKey] ? (
+                              <p className="form-note">Selected proof: {taskProofFiles[proofKey]?.name}</p>
+                            ) : null}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                   <label className="field">
                     <span>Screenshot URL</span>
                     <input

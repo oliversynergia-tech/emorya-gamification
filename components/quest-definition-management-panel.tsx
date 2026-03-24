@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { validateCampaignPackTemplates } from "@/lib/campaign-pack";
 import type {
+  QuestTaskBlock,
   QuestDefinitionAdminItem,
   QuestDefinitionTemplateItem,
   RewardAsset,
@@ -148,6 +149,53 @@ type MetadataBuilderState = {
   directTokenAmount: number;
   rewardProgramId: string;
 };
+
+function slugifyTaskLabel(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
+
+function normalizeTaskBlocks(metadata: Record<string, unknown>): QuestTaskBlock[] {
+  if (!Array.isArray(metadata.taskBlocks)) {
+    return [];
+  }
+
+  return metadata.taskBlocks.reduce<QuestTaskBlock[]>((taskBlocks, rawTask, index) => {
+    if (!rawTask || typeof rawTask !== "object") {
+      return taskBlocks;
+    }
+
+    const task = rawTask as Record<string, unknown>;
+    const label = typeof task.label === "string" ? task.label : "";
+    if (!label.trim()) {
+      return taskBlocks;
+    }
+
+    taskBlocks.push({
+      id:
+        typeof task.id === "string" && task.id.trim()
+          ? task.id.trim()
+          : `task-${index + 1}`,
+      label,
+      description: typeof task.description === "string" ? task.description : undefined,
+      platformLabel: typeof task.platformLabel === "string" ? task.platformLabel : undefined,
+      ctaLabel: typeof task.ctaLabel === "string" ? task.ctaLabel : undefined,
+      targetUrl: typeof task.targetUrl === "string" ? task.targetUrl : undefined,
+      helpUrl: typeof task.helpUrl === "string" ? task.helpUrl : undefined,
+      verificationReferenceUrl:
+        typeof task.verificationReferenceUrl === "string" ? task.verificationReferenceUrl : undefined,
+      proofType: typeof task.proofType === "string" ? task.proofType : undefined,
+      proofInstructions: typeof task.proofInstructions === "string" ? task.proofInstructions : undefined,
+      required: typeof task.required === "boolean" ? task.required : true,
+    });
+
+    return taskBlocks;
+  }, []);
+}
 
 type QuestTemplate = {
   label: string;
@@ -309,6 +357,7 @@ export function QuestDefinitionManagementPanel({
       previewLabel: typeof previewConfig.label === "string" ? previewConfig.label : null,
       ctaLabel: typeof metadata.ctaLabel === "string" ? metadata.ctaLabel : null,
       proofType: typeof metadata.proofType === "string" ? metadata.proofType : null,
+      taskBlockCount: normalizeTaskBlocks(metadata).length,
       unlockRuleCount: (unlockRules.all?.length ?? 0) + (unlockRules.any?.length ?? 0),
       directTokenReward:
         directTokenReward?.asset && typeof directTokenReward.amount === "number"
@@ -316,6 +365,7 @@ export function QuestDefinitionManagementPanel({
           : null,
     };
   }, [metadataState.parsed]);
+  const metadataTaskBlocks = useMemo(() => normalizeTaskBlocks(metadataState.parsed ?? {}), [metadataState.parsed]);
   const metadataBuilder = useMemo<MetadataBuilderState>(() => {
     const metadata = metadataState.parsed ?? {};
     const rewardConfig = (metadata.rewardConfig as Record<string, unknown> | undefined) ?? {};
@@ -819,6 +869,57 @@ export function QuestDefinitionManagementPanel({
       ...current,
       metadataText: JSON.stringify(nextMetadata, null, 2),
     }));
+  }
+
+  function updateTaskBlocks(updater: (current: QuestTaskBlock[]) => QuestTaskBlock[]) {
+    const nextMetadata = { ...(metadataState.parsed ?? {}) } as Record<string, unknown>;
+    const nextTaskBlocks = updater(metadataTaskBlocks);
+
+    if (nextTaskBlocks.length > 0) {
+      nextMetadata.taskBlocks = nextTaskBlocks.map((task) => ({
+        id: task.id,
+        label: task.label.trim(),
+        ...(task.description?.trim() ? { description: task.description.trim() } : {}),
+        ...(task.platformLabel?.trim() ? { platformLabel: task.platformLabel.trim() } : {}),
+        ...(task.ctaLabel?.trim() ? { ctaLabel: task.ctaLabel.trim() } : {}),
+        ...(task.targetUrl?.trim() ? { targetUrl: task.targetUrl.trim() } : {}),
+        ...(task.helpUrl?.trim() ? { helpUrl: task.helpUrl.trim() } : {}),
+        ...(task.verificationReferenceUrl?.trim()
+          ? { verificationReferenceUrl: task.verificationReferenceUrl.trim() }
+          : {}),
+        ...(task.proofType?.trim() ? { proofType: task.proofType.trim() } : {}),
+        ...(task.proofInstructions?.trim() ? { proofInstructions: task.proofInstructions.trim() } : {}),
+        ...(task.required === false ? { required: false } : { required: true }),
+      }));
+    } else {
+      delete nextMetadata.taskBlocks;
+    }
+
+    setForm((current) => ({
+      ...current,
+      metadataText: JSON.stringify(nextMetadata, null, 2),
+    }));
+  }
+
+  function addTaskBlock() {
+    updateTaskBlocks((current) => [
+      ...current,
+      {
+        id: `task-${current.length + 1}`,
+        label: "",
+        required: true,
+      },
+    ]);
+  }
+
+  function updateTaskBlock(taskId: string, updater: (task: QuestTaskBlock) => QuestTaskBlock) {
+    updateTaskBlocks((current) =>
+      current.map((task) => (task.id === taskId ? updater(task) : task)),
+    );
+  }
+
+  function removeTaskBlock(taskId: string) {
+    updateTaskBlocks((current) => current.filter((task) => task.id !== taskId));
   }
 
   async function submit() {
@@ -1495,6 +1596,155 @@ export function QuestDefinitionManagementPanel({
           </label>
         </div>
       </section>
+      <section className="panel panel--glass">
+        <div className="panel__header">
+          <div>
+            <p className="eyebrow">Quest tasks</p>
+            <h3>Build multi-step custom quests</h3>
+          </div>
+          <span className="badge">{metadataTaskBlocks.length} steps</span>
+        </div>
+        <p className="form-note">
+          Use task blocks for Zealy-style multi-step quests. They work best with manual-review quests right now, where each step can carry its own link and proof requirement.
+        </p>
+        <div className="review-bulk-actions">
+          <button className="button button--secondary button--small" type="button" onClick={addTaskBlock}>
+            Add task step
+          </button>
+        </div>
+        <div className="achievement-list">
+          {metadataTaskBlocks.map((task, index) => (
+            <article key={task.id} className="achievement-card">
+              <div className="form-stack">
+                <div className="quest-card__meta">
+                  <span>Step {index + 1}</span>
+                  <span>{task.required === false ? "optional" : "required"}</span>
+                </div>
+                <label className="field">
+                  <span>Step label</span>
+                  <input
+                    value={task.label}
+                    onChange={(event) =>
+                      updateTaskBlock(task.id, (current) => {
+                        const nextLabel = event.target.value;
+                        const nextId = slugifyTaskLabel(nextLabel);
+                        return {
+                          ...current,
+                          id: nextId || current.id,
+                          label: nextLabel,
+                        };
+                      })
+                    }
+                    placeholder="Join Discord, follow on X, upload proof..."
+                  />
+                </label>
+                <label className="field">
+                  <span>Step description</span>
+                  <input
+                    value={task.description ?? ""}
+                    onChange={(event) =>
+                      updateTaskBlock(task.id, (current) => ({ ...current, description: event.target.value }))
+                    }
+                    placeholder="Optional extra context"
+                  />
+                </label>
+                <div className="profile-grid">
+                  <label className="field">
+                    <span>Platform</span>
+                    <input
+                      value={task.platformLabel ?? ""}
+                      onChange={(event) =>
+                        updateTaskBlock(task.id, (current) => ({ ...current, platformLabel: event.target.value }))
+                      }
+                      placeholder="X, Discord, Galxe, Website..."
+                    />
+                  </label>
+                  <label className="field">
+                    <span>CTA label</span>
+                    <input
+                      value={task.ctaLabel ?? ""}
+                      onChange={(event) =>
+                        updateTaskBlock(task.id, (current) => ({ ...current, ctaLabel: event.target.value }))
+                      }
+                      placeholder="Open step"
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Target URL</span>
+                    <input
+                      value={task.targetUrl ?? ""}
+                      onChange={(event) =>
+                        updateTaskBlock(task.id, (current) => ({ ...current, targetUrl: event.target.value }))
+                      }
+                      placeholder="https://..."
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Help URL</span>
+                    <input
+                      value={task.helpUrl ?? ""}
+                      onChange={(event) =>
+                        updateTaskBlock(task.id, (current) => ({ ...current, helpUrl: event.target.value }))
+                      }
+                      placeholder="Optional guide"
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Verification guide URL</span>
+                    <input
+                      value={task.verificationReferenceUrl ?? ""}
+                      onChange={(event) =>
+                        updateTaskBlock(task.id, (current) => ({ ...current, verificationReferenceUrl: event.target.value }))
+                      }
+                      placeholder="Optional proof example"
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Proof type</span>
+                    <select
+                      value={task.proofType ?? ""}
+                      onChange={(event) =>
+                        updateTaskBlock(task.id, (current) => ({ ...current, proofType: event.target.value }))
+                      }
+                    >
+                      <option value="">No proof guidance</option>
+                      {["link", "text", "url", "screenshot", "file-upload", "wallet", "social-oauth", "quiz", "manual-review"].map((value) => (
+                        <option key={value} value={value}>{value}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <label className="field">
+                  <span>Proof instructions</span>
+                  <input
+                    value={task.proofInstructions ?? ""}
+                    onChange={(event) =>
+                      updateTaskBlock(task.id, (current) => ({ ...current, proofInstructions: event.target.value }))
+                    }
+                    placeholder="Paste the post link, upload a screenshot, connect a wallet..."
+                  />
+                </label>
+                <label className="field field--checkbox">
+                  <span>Required step</span>
+                  <input
+                    type="checkbox"
+                    checked={task.required !== false}
+                    onChange={(event) =>
+                      updateTaskBlock(task.id, (current) => ({ ...current, required: event.target.checked }))
+                    }
+                  />
+                </label>
+                <div className="review-bulk-actions">
+                  <button className="button button--secondary button--small" type="button" onClick={() => removeTaskBlock(task.id)}>
+                    Remove step
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+          {metadataTaskBlocks.length === 0 ? <p className="form-note">No task steps added yet.</p> : null}
+        </div>
+      </section>
       <div className="achievement-list">
         <article className="achievement-card">
           <div>
@@ -1518,6 +1768,7 @@ export function QuestDefinitionManagementPanel({
               {preview.platformLabel ? ` Platform: ${preview.platformLabel}.` : ""}
               {preview.ctaLabel ? ` CTA: ${preview.ctaLabel}.` : ""}
               {preview.proofType ? ` Proof: ${preview.proofType}.` : ""}
+              {preview.taskBlockCount ? ` Steps: ${preview.taskBlockCount}.` : ""}
             </p>
           </div>
           <div className="achievement-card__side">

@@ -14,6 +14,38 @@ type ReviewOutcome = {
   moderationNote?: string | null;
 };
 
+function renderTaskSubmissionSummary(submissionData: Record<string, unknown>) {
+  if (!Array.isArray(submissionData.taskSubmissions) || submissionData.taskSubmissions.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="form-stack">
+      <p className="form-note">Task steps submitted:</p>
+      {submissionData.taskSubmissions.map((rawSubmission, index) => {
+        if (!rawSubmission || typeof rawSubmission !== "object") {
+          return null;
+        }
+
+        const submission = rawSubmission as Record<string, unknown>;
+        const taskId = typeof submission.taskId === "string" ? submission.taskId : `step-${index + 1}`;
+
+        return (
+          <div key={taskId} className="info-card">
+            <span>{taskId}</span>
+            <strong>{String(submission.contentUrl ?? submission.note ?? "Task evidence submitted")}</strong>
+            {typeof submission.proofFileUrl === "string" && submission.proofFileUrl ? (
+              <a href={submission.proofFileUrl} target="_blank" rel="noreferrer">
+                {String(submission.proofFileName ?? "Open uploaded task proof")}
+              </a>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ReviewQueuePanel({
   initialQueue,
   initialHistory,
@@ -327,6 +359,7 @@ export function ReviewQueuePanel({
                     </a>
                   </p>
                 ) : null}
+                {renderTaskSubmissionSummary(item.submissionData)}
                 <div className="review-history__meta">
                   <span>Reviewer: {item.reviewerDisplayName ?? "Unknown"}</span>
                   <span>XP: {item.awardedXp}</span>
@@ -437,6 +470,7 @@ export function ReviewQueuePanel({
                 </a>
               </p>
             ) : null}
+            {renderTaskSubmissionSummary(item.submissionData)}
             <pre className="review-payload">{JSON.stringify(item.submissionData, null, 2)}</pre>
             <label className="field">
               <span>Moderation note</span>

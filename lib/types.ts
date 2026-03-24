@@ -35,6 +35,29 @@ export type VerificationType =
   | "link-visit"
   | "text-submission";
 
+export type QuestTaskBlock = {
+  id: string;
+  label: string;
+  description?: string;
+  platformLabel?: string;
+  ctaLabel?: string;
+  targetUrl?: string;
+  helpUrl?: string;
+  verificationReferenceUrl?: string;
+  proofType?: string;
+  proofInstructions?: string;
+  required?: boolean;
+};
+
+export type QuestTaskSubmission = {
+  taskId: string;
+  contentUrl: string | null;
+  note: string | null;
+  proofFileUrl?: string | null;
+  proofFileName?: string | null;
+  proofFileType?: string | null;
+};
+
 export type QuestCategory =
   | "social"
   | "learn"
@@ -80,6 +103,7 @@ export type Quest = {
   proofInstructions?: string;
   campaignPackId?: string;
   campaignPackLabel?: string;
+  taskBlocks?: QuestTaskBlock[];
 };
 
 export type UserRecord = {
@@ -165,7 +189,7 @@ export type QuestCompletionRecord = {
   userId: string;
   questId: string;
   status: CompletionStatus;
-  submissionData: Record<string, string | number | boolean | null>;
+  submissionData: Record<string, unknown>;
   reviewedBy: string | null;
   completedAt: string | null;
   awardedXp: number;
@@ -1435,7 +1459,7 @@ export type ReviewQueueItem = {
   userDisplayName: string;
   userEmail: string | null;
   verificationType: VerificationType;
-  submissionData: Record<string, string | number | boolean | null>;
+  submissionData: Record<string, unknown>;
   status: CompletionStatus;
   createdAt: string;
 };
@@ -1448,7 +1472,7 @@ export type ReviewHistoryItem = {
   userEmail: string | null;
   reviewerDisplayName: string | null;
   verificationType: VerificationType;
-  submissionData: Record<string, string | number | boolean | null>;
+  submissionData: Record<string, unknown>;
   status: Extract<CompletionStatus, "approved" | "rejected">;
   awardedXp: number;
   reviewedAt: string;
@@ -1462,6 +1486,7 @@ export type ManualReviewSubmission = {
   proofFileType?: string | null;
   platform: string | null;
   note: string | null;
+  taskSubmissions?: QuestTaskSubmission[];
   submittedAt: string;
   moderationNote?: string | null;
   moderatedAt?: string | null;
