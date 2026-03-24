@@ -3,14 +3,14 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { defaultBrandThemeId } from "@/lib/brand-themes";
 import { getBrandCopyProfile, getBrandDisplayReferralCode } from "@/lib/brand-copy";
 import { defaultConnectionRewards, socialPlatformMeta, validateSocialHandle } from "@/lib/social-platforms";
 import type { ProfileData, SocialConnectionState } from "@/lib/types";
 
 export function ProfileEditor({ profile }: { profile: ProfileData }) {
   const router = useRouter();
-  const activeThemeId =
-    typeof document !== "undefined" ? document.body.dataset.brandTheme ?? process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME : process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME;
+  const activeThemeId = typeof document !== "undefined" ? document.body.dataset.brandTheme ?? defaultBrandThemeId : defaultBrandThemeId;
   const brandCopy = getBrandCopyProfile(activeThemeId);
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl ?? "");

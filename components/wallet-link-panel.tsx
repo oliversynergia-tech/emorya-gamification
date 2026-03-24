@@ -7,7 +7,7 @@ import { Message } from "@multiversx/sdk-core/out/core/message";
 import { WalletConnectV2Provider } from "@multiversx/sdk-wallet-connect-provider";
 import QRCode from "qrcode";
 
-import { getBrandTheme } from "@/lib/brand-themes";
+import { defaultBrandThemeId, getBrandTheme } from "@/lib/brand-themes";
 import { getBrandCopyProfile } from "@/lib/brand-copy";
 
 type WalletLinkPanelProps = {
@@ -47,7 +47,7 @@ async function getWalletProvider() {
   const activeBrandTheme =
     typeof document !== "undefined"
       ? getBrandTheme(document.body.dataset.brandTheme)
-      : getBrandTheme(process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME);
+      : getBrandTheme(defaultBrandThemeId);
 
   if (!providerPromise) {
     const provider = new WalletConnectV2Provider(
@@ -82,8 +82,7 @@ export function WalletLinkPanel({
   walletProductLabel,
 }: WalletLinkPanelProps) {
   const router = useRouter();
-  const activeThemeId =
-    typeof document !== "undefined" ? document.body.dataset.brandTheme ?? process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME : process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME;
+  const activeThemeId = typeof document !== "undefined" ? document.body.dataset.brandTheme ?? defaultBrandThemeId : defaultBrandThemeId;
   const brandCopy = getBrandCopyProfile(activeThemeId);
   const walletLabel = walletProductLabel ?? brandCopy.walletProduct;
   const [walletAddress, setWalletAddress] = useState("");

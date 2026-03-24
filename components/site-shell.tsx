@@ -1,12 +1,13 @@
 import Image from "next/image";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { ReactNode } from "react";
 
-import { brandThemeCookieName, getBrandTheme, type BrandThemeId } from "@/lib/brand-themes";
+import { type BrandThemeId } from "@/lib/brand-themes";
+import { resolveRuntimeBrandTheme } from "@/lib/brand-themes/server";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import type { AuthUser } from "@/lib/types";
+import { isAdminUser } from "@/server/auth/admin";
 
 const navItems = [
   { href: "/", label: "Overview" },
@@ -27,9 +28,9 @@ export async function SiteShell({
   eyebrow?: string;
   currentUser?: AuthUser | null;
 }) {
-  const cookieStore = await cookies();
-  const activeBrandTheme = getBrandTheme(cookieStore.get(brandThemeCookieName)?.value ?? process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME);
+  const activeBrandTheme = await resolveRuntimeBrandTheme(currentUser);
   const showBrandCopy = activeBrandTheme.id === "emorya";
+  const canSwitchThemes = await isAdminUser(currentUser);
 
   return (
     <div className="shell">
@@ -62,7 +63,7 @@ export async function SiteShell({
               </Link>
             ))}
           </nav>
-          <ThemeSwitcher activeTheme={activeBrandTheme.id as BrandThemeId} />
+          {canSwitchThemes ? <ThemeSwitcher activeTheme={activeBrandTheme.id as BrandThemeId} /> : null}
           <div className="session-chip">
             {currentUser ? (
               <>

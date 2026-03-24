@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import type { ReactNode } from "react";
-import { brandThemeCookieName, getBrandTheme, getBrandThemeStyleVariables } from "@/lib/brand-themes";
+import { getBrandThemeStyleVariables } from "@/lib/brand-themes";
+import { resolveRuntimeBrandTheme } from "@/lib/brand-themes/server";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const activeBrandTheme = getBrandTheme(cookieStore.get(brandThemeCookieName)?.value ?? process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME);
+  const activeBrandTheme = await resolveRuntimeBrandTheme();
 
   return {
     title: activeBrandTheme.brand.metadataTitle,
@@ -15,8 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  const cookieStore = await cookies();
-  const activeBrandTheme = getBrandTheme(cookieStore.get(brandThemeCookieName)?.value ?? process.env.NEXT_PUBLIC_BRAND_THEME ?? process.env.BRAND_THEME);
+  const activeBrandTheme = await resolveRuntimeBrandTheme();
 
   return (
     <html lang="en">
