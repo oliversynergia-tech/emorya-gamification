@@ -14,6 +14,158 @@ type ReviewOutcome = {
   moderationNote?: string | null;
 };
 
+function renderLink(label: string, href: unknown) {
+  if (typeof href !== "string" || !href) {
+    return null;
+  }
+
+  return (
+    <a href={href} target="_blank" rel="noreferrer">
+      {label}
+    </a>
+  );
+}
+
+function renderApiVerificationSummary(submissionData: Record<string, unknown>) {
+  const rawVerification = submissionData.apiVerification;
+  if (!rawVerification || typeof rawVerification !== "object") {
+    return null;
+  }
+
+  const verification = rawVerification as Record<string, unknown>;
+  const approved = verification.approved === true;
+
+  return (
+    <div className="profile-meta">
+      <div className="info-card">
+        <span>Verification result</span>
+        <strong>{approved ? "Approved" : "Not approved"}</strong>
+      </div>
+      <div className="info-card">
+        <span>Method</span>
+        <strong>{String(verification.method ?? "unknown")}</strong>
+      </div>
+      <div className="info-card">
+        <span>Failure mode</span>
+        <strong>{String(verification.failureMode ?? "reject")}</strong>
+      </div>
+      {typeof verification.message === "string" && verification.message ? (
+        <div className="info-card">
+          <span>Verifier message</span>
+          <strong>{verification.message}</strong>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function renderSubmissionSummary(verificationType: string, submissionData: Record<string, unknown>) {
+  if (verificationType === "text-submission") {
+    return (
+      <div className="form-stack">
+        {typeof submissionData.response === "string" && submissionData.response ? (
+          <div className="info-card">
+            <span>Written response</span>
+            <strong>{submissionData.response}</strong>
+          </div>
+        ) : null}
+        <div className="review-history__meta">
+          {typeof submissionData.platform === "string" && submissionData.platform ? (
+            <span>Platform: {submissionData.platform}</span>
+          ) : null}
+          {typeof submissionData.referenceUrl === "string" && submissionData.referenceUrl ? (
+            <span>{renderLink("Open reference", submissionData.referenceUrl)}</span>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  if (verificationType === "api-check") {
+    return (
+      <div className="form-stack">
+        {renderApiVerificationSummary(submissionData)}
+        <div className="review-history__meta">
+          {typeof submissionData.platform === "string" && submissionData.platform ? (
+            <span>Platform: {submissionData.platform}</span>
+          ) : null}
+          {typeof submissionData.contentUrl === "string" && submissionData.contentUrl ? (
+            <span>{renderLink("Open submitted reference", submissionData.contentUrl)}</span>
+          ) : null}
+        </div>
+        {typeof submissionData.note === "string" && submissionData.note ? (
+          <p className="form-note">Verifier context: {submissionData.note}</p>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (verificationType === "manual-review") {
+    return (
+      <div className="form-stack">
+        <div className="review-history__meta">
+          {typeof submissionData.platform === "string" && submissionData.platform ? (
+            <span>Platform: {submissionData.platform}</span>
+          ) : null}
+          {typeof submissionData.contentUrl === "string" && submissionData.contentUrl ? (
+            <span>{renderLink("Open content", submissionData.contentUrl)}</span>
+          ) : null}
+          {typeof submissionData.screenshotUrl === "string" && submissionData.screenshotUrl ? (
+            <span>{renderLink("Open screenshot", submissionData.screenshotUrl)}</span>
+          ) : null}
+        </div>
+        {typeof submissionData.note === "string" && submissionData.note ? (
+          <p className="form-note">Submitter note: {submissionData.note}</p>
+        ) : null}
+        {typeof submissionData.proofFileUrl === "string" && submissionData.proofFileUrl ? (
+          <p className="form-note">
+            Proof file: {renderLink(String(submissionData.proofFileName ?? "Open uploaded proof"), submissionData.proofFileUrl)}
+          </p>
+        ) : null}
+        {renderTaskSubmissionSummary(submissionData)}
+      </div>
+    );
+  }
+
+  if (verificationType === "quiz") {
+    return (
+      <div className="profile-meta">
+        <div className="info-card">
+          <span>Score</span>
+          <strong>
+            {String(submissionData.answersCorrect ?? "-")}/{String(submissionData.totalQuestions ?? "-")}
+          </strong>
+        </div>
+        <div className="info-card">
+          <span>Pass score</span>
+          <strong>{String(submissionData.passScore ?? "-")}</strong>
+        </div>
+      </div>
+    );
+  }
+
+  if (verificationType === "link-visit") {
+    return typeof submissionData.targetUrl === "string" && submissionData.targetUrl ? (
+      <p className="form-note">Visited: {renderLink(submissionData.targetUrl, submissionData.targetUrl)}</p>
+    ) : null;
+  }
+
+  if (verificationType === "wallet-check") {
+    return (
+      <div className="review-history__meta">
+        {typeof submissionData.walletAddress === "string" && submissionData.walletAddress ? (
+          <span>Wallet: {submissionData.walletAddress}</span>
+        ) : null}
+        {typeof submissionData.walletCheckMode === "string" && submissionData.walletCheckMode ? (
+          <span>Mode: {submissionData.walletCheckMode}</span>
+        ) : null}
+      </div>
+    );
+  }
+
+  return null;
+}
+
 function renderTaskSubmissionSummary(submissionData: Record<string, unknown>) {
   if (!Array.isArray(submissionData.taskSubmissions) || submissionData.taskSubmissions.length === 0) {
     return null;
@@ -351,15 +503,7 @@ export function ReviewQueuePanel({
                   {item.userDisplayName}
                   {item.userEmail ? ` · ${item.userEmail}` : ""}
                 </p>
-                {item.submissionData.proofFileUrl ? (
-                  <p className="form-note">
-                    Proof file:{" "}
-                    <a href={String(item.submissionData.proofFileUrl)} target="_blank" rel="noreferrer">
-                      {String(item.submissionData.proofFileName ?? "Open uploaded proof")}
-                    </a>
-                  </p>
-                ) : null}
-                {renderTaskSubmissionSummary(item.submissionData)}
+                {renderSubmissionSummary(item.verificationType, item.submissionData)}
                 <div className="review-history__meta">
                   <span>Reviewer: {item.reviewerDisplayName ?? "Unknown"}</span>
                   <span>XP: {item.awardedXp}</span>
@@ -462,15 +606,7 @@ export function ReviewQueuePanel({
               {item.userDisplayName}
               {item.userEmail ? ` · ${item.userEmail}` : ""}
             </p>
-            {item.submissionData.proofFileUrl ? (
-              <p className="form-note">
-                Proof file:{" "}
-                <a href={String(item.submissionData.proofFileUrl)} target="_blank" rel="noreferrer">
-                  {String(item.submissionData.proofFileName ?? "Open uploaded proof")}
-                </a>
-              </p>
-            ) : null}
-            {renderTaskSubmissionSummary(item.submissionData)}
+            {renderSubmissionSummary(item.verificationType, item.submissionData)}
             <pre className="review-payload">{JSON.stringify(item.submissionData, null, 2)}</pre>
             <label className="field">
               <span>Moderation note</span>
