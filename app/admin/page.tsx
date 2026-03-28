@@ -4,6 +4,7 @@ import { PayoutOperationsDashboard } from "@/components/payout-operations-dashbo
 import { PayoutAuditTrailPanel } from "@/components/payout-audit-trail-panel";
 import { QuestDefinitionManagementPanel } from "@/components/quest-definition-management-panel";
 import { QuestDefinitionToolingPanel } from "@/components/quest-definition-tooling-panel";
+import { QuestVerificationShowcasePanel } from "@/components/quest-verification-showcase-panel";
 import { RewardAssetsPanel } from "@/components/reward-assets-panel";
 import { RewardProgramsPanel } from "@/components/reward-programs-panel";
 import { AdminSection } from "@/components/sections";
@@ -162,6 +163,7 @@ export default async function AdminPage() {
           </p>
         </div>
         <QuestDefinitionToolingPanel />
+        <QuestVerificationShowcasePanel questDefinitions={data.questDefinitionDirectory ?? []} />
         <QuestDefinitionManagementPanel
           availableAssets={data.rewardAssets}
           availablePrograms={data.rewardPrograms}
