@@ -1730,6 +1730,83 @@ export function QuestDefinitionManagementPanel({
     }
   }
 
+  async function duplicateTemplate(template: QuestDefinitionTemplateItem) {
+    setPending(`duplicate-${template.id}`);
+    setMessage(null);
+    setError(null);
+
+    const payload = {
+      label: `${template.label} copy`,
+      description: template.description,
+      isActive: false,
+      form: template.form,
+      metadata: template.metadata,
+    };
+
+    try {
+      const response = await fetch("/api/admin/quest-definition-templates", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = (await response.json()) as QuestDefinitionTemplateResponse;
+
+      if (!response.ok || !result.ok || !result.templates) {
+        setError(result.error ?? "Unable to duplicate quest template.");
+        return;
+      }
+
+      setTemplates(result.templates);
+      setMessage("Quest template duplicated as an inactive copy.");
+      router.refresh();
+    } catch {
+      setError("Unable to reach the quest template service.");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  async function toggleTemplateActive(template: QuestDefinitionTemplateItem) {
+    setPending(`toggle-${template.id}`);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/quest-definition-templates/${template.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          label: template.label,
+          description: template.description,
+          isActive: !template.isActive,
+          form: template.form,
+          metadata: template.metadata,
+        }),
+      });
+      const result = (await response.json()) as QuestDefinitionTemplateResponse;
+
+      if (!response.ok || !result.ok || !result.templates) {
+        setError(result.error ?? "Unable to update quest template status.");
+        return;
+      }
+
+      setTemplates(result.templates);
+      setMessage(template.isActive ? "Quest template archived." : "Quest template reactivated.");
+      if (editingTemplateId === template.id && templateForm.isActive !== !template.isActive) {
+        setTemplateForm((current) => ({ ...current, isActive: !template.isActive }));
+      }
+      router.refresh();
+    } catch {
+      setError("Unable to reach the quest template service.");
+    } finally {
+      setPending(null);
+    }
+  }
+
   async function createCampaignPack() {
     if (campaignPackValidationError) {
       setError(campaignPackValidationError);
@@ -2122,6 +2199,7 @@ export function QuestDefinitionManagementPanel({
               <h4>{template.description}</h4>
               <div className="review-history__meta">
                 <span>{template.form.category}</span>
+                <span>{template.form.verificationType}</span>
                 <span>{template.form.requiredTier}</span>
                 <span>Lv {template.form.requiredLevel}</span>
                 <span>{template.form.xpReward} XP</span>
@@ -2135,6 +2213,18 @@ export function QuestDefinitionManagementPanel({
                 </button>
                 <button className="button button--secondary button--small" type="button" disabled={pending !== null} onClick={() => startEditTemplate(template)}>
                   Edit template
+                </button>
+                <button className="button button--secondary button--small" type="button" disabled={pending !== null} onClick={() => duplicateTemplate(template)}>
+                  {pending === `duplicate-${template.id}` ? "Duplicating..." : "Duplicate"}
+                </button>
+                <button className="button button--secondary button--small" type="button" disabled={pending !== null} onClick={() => toggleTemplateActive(template)}>
+                  {pending === `toggle-${template.id}`
+                    ? template.isActive
+                      ? "Archiving..."
+                      : "Activating..."
+                    : template.isActive
+                      ? "Archive"
+                      : "Activate"}
                 </button>
                 <button className="button button--secondary button--small" type="button" disabled={pending !== null} onClick={() => removeTemplate(template.id)}>
                   {pending === template.id ? "Deleting..." : "Delete"}

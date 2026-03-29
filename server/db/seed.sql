@@ -966,6 +966,118 @@ WHERE slug IN (
   'verify-galxe-campaign-credential'
 );
 
+INSERT INTO quest_definitions (
+  id,
+  slug,
+  title,
+  description,
+  category,
+  xp_reward,
+  difficulty,
+  verification_type,
+  recurrence,
+  required_tier,
+  required_level,
+  is_premium_preview,
+  is_active,
+  metadata
+) VALUES
+  (
+    '8d45a988-c2f9-4ef2-ae76-0278d84517ee',
+    'share-first-calorie-conversion-celebration',
+    'Share your first calorie conversion celebration',
+    'Share your first calorie-to-EMRS celebration moment once milestone sharing is live.',
+    'social',
+    140,
+    'medium',
+    'manual-review',
+    'one-time',
+    'free',
+    3,
+    FALSE,
+    FALSE,
+    '{"track":"social","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"emorya_only","shareTrigger":"first_calorie_conversion","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"convert-your-first-calories"}]},"previewConfig":{"label":"Milestone share placeholder"}}'::jsonb
+  ),
+  (
+    '33d95da7-b7cb-4838-b24b-a65f8d636ad9',
+    'share-your-7-day-streak-win',
+    'Share your 7-day streak win',
+    'Share your completed Weekly Warrior streak once milestone sharing is live.',
+    'social',
+    220,
+    'medium',
+    'manual-review',
+    'monthly',
+    'free',
+    5,
+    FALSE,
+    FALSE,
+    '{"track":"social","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"emorya_only","shareTrigger":"weekly_warrior_complete","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"weekly-warrior"}]},"previewConfig":{"label":"Weekly streak share"}}'::jsonb
+  ),
+  (
+    'f626b825-bb4f-42bd-b5c3-80eb59371c0e',
+    'share-your-referral-signup-win',
+    'Share your referral signup win',
+    'Share a verified referral signup moment once milestone sharing is live.',
+    'social',
+    160,
+    'medium',
+    'manual-review',
+    'monthly',
+    'free',
+    3,
+    FALSE,
+    FALSE,
+    '{"track":"referral","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"portable_adapt","shareTrigger":"referral_signup","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"send-your-first-referral-wave"}]},"previewConfig":{"label":"Referral win share"}}'::jsonb
+  ),
+  (
+    'ad58f425-d60d-4df9-875b-7c93b6cadfa4',
+    'share-your-premium-unlock',
+    'Share your premium unlock',
+    'Share your premium upgrade moment once milestone sharing is live.',
+    'social',
+    260,
+    'medium',
+    'manual-review',
+    'one-time',
+    'monthly',
+    4,
+    FALSE,
+    FALSE,
+    '{"track":"premium","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"portable_adapt","shareTrigger":"premium_unlock","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"upgrade-to-premium-monthly"}]},"previewConfig":{"label":"Premium unlock share"}}'::jsonb
+  ),
+  (
+    '24820e34-e627-4979-90dc-d63c2714c077',
+    'share-your-marathon-completion',
+    'Share your marathon completion',
+    'Share your Emorya Marathon completion once milestone sharing is live.',
+    'social',
+    420,
+    'hard',
+    'manual-review',
+    'one-time',
+    'free',
+    8,
+    FALSE,
+    FALSE,
+    '{"track":"ambassador","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"emorya_only","shareTrigger":"marathon_complete","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"emorya-marathon"}]},"previewConfig":{"label":"Marathon share"}}'::jsonb
+  )
+ON CONFLICT (id) DO UPDATE SET
+  slug = EXCLUDED.slug,
+  title = EXCLUDED.title,
+  description = EXCLUDED.description,
+  category = EXCLUDED.category,
+  xp_reward = EXCLUDED.xp_reward,
+  difficulty = EXCLUDED.difficulty,
+  verification_type = EXCLUDED.verification_type,
+  recurrence = EXCLUDED.recurrence,
+  required_tier = EXCLUDED.required_tier,
+  required_level = EXCLUDED.required_level,
+  is_premium_preview = EXCLUDED.is_premium_preview,
+  is_active = EXCLUDED.is_active,
+  metadata = EXCLUDED.metadata,
+  updated_at = NOW();
+
 INSERT INTO quest_completions (id, user_id, quest_id, status, submission_data, completed_at) VALUES
   (
     '2d5317b5-354c-4764-9007-ad26dc6bef26',
