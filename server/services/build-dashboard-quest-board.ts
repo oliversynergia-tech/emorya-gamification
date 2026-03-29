@@ -1,3 +1,5 @@
+import type { BrandThemeId } from "@/lib/brand-themes";
+import { questVisibleForBrand } from "../../lib/quest-portability.ts";
 import { defaultEconomySettings, getCampaignEconomyOverride, resolveCampaignExperienceSource } from "../../lib/economy-settings.ts";
 import {
   buildRewardConfig,
@@ -188,12 +190,15 @@ export function buildDashboardQuestBoard({
   userProgressState,
   journeyState,
   settings = defaultEconomySettings,
+  runtimeBrandThemeId = "emorya",
 }: {
   quests: DashboardQuestRow[];
   userProgressState: UserProgressState;
   journeyState: UserJourneyState;
   settings?: EconomySettings;
+  runtimeBrandThemeId?: BrandThemeId;
 }) {
+  const visibleQuests = quests.filter((quest) => questVisibleForBrand(quest.metadata, runtimeBrandThemeId));
   const runtimeContext = createDefaultQuestRuntimeContext();
   const activeCampaignLane = resolveCampaignExperienceSource(settings, userProgressState.campaignSource);
   const featuredTracks = getCampaignFeaturedTracks(
@@ -203,6 +208,7 @@ export function buildDashboardQuestBoard({
   const activeMissionPackIds = Array.from(
     new Set(
       quests
+        .filter((quest) => questVisibleForBrand(quest.metadata, runtimeBrandThemeId))
         .filter((quest) =>
           quest.metadata?.campaignPackId &&
           quest.metadata?.campaignPackState === "live" &&
@@ -214,7 +220,7 @@ export function buildDashboardQuestBoard({
   );
   const evaluatedByQuestId = new Map<string, { evaluatedQuest: EvaluatedQuest; cadence: QuestCadence }>();
 
-  for (const quest of quests) {
+  for (const quest of visibleQuests) {
     const track = inferQuestTrack({
       slug: quest.slug,
       category: quest.category,

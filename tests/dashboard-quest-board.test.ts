@@ -156,3 +156,77 @@ test("buildDashboardQuestBoard returns a mixed active board with locked previews
   assert.ok(board.some((quest) => quest.track === "campaign"));
   assert.ok(board.some((quest) => quest.status === "locked" && quest.track === "premium"));
 });
+
+test("buildDashboardQuestBoard filters emorya-only and brand-scoped quests for partner skins", () => {
+  const quests = [
+    {
+      id: "emorya-only",
+      slug: "create-emorya-account",
+      title: "Create Emorya account",
+      description: "Starter",
+      category: "app" as const,
+      xp_reward: 30,
+      difficulty: "easy" as const,
+      verification_type: "link-visit" as const,
+      required_level: 1,
+      required_tier: "free" as const,
+      is_premium_preview: false,
+      recurrence: "one-time" as const,
+      metadata: { track: "starter", questPortability: "emorya_only" },
+      completion_status: null,
+    },
+    {
+      id: "xportal-wallet",
+      slug: "connect-your-xportal-wallet",
+      title: "Connect your XPortal Wallet",
+      description: "Wallet",
+      category: "app" as const,
+      xp_reward: 40,
+      difficulty: "easy" as const,
+      verification_type: "wallet-check" as const,
+      required_level: 1,
+      required_tier: "free" as const,
+      is_premium_preview: false,
+      recurrence: "one-time" as const,
+      metadata: { track: "wallet", questPortability: "portable_adapt", brandThemes: ["emorya", "xportal"] },
+      completion_status: null,
+    },
+    {
+      id: "portable",
+      slug: "generic-portable-quest",
+      title: "Generic portable quest",
+      description: "Starter",
+      category: "app" as const,
+      xp_reward: 20,
+      difficulty: "easy" as const,
+      verification_type: "link-visit" as const,
+      required_level: 1,
+      required_tier: "free" as const,
+      is_premium_preview: false,
+      recurrence: "one-time" as const,
+      metadata: { track: "starter", questPortability: "core_portable", targetUrl: "https://example.com" },
+      completion_status: null,
+    },
+  ];
+
+  const multiversxBoard = buildDashboardQuestBoard({
+    quests,
+    userProgressState: baseUserState,
+    journeyState: "activated_free",
+    runtimeBrandThemeId: "multiversx",
+  });
+
+  assert.equal(multiversxBoard.some((quest) => quest.title === "Create Emorya account"), false);
+  assert.equal(multiversxBoard.some((quest) => quest.title === "Connect your XPortal Wallet"), false);
+  assert.equal(multiversxBoard.some((quest) => quest.title === "Generic portable quest"), true);
+
+  const xportalBoard = buildDashboardQuestBoard({
+    quests,
+    userProgressState: baseUserState,
+    journeyState: "activated_free",
+    runtimeBrandThemeId: "xportal",
+  });
+
+  assert.equal(xportalBoard.some((quest) => quest.title === "Create Emorya account"), false);
+  assert.equal(xportalBoard.some((quest) => quest.title === "Connect your XPortal Wallet"), true);
+});

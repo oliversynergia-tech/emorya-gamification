@@ -141,6 +141,8 @@ type MetadataBuilderState = {
   verificationReferenceUrl: string;
   proofType: string;
   proofInstructions: string;
+  questPortability: string;
+  visibleBrandThemes: string;
   minLevel: number;
   successfulReferrals: number;
   walletLinked: boolean;
@@ -661,6 +663,11 @@ export function QuestDefinitionManagementPanel({
         typeof metadata.verificationReferenceUrl === "string" ? metadata.verificationReferenceUrl : "",
       proofType: typeof metadata.proofType === "string" ? metadata.proofType : "",
       proofInstructions: typeof metadata.proofInstructions === "string" ? metadata.proofInstructions : "",
+      questPortability:
+        typeof metadata.questPortability === "string" ? metadata.questPortability : "core_portable",
+      visibleBrandThemes: Array.isArray(metadata.brandThemes)
+        ? metadata.brandThemes.filter((theme) => typeof theme === "string").join(", ")
+        : "",
       minLevel: Number(allRules.find((rule) => rule.type === "min_level")?.value ?? 0),
       successfulReferrals: Number(allRules.find((rule) => rule.type === "successful_referrals")?.value ?? 0),
       walletLinked: Boolean(allRules.find((rule) => rule.type === "wallet_linked")?.value),
@@ -1436,6 +1443,24 @@ export function QuestDefinitionManagementPanel({
     } else {
       delete nextMetadata.proofInstructions;
     }
+    if (
+      next.questPortability === "portable_adapt" ||
+      next.questPortability === "emorya_only" ||
+      next.questPortability === "campaign_conditional"
+    ) {
+      nextMetadata.questPortability = next.questPortability;
+    } else {
+      delete nextMetadata.questPortability;
+    }
+    const visibleBrandThemes = next.visibleBrandThemes
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (visibleBrandThemes.length > 0) {
+      nextMetadata.brandThemes = visibleBrandThemes;
+    } else {
+      delete nextMetadata.brandThemes;
+    }
     if (next.rewardProgramId) {
       nextMetadata.rewardProgramId = next.rewardProgramId;
     } else {
@@ -2207,6 +2232,23 @@ export function QuestDefinitionManagementPanel({
               value={metadataBuilder.proofInstructions}
               onChange={(event) => updateMetadataBuilder((current) => ({ ...current, proofInstructions: event.target.value }))}
               placeholder="Paste a post URL, upload proof, connect wallet..."
+            />
+          </label>
+          <label className="field">
+            <span>Quest portability</span>
+            <select value={metadataBuilder.questPortability} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, questPortability: event.target.value }))}>
+              <option value="core_portable">Core portable</option>
+              <option value="portable_adapt">Portable adapt</option>
+              <option value="emorya_only">Emorya only</option>
+              <option value="campaign_conditional">Campaign conditional</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Visible brand themes</span>
+            <input
+              value={metadataBuilder.visibleBrandThemes}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, visibleBrandThemes: event.target.value }))}
+              placeholder="emorya, multiversx, xportal"
             />
           </label>
           <label className="field">

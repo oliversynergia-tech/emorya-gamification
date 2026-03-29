@@ -36,6 +36,7 @@ import {
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { defaultConnectionRewards } from "@/lib/social-platforms";
 import type { SupportedSocialPlatform } from "@/lib/social-platforms";
+import { resolveRuntimeBrandThemeId } from "@/lib/brand-themes/server";
 import type {
   Achievement,
   ActivityItem,
@@ -919,25 +920,29 @@ async function getQuestBoard({
   journeyState: UserJourneyState;
   economySettings?: EconomySettings;
 }): Promise<Quest[]> {
-  const result = await runQuery<QuestRow>(
-    `SELECT q.id, q.slug, q.title, q.description, q.category, q.xp_reward, q.difficulty, q.verification_type,
-            q.required_level, q.required_tier, q.is_premium_preview, q.recurrence, q.metadata,
-            qc.status AS completion_status
-     FROM quest_definitions
-     q
-     LEFT JOIN quest_completions qc
-       ON qc.quest_id = q.id
-      AND qc.user_id = $1
-     WHERE q.is_active = TRUE
-     ORDER BY q.required_level ASC, q.xp_reward ASC`,
-    [user.id],
-  );
+  const [result, runtimeBrandThemeId] = await Promise.all([
+    runQuery<QuestRow>(
+      `SELECT q.id, q.slug, q.title, q.description, q.category, q.xp_reward, q.difficulty, q.verification_type,
+              q.required_level, q.required_tier, q.is_premium_preview, q.recurrence, q.metadata,
+              qc.status AS completion_status
+       FROM quest_definitions
+       q
+       LEFT JOIN quest_completions qc
+         ON qc.quest_id = q.id
+        AND qc.user_id = $1
+       WHERE q.is_active = TRUE
+       ORDER BY q.required_level ASC, q.xp_reward ASC`,
+      [user.id],
+    ),
+    resolveRuntimeBrandThemeId(),
+  ]);
 
   return buildDashboardQuestBoard({
     quests: result.rows,
     userProgressState,
     journeyState,
     settings: economySettings,
+    runtimeBrandThemeId,
   });
 }
 
