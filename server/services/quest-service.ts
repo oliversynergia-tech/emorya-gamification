@@ -15,6 +15,7 @@ import {
 } from "@/server/services/quest-rules";
 import {
   executeApiQuestVerification,
+  mergeApiVerificationCallbackSubmission,
   parseApiQuestVerificationConfig,
 } from "@/server/services/api-quest-verification";
 import { createActivityLogEntry, getUserProgressById } from "@/server/repositories/progression-repository";
@@ -22,6 +23,7 @@ import { applyQuestRewardTransition } from "@/server/services/progression-servic
 import { resolveWalletQuestVerification } from "@/server/services/wallet-quest-rules";
 import {
   getPendingReviewQueue,
+  getQuestCompletionById,
   getQuestCompletionForUser,
   getQuestDefinitionById,
   getRecentReviewHistory,
@@ -537,5 +539,98 @@ export async function bulkReviewQuestSubmissions({
     failedCount: failures.length,
     outcomes,
     failures,
+  };
+}
+
+export async function resolveApiQuestVerificationCallback({
+  questId,
+  completionId,
+  approved,
+  callbackToken,
+  message,
+  verifierResponse,
+}: {
+  questId: string;
+  completionId: string;
+  approved: boolean;
+  callbackToken: string;
+  message?: string;
+  verifierResponse?: Record<string, unknown>;
+}) {
+  const [quest, completion] = await Promise.all([
+    getQuestDefinitionById(questId),
+    getQuestCompletionById(completionId),
+  ]);
+
+  if (!quest || quest.verification_type !== "api-check") {
+    throw new Error("API-check quest not found.");
+  }
+
+  if (!completion || completion.questId !== questId) {
+    throw new Error("Quest completion not found.");
+  }
+
+  if (completion.status !== "pending") {
+    throw new Error("Only pending API-check completions can be resolved by callback.");
+  }
+
+  const config = parseApiQuestVerificationConfig(quest.metadata);
+  if (!config || !config.callbackToken) {
+    throw new Error("This quest does not accept asynchronous verification callbacks.");
+  }
+
+  if (config.callbackToken !== callbackToken.trim()) {
+    throw new Error("Invalid verification callback token.");
+  }
+
+  const callbackAt = new Date().toISOString();
+  const nextSubmissionData = mergeApiVerificationCallbackSubmission({
+    submissionData: completion.submissionData,
+    approved,
+    callbackAt,
+    verifierResponse,
+    callbackMessage: message,
+  });
+
+  const updatedCompletion = await updateQuestCompletionReview({
+    completionId,
+    reviewerId: null,
+    status: approved ? "approved" : "rejected",
+    submissionData: nextSubmissionData,
+  });
+
+  if (!updatedCompletion) {
+    throw new Error("Quest completion not found.");
+  }
+
+  const progressUpdate = await applyQuestRewardTransition({
+    userId: updatedCompletion.userId,
+    completionId: updatedCompletion.id,
+    questId: updatedCompletion.questId,
+    questTitle: quest.title,
+    questXpReward: quest.xp_reward,
+    previousAwardedXp: updatedCompletion.awardedXp,
+    shouldBeApproved: approved,
+  });
+
+  if (!approved) {
+    const reviewedUser = await getUserProgressById(updatedCompletion.userId);
+
+    if (reviewedUser) {
+      await logQuestActivity({
+        userId: updatedCompletion.userId,
+        actor: reviewedUser.display_name,
+        actionType: "quest-rejected",
+        action: "failed an external verification",
+        detail: `${quest.title} did not pass the external verification callback`,
+        questId: updatedCompletion.questId,
+        questTitle: quest.title,
+      });
+    }
+  }
+
+  return {
+    completion: updatedCompletion,
+    progressUpdate,
   };
 }

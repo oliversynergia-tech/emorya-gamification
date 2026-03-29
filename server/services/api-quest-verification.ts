@@ -10,6 +10,7 @@ export type ApiQuestVerificationConfig = {
   authHeaderName?: string;
   authHeaderValue?: string;
   failureMode: "reject" | "pending-review";
+  callbackToken?: string;
 };
 
 export function parseApiQuestVerificationConfig(metadata: Record<string, unknown>): ApiQuestVerificationConfig | null {
@@ -28,6 +29,7 @@ export function parseApiQuestVerificationConfig(metadata: Record<string, unknown
   const failureMode = normalizeText(config.failureMode) === "pending-review" ? "pending-review" : "reject";
   const authHeaderName = normalizeText(config.authHeaderName);
   const authHeaderValue = normalizeText(config.authHeaderValue);
+  const callbackToken = normalizeText(config.callbackToken);
 
   return {
     endpointUrl,
@@ -35,6 +37,51 @@ export function parseApiQuestVerificationConfig(metadata: Record<string, unknown
     authHeaderName: authHeaderName || undefined,
     authHeaderValue: authHeaderValue || undefined,
     failureMode,
+    callbackToken: callbackToken || undefined,
+  };
+}
+
+export function mergeApiVerificationCallbackSubmission({
+  submissionData,
+  approved,
+  callbackAt,
+  verifierResponse,
+  callbackMessage,
+}: {
+  submissionData: Record<string, unknown>;
+  approved: boolean;
+  callbackAt: string;
+  verifierResponse?: Record<string, unknown> | null;
+  callbackMessage?: string;
+}) {
+  const rawVerification =
+    submissionData.apiVerification && typeof submissionData.apiVerification === "object"
+      ? (submissionData.apiVerification as Record<string, unknown>)
+      : {};
+
+  return {
+    ...submissionData,
+    apiVerification: {
+      ...rawVerification,
+      approved,
+      message:
+        callbackMessage && callbackMessage.trim()
+          ? callbackMessage.trim()
+          : typeof rawVerification.message === "string"
+            ? rawVerification.message
+            : approved
+              ? "Verification passed."
+              : "Verification did not pass.",
+      callbackReceivedAt: callbackAt,
+      callbackResponse: verifierResponse ?? null,
+    },
+    moderatedAt: callbackAt,
+    moderationNote:
+      callbackMessage && callbackMessage.trim()
+        ? callbackMessage.trim()
+        : typeof submissionData.moderationNote === "string"
+          ? submissionData.moderationNote
+          : null,
   };
 }
 

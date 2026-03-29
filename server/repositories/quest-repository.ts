@@ -4,7 +4,6 @@ import type { QueryResultRow } from "pg";
 
 import type {
   CompletionStatus,
-  ManualReviewSubmission,
   QuestCompletionRecord,
   ReviewHistoryItem,
   SubscriptionTier,
@@ -143,6 +142,18 @@ export async function getQuestCompletionForUser(userId: string, questId: string)
   return result.rows[0] ? mapQuestCompletion(result.rows[0]) : null;
 }
 
+export async function getQuestCompletionById(completionId: string) {
+  const result = await runQuery<QuestCompletionRow>(
+    `SELECT id, user_id, quest_id, status, submission_data, awarded_xp, reviewed_by, completed_at, created_at
+     FROM quest_completions
+     WHERE id = $1
+     LIMIT 1`,
+    [completionId],
+  );
+
+  return result.rows[0] ? mapQuestCompletion(result.rows[0]) : null;
+}
+
 export async function upsertQuestCompletionForUser({
   userId,
   questId,
@@ -194,9 +205,9 @@ export async function updateQuestCompletionReview({
   submissionData,
 }: {
   completionId: string;
-  reviewerId: string;
+  reviewerId: string | null;
   status: Extract<CompletionStatus, "approved" | "rejected">;
-  submissionData?: ManualReviewSubmission;
+  submissionData?: Record<string, unknown>;
 }) {
   const result = await runQuery<QuestCompletionRow>(
     `UPDATE quest_completions

@@ -153,6 +153,7 @@ type MetadataBuilderState = {
   apiAuthHeaderName: string;
   apiAuthHeaderValue: string;
   apiFailureMode: string;
+  apiCallbackToken: string;
 };
 
 function slugifyTaskLabel(value: string) {
@@ -690,6 +691,10 @@ export function QuestDefinitionManagementPanel({
         typeof (metadata.apiVerification as Record<string, unknown> | undefined)?.failureMode === "string"
           ? String((metadata.apiVerification as Record<string, unknown>).failureMode)
           : "reject",
+      apiCallbackToken:
+        typeof (metadata.apiVerification as Record<string, unknown> | undefined)?.callbackToken === "string"
+          ? String((metadata.apiVerification as Record<string, unknown>).callbackToken)
+          : "",
     };
   }, [availableAssets, metadataState.parsed]);
   const questTemplates = useMemo<QuestTemplate[]>(() => {
@@ -1443,6 +1448,7 @@ export function QuestDefinitionManagementPanel({
         failureMode: next.apiFailureMode === "pending-review" ? "pending-review" : "reject",
         ...(next.apiAuthHeaderName.trim() ? { authHeaderName: next.apiAuthHeaderName.trim() } : {}),
         ...(next.apiAuthHeaderValue.trim() ? { authHeaderValue: next.apiAuthHeaderValue.trim() } : {}),
+        ...(next.apiCallbackToken.trim() ? { callbackToken: next.apiCallbackToken.trim() } : {}),
       };
     } else {
       delete nextMetadata.apiVerification;
@@ -2280,6 +2286,14 @@ export function QuestDefinitionManagementPanel({
               <option value="reject">Reject</option>
               <option value="pending-review">Send to review</option>
             </select>
+          </label>
+          <label className="field">
+            <span>Callback token</span>
+            <input
+              value={metadataBuilder.apiCallbackToken}
+              onChange={(event) => updateMetadataBuilder((current) => ({ ...current, apiCallbackToken: event.target.value }))}
+              placeholder="optional async verification token"
+            />
           </label>
         </div>
       </section>

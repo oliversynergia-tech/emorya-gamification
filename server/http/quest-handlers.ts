@@ -155,3 +155,76 @@ export async function handleReviewPatchRequest(
     };
   }
 }
+
+export async function handleApiQuestVerificationCallbackRequest(
+  {
+    questId,
+    body,
+    callbackToken,
+  }: {
+    questId: string;
+    body: {
+      completionId?: string;
+      approved?: boolean;
+      message?: string;
+      verifierResponse?: Record<string, unknown>;
+    };
+    callbackToken: string;
+  },
+  resolveApiQuestVerificationCallback: (input: {
+    questId: string;
+    completionId: string;
+    approved: boolean;
+    callbackToken: string;
+    message?: string;
+    verifierResponse?: Record<string, unknown>;
+  }) => Promise<Record<string, unknown>>,
+) {
+  if (!body.completionId || typeof body.completionId !== "string") {
+    return {
+      status: 400,
+      body: { ok: false, error: "completionId is required." },
+    };
+  }
+
+  if (typeof body.approved !== "boolean") {
+    return {
+      status: 400,
+      body: { ok: false, error: "approved must be true or false." },
+    };
+  }
+
+  if (!callbackToken.trim()) {
+    return {
+      status: 401,
+      body: { ok: false, error: "Verification callback token is required." },
+    };
+  }
+
+  try {
+    const result = await resolveApiQuestVerificationCallback({
+      questId,
+      completionId: body.completionId,
+      approved: body.approved,
+      callbackToken,
+      message: body.message,
+      verifierResponse: body.verifierResponse,
+    });
+
+    return {
+      status: 200,
+      body: { ok: true, ...result },
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to process verification callback.";
+
+    return {
+      status: message.includes("token")
+        ? 401
+        : message.includes("not found")
+          ? 404
+          : 400,
+      body: { ok: false, error: message },
+    };
+  }
+}

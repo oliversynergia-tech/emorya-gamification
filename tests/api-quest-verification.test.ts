@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   executeApiQuestVerification,
+  mergeApiVerificationCallbackSubmission,
   parseApiQuestVerificationConfig,
 } from "../server/services/api-quest-verification.ts";
 
@@ -19,6 +20,7 @@ test("parseApiQuestVerificationConfig normalizes method and failure mode", () =>
       authHeaderName: " x-api-key ",
       authHeaderValue: " secret ",
       failureMode: "pending-review",
+      callbackToken: " callback-secret ",
     },
   });
 
@@ -28,6 +30,7 @@ test("parseApiQuestVerificationConfig normalizes method and failure mode", () =>
     authHeaderName: "x-api-key",
     authHeaderValue: "secret",
     failureMode: "pending-review",
+    callbackToken: "callback-secret",
   });
 });
 
@@ -109,4 +112,33 @@ test("executeApiQuestVerification falls back to pending review when configured",
 
   assert.equal(result.status, "pending");
   assert.equal(result.message, "Needs human review.");
+});
+
+test("mergeApiVerificationCallbackSubmission records callback state", () => {
+  const merged = mergeApiVerificationCallbackSubmission({
+    submissionData: {
+      submittedAt: "2026-03-25T12:00:00.000Z",
+      platform: "Zealy",
+      contentUrl: "submission-123",
+      apiVerification: {
+        endpointUrl: "https://verifier.example.com/check",
+        method: "POST",
+        approved: false,
+        message: "Awaiting callback.",
+      },
+    },
+    approved: true,
+    callbackAt: "2026-03-29T09:30:00.000Z",
+    callbackMessage: "Credential verified asynchronously.",
+    verifierResponse: {
+      proofId: "proof-1",
+    },
+  });
+
+  assert.equal((merged.apiVerification as Record<string, unknown>).approved, true);
+  assert.equal(
+    (merged.apiVerification as Record<string, unknown>).callbackReceivedAt,
+    "2026-03-29T09:30:00.000Z",
+  );
+  assert.equal(merged.moderationNote, "Credential verified asynchronously.");
 });
