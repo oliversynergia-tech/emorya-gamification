@@ -24,6 +24,78 @@ import { ProfileMissionRecapPanel } from "@/components/profile-mission-recap-pan
 import { SourceLaneReportPanel } from "@/components/source-lane-report-panel";
 import { TokenReceiptHistoryPanel } from "@/components/token-receipt-history-panel";
 
+const QUEST_BOARD_PHASES = [
+  {
+    key: "activation",
+    eyebrow: "Core path",
+    title: "Activation ladder",
+    description: "The main route from campaign arrival into a fully activated, reward-ready Emorya user.",
+    slugs: [
+      "download-the-emorya-app",
+      "open-the-app-for-the-first-time",
+      "create-emorya-account",
+      "complete-your-profile",
+      "confirm-your-starter-setup",
+      "complete-daily-wheel-spin",
+      "play-emoryan-adventure-game",
+      "download-xportal",
+      "open-or-create-your-xportal-wallet",
+      "connect-your-xportal-wallet",
+      "view-your-emrs-reward-path",
+      "convert-your-first-calories",
+      "complete-the-full-activation-ladder",
+    ],
+  },
+  {
+    key: "momentum",
+    eyebrow: "Repeat use",
+    title: "Daily momentum",
+    description: "Habit and streak quests that turn activation into repeat product behavior.",
+    slugs: [
+      "500-in-24",
+      "weekly-warrior",
+      "convert-2000-calories-to-emrs",
+      "emorya-marathon",
+    ],
+  },
+  {
+    key: "commitment",
+    eyebrow: "Optional lane",
+    title: "Commitment and staking",
+    description: "Optional higher-commitment quests for premium, staking, and monetisation-readiness.",
+    slugs: [
+      "upgrade-to-premium-monthly",
+      "upgrade-to-annual",
+      "stake-your-first-emr",
+      "reach-staking-threshold-a",
+      "reach-staking-threshold-b",
+      "unlock-apy-boost-status",
+      "strengthen-the-core-30-day-hold",
+      "referred-staker-bonus",
+    ],
+  },
+  {
+    key: "growth",
+    eyebrow: "Amplification",
+    title: "Trust and growth",
+    description: "Social proof, referrals, reviews, and creator moments that turn user progress into brand visibility.",
+    slugs: [
+      "rate-emorya-on-the-app-store",
+      "leave-your-first-emorya-review",
+      "share-your-verified-progress-screenshot",
+      "invite-your-first-accountability-partner",
+      "refer-one-user-who-converts-calories",
+      "this-weeks-ugc-challenge",
+      "create-an-emorya-progress-reel",
+      "join-emorya-telegram",
+      "join-emorya-discord",
+      "follow-emorya-on-x",
+      "like-this-weeks-emorya-post",
+      "share-an-emorya-post",
+    ],
+  },
+] as const;
+
 function tierClass(tier: SubscriptionTier) {
   return `tier-pill tier-pill--${tier}`;
 }
@@ -55,31 +127,6 @@ function getTrackLabel(track: QuestTrack) {
   }
 }
 
-function getTrackDescription(track: QuestTrack) {
-  switch (track) {
-    case "starter":
-      return "Low-friction onboarding wins that push identity and first momentum.";
-    case "daily":
-      return "Habit-forming quests designed to build streaks and weekly yield.";
-    case "social":
-      return "Community and distribution actions that unlock stronger growth lanes.";
-    case "wallet":
-      return "Wallet-linked actions that move users toward token-ready status.";
-    case "referral":
-      return "Team-building milestones with the strongest long-term upside.";
-    case "premium":
-      return "Higher-yield member quests that accelerate progression and rewards.";
-    case "ambassador":
-      return "High-trust creator and campaign-lead actions for top performers.";
-    case "creative":
-      return "Manual-review creative missions that build prestige and campaign energy.";
-    case "campaign":
-      return "Time-bound activations and ecosystem moments.";
-    default:
-      return "Progression-aligned quests grouped by the user journey.";
-  }
-}
-
 function getCampaignSourceLabel(source: "direct" | "zealy" | "galxe" | "taskon") {
   switch (source) {
     case "zealy":
@@ -96,14 +143,14 @@ function getCampaignSourceLabel(source: "direct" | "zealy" | "galxe" | "taskon")
 function getMissionCueForPack(pack: DashboardData["campaignPacks"][number]) {
   if (pack.nextQuestActionable && pack.nextQuestTitle) {
     return {
-      badge: "Exact quest ready",
-      note: `Resume exact quest: ${pack.nextQuestTitle} is ready now.`,
+      badge: "Next quest ready",
+      note: `${pack.nextQuestTitle} is the cleanest live move right now.`,
       tone: "ready",
     } as const;
   }
   return {
-    badge: "Review mission path",
-    note: "Review the mission path first to see what opens next before you jump back in.",
+    badge: "Next route",
+    note: "Review the mission path to see which step opens the strongest route forward.",
     tone: "planning",
   } as const;
 }
@@ -191,7 +238,7 @@ function getDashboardPriorityAction(data: DashboardData) {
         : returnPack.blockageState === "trust"
           ? "Blocked by trust"
           : returnPack.blockageState === "starter_path"
-            ? "Blocked by starter path"
+            ? "Blocked by activation progress"
             : returnPack.blockageState === "premium_phase"
               ? "Blocked by premium phase"
               : returnPack.blockageState === "weekly_pace"
@@ -209,7 +256,7 @@ function getDashboardPriorityAction(data: DashboardData) {
           : returnPack.blockageState === "level"
             ? "A quick XP push gets this mission moving again"
             : returnPack.blockageState === "starter_path"
-              ? "Finish the starter path to unblock this mission"
+              ? "Finish the activation ladder to unblock this mission"
               : returnPack.blockageState === "premium_phase"
                 ? "This mission is now strongest at the premium step"
                 : returnPack.blockageState === "weekly_pace"
@@ -223,7 +270,7 @@ function getDashboardPriorityAction(data: DashboardData) {
           : returnPack.blockageState === "level"
             ? "The next mission step is mainly waiting on XP and level pressure."
             : returnPack.blockageState === "starter_path"
-              ? "Starter-path completion is still the simplest unlock for the next mission step."
+              ? "Activation-ladder completion is still the simplest unlock for the next mission step."
               : returnPack.blockageState === "weekly_pace"
                 ? returnPack.unlockRewardPreview
                 : returnPack.unlockPreview;
@@ -245,7 +292,7 @@ function getDashboardPriorityAction(data: DashboardData) {
         : returnPack.blockageState === "wallet_connection"
           ? { label: "Next unlock", value: "Connect xPortal" }
           : returnPack.blockageState === "starter_path"
-            ? { label: "Next unlock", value: "Finish starter path" }
+            ? { label: "Next unlock", value: "Finish activation ladder" }
             : returnPack.blockageState === "level"
               ? { label: "Next unlock", value: returnPack.weeklyGoal.label }
               : returnPack.blockageState === "trust"
@@ -555,13 +602,23 @@ export function DashboardSnapshot({
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Starter path</p>
-              <h3>{data.user.starterPath.complete ? "Starter Path complete" : "Progress toward reward eligibility"}</h3>
+              <p className="eyebrow">Activation ladder</p>
+              <h3>{data.user.starterPath.title}</h3>
             </div>
             <span className={`badge ${data.user.starterPath.complete ? "badge--pink" : ""}`}>
               {Math.round(data.user.starterPath.progress * 100)}%
             </span>
           </div>
+          <p className="form-note">{data.user.starterPath.summary}</p>
+          {data.user.starterPath.nextStepLabel ? (
+            <p className="mission-cue mission-cue--planning">
+              <strong>Next activation move</strong> {data.user.starterPath.nextStepLabel}. {data.user.starterPath.nextStepDetail}
+            </p>
+          ) : (
+            <p className="mission-cue mission-cue--ready">
+              <strong>{data.user.starterPath.completionLabel}</strong> {data.user.starterPath.completionDetail}
+            </p>
+          )}
           <div className="achievement-list">
             {data.user.starterPath.steps.map((step) => (
               <article key={step.label} className="achievement-card">
@@ -611,8 +668,8 @@ export function DashboardSnapshot({
               </article>
               <article className="achievement-card">
                 <div>
-                  <strong>Complete Starter Path</strong>
-                  <p>Turns campaign curiosity into a stable return loop and referral-ready account.</p>
+                  <strong>Complete activation ladder</strong>
+                  <p>Turns campaign curiosity into a stable return loop, a wallet-ready account, and real product progression.</p>
                 </div>
                 <span className={data.user.starterPath.complete ? "badge badge--pink" : "badge"}>
                   {data.user.starterPath.complete ? "Done" : "Open"}
@@ -621,7 +678,7 @@ export function DashboardSnapshot({
               <article className="achievement-card">
                 <div>
                   <strong>Reach reward eligibility</strong>
-                  <p>Level 5 plus trust and wallet linkage opens the deeper campaign reward lanes.</p>
+                  <p>Level 5 plus activation completion, trust, and wallet linkage opens the deeper campaign reward lanes.</p>
                 </div>
                 <span className={data.user.rewardEligibility.eligible ? "badge badge--pink" : "badge"}>
                   {data.user.rewardEligibility.eligible ? "Live" : "Pending"}
@@ -987,7 +1044,7 @@ export function DashboardSnapshot({
           <p className="form-note">
             {data.user.rewardEligibility.eligible
               ? `Reward eligible with ${data.user.rewardEligibility.trustScoreBand} trust status.`
-              : `Next requirement: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing"}.`}
+              : `Next reward gate: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing through activation and weekly momentum"}.`}
           </p>
           <p className="form-note">
             Active lane focus: {data.economy.campaignPreset.featuredTracks.join(", ")}. Weekly thresholds are being shaped by {data.economy.campaignPreset.weeklyTargetOffset} XP for this source.
@@ -1435,58 +1492,59 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
 }
 
 export function QuestBoardSection({ data }: { data: DashboardData }) {
-  const activePackIds = new Set(data.campaignPacks.map((pack) => pack.packId));
-  const activeQuests = data.quests
-    .filter((quest) => quest.status !== "locked")
-    .sort((left, right) => {
-      const leftPriority = left.campaignPackId && activePackIds.has(left.campaignPackId) ? 1 : 0;
-      const rightPriority = right.campaignPackId && activePackIds.has(right.campaignPackId) ? 1 : 0;
-      if (leftPriority !== rightPriority) {
-        return rightPriority - leftPriority;
-      }
-
-      return Number(Boolean(right.recommended)) - Number(Boolean(left.recommended));
-    });
+  const activeQuests = data.quests.filter((quest) => quest.status !== "locked");
   const lockedPreviews = data.quests.filter((quest) => quest.status === "locked");
-  const orderedTracks: QuestTrack[] = ["starter", "daily", "social", "wallet", "referral", "premium", "creative", "ambassador", "campaign", "quiz"];
-  const groupedActiveTracks = orderedTracks
-    .map((track) => ({
-      track,
-      quests: activeQuests.filter((quest) => quest.track === track),
-    }))
-    .filter((group) => group.quests.length > 0);
+  const groupedActivePhases = QUEST_BOARD_PHASES.map((phase) => ({
+    ...phase,
+    quests: activeQuests.filter((quest) => Boolean(quest.slug && phase.slugs.some((slug) => slug === quest.slug))),
+  })).filter((group) => group.quests.length > 0);
+  const phasedQuestIds = new Set(groupedActivePhases.flatMap((group) => group.quests.map((quest) => quest.id)));
+  const overflowQuests = activeQuests.filter((quest) => !phasedQuestIds.has(quest.id));
 
   return (
     <section className="panel" id="quest-board">
       <div className="panel__header">
         <div>
           <p className="eyebrow">Quest board</p>
-          <h3>Track-based progression view with active quests and previewed unlocks</h3>
+          <h3>Activation-first progression view with optional side lanes and previewed unlocks</h3>
         </div>
         <span className="badge">{activeQuests.length} active / {lockedPreviews.length} previewed</span>
       </div>
       <p className="form-note">
-        Featured funnel tracks for the active {data.economy.campaignPreset.source} lane: {data.economy.campaignPreset.featuredTracks.join(", ")}.
+        The board now prioritizes the activation ladder first, then repeat-use momentum, then optional commitment and growth lanes.
       </p>
       <div className="track-board">
-        {groupedActiveTracks.map((group) => (
-          <section key={group.track} className="panel panel--glass">
+        {groupedActivePhases.map((group) => (
+          <section key={group.key} className="panel panel--glass">
             <div className="panel__header">
               <div>
-                <p className="eyebrow">Active track</p>
-                <h3>{getTrackLabel(group.track)}</h3>
+                <p className="eyebrow">{group.eyebrow}</p>
+                <h3>{group.title}</h3>
               </div>
               <span className="badge">{group.quests.length} live</span>
             </div>
-            <p className="form-note">{getTrackDescription(group.track)}</p>
+            <p className="form-note">{group.description}</p>
             <div className="quest-grid">{group.quests.map(renderQuestCard)}</div>
           </section>
         ))}
+        {overflowQuests.length > 0 ? (
+          <section className="panel panel--glass">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Additional live quests</p>
+                <h3>Extra active routes</h3>
+              </div>
+              <span className="badge">{overflowQuests.length} live</span>
+            </div>
+            <p className="form-note">These are still active, but they sit outside the main activation-first journey.</p>
+            <div className="quest-grid">{overflowQuests.map(renderQuestCard)}</div>
+          </section>
+        ) : null}
         <section className="panel panel--glass">
           <div className="panel__header">
             <div>
               <p className="eyebrow">Locked previews</p>
-              <h3>High-value tracks waiting behind the next milestone</h3>
+              <h3>High-value unlocks waiting behind the next milestone</h3>
             </div>
           </div>
           <div className="quest-grid">
@@ -1712,7 +1770,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Live activity</p>
-            <h3>The platform should feel active</h3>
+            <h3>Live proof that the platform is moving</h3>
           </div>
         </div>
         <div className="activity-list">
@@ -1859,19 +1917,19 @@ export function ProfileSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Progress gates</p>
-            <h3>Starter path and weekly reward status</h3>
+            <h3>Activation ladder and weekly reward status</h3>
           </div>
           <span className="badge">{data.user.weeklyProgress.tierLabel}</span>
         </div>
         <div className="achievement-list">
           <article className="achievement-card">
             <div>
-              <strong>{data.user.starterPath.complete ? "Starter Path complete" : "Starter Path in progress"}</strong>
+              <strong>{data.user.starterPath.title}</strong>
               <p>
                 {Math.round(data.user.starterPath.progress * 100)}% complete.{" "}
                 {data.user.rewardEligibility.eligible
                   ? "Reward eligibility is live."
-                  : `Next requirement: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing"}.`}
+                  : `Next reward gate: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing through the activation ladder and weekly flow"}.`}
               </p>
             </div>
             <div className="achievement-card__side">

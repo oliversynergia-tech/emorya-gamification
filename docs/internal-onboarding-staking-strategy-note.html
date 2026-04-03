@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emorya Gamify Onboarding and Staking Strategy Note</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f4ef;
+        --paper: #ffffff;
+        --text: #201910;
+        --muted: #6f6253;
+        --line: #e6dbcd;
+        --accent: #b56b20;
+        --accent-soft: #fff3e4;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #f8f2ea 0%, #fcfaf7 100%);
+        color: var(--text);
+        font: 16px/1.6 "Inter", "Segoe UI", sans-serif;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 28px 72px;
+      }
+      .sheet {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 24px 64px rgba(72, 48, 18, 0.08);
+      }
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      h1, h2, h3 { margin: 0 0 14px; line-height: 1.15; }
+      h1 { font-size: 34px; }
+      h2 {
+        margin-top: 34px;
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+        font-size: 24px;
+      }
+      h3 { margin-top: 24px; font-size: 18px; }
+      p { margin: 0 0 14px; }
+      ul { margin: 0 0 18px 20px; padding: 0; }
+      li { margin: 0 0 8px; }
+      .intro,
+      .callout {
+        padding: 18px 20px;
+        margin: 22px 0 10px;
+        border-radius: 18px;
+        background: var(--accent-soft);
+      }
+      .section-note {
+        color: var(--muted);
+      }
+      .ladder {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin: 18px 0 20px;
+      }
+      .card {
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fffdfa;
+      }
+      .card h3 {
+        margin-top: 0;
+        font-size: 17px;
+      }
+      .subtle {
+        color: var(--muted);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0 20px;
+        font-size: 14px;
+      }
+      th, td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        text-align: left;
+      }
+      th {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      @media print {
+        body { background: #fff; }
+        main { max-width: none; margin: 0; padding: 0; }
+        .sheet {
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+          padding: 0;
+        }
+        .ladder {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <article class="sheet">
+        <p class="eyebrow">Internal Strategy Note</p>
+        <h1>Emorya Gamify: Onboarding, Staking, and Monetisation Readiness</h1>
+        <div class="intro">
+          <p>
+            This note sets out a tighter product direction for the most important user journey in Emorya Gamify:
+            taking a curious spectator, turning them into a fully activated Emorya user, and then moving them toward
+            monetisation readiness.
+          </p>
+          <p class="section-note">
+            It is intended as an internal strategy note rather than a pitch document. The goal is to align the team on
+            why onboarding and staking should become a more deliberate, heavily weighted progression system.
+          </p>
+        </div>
+
+        <h2>Core Position</h2>
+        <p>
+          The North Star for the platform is user acquisition. More specifically, it is the conversion of curious
+          spectators into everyday Emorya users.
+        </p>
+        <p>
+          With that in mind, the onboarding path is not a minor starter layer. It is the single most important
+          conversion bridge in the product. If we believe the platform’s purpose is to move people from interest into
+          real use, then the full path from first app download through to wallet connection and first real in-app
+          action should be treated as a high-value gamified ladder.
+        </p>
+
+        <div class="callout">
+          <p>
+            The key design principle is this: onboarding should be rewarded heavily, but the reward curve should be
+            back-loaded. The biggest onboarding reward should go to full activation completion, not simply to the first
+            step.
+          </p>
+        </div>
+
+        <h2>Why This Matters</h2>
+        <ul>
+          <li>It gives the platform a much clearer acquisition function rather than just a campaign function.</li>
+          <li>It creates a visible psychological path from curiosity to identity, activation, commitment, and growth.</li>
+          <li>It improves the chances that a new user actually finishes onboarding instead of stopping midway.</li>
+          <li>It makes wallet connection feel like a real milestone rather than a technical side-step.</li>
+          <li>It gives Gamify a stronger role in moving users toward monetisation readiness.</li>
+        </ul>
+
+        <h2>Master Progression Model</h2>
+        <div class="ladder">
+          <section class="card">
+            <h3>1. Spectator</h3>
+            <p class="subtle">Curious, watching content, not yet committed.</p>
+            <ul>
+              <li>join communities</li>
+              <li>follow socials</li>
+              <li>download app</li>
+            </ul>
+          </section>
+          <section class="card">
+            <h3>2. Connected User</h3>
+            <p class="subtle">Identity begins forming inside the ecosystem.</p>
+            <ul>
+              <li>open app</li>
+              <li>create account</li>
+              <li>complete profile</li>
+              <li>connect xPortal</li>
+            </ul>
+          </section>
+          <section class="card">
+            <h3>3. Activated User</h3>
+            <p class="subtle">Starts using the product for real.</p>
+            <ul>
+              <li>view reward path</li>
+              <li>first in-app action</li>
+              <li>first calorie conversion</li>
+            </ul>
+          </section>
+          <section class="card">
+            <h3>4. Retained User</h3>
+            <p class="subtle">Returns repeatedly and builds habits.</p>
+            <ul>
+              <li>daily wheel</li>
+              <li>adventure game</li>
+              <li>streaks and challenge loops</li>
+            </ul>
+          </section>
+          <section class="card">
+            <h3>5. Monetisation-Ready User</h3>
+            <p class="subtle">Moves from engagement into economic commitment.</p>
+            <ul>
+              <li>upgrade monthly</li>
+              <li>upgrade annual</li>
+              <li>stake EMR</li>
+              <li>maintain stake</li>
+            </ul>
+          </section>
+          <section class="card">
+            <h3>6. Growth User</h3>
+            <p class="subtle">Helps drive trust, visibility, and acquisition.</p>
+            <ul>
+              <li>referrals</li>
+              <li>reviews</li>
+              <li>UGC</li>
+              <li>milestone shares</li>
+            </ul>
+          </section>
+        </div>
+
+        <h2>Onboarding As A Dedicated Activation Ladder</h2>
+        <p>
+          The strongest version of onboarding is not a loose collection of starter quests. It is a named activation
+          ladder with escalating value at each stage.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>Suggested XP</th>
+              <th>Why It Matters</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Download the Emorya app</td>
+              <td>75 XP</td>
+              <td>First meaningful commitment step.</td>
+            </tr>
+            <tr>
+              <td>Open the app for the first time</td>
+              <td>100 XP</td>
+              <td>Confirms movement from spectator to active interest.</td>
+            </tr>
+            <tr>
+              <td>Create Emorya account</td>
+              <td>200 XP</td>
+              <td>Core identity conversion moment.</td>
+            </tr>
+            <tr>
+              <td>Complete your profile</td>
+              <td>150 XP</td>
+              <td>Improves user quality and lowers future drop-off.</td>
+            </tr>
+            <tr>
+              <td>Confirm your starter setup</td>
+              <td>125 XP</td>
+              <td>Closes the setup loop cleanly.</td>
+            </tr>
+            <tr>
+              <td>Download xPortal</td>
+              <td>125 XP</td>
+              <td>Prepares the user for reward and wallet readiness.</td>
+            </tr>
+            <tr>
+              <td>Open or create your xPortal wallet</td>
+              <td>175 XP</td>
+              <td>Increases seriousness of onboarding.</td>
+            </tr>
+            <tr>
+              <td>Connect Emorya to your xPortal wallet</td>
+              <td>300 XP</td>
+              <td>One of the most important activation milestones.</td>
+            </tr>
+            <tr>
+              <td>View your EMRS reward path</td>
+              <td>125 XP</td>
+              <td>Teaches how actions connect to value.</td>
+            </tr>
+            <tr>
+              <td>Complete your first real in-app action</td>
+              <td>250 XP</td>
+              <td>Moves the user beyond setup into use.</td>
+            </tr>
+            <tr>
+              <td>Convert your first calories</td>
+              <td>350 XP</td>
+              <td>True activation proof point.</td>
+            </tr>
+            <tr>
+              <td>Complete the full activation ladder</td>
+              <td>750 XP</td>
+              <td>The real spectator-to-user conversion moment.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          This structure intentionally puts the largest reward at the end of onboarding. That gives the user meaningful
+          incentive to finish the journey rather than stopping after one or two low-effort steps.
+        </p>
+
+        <h2>Why Staking Should Be The Next Major Ladder</h2>
+        <p>
+          Once a user is activated and retained, the next strategic move is to guide them into deeper commitment.
+          Staking is the cleanest bridge from engagement into monetisation readiness.
+        </p>
+        <p>
+          If a user must have EMR staked in order to monetise, then staking is not just another wallet task. It becomes
+          a major psychological and economic transition point:
+        </p>
+        <ul>
+          <li>engage</li>
+          <li>earn</li>
+          <li>stake</li>
+          <li>unlock stronger benefits</li>
+          <li>become monetisation-ready</li>
+        </ul>
+
+        <h2>APY Boost Incentive</h2>
+        <p>
+          XP and progression rewards make staking visible inside Gamify, but an APY boost above a defined staking
+          threshold would make it materially more meaningful. That would give users a real economic reason to move from
+          casual participation into stronger commitment.
+        </p>
+        <p>This would add value in several ways:</p>
+        <ul>
+          <li>stronger staking participation</li>
+          <li>clearer EMR utility</li>
+          <li>stronger retention among serious users</li>
+          <li>positive impact on the “Road to Healthy” staking campaign</li>
+          <li>a much clearer path from engagement to monetisation readiness</li>
+        </ul>
+        <p>
+          The cleanest structure is threshold-based rather than linear. That is easier to explain, easier to balance,
+          and stronger psychologically.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Staking Step</th>
+              <th>Suggested XP</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Stake your first EMR</td>
+              <td>250 XP</td>
+              <td>First commitment step into the staking journey.</td>
+            </tr>
+            <tr>
+              <td>Reach staking threshold A</td>
+              <td>400 XP</td>
+              <td>Move from symbolic to meaningful stake size.</td>
+            </tr>
+            <tr>
+              <td>Reach staking threshold B</td>
+              <td>900 XP</td>
+              <td>Unlock APY boost eligibility and deeper commitment status.</td>
+            </tr>
+            <tr>
+              <td>Unlock APY boost status</td>
+              <td>600 XP</td>
+              <td>Make the economic incentive explicit inside Gamify.</td>
+            </tr>
+            <tr>
+              <td>Maintain qualifying stake for 30 days</td>
+              <td>1200 XP</td>
+              <td>Reward commitment over time, not just a staking snapshot.</td>
+            </tr>
+            <tr>
+              <td>Referred staker bonus</td>
+              <td>500 XP</td>
+              <td>Add growth leverage to the staking ladder.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Recommended Product Framing</h2>
+        <p>
+          Onboarding should be framed as the activation ladder. Staking should be framed as the monetisation-readiness
+          ladder. Together, they create a much stronger overall product story:
+        </p>
+        <ul>
+          <li>Gamify drives user behavior.</li>
+          <li>Onboarding converts curiosity into activation.</li>
+          <li>Staking converts activation into economic commitment.</li>
+          <li>APY and longer-term benefits convert commitment into retention.</li>
+        </ul>
+
+        <h2>Recommended Next Product Steps</h2>
+        <ul>
+          <li>formalise the onboarding ladder as a named activation sequence inside the quest framework</li>
+          <li>expand the number of real in-Emorya app events that can complete onboarding and activation tasks</li>
+          <li>define the exact xPortal and wallet-link journey we want to reward</li>
+          <li>agree internally on staking thresholds and whether APY boost above threshold is commercially feasible</li>
+          <li>add staking quests as a dedicated commitment ladder rather than a single isolated task</li>
+          <li>connect milestone-share mechanics later so onboarding and staking wins can be shared publicly</li>
+        </ul>
+
+        <h2>Bottom Line</h2>
+        <p>
+          The strongest next evolution of Emorya Gamify is not a broad new product layer. It is making the most
+          valuable existing journey much more deliberate.
+        </p>
+        <p>
+          If onboarding becomes a high-value activation ladder, and staking becomes a high-value monetisation-readiness
+          ladder, the whole platform becomes more strategically coherent. It stops being a collection of quests and
+          becomes a clear progression system from spectator to committed ecosystem participant.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

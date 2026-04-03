@@ -73,6 +73,7 @@ export type CompletionStatus = "pending" | "approved" | "rejected";
 
 export type Quest = {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   category: QuestCategory;
@@ -268,6 +269,12 @@ export type UserSnapshot = {
   starterPath: {
     complete: boolean;
     progress: number;
+    title: string;
+    summary: string;
+    nextStepLabel: string | null;
+    nextStepDetail: string | null;
+    completionLabel: string;
+    completionDetail: string;
     steps: Array<{
       label: string;
       complete: boolean;

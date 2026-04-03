@@ -7,7 +7,7 @@ function formatSingleRule(rule: UnlockRule) {
     case "wallet_linked":
       return "Connect xPortal";
     case "starter_path_complete":
-      return "Complete Starter Path";
+      return "Complete Activation Path";
     case "subscription_tier":
       return `Upgrade to ${rule.value === "annual" ? "Annual" : "Monthly"} Premium`;
     case "connected_social_count":

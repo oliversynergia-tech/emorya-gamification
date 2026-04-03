@@ -1,11 +1,11 @@
 import type { QueryResultRow } from "pg";
 
 import {
+  activationPathCompletionQuestSlug,
   ambassadorMinimumLevel,
   ambassadorReferralRequirement,
   firstTokenEligibilityLevel,
   inferQuestTrack,
-  starterPathRequirements,
 } from "../../lib/progression-rules.ts";
 import type { QuestCategory, TrustScoreBand, UserProgressState } from "../../lib/types.ts";
 
@@ -145,13 +145,7 @@ export function deriveUserProgressState(input: DeriveUserProgressStateInput): Us
     connectedSocialCount,
   });
 
-  const starterPathComplete =
-    input.totalXp >= starterPathRequirements.minXp &&
-    input.level >= starterPathRequirements.minLevel &&
-    input.walletLinked &&
-    starterQuestCount >= starterPathRequirements.starterQuestCount &&
-    wellnessQuestCount >= starterPathRequirements.wellnessQuestCount &&
-    socialQuestCount >= starterPathRequirements.socialQuestCount;
+  const starterPathComplete = completedQuestSlugs.includes(activationPathCompletionQuestSlug);
 
   const rewardEligible =
     input.level >= firstTokenEligibilityLevel &&

@@ -130,6 +130,18 @@ export async function getQuestDefinitionById(questId: string) {
   return result.rows[0] ?? null;
 }
 
+export async function getQuestDefinitionBySlug(slug: string) {
+  const result = await runQuery<QuestDefinitionRow>(
+    `SELECT id, title, xp_reward, verification_type, recurrence, required_level, required_tier, metadata
+     FROM quest_definitions
+     WHERE slug = $1 AND is_active = TRUE
+     LIMIT 1`,
+    [slug],
+  );
+
+  return result.rows[0] ?? null;
+}
+
 export async function getQuestCompletionForUser(userId: string, questId: string) {
   const result = await runQuery<QuestCompletionRow>(
     `SELECT id, user_id, quest_id, status, submission_data, awarded_xp, reviewed_by, completed_at, created_at

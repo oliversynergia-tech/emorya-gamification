@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Staking Verifier Spec</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f1eb;
+        --paper: #fffdf9;
+        --ink: #191419;
+        --muted: #5d5561;
+        --line: #ddd2e3;
+        --accent: #a13579;
+        --accent-soft: #f3dbe8;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 40px;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.5 "Inter", "Segoe UI", sans-serif;
+      }
+
+      .page {
+        max-width: 920px;
+        margin: 0 auto;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 36px 40px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 32px;
+        line-height: 1.1;
+      }
+
+      .lede {
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .card {
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(161, 53, 121, 0.04), rgba(255,255,255,0.7));
+      }
+
+      .card strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      h2 {
+        margin: 26px 0 10px;
+        font-size: 18px;
+      }
+
+      ul {
+        margin: 8px 0 0 18px;
+        padding: 0;
+      }
+
+      li { margin: 6px 0; }
+
+      pre {
+        margin: 12px 0 0;
+        padding: 14px;
+        overflow: auto;
+        border-radius: 14px;
+        background: #151218;
+        color: #f8f6fb;
+        font: 12px/1.45 "SFMono-Regular", Consolas, monospace;
+      }
+
+      .callout {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--accent-soft);
+      }
+
+      .footer {
+        margin-top: 24px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media print {
+        body { padding: 0; background: #fff; }
+        .page { border: 0; border-radius: 0; padding: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <p class="eyebrow">Internal Spec</p>
+      <h1>Staking Verifier Spec</h1>
+      <p class="lede">
+        Purpose: let Gamify auto-verify optional EMR staking quests through app or backend connection, without making staking a required gate for the core user journey.
+      </p>
+
+      <section class="grid">
+        <div class="card">
+          <strong>What it must support</strong>
+          Current stake checks, threshold checks, hold-duration checks, and later referred-staker checks.
+        </div>
+        <div class="card">
+          <strong>What it must not do</strong>
+          Staking must remain optional. It cannot block activation or the main onboarding path.
+        </div>
+      </section>
+
+      <h2>Required Source Of Truth</h2>
+      <ul>
+        <li>Emorya backend, MultiversX staking/indexer service, contract-query service, or equivalent internal service.</li>
+        <li>Must be able to answer: linked wallet address, current qualifying staked amount, qualification timestamp, and whether the stake is still active.</li>
+      </ul>
+
+      <h2>Verifier Input</h2>
+      <pre>{
+  "userId": "uuid",
+  "walletAddress": "erd1...",
+  "questSlug": "reach-staking-threshold-a",
+  "thresholdAmount": 500,
+  "requiredHoldDays": 0,
+  "campaignSource": "direct"
+}</pre>
+
+      <h2>Verifier Output</h2>
+      <pre>{
+  "approved": true,
+  "walletAddress": "erd1...",
+  "stakedAmount": 1200,
+  "thresholdAmount": 1000,
+  "qualifiedAt": "2026-04-02T10:15:00Z",
+  "verifiedAt": "2026-04-02T10:20:00Z",
+  "reason": "threshold_met"
+}</pre>
+
+      <h2>Quest Decision Rules</h2>
+      <ul>
+        <li><strong>stake-your-first-emr</strong>: approve if <code>stakedAmount &gt; 0</code>.</li>
+        <li><strong>reach-staking-threshold-a</strong>: approve if <code>stakedAmount &gt;= thresholdA</code>.</li>
+        <li><strong>reach-staking-threshold-b</strong>: approve if <code>stakedAmount &gt;= thresholdB</code>.</li>
+        <li><strong>unlock-apy-boost-status</strong>: approve if <code>stakedAmount &gt;= apyThreshold</code>.</li>
+        <li><strong>strengthen-the-core-30-day-hold</strong>: approve only if threshold is met, qualification date exists, 30 days have elapsed, and the stake is still active.</li>
+        <li><strong>referred-staker-bonus</strong>: later, approve when a referred user also meets the required threshold.</li>
+      </ul>
+
+      <h2>Recommended API Shape</h2>
+      <ul>
+        <li>Gamify uses the existing <code>api-check</code> verification type.</li>
+        <li>Suggested endpoint: <code>POST /staking/verify</code>.</li>
+        <li>Suggested auth: shared secret or signed server-to-server token.</li>
+      </ul>
+
+      <h2>Fallback Behavior</h2>
+      <ul>
+        <li>If verification is unavailable or incomplete, return <code>approved: false</code> with a reason like <code>wallet_not_found</code>, <code>staking_source_unavailable</code>, <code>threshold_not_met</code>, or <code>hold_period_not_met</code>.</li>
+        <li>Gamify can then keep the quest incomplete or route it to manual review.</li>
+      </ul>
+
+      <h2>Questions For The App Team</h2>
+      <ul>
+        <li>Can we reliably identify the user’s linked wallet address?</li>
+        <li>Can we query the user’s current EMR stake amount?</li>
+        <li>Can we determine when the user first crossed a qualifying threshold?</li>
+        <li>Can we determine whether the stake remained active through the hold period?</li>
+        <li>Can the backend expose or call an authenticated verifier endpoint for Gamify?</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Minimum viable version</strong><br />
+        Phase 1 only needs current stake amount for first stake, threshold A, threshold B, and APY threshold. Phase 2 adds hold-duration and referred-staker verification.
+      </div>
+
+      <p class="footer">
+        Short conclusion: if the app or backend can return wallet-linked stake amount, threshold status, and qualification timing, Gamify can auto-verify optional staking quests cleanly through the existing API-check flow.
+      </p>
+    </main>
+  </body>
+</html>

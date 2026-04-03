@@ -152,7 +152,7 @@ export function AuthClientPanel({
       {message ? <p className="status status--success">{message}</p> : null}
       {message ? (
         <p className="mission-cue mission-cue--ready">
-          <strong>Exact quest ready</strong> Your mission flow will reopen on the active campaign view after sign-in.
+          <strong>Next quest ready</strong> Your mission flow will reopen on the active campaign view after sign-in.
         </p>
       ) : null}
       {error ? <p className="status status--error">{error}</p> : null}

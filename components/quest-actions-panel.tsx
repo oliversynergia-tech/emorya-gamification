@@ -12,6 +12,110 @@ function getTaskProofKey(questId: string, taskId: string) {
   return `${questId}::${taskId}`;
 }
 
+type MilestoneQuestSummary = {
+  slug?: string;
+  title: string;
+};
+
+function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progressUpdate: QuestProgressUpdate | null) {
+  if (!quest || !progressUpdate || !quest.slug) {
+    return null;
+  }
+
+  switch (quest.slug) {
+    case "complete-the-full-activation-ladder":
+      return {
+        tone: "success" as const,
+        badge: "Activation complete",
+        title: "The account is now fully activated",
+        detail:
+          "This user has crossed the main onboarding bridge into real Emorya progression. From here, retention, premium, and optional staking lanes all make more sense.",
+      };
+    case "connect-your-xportal-wallet":
+      return {
+        tone: "success" as const,
+        badge: "Wallet linked",
+        title: "xPortal is now connected",
+        detail:
+          "This is one of the strongest trust and readiness moments in the flow. Reward-linked progression and deeper monetisation paths now feel real.",
+      };
+    case "convert-your-first-calories":
+      return {
+        tone: "success" as const,
+        badge: "First conversion",
+        title: "First calorie conversion completed",
+        detail:
+          "This is the point where setup turns into real product behavior. It is one of the clearest activation proof moments in the whole journey.",
+      };
+    case "upgrade-to-premium-monthly":
+      return {
+        tone: "success" as const,
+        badge: "Premium live",
+        title: "Monthly premium is now live",
+        detail:
+          "This user has moved from free participation into a stronger value lane. Weekly pace, rewards, and loyalty pressure should now feel more meaningful.",
+      };
+    case "upgrade-to-annual":
+      return {
+        tone: "success" as const,
+        badge: "Annual unlocked",
+        title: "Annual commitment reached",
+        detail:
+          "This is one of the highest-value commercial moments in the platform. It marks a shift from active user into a deeper long-term loyalty state.",
+      };
+    case "stake-your-first-emr":
+      return {
+        tone: "success" as const,
+        badge: "First stake",
+        title: "The staking lane has started",
+        detail:
+          "This optional path now moves the user closer to monetisation readiness while also strengthening long-term token commitment.",
+      };
+    case "reach-staking-threshold-a":
+      return {
+        tone: "success" as const,
+        badge: "Threshold A",
+        title: "First meaningful staking threshold reached",
+        detail:
+          "The user is no longer staking symbolically. This is the first serious commitment point inside the optional staking lane.",
+      };
+    case "reach-staking-threshold-b":
+      return {
+        tone: "success" as const,
+        badge: "Threshold B",
+        title: "Second staking threshold reached",
+        detail:
+          "This is the stronger commitment tier where the staking lane starts to matter more economically as well as psychologically.",
+      };
+    case "unlock-apy-boost-status":
+      return {
+        tone: "success" as const,
+        badge: "APY boost",
+        title: "APY boost status unlocked",
+        detail:
+          "The staking lane has now crossed into a true economic incentive moment, not just an XP or trust milestone.",
+      };
+    case "weekly-warrior":
+      return {
+        tone: "success" as const,
+        badge: "7-day streak",
+        title: "Weekly Warrior completed",
+        detail:
+          "This is a real habit milestone. The user has proven repeat behavior, which is a much stronger retention signal than one-off onboarding completions.",
+      };
+    case "emorya-marathon":
+      return {
+        tone: "success" as const,
+        badge: "Marathon clear",
+        title: "Emorya Marathon completed",
+        detail:
+          "This is one of the flagship proof points in the product. It shows deep consistency, commitment, and strong eligibility for higher-trust reward moments.",
+      };
+    default:
+      return null;
+  }
+}
+
 async function trackMissionSubmitAttempt(payload: {
   packId: string;
   eventType: string;
@@ -83,6 +187,7 @@ export function QuestActionsPanel({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [progressUpdate, setProgressUpdate] = useState<QuestProgressUpdate | null>(null);
+  const [progressQuest, setProgressQuest] = useState<Pick<Quest, "slug" | "title"> | null>(null);
   const [progressQuestTitle, setProgressQuestTitle] = useState<string | null>(null);
 
   const missionCelebration = useMemo(() => {
@@ -120,16 +225,20 @@ export function QuestActionsPanel({
     if (activeCampaignPack.nextQuestActionable && activeCampaignPack.nextQuestTitle) {
       return {
         tone: "ready",
-        badge: "Exact quest ready",
+        badge: "Next quest ready",
         note: `Next up: ${activeCampaignPack.nextQuestTitle} is ready now.`,
       } as const;
     }
     return {
       tone: "planning",
-      badge: "Review mission path",
+      badge: "Review the route ahead",
       note: "Review the mission path to see what opens next after this submission clears.",
     } as const;
   }, [activeCampaignPack]);
+  const questMilestoneCelebration = useMemo(
+    () => getQuestMilestoneCelebration(progressQuest, progressUpdate),
+    [progressQuest, progressUpdate],
+  );
 
   async function submitQuest(
     quest: Quest,
@@ -140,6 +249,7 @@ export function QuestActionsPanel({
     setMessage(null);
     setError(null);
     setProgressUpdate(null);
+    setProgressQuest(null);
     setProgressQuestTitle(null);
 
     if (
@@ -179,6 +289,7 @@ export function QuestActionsPanel({
 
       setMessage(result.message ?? successMessage);
       setProgressUpdate(result.progressUpdate ?? null);
+      setProgressQuest(result.progressUpdate ? { slug: quest.slug, title: quest.title } : null);
       setProgressQuestTitle(result.progressUpdate ? quest.title : null);
       if (result.outcome) {
         onQuestResult?.({
@@ -802,6 +913,15 @@ export function QuestActionsPanel({
           <small className="form-note">
             Total credited for this quest: {progressUpdate.xpAwarded} XP.
           </small>
+          {questMilestoneCelebration ? (
+            <article className={`milestone-celebration milestone-celebration--${questMilestoneCelebration.tone}`}>
+              <div>
+                <p className="eyebrow">{questMilestoneCelebration.badge}</p>
+                <h4>{questMilestoneCelebration.title}</h4>
+                <p>{questMilestoneCelebration.detail}</p>
+              </div>
+            </article>
+          ) : null}
           {activeCampaignPack ? (
             <>
               <small className="form-note">

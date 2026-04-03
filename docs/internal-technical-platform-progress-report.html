@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emorya Gamify Technical Platform Progress Report</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f6fb;
+        --paper: #ffffff;
+        --text: #162033;
+        --muted: #58627a;
+        --line: #d8dfea;
+        --accent: #0f7bff;
+        --accent-soft: #eaf3ff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #eef4fb 0%, #fbfcff 100%);
+        color: var(--text);
+        font: 16px/1.6 "Inter", "Segoe UI", sans-serif;
+      }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 40px 28px 72px;
+      }
+      .sheet {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 24px 64px rgba(25, 40, 72, 0.08);
+      }
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      h1, h2, h3 { margin: 0 0 14px; line-height: 1.15; }
+      h1 { font-size: 34px; }
+      h2 {
+        margin-top: 34px;
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+        font-size: 24px;
+      }
+      h3 { margin-top: 24px; font-size: 18px; }
+      p { margin: 0 0 14px; }
+      ul { margin: 0 0 18px 20px; padding: 0; }
+      li { margin: 0 0 8px; }
+      code {
+        padding: 1px 6px;
+        border-radius: 8px;
+        background: #eff3fa;
+        font: 0.92em "SFMono-Regular", "Menlo", monospace;
+      }
+      .intro {
+        padding: 18px 20px;
+        margin: 22px 0 10px;
+        border-radius: 18px;
+        background: var(--accent-soft);
+      }
+      .section-note {
+        color: var(--muted);
+      }
+      @media print {
+        body { background: #fff; }
+        main { max-width: none; margin: 0; padding: 0; }
+        .sheet {
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+          padding: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <article class="sheet">
+        <p class="eyebrow">Technical Internal Report</p>
+        <h1>Emorya Gamify Technical Platform Progress Report</h1>
+        <div class="intro">
+          <p>
+            This document is the technical/internal version of platform status. It is intended for the development side
+            of the team and focuses on system shape, recent implementation progress, and the remaining work.
+          </p>
+        </div>
+
+        <h2>Platform Definition</h2>
+        <p>Emorya Gamify is a single Next.js full-stack application with:</p>
+        <ul>
+          <li>App Router UI</li>
+          <li>Route Handler backend APIs</li>
+          <li>PostgreSQL as the main source of truth</li>
+          <li>server-side auth/session handling</li>
+          <li>wallet linking into the same user identity model</li>
+          <li>a quest/rules/reward engine</li>
+          <li>admin and moderation tooling</li>
+        </ul>
+        <p>It is designed to support:</p>
+        <ul>
+          <li>Emorya-native engagement loops</li>
+          <li>partner-branded campaign instances</li>
+          <li>white-label / SaaS-style use for other MultiversX ecosystem projects</li>
+        </ul>
+
+        <h2>Current Core Stack</h2>
+        <h3>Application architecture</h3>
+        <ul>
+          <li>Next.js App Router</li>
+          <li>TypeScript</li>
+          <li>PostgreSQL</li>
+          <li>server-side repositories and services in <code>server/</code></li>
+          <li>product/admin pages in <code>app/</code></li>
+        </ul>
+        <h3>Auth and identity</h3>
+        <ul>
+          <li>email/password auth</li>
+          <li>session cookie auth</li>
+          <li>MultiversX wallet linking</li>
+          <li>admin and super-admin role model</li>
+        </ul>
+        <h3>Main product layers</h3>
+        <ul>
+          <li>dashboard / quest board</li>
+          <li>profile and identity</li>
+          <li>leaderboard</li>
+          <li>admin moderation and campaign operations</li>
+          <li>reward / settlement configuration</li>
+          <li>campaign pack surfaces</li>
+        </ul>
+
+        <h2>What The Platform Can Do Now</h2>
+        <h3>1. Multi-brand runtime presentation</h3>
+        <ul>
+          <li>Emorya, MultiversX, xPortal brand themes</li>
+          <li>published public skin stored in app settings</li>
+          <li>normal users cannot switch skin</li>
+          <li>super admin can set live public skin</li>
+        </ul>
+
+        <h3>2. Database-backed quest system</h3>
+        <ul>
+          <li>quest definitions in SQL</li>
+          <li>quest completions in SQL</li>
+          <li>recurrence handling including monthly</li>
+          <li>locked preview support</li>
+          <li>structured metadata-driven unlock and reward logic</li>
+          <li>reward transition application into progression</li>
+        </ul>
+
+        <h3>3. Custom quest authoring system</h3>
+        <p>This has advanced significantly.</p>
+        <ul>
+          <li>admin quest definition management panel</li>
+          <li>guided platform + quest type builder</li>
+          <li>one-click save of guided setups as templates</li>
+          <li>reusable external quest templates</li>
+          <li>structured metadata builder</li>
+          <li>multi-step task blocks inside a single quest</li>
+        </ul>
+
+        <h3>4. Verification model</h3>
+        <p>Supported verification lanes now include:</p>
+        <ul>
+          <li><code>link-visit</code></li>
+          <li><code>quiz</code></li>
+          <li><code>wallet-check</code></li>
+          <li><code>manual-review</code></li>
+          <li><code>text-submission</code></li>
+          <li><code>api-check</code></li>
+          <li><code>social-oauth</code> reserved for future stronger native checks</li>
+        </ul>
+
+        <h3>5. Proof collection and review</h3>
+        <ul>
+          <li>manual review submissions</li>
+          <li>file proof upload</li>
+          <li>review queue</li>
+          <li>improved review summaries by verification type</li>
+          <li>task-step evidence rendering</li>
+        </ul>
+
+        <h3>6. External verification capability</h3>
+        <p>This is one of the most important recent advances.</p>
+        <ul>
+          <li>synchronous API verification during quest submission</li>
+          <li>asynchronous callback resolution for pending API-check quests</li>
+          <li>token-protected callback route</li>
+          <li>reusable seeded examples for Zealy / Galxe-style flows</li>
+        </ul>
+
+        <h2>Recent Technical Progress</h2>
+        <ul>
+          <li>richer quest action metadata and links</li>
+          <li>file uploads for quest proof</li>
+          <li>multi-step custom quest task blocks</li>
+          <li>API-backed verification adapters</li>
+          <li>reusable external verification templates</li>
+          <li>first-class text-submission quests</li>
+          <li>review queue improvements for mixed verification types</li>
+          <li>guided quest builder workflow</li>
+          <li>one-click guided-template save</li>
+          <li>admin verification showcase panel</li>
+          <li>dormant admin verification demo pack</li>
+          <li>partner quest portability rules</li>
+          <li>milestone-share placeholder quest seeds</li>
+        </ul>
+        <p>Recent commits:</p>
+        <ul>
+          <li><code>d1e9ec1</code> Add admin quest verification showcase</li>
+          <li><code>911db8a</code> Add async callback support for API-check quests</li>
+          <li><code>93384dc</code> Seed admin verification demo quest pack</li>
+          <li><code>44129e2</code> Add partner quest portability rules</li>
+          <li><code>bddb730</code> Polish quest templates and seed milestone share placeholders</li>
+        </ul>
+
+        <h2>Emorya Quest Framework Status</h2>
+        <p>The Emorya quest base is no longer just a short starter set.</p>
+        <p>Current structure includes:</p>
+        <ul>
+          <li>acquisition / familiarity</li>
+          <li>conversion start</li>
+          <li>retention / value</li>
+          <li>amplification / credibility</li>
+          <li>creator / UGC</li>
+        </ul>
+        <p>The strongest new system behavior is that the board can now be curated around the intended funnel rather than just raw quest buckets.</p>
+
+        <h2>Partner / SaaS Readiness Status</h2>
+        <p>Technically, the platform is now much closer to reusable partner deployment because:</p>
+        <ul>
+          <li>public skin is admin-published</li>
+          <li>partner-only or Emorya-only quests can now be filtered by portability rules</li>
+          <li>campaign-conditional quest classes exist</li>
+          <li>custom quest builder can support external platform actions and proof</li>
+          <li>verification model is flexible enough to support partner-specific integrations</li>
+        </ul>
+        <p>This is the beginning of a real white-label architecture, not just theme swapping.</p>
+
+        <h2>What Still Needs Finishing</h2>
+        <h3>1. Deeper app-event integration</h3>
+        <ul>
+          <li>first-class triggers from real in-app actions</li>
+          <li>more real completion states</li>
+          <li>stronger milestone event plumbing</li>
+          <li>less manual proof for events the app itself can verify</li>
+        </ul>
+        <h3>2. Milestone-share feature implementation</h3>
+        <ul>
+          <li>real celebration event triggers</li>
+          <li>share CTA and UX</li>
+          <li>verification / capture rules</li>
+          <li>reward handling</li>
+        </ul>
+        <h3>3. More native verification where possible</h3>
+        <ul>
+          <li>direct app-state verification</li>
+          <li>stronger connected-platform checks</li>
+          <li>more structured event-driven completion</li>
+        </ul>
+        <h3>4. Final production hardening</h3>
+        <ul>
+          <li>final production env values</li>
+          <li>final smoke tests</li>
+          <li>hosted scheduling ownership</li>
+          <li>wallet-connect production confirmation</li>
+        </ul>
+
+        <h2>Developer View Of The Current State</h2>
+        <p>This is no longer a mock or concept product.</p>
+        <p>Technically, it is now:</p>
+        <ul>
+          <li>a real full-stack app</li>
+          <li>with real DB state</li>
+          <li>a real quest and review engine</li>
+          <li>brand-publishable for different project skins</li>
+          <li>capable of custom, structured, externally verifiable campaign quests</li>
+        </ul>
+        <p>The main remaining technical value is not “build the foundation.”</p>
+        <p>It is to connect the foundation more deeply to real Emorya app behavior, continue reducing manual or brittle edges, and keep preparing the system for cleaner live campaign and partner rollout.</p>
+      </article>
+    </main>
+  </body>
+</html>

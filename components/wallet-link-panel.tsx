@@ -310,7 +310,7 @@ export function WalletLinkPanel({
           <img src={qrCodeDataUrl} alt="xPortal QR code" className="qr-card__image" />
           <small>Open {walletLabel}, scan the QR code, then approve connect and sign requests.</small>
           <p className="mission-cue mission-cue--planning">
-            <strong>Review mission path</strong> Reopen the mission path after approval if the wallet gate is still the current blocker.
+            <strong>Review the route ahead</strong> Reopen the mission path after approval if the wallet gate is still the current blocker.
           </p>
         </div>
       ) : null}
@@ -345,7 +345,7 @@ export function WalletLinkPanel({
             <strong>{activeMissionLabel} has moved past the wallet gate</strong>
             <p>Your active mission should now refresh with the next progression step instead of the wallet-link prompt.</p>
             <p className="mission-cue mission-cue--ready">
-              <strong>Exact quest ready</strong> Your mission path should now reopen at the next actionable step.
+              <strong>Next quest ready</strong> Your mission path should now reopen at the next actionable step.
             </p>
           </div>
           <div className="achievement-card__side">

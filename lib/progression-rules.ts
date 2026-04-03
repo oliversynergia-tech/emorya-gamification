@@ -20,13 +20,54 @@ import type {
   UnlockRuleGroup,
 } from "@/lib/types";
 
+export const activationPathCompletionQuestSlug = "complete-the-full-activation-ladder" as const;
+
+export const activationPathStepGroups = [
+  {
+    label: "Download and open the Emorya app",
+    detail: "Install Emorya and launch your first live session so the platform can move you from spectator to active user.",
+    slugs: ["download-the-emorya-app", "open-the-app-for-the-first-time"],
+  },
+  {
+    label: "Create your account and complete your profile",
+    detail: "Set up your account identity so progression, rewards, and referral attribution all attach to a real user profile.",
+    slugs: ["create-emorya-account", "complete-your-profile"],
+  },
+  {
+    label: "Confirm setup and complete your first app loop",
+    detail: "Finish the first in-app routine so onboarding starts to feel like real product use, not just setup.",
+    slugs: ["confirm-your-starter-setup", "complete-daily-wheel-spin", "play-emoryan-adventure-game"],
+  },
+  {
+    label: "Prepare xPortal",
+    detail: "Get xPortal ready so the account can move into wallet-linked rewards and monetisation-ready progression.",
+    slugs: ["download-xportal", "open-or-create-your-xportal-wallet"],
+  },
+  {
+    label: "Connect xPortal and view your reward path",
+    detail: "Link your wallet and open the EMRS path so the user sees exactly how product actions become rewards.",
+    slugs: ["connect-your-xportal-wallet", "view-your-emrs-reward-path"],
+  },
+  {
+    label: "Complete your first calorie conversion",
+    detail: "Land the first real conversion milestone so the user crosses from setup into true activation.",
+    slugs: ["convert-your-first-calories"],
+  },
+  {
+    label: "Claim your full activation reward",
+    detail: "Complete the full ladder and unlock the largest onboarding reward in the product.",
+    slugs: [activationPathCompletionQuestSlug],
+  },
+] as const;
+
 export const starterPathRequirements = {
-  minXp: 250,
-  minLevel: 3,
-  starterQuestCount: 3,
-  wellnessQuestCount: 1,
-  socialQuestCount: 1,
+  completionQuestSlug: activationPathCompletionQuestSlug,
+  stepGroups: activationPathStepGroups,
 } as const;
+
+export const activationPathPrerequisiteQuestSlugs = activationPathStepGroups
+  .flatMap((stepGroup) => stepGroup.slugs)
+  .filter((slug) => slug !== activationPathCompletionQuestSlug);
 
 export const firstTokenEligibilityLevel = 5;
 export const ambassadorMinimumLevel = 10;

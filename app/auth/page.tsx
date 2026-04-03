@@ -75,7 +75,7 @@ export default async function AuthPage() {
             <span>Reward path</span>
             <strong>{data.user.tokenProgram.minimumPoints} eligibility points</strong>
             <small>
-              Level 5 plus Starter Path opens projected {data.user.tokenProgram.asset} redemption and partner campaign payout lanes.
+              Level 5 plus activation-ladder completion opens projected {data.user.tokenProgram.asset} redemption and partner campaign payout lanes.
             </small>
           </div>
           <div className="metric-card">
@@ -84,9 +84,9 @@ export default async function AuthPage() {
             <small>
               {data.user.campaignSource
                 ? data.user.campaignSource === activeCampaignLane
-                  ? `This account is currently running through the ${activeCampaignLane} experience lane.`
-                  : `This account is attributed to ${data.user.campaignSource}, but the live onboarding path is currently routed through the ${activeCampaignLane} bridge lane.`
-                : "Direct onboarding uses the default starter ladder."}
+                  ? `Your current experience is running through the ${activeCampaignLane} lane.`
+                  : `Attribution is preserved as ${data.user.campaignSource}, while the live onboarding flow is being routed through the ${activeCampaignLane} bridge lane.`
+                : "Direct onboarding follows the default activation ladder."}
             </small>
           </div>
           <div className="metric-card">
@@ -163,19 +163,29 @@ export default async function AuthPage() {
         <section className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Onboarding ladder</p>
-              <h3>Starter Path to reward eligibility</h3>
+              <p className="eyebrow">Activation ladder</p>
+              <h3>{data.user.starterPath.title}</h3>
             </div>
             <span className="badge">{Math.round(data.user.starterPath.progress * 100)}%</span>
           </div>
+          <p className="form-note">{data.user.starterPath.summary}</p>
+          {data.user.starterPath.nextStepLabel ? (
+            <p className="mission-cue mission-cue--planning">
+              <strong>Next activation move</strong> {data.user.starterPath.nextStepLabel}. {data.user.starterPath.nextStepDetail}
+            </p>
+          ) : (
+            <p className="mission-cue mission-cue--ready">
+              <strong>{data.user.starterPath.completionLabel}</strong> {data.user.starterPath.completionDetail}
+            </p>
+          )}
           <div className="achievement-list">
-            {data.user.starterPath.steps.slice(0, 4).map((step) => (
+            {data.user.starterPath.steps.map((step) => (
               <article key={step.label} className="achievement-card">
                 <div>
                   <strong>{step.label}</strong>
                   <p>{step.detail}</p>
                 </div>
-                <span className={step.complete ? "badge badge--pink" : "badge"}>{step.complete ? "Done" : "Next"}</span>
+                <span className={step.complete ? "badge badge--pink" : "badge"}>{step.complete ? "Done" : "Open"}</span>
               </article>
             ))}
           </div>
@@ -198,11 +208,11 @@ export default async function AuthPage() {
               This pack is still reward-eligible. A return move worth roughly {returnPack.weeklyGoal.shortfallXp} XP closes the current weekly pace gap and keeps the mission lane warm.
             </p>
             <p className={`mission-cue mission-cue--${returnPack.nextQuestActionable ? "ready" : "planning"}`}>
-              <strong>{returnPack.nextQuestActionable ? "Exact quest ready" : "Review mission path"}</strong>
+              <strong>{returnPack.nextQuestActionable ? "Next quest ready" : "Review the route ahead"}</strong>
               {` `}
               {returnPack.nextQuestActionable && returnPack.nextQuestTitle
                 ? `${returnPack.nextQuestTitle} is ready as the strongest next comeback move.`
-                : "Open the mission path first to see which comeback step is most useful now."}
+                : "Open the mission path first to see which comeback step will move this route forward fastest."}
             </p>
             <div className="hero__actions">
               <MissionLink

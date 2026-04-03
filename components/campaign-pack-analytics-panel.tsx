@@ -1616,7 +1616,7 @@ export function CampaignPackAnalyticsPanel({
                 Premium conversion: {(pack.premiumConversionRate * 100).toFixed(0)}% ({pack.premiumParticipantCount} premium / {pack.annualParticipantCount} annual).
               </p>
               <p className="form-note">
-                Wallet linked: {(pack.walletLinkRate * 100).toFixed(0)}% ({pack.walletLinkedParticipantCount} users). Starter path:
+                Wallet linked: {(pack.walletLinkRate * 100).toFixed(0)}% ({pack.walletLinkedParticipantCount} users). Activation ladder:
                 {` `}
                 {(pack.starterPathCompletionRate * 100).toFixed(0)}% ({pack.starterPathCompleteCount}). Reward eligible:
                 {` `}

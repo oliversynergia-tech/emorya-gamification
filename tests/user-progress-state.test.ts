@@ -20,23 +20,9 @@ test("deriveUserProgressState marks starter path and reward eligibility when thr
     annualPremiumReferralCount: 0,
     approvedQuests: [
       {
-        slug: "starter-first-step",
-        category: "social",
-        verificationType: "social-oauth",
-        requiredLevel: 1,
-        isPremiumPreview: false,
-      },
-      {
-        slug: "visit-premium-explainer",
-        category: "learn",
-        verificationType: "link-visit",
-        requiredLevel: 1,
-        isPremiumPreview: false,
-      },
-      {
-        slug: "convert-2000-calories-to-emrs",
+        slug: "complete-the-full-activation-ladder",
         category: "app",
-        verificationType: "manual-review",
+        verificationType: "link-visit",
         requiredLevel: 3,
         isPremiumPreview: false,
       },
@@ -97,9 +83,9 @@ test("resolveUserJourneyState prioritizes ambassador and premium tiers", () => {
     annualPremiumReferralCount: 1,
     approvedQuests: [
       {
-        slug: "convert-2000-calories-to-emrs",
+        slug: "complete-the-full-activation-ladder",
         category: "app",
-        verificationType: "manual-review",
+        verificationType: "link-visit",
         requiredLevel: 3,
         isPremiumPreview: false,
       },

@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Activation Ladder Event Integration Spec</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f1eb;
+        --paper: #fffdf9;
+        --ink: #191419;
+        --muted: #5d5561;
+        --line: #ddd2e3;
+        --accent: #a13579;
+        --accent-soft: #f3dbe8;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 40px;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.5 "Inter", "Segoe UI", sans-serif;
+      }
+
+      .page {
+        max-width: 920px;
+        margin: 0 auto;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 36px 40px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 32px;
+        line-height: 1.1;
+      }
+
+      .lede {
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .card {
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(161, 53, 121, 0.04), rgba(255,255,255,0.7));
+      }
+
+      .card strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      h2 {
+        margin: 26px 0 10px;
+        font-size: 18px;
+      }
+
+      ul {
+        margin: 8px 0 0 18px;
+        padding: 0;
+      }
+
+      li { margin: 6px 0; }
+
+      pre {
+        margin: 12px 0 0;
+        padding: 14px;
+        overflow: auto;
+        border-radius: 14px;
+        background: #151218;
+        color: #f8f6fb;
+        font: 12px/1.45 "SFMono-Regular", Consolas, monospace;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: rgba(161, 53, 121, 0.06);
+      }
+
+      .callout {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--accent-soft);
+      }
+
+      .footer {
+        margin-top: 24px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media print {
+        body { padding: 0; background: #fff; }
+        .page { border: 0; border-radius: 0; padding: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <p class="eyebrow">Internal Spec</p>
+      <h1>Activation Ladder Event Integration Spec</h1>
+      <p class="lede">
+        Purpose: let Emorya app or backend send trustworthy product events into Gamify so onboarding and activation quests can complete automatically from real user behavior.
+      </p>
+
+      <section class="grid">
+        <div class="card">
+          <strong>What this enables</strong>
+          A smoother activation ladder where account creation, profile completion, wallet connection, and first real actions complete automatically instead of relying on manual proof.
+        </div>
+        <div class="card">
+          <strong>What this avoids</strong>
+          Friction, fake proof, manual admin review for core onboarding, and weak “I did it, trust me” quest flows.
+        </div>
+      </section>
+
+      <h2>Core Objective</h2>
+      <ul>
+        <li>Use real Emorya product behavior to complete activation quests.</li>
+        <li>Make onboarding feel like one intentional activation ladder.</li>
+        <li>Derive full activation completion inside Gamify once prerequisite steps are complete.</li>
+      </ul>
+
+      <h2>Recommended Event Set</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Completes</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>app_opened_first_time</code></td>
+            <td><code>open-the-app-for-the-first-time</code></td>
+            <td>First recorded real app session.</td>
+          </tr>
+          <tr>
+            <td><code>account_created</code></td>
+            <td><code>create-emorya-account</code></td>
+            <td>One of the most important activation steps.</td>
+          </tr>
+          <tr>
+            <td><code>profile_completed</code></td>
+            <td><code>complete-your-profile</code></td>
+            <td>Requires agreed profile completeness rule.</td>
+          </tr>
+          <tr>
+            <td><code>starter_setup_completed</code></td>
+            <td><code>confirm-your-starter-setup</code></td>
+            <td>Could map to onboarding checklist completion.</td>
+          </tr>
+          <tr>
+            <td><code>wallet_connected</code></td>
+            <td><code>connect-your-xportal-wallet</code></td>
+            <td>Critical for reward readiness.</td>
+          </tr>
+          <tr>
+            <td><code>reward_path_viewed</code></td>
+            <td><code>view-your-emrs-reward-path</code></td>
+            <td>First recorded visit only.</td>
+          </tr>
+          <tr>
+            <td><code>first_calorie_conversion_completed</code></td>
+            <td><code>convert-your-first-calories</code></td>
+            <td>Main activation proof point.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Suggested Event Payload</h2>
+      <pre>{
+  "event": "profile_completed",
+  "userId": "uuid",
+  "occurredAt": "2026-04-02T12:00:00.000Z",
+  "source": "emorya-app",
+  "metadata": {}
+}</pre>
+
+      <h2>Minimum Requirements</h2>
+      <ul>
+        <li>A stable shared user identifier between Emorya and Gamify.</li>
+        <li>Reliable event emission when the underlying product action really happens.</li>
+        <li>Idempotent handling so repeated events do not double-complete or double-award.</li>
+        <li>An authenticated server-to-server or trusted client-to-server delivery path.</li>
+      </ul>
+
+      <h2>Gamify Integration Shape</h2>
+      <ul>
+        <li>Gamify already exposes <code>POST /api/app-events</code>.</li>
+        <li>Emorya app or backend sends supported activation events to that endpoint.</li>
+        <li>Gamify maps those events to activation quests and auto-completes them.</li>
+        <li><code>complete-the-full-activation-ladder</code> should remain derived inside Gamify once all prerequisite quests are complete.</li>
+      </ul>
+
+      <h2>Questions For The App Team</h2>
+      <ul>
+        <li>Can the app or backend emit reliable events for account creation, profile completion, wallet connection, reward-path view, and first calorie conversion?</li>
+        <li>What exact user identifier can we share with Gamify?</li>
+        <li>Does the backend already store these states or trigger handlers when they happen?</li>
+        <li>Can the backend call an authenticated Gamify endpoint directly?</li>
+        <li>Which of these events are definitely available now versus later?</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Minimum viable version</strong><br />
+        Phase 1 can be very small: <code>account_created</code>, <code>profile_completed</code>, <code>wallet_connected</code>, <code>reward_path_viewed</code>, and <code>first_calorie_conversion_completed</code>. That would already make the activation ladder feel much more real.
+      </div>
+
+      <p class="footer">
+        Short conclusion: if the Emorya app or backend can emit a small set of trusted product events tied to a stable user identity, the activation ladder can become mostly automatic using infrastructure that already exists in Gamify.
+      </p>
+    </main>
+  </body>
+</html>

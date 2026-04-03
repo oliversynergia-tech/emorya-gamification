@@ -229,6 +229,7 @@ a {
 
 .brand-logo {
   width: 162px;
+  height: auto;
   max-width: 100%;
 }
 
@@ -1603,6 +1604,31 @@ a {
   background: var(--progress-feedback-bg, linear-gradient(180deg, rgba(240, 214, 160, 0.08), rgba(255, 255, 255, 0.02)));
 }
 
+.milestone-celebration {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: var(--radius-soft);
+  border: 1px solid rgba(223, 182, 255, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(240, 214, 160, 0.14), transparent 0 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+    rgba(255, 255, 255, 0.02);
+  box-shadow: var(--shadow-soft);
+}
+
+.milestone-celebration h4 {
+  margin: 8px 0 10px;
+}
+
+.milestone-celebration p:last-child {
+  margin: 0;
+  color: var(--muted);
+}
+
+.milestone-celebration--success {
+  border-color: rgba(240, 214, 160, 0.24);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -1840,7 +1866,8 @@ body[data-brand-theme="emorya"] .shell__glow--right {
 }
 
 body[data-brand-theme="emorya"] .brand-logo {
-  width: 199px;
+  width: 260px;
+  height: auto;
 }
 
 body[data-brand-theme="emorya"] .brand-copy {
@@ -2063,6 +2090,11 @@ body[data-brand-theme="xportal"] .button--primary {
 
   .brand-logo {
     width: 148px;
+  }
+
+  body[data-brand-theme="emorya"] .brand-logo {
+    width: 220px;
+    height: auto;
   }
 
   .grid--auth {

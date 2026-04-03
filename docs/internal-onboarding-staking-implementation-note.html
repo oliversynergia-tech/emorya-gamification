@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emorya Gamify Onboarding and Staking Implementation Note</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #eef5f2;
+        --paper: #ffffff;
+        --text: #16251f;
+        --muted: #5a6d65;
+        --line: #d6e4de;
+        --accent: #0d8f63;
+        --accent-soft: #e7f8f1;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #edf6f2 0%, #fafdfb 100%);
+        color: var(--text);
+        font: 16px/1.6 "Inter", "Segoe UI", sans-serif;
+      }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 40px 28px 72px;
+      }
+      .sheet {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 24px 64px rgba(24, 54, 44, 0.08);
+      }
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      h1, h2, h3 { margin: 0 0 14px; line-height: 1.15; }
+      h1 { font-size: 34px; }
+      h2 {
+        margin-top: 34px;
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+        font-size: 24px;
+      }
+      h3 { margin-top: 22px; font-size: 18px; }
+      p { margin: 0 0 14px; }
+      ul { margin: 0 0 18px 20px; padding: 0; }
+      li { margin: 0 0 8px; }
+      .intro,
+      .callout {
+        padding: 18px 20px;
+        margin: 22px 0 10px;
+        border-radius: 18px;
+        background: var(--accent-soft);
+      }
+      .section-note { color: var(--muted); }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0 20px;
+        font-size: 14px;
+      }
+      th, td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        text-align: left;
+      }
+      th {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .impact-low,
+      .impact-medium,
+      .impact-high {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .impact-low { background: #e8f7ef; color: #0d7c4b; }
+      .impact-medium { background: #fff4dd; color: #9a6400; }
+      .impact-high { background: #ffe6e1; color: #b2381f; }
+      @media print {
+        body { background: #fff; }
+        main { max-width: none; margin: 0; padding: 0; }
+        .sheet {
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+          padding: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <article class="sheet">
+        <p class="eyebrow">Internal Implementation Note</p>
+        <h1>Emorya Gamify: Onboarding and Staking Ladder Implementation</h1>
+        <div class="intro">
+          <p>
+            This note turns the onboarding and staking direction into a practical implementation view. It also reviews
+            how much of the existing Gamify work is affected by this shift in approach.
+          </p>
+          <p class="section-note">
+            The short answer is positive: most of the completed platform work still stands. The main changes are to
+            Emorya-specific quest strategy, reward weighting, starter-path logic, and in-app event integration.
+          </p>
+        </div>
+
+        <h2>Working Assumption</h2>
+        <p>
+          The new approach is to treat onboarding as the main activation ladder and staking as the next
+          monetisation-readiness ladder. This is a meaningful shift in emphasis, but not a fundamental rebuild of the
+          product.
+        </p>
+
+        <div class="callout">
+          <p>
+            Estimated impact: roughly 70-80% of the implemented platform work remains directly reusable. Roughly
+            20-30% needs reshaping, mostly in Emorya quest content, reward design, starter-path logic, and event hooks.
+          </p>
+        </div>
+
+        <h2>Seed-Ready Onboarding Ladder</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Quest</th>
+              <th>Suggested XP</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Download the Emorya app</td>
+              <td>75 XP</td>
+              <td>First commitment step.</td>
+            </tr>
+            <tr>
+              <td>Open the app for the first time</td>
+              <td>100 XP</td>
+              <td>Moves from spectator to active interest.</td>
+            </tr>
+            <tr>
+              <td>Create Emorya account</td>
+              <td>200 XP</td>
+              <td>Core identity conversion moment.</td>
+            </tr>
+            <tr>
+              <td>Complete your profile</td>
+              <td>150 XP</td>
+              <td>Improves quality and reduces onboarding drop-off.</td>
+            </tr>
+            <tr>
+              <td>Confirm your starter setup</td>
+              <td>125 XP</td>
+              <td>Closes the setup loop cleanly.</td>
+            </tr>
+            <tr>
+              <td>Download xPortal</td>
+              <td>125 XP</td>
+              <td>Bridge into wallet-linked reward readiness.</td>
+            </tr>
+            <tr>
+              <td>Open or create your xPortal wallet</td>
+              <td>175 XP</td>
+              <td>Strengthens seriousness of onboarding.</td>
+            </tr>
+            <tr>
+              <td>Connect Emorya to your xPortal wallet</td>
+              <td>300 XP</td>
+              <td>One of the highest-value activation milestones.</td>
+            </tr>
+            <tr>
+              <td>View your EMRS reward path</td>
+              <td>125 XP</td>
+              <td>Explains how activity maps to value.</td>
+            </tr>
+            <tr>
+              <td>Complete your first real in-app action</td>
+              <td>250 XP</td>
+              <td>Moves the user beyond setup into real use.</td>
+            </tr>
+            <tr>
+              <td>Convert your first calories</td>
+              <td>350 XP</td>
+              <td>True activation proof point.</td>
+            </tr>
+            <tr>
+              <td>Complete the full activation ladder</td>
+              <td>750 XP</td>
+              <td>Largest onboarding reward, intentionally back-loaded.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Seed-Ready Staking Ladder</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Quest</th>
+              <th>Suggested XP</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Stake your first EMR</td>
+              <td>250 XP</td>
+              <td>First monetisation-readiness step.</td>
+            </tr>
+            <tr>
+              <td>Reach staking threshold A</td>
+              <td>400 XP</td>
+              <td>Move beyond symbolic stake size.</td>
+            </tr>
+            <tr>
+              <td>Reach staking threshold B</td>
+              <td>900 XP</td>
+              <td>Qualify for deeper commitment status and APY eligibility.</td>
+            </tr>
+            <tr>
+              <td>Unlock APY boost status</td>
+              <td>600 XP</td>
+              <td>Makes the economic reward explicit inside the progression system.</td>
+            </tr>
+            <tr>
+              <td>Maintain qualifying stake for 30 days</td>
+              <td>1200 XP</td>
+              <td>Rewards commitment over time rather than a one-time stake snapshot.</td>
+            </tr>
+            <tr>
+              <td>Referred staker bonus</td>
+              <td>500 XP</td>
+              <td>Links staking to growth and referral quality.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>What This Changes In The Product</h2>
+        <h3>1. The platform’s main early journey becomes more deliberate</h3>
+        <p>
+          Instead of a broad starter mix of social, app, and calorie tasks, the first visible journey becomes an
+          activation ladder with stronger sequencing and more deliberate weighting.
+        </p>
+
+        <h3>2. Wallet readiness becomes more central</h3>
+        <p>
+          xPortal setup and wallet linking stop being just one quest among many. They become central milestones in the
+          core activation path.
+        </p>
+
+        <h3>3. Monetisation readiness becomes a visible product stage</h3>
+        <p>
+          Staking is no longer just a trust or wallet side-task. It becomes the next meaningful progression phase after
+          activation and retention.
+        </p>
+
+        <h2>Impact Review: What Stays Intact</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Impact</th>
+              <th>Why</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Brand skin / partner publishing system</td>
+              <td><span class="impact-low">Low</span></td>
+              <td>Unaffected. Theme publishing and brand switching still work exactly as intended.</td>
+            </tr>
+            <tr>
+              <td>Custom quest builder</td>
+              <td><span class="impact-low">Low</span></td>
+              <td>The builder is already strong enough to support the new quest shapes and sequencing.</td>
+            </tr>
+            <tr>
+              <td>Verification lanes and review queue</td>
+              <td><span class="impact-low">Low</span></td>
+              <td>Manual review, file proof, API verification, and text submissions all remain useful.</td>
+            </tr>
+            <tr>
+              <td>Partner quest portability system</td>
+              <td><span class="impact-low">Low</span></td>
+              <td>Still valuable. This shift mainly affects the Emorya-native ladder, not the portability model.</td>
+            </tr>
+            <tr>
+              <td>Admin verification showcase and demo packs</td>
+              <td><span class="impact-low">Low</span></td>
+              <td>Still valid. These are infrastructure and admin tooling, not Emorya-specific funnel assumptions.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Impact Review: What Needs Reshaping</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Impact</th>
+              <th>What Changes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Emorya v1 launch quest set</td>
+              <td><span class="impact-medium">Medium</span></td>
+              <td>The existing launch set stays useful, but the order, weighting, and emphasis need to move harder toward activation-first onboarding.</td>
+            </tr>
+            <tr>
+              <td>Quest board ordering</td>
+              <td><span class="impact-medium">Medium</span></td>
+              <td>The current launch funnel ordering will need to be updated so the activation ladder is the dominant visible path.</td>
+            </tr>
+            <tr>
+              <td>Starter path logic</td>
+              <td><span class="impact-medium">Medium</span></td>
+              <td>Current starter-path requirements still use generic XP/level/activity/community thresholds. These should be rebuilt around activation completion.</td>
+            </tr>
+            <tr>
+              <td>Emorya-specific quest metadata and XP balances</td>
+              <td><span class="impact-medium">Medium</span></td>
+              <td>Several seeded quest rewards remain valid, but relative weighting needs rebalancing once onboarding becomes a premium conversion layer.</td>
+            </tr>
+            <tr>
+              <td>Demo data and test fixtures</td>
+              <td><span class="impact-medium">Medium</span></td>
+              <td>Tests and seeded user progress should reflect the new activation milestones and not the older starter-path assumptions.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Impact Review: What Becomes More Important</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Impact</th>
+              <th>Why It Now Matters More</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Real in-Emorya app event hooks</td>
+              <td><span class="impact-high">High</span></td>
+              <td>The more onboarding is central, the more valuable automatic completion from real app events becomes.</td>
+            </tr>
+            <tr>
+              <td>Profile completion and onboarding-state tracking</td>
+              <td><span class="impact-high">High</span></td>
+              <td>These need to exist as first-class completion states rather than vague proxies.</td>
+            </tr>
+            <tr>
+              <td>xPortal download/open/create journey definition</td>
+              <td><span class="impact-high">High</span></td>
+              <td>The exact wallet journey now matters because it is part of the core activation ladder.</td>
+            </tr>
+            <tr>
+              <td>Staking verification logic</td>
+              <td><span class="impact-high">High</span></td>
+              <td>The old single 30-day stake hold concept is no longer enough if staking becomes a full ladder with thresholds.</td>
+            </tr>
+            <tr>
+              <td>Commercial rules around APY boost</td>
+              <td><span class="impact-high">High</span></td>
+              <td>This needs product and business alignment before the quest ladder can be finalised properly.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Concrete Areas In The Current Build Likely To Change Next</h2>
+        <ul>
+          <li>seeded Emorya quest definitions in <strong>server/db/seed.sql</strong></li>
+          <li>Emorya launch-set curation migrations in the later quest migrations</li>
+          <li>starter-path rules in <strong>lib/progression-rules.ts</strong></li>
+          <li>starter-path progress rendering in <strong>server/repositories/platform-repository-db.ts</strong></li>
+          <li>quest board ordering logic where the Emorya launch funnel is currently defined</li>
+          <li>tests tied to starter quests, progress state, and dashboard board selection</li>
+        </ul>
+
+        <h2>What Does Not Need Rebuilding</h2>
+        <ul>
+          <li>brand theme architecture</li>
+          <li>admin publishing of public skin</li>
+          <li>quest verification engine</li>
+          <li>custom quest builder workflow</li>
+          <li>proof uploads and review queue</li>
+          <li>API callback verification</li>
+          <li>partner portability metadata structure</li>
+          <li>milestone-share placeholders as a concept</li>
+        </ul>
+
+        <h2>Recommended Sequence From Here</h2>
+        <ol>
+          <li>Replace the current Emorya starter path with the activation ladder.</li>
+          <li>Add the missing onboarding quests: profile completion, starter setup, xPortal open/create, full activation completion.</li>
+          <li>Reweight onboarding XP so the largest reward sits at full activation.</li>
+          <li>Refactor the existing staking quest into a tiered staking ladder.</li>
+          <li>Agree internally on APY feasibility and threshold design.</li>
+          <li>Connect more real in-app events so onboarding and staking can auto-complete where possible.</li>
+        </ol>
+
+        <h2>Bottom Line</h2>
+        <p>
+          This switch in approach affects the product strategy meaningfully, but it does not invalidate most of the work
+          already done. The infrastructure, admin tooling, verification model, theming, and custom quest system are all
+          still strong and still relevant.
+        </p>
+        <p>
+          The main impact is that Emorya’s questing logic becomes more intentional around activation and monetisation.
+          In practice, that means we are mostly reshaping content, sequencing, and event hooks rather than rebuilding
+          the underlying platform.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

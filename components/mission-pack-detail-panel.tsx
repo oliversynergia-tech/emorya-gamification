@@ -10,14 +10,14 @@ type MissionView = "active" | "completed" | "all" | "reward";
 function getMissionCue(pack: DashboardData["campaignPacks"][number]) {
   if (pack.nextQuestActionable && pack.nextQuestTitle) {
     return {
-      badge: "Exact quest ready",
-      note: `Resume exact quest: ${pack.nextQuestTitle} is ready now.`,
+      badge: "Next quest ready",
+      note: `${pack.nextQuestTitle} is ready now as the strongest next move.`,
       tone: "ready",
     } as const;
   }
   return {
-    badge: "Review mission path",
-    note: "Review the remaining mission path to see what opens next before you jump back in.",
+    badge: "Review the route ahead",
+    note: "Review the remaining mission path to see which step opens the strongest route forward.",
     tone: "planning",
   } as const;
 }
@@ -137,7 +137,7 @@ export function MissionPackDetailPanel({
         quest.dependencyProgressLabel.toLowerCase().includes("wallet")
           ? "Wallet"
           : quest.dependencyProgressLabel.toLowerCase().includes("starter")
-            ? "Starter path"
+            ? "Activation ladder"
             : quest.dependencyProgressLabel.toLowerCase().includes("premium")
               ? "Premium"
               : quest.dependencyProgressLabel.toLowerCase().includes("recovery") ||

@@ -26,6 +26,7 @@ import {
   hasDatabaseConfig,
 } from "@/lib/config";
 import {
+  activationPathCompletionQuestSlug,
   buildRewardConfig,
   getWeeklyProgressBand,
   inferQuestTrack,
@@ -388,7 +389,7 @@ function getNextRewardRequirement(progressState: UserProgressState, journeyState
   }
 
   if (!progressState.starterPathComplete) {
-    return "Complete Starter Path";
+    return "Complete Activation Path";
   }
 
   if (progressState.level < 5) {
@@ -407,43 +408,36 @@ function getNextRewardRequirement(progressState: UserProgressState, journeyState
 }
 
 function buildStarterPathProgress(progressState: UserProgressState) {
-  const steps = [
-    {
-      label: "Earn 250 XP",
-      complete: progressState.totalXp >= starterPathRequirements.minXp,
-      detail: `${Math.min(progressState.totalXp, starterPathRequirements.minXp)} / ${starterPathRequirements.minXp} XP`,
-    },
-    {
-      label: "Reach Level 3",
-      complete: progressState.level >= starterPathRequirements.minLevel,
-      detail: `Level ${progressState.level}`,
-    },
-    {
-      label: "Connect xPortal",
-      complete: progressState.walletLinked,
-      detail: progressState.walletLinked ? "Wallet linked" : "Wallet still needed",
-    },
-    {
-      label: "Complete 3 starter quests",
-      complete: progressState.starterQuestCount >= starterPathRequirements.starterQuestCount,
-      detail: `${Math.min(progressState.starterQuestCount, starterPathRequirements.starterQuestCount)} / ${starterPathRequirements.starterQuestCount}`,
-    },
-    {
-      label: "Complete 1 activity quest",
-      complete: progressState.wellnessQuestCount >= starterPathRequirements.wellnessQuestCount,
-      detail: `${Math.min(progressState.wellnessQuestCount, starterPathRequirements.wellnessQuestCount)} / ${starterPathRequirements.wellnessQuestCount}`,
-    },
-    {
-      label: "Complete 1 community quest",
-      complete: progressState.socialQuestCount >= starterPathRequirements.socialQuestCount,
-      detail: `${Math.min(progressState.socialQuestCount, starterPathRequirements.socialQuestCount)} / ${starterPathRequirements.socialQuestCount}`,
-    },
-  ];
+  const hasClaimedActivationReward = progressState.completedQuestSlugs.includes(activationPathCompletionQuestSlug);
+  const steps = starterPathRequirements.stepGroups.map((stepGroup) => {
+    const completedQuestCount = hasClaimedActivationReward
+      ? stepGroup.slugs.length
+      : stepGroup.slugs.filter((slug) => progressState.completedQuestSlugs.includes(slug)).length;
+
+    return {
+      label: stepGroup.label,
+      complete: hasClaimedActivationReward || completedQuestCount >= stepGroup.slugs.length,
+      detail: hasClaimedActivationReward
+        ? stepGroup.detail
+        : `${Math.min(completedQuestCount, stepGroup.slugs.length)} / ${stepGroup.slugs.length} complete. ${stepGroup.detail}`,
+    };
+  });
   const completedSteps = steps.filter((step) => step.complete).length;
+  const nextStep = steps.find((step) => !step.complete) ?? null;
+  const progress = steps.length > 0 ? completedSteps / steps.length : 0;
 
   return {
     complete: progressState.starterPathComplete,
-    progress: steps.length > 0 ? completedSteps / steps.length : 0,
+    progress,
+    title: progressState.starterPathComplete ? "Activation ladder complete" : "Activation ladder in progress",
+    summary: progressState.starterPathComplete
+      ? "The account is fully activated and has crossed the onboarding bridge into reward-ready progression."
+      : "This is the shortest route from campaign arrival to a fully activated, wallet-ready Emorya user.",
+    nextStepLabel: nextStep?.label ?? null,
+    nextStepDetail: nextStep?.detail ?? null,
+    completionLabel: "Full activation reward",
+    completionDetail:
+      "The largest onboarding reward lands at full activation completion, not at the first setup step.",
     steps,
   };
 }
@@ -1303,7 +1297,7 @@ function getPackPriorityReason({
   }
 
   if (!userProgressState.starterPathComplete) {
-    return "This mission is prioritized because Starter Path stability matters more than deeper reward steps right now.";
+    return "This mission is prioritized because activation-path completion matters more than deeper reward steps right now.";
   }
 
   if (!rewardEligible) {
@@ -1345,7 +1339,7 @@ function getCampaignPackBlockageState({
     if (normalizedRequirement.includes("level")) {
       return "level";
     }
-    if (normalizedRequirement.includes("starter path")) {
+    if (normalizedRequirement.includes("starter path") || normalizedRequirement.includes("activation path")) {
       return "starter_path";
     }
     return "trust";
@@ -1413,7 +1407,7 @@ function getPackUnlockRewardPreview({
   }
 
   if (blockageState === "starter_path") {
-    return `Finishing ${currentLabel} clears another starter-path step so ${nextLabel} can push identity and trust forward.`;
+    return `Finishing ${currentLabel} clears another activation-ladder step so ${nextLabel} can push identity, trust, and real app use forward.`;
   }
 
   if (blockageState === "level" || blockageState === "trust") {
@@ -1522,7 +1516,7 @@ function getPackUnlockOutcomePreview({
       blockageState === "wallet_connection"
         ? "Eligibility is still waiting on wallet connection before the reward path fully opens."
         : blockageState === "starter_path"
-          ? "Eligibility improves as the starter path becomes more complete and trusted."
+          ? "Eligibility improves as the activation path becomes more complete and trusted."
           : blockageState === "trust"
             ? "Eligibility is mainly waiting on stronger verified activity and trust signals."
             : rewardEligible
@@ -1561,8 +1555,8 @@ function getPackDependencySummary({
 
   if (blockageState === "starter_path") {
     items.push({
-      label: "Starter path",
-      detail: "Starter-path stability still has to clear before deeper reward pressure matters.",
+      label: "Activation ladder",
+      detail: "Activation-ladder progress still has to clear before deeper reward pressure matters.",
     });
   }
 
@@ -1621,7 +1615,7 @@ function getQuestGateLabel({
   }
 
   if (track === "starter") {
-    return "Helps clear the starter-path gate";
+    return "Helps clear the activation-ladder gate";
   }
 
   if (track === "daily" || track === "campaign") {
@@ -1649,7 +1643,7 @@ function getQuestDependencyDetail({
   }
 
   if (blockageState === "starter_path" || track === "starter") {
-    return "This step removes starter-path friction so later quests can matter more.";
+    return "This step removes activation-ladder friction so later quests can matter more.";
   }
 
   if (blockageState === "level") {
@@ -1695,8 +1689,8 @@ function getPackOperatorNextMove({
 
   if (blockageState === "starter_path") {
     return {
-      title: "Simplify the starter-path message",
-      detail: "Starter-path friction is still dominant here, so clearer onboarding guidance should help more than stronger reward copy.",
+      title: "Simplify the activation-ladder message",
+      detail: "Activation-ladder friction is still dominant here, so clearer onboarding guidance should help more than stronger reward copy.",
     };
   }
 
@@ -2343,7 +2337,7 @@ async function getUserCampaignPackJourneys({
       sequenceReason = "Wallet linking is the gating step that turns this pack from campaign traffic into reward-ready progression.";
     } else if (!userProgressState.starterPathComplete) {
       nextAction = getBrandSafeStarterPathPrompt();
-      sequenceReason = "Starter Path completion comes first because it stabilizes the account before the heavier-value steps matter.";
+      sequenceReason = "Activation-path completion comes first because it stabilizes the account before the heavier-value steps matter.";
     } else if (!user.rewardEligibility.eligible) {
       nextAction = `Stay on the progression path: ${user.rewardEligibility.nextRequirement ?? "keep building XP and trust"}.`;
       sequenceReason = "Reward eligibility is the current bottleneck, so the pack is biasing toward trust and repeat activity.";
@@ -4408,7 +4402,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         entry.state === "wallet_connection"
           ? "The biggest blocker is wallet connection, so pack CTAs should point directly to wallet-linked actions."
           : entry.state === "starter_path"
-            ? "Users are still getting stuck in the starter path, so simplify early mission steps and reinforce first wins."
+            ? "Users are still getting stuck in the activation path, so simplify early mission steps and reinforce first wins."
             : entry.state === "level"
               ? "Users need more XP and level momentum before the pack can pay off, so keep progression CTAs front and center."
               : entry.state === "trust"

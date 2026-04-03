@@ -25,14 +25,14 @@ function getProfilePackHref(pack: DashboardCampaignPack) {
 function getProfilePackCue(pack: DashboardCampaignPack) {
   if (pack.nextQuestActionable && pack.nextQuestTitle) {
     return {
-      badge: "Exact quest ready",
-      note: `Resume exact quest: ${pack.nextQuestTitle} is ready now.`,
+      badge: "Next quest ready",
+      note: `${pack.nextQuestTitle} is ready now as the strongest next move.`,
       tone: "ready",
     };
   }
   return {
-    badge: "Review mission path",
-    note: "Review the mission path to see what opens next before you jump back in.",
+    badge: "Review the route ahead",
+    note: "Review the mission path to see which step opens the strongest route forward.",
     tone: "planning",
   };
 }

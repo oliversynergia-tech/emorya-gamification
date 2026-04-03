@@ -79,12 +79,12 @@ export function getBrandSafeWalletLinkPrompt() {
 
 export function getBrandSafeStarterPathPrompt() {
   const profile = getActiveBrandCopyProfile();
-  return `Finish your Starter Path so this campaign interest becomes ${profile.nativeLoop}.`;
+  return `Finish the activation ladder so this campaign interest turns into ${profile.nativeLoop}.`;
 }
 
 export function getBrandSafeOnboardingHint() {
   const profile = getActiveBrandCopyProfile();
-  return `Start here: clear one mission, connect ${profile.walletProduct}, and keep the weekly XP loop alive. That is the shortest path from campaign arrival to ${profile.progressionLabel}.`;
+  return `Start here: finish the activation ladder, connect ${profile.walletProduct}, and complete your first meaningful product actions. That is the shortest path from campaign arrival to ${profile.progressionLabel}.`;
 }
 
 export function getBrandSafeRewardFocus(attributionSource: string, experienceLane: string, payoutAsset: string) {

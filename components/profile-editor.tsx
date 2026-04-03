@@ -206,7 +206,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
             <strong>Account changes saved</strong>
             <p>Your mission surfaces will reopen with the same active lens, so you can jump back into the right next step.</p>
             <p className="mission-cue mission-cue--planning">
-              <strong>Review mission path</strong> Recheck the mission path now that your account details are up to date.
+              <strong>Review the route ahead</strong> Recheck the mission path now that your account details are up to date.
             </p>
           </div>
           <div className="achievement-card__side">

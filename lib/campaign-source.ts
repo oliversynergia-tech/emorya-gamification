@@ -8,27 +8,27 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
     case "zealy":
       return {
         label: "Zealy entrant",
-        title: "Turn quest hunters into wallet-linked returning members.",
+        title: "Move campaign entrants into connected, returning Emorya users.",
         description:
-          "This lane should feel like a fast bridge from campaign XP to wallet identity, weekly progress, and referral momentum.",
+          "This lane should quickly convert campaign momentum into account creation, wallet readiness, weekly progress, and repeat use.",
         accent: "Quest-to-wallet",
         mood: "bridge" as const,
       };
     case "galxe":
       return {
         label: "Galxe entrant",
-        title: "Move discovery users into the Zealy bridge and then into recurring reward behavior.",
+        title: "Turn discovery traffic into connected users with real retention potential.",
         description:
-          "This source is usually routed through the Zealy bridge first, so the product should emphasize campaign completion, token readiness, and premium conversion instead of one-off participation.",
+          "This source is usually routed through the Zealy bridge first, so the journey should emphasize activation, reward readiness, and repeat participation rather than one-off completion.",
         accent: "Discovery-to-retention",
         mood: "feeder" as const,
       };
     case "taskon":
       return {
         label: "TaskOn entrant",
-        title: "Convert TaskOn participants into the Zealy bridge and then into high-intent returning operators.",
+        title: "Convert TaskOn participants into activated users with stronger long-term intent.",
         description:
-          "This source is usually routed through the Zealy bridge first. Separate TaskOn-specific funnel behavior is available, but only when platform differentiation is enabled.",
+          "This source is usually routed through the Zealy bridge first, with the focus on activation, product familiarity, and deeper follow-through after the first campaign touch.",
         accent: "Tasks-to-loyalty",
         mood: "feeder" as const,
       };
@@ -40,9 +40,9 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
             ? "From crypto newbie to super app native, one quest at a time."
             : activeThemeId === "multiversx"
               ? "Turn curious users into stakers, builders, and believers."
-              : "Guide users from first quest to premium and token readiness.",
+              : "Guide users from first touch into activation, loyalty, and reward readiness.",
         description:
-          "This lane focuses on early gratification, wallet adoption, weekly progress, and referral-driven growth.",
+          "This lane focuses on smooth onboarding, real app activation, weekly momentum, and growth through trust and referrals.",
         accent: "Direct-to-growth",
         mood: "direct" as const,
       };
@@ -60,7 +60,7 @@ export function getCampaignLaneVisualProfile(
     return {
       themeClass: "lane-theme--bridge",
       label: isBridged ? "Zealy bridge live" : "Zealy live",
-      emphasis: "Bridge users should feel momentum, wallet identity, and weekly progression pressure quickly.",
+      emphasis: "This lane should move people quickly from campaign entry into account setup, wallet identity, and repeat product use.",
       chips: ["Bridge lane", "Wallet-forward", "Retention ramp"],
     };
   }
@@ -70,8 +70,8 @@ export function getCampaignLaneVisualProfile(
       themeClass: "lane-theme--feeder",
       label: isBridged ? "Galxe feeder" : "Galxe live",
       emphasis: isBridged
-        ? "Galxe is being preserved as attribution, but the live conversion pressure is intentionally routed through Zealy."
-        : "Galxe is running as its own live lane with discovery-to-retention pressure.",
+        ? "Galxe attribution is being preserved, but the live conversion flow is intentionally routed through the stronger activation bridge."
+        : "Galxe is running as its own live lane with discovery-to-activation pressure.",
       chips: ["Discovery source", isBridged ? "Zealy bridge" : "Live lane", "Campaign entry"],
     };
   }
@@ -81,8 +81,8 @@ export function getCampaignLaneVisualProfile(
       themeClass: "lane-theme--task",
       label: isBridged ? "TaskOn feeder" : "TaskOn live",
       emphasis: isBridged
-        ? "TaskOn users are being funneled through the Zealy bridge, but their task-completion intent is still preserved."
-        : "TaskOn is running as its own live lane with stronger mission-depth framing.",
+        ? "TaskOn users are being funneled through the activation bridge, while preserving the intent and completion quality of the original source."
+        : "TaskOn is running as its own live lane with stronger mission-depth and activation framing.",
       chips: ["Task source", isBridged ? "Zealy bridge" : "Live lane", "High-intent"],
     };
   }
@@ -90,7 +90,7 @@ export function getCampaignLaneVisualProfile(
   return {
     themeClass: "lane-theme--direct",
     label: "Direct lane",
-    emphasis: "Direct users should feel the core mission ladder first: starter momentum, premium lift, and reward readiness.",
+    emphasis: "Direct users should feel the core activation ladder first, then momentum, then the higher-value commitment lanes.",
     chips: ["Direct entry", "Core ladder", "Premium ramp"],
   };
 }
@@ -99,18 +99,18 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
   switch (source) {
     case "zealy":
       return {
-        title: "Turn quest momentum into premium yield",
-        summary: "Zealy users should feel the jump from campaign points into wallet-linked premium tracks immediately.",
+        title: "Turn campaign momentum into higher-value progression",
+        summary: "Zealy users should feel a clear step up from campaign entry into wallet-linked premium progress and stronger reward potential.",
         hooks: [
           "Monthly premium multiplies your campaign bridge XP and opens stronger referral conversion rewards.",
           "Annual premium is the fastest route from quest completions into direct-token reward moments.",
         ],
-        cta: "Upgrade once the quest ladder starts converting into weekly reward pressure.",
+        cta: "Upgrade once the activation ladder starts turning into weekly reward momentum.",
       };
     case "galxe":
       return {
-        title: "Convert discovery into recurring reward behavior",
-        summary: "Galxe entrants usually pass through the Zealy bridge, so premium should reinforce the jump from discovery into recurring reward behavior.",
+        title: "Convert discovery into recurring, higher-value use",
+        summary: "Galxe entrants usually pass through the activation bridge, so premium should reinforce the move from discovery into repeat behavior and stronger reward value.",
         hooks: [
           "Monthly premium turns one-off discovery into recurring weekly reward accumulation.",
           "Annual premium makes referral conversions and claimed-to-settled payouts materially stronger.",
@@ -119,8 +119,8 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
       };
     case "taskon":
       return {
-        title: "Push task momentum into high-trust premium progression",
-        summary: "TaskOn entrants usually pass through the Zealy bridge first, but can still be pushed into a higher-trust premium progression path.",
+        title: "Push task momentum into higher-trust premium progression",
+        summary: "TaskOn entrants usually pass through the activation bridge first, but can still be moved into a stronger premium progression path once intent is clear.",
         hooks: [
           "Monthly premium adds higher-yield mission tracks on top of the task-completion lane.",
           "Annual premium compounds XP, referral leverage, and direct-token upside for the most committed users.",
@@ -129,13 +129,13 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
       };
     default:
       return {
-        title: "Use premium to accelerate the core mission ladder",
-        summary: "Direct entrants should see premium as faster progression, better rewards, and stronger referral economics.",
+        title: "Use premium to accelerate the core progression path",
+        summary: "Direct entrants should see premium as faster activation follow-through, better rewards, and stronger referral economics.",
         hooks: [
           "Monthly premium unlocks higher-yield quests and lifts XP and token conversion value.",
           "Annual premium creates the strongest referral upside and direct-token reward moments.",
         ],
-        cta: "Upgrade when you want the fastest route from Starter Path to high-value reward lanes.",
+        cta: "Upgrade when you want the fastest route from activation into the highest-value reward lanes.",
       };
   }
 }
@@ -203,7 +203,7 @@ export function getCampaignPremiumJourney(
         monthlyReason: "Monthly is the best first step for direct users because it immediately improves XP yield and quest value without a heavy commitment.",
         annualReason: "Annual should be presented as the high-conviction choice once referrals, streaks, and direct-token moments are already proving out.",
         pathSteps: [
-          "Complete Starter Path and expose the premium upside early.",
+          "Complete the activation ladder and expose the premium upside early.",
           "Convert to Monthly when weekly momentum and better quest yield become clear.",
           "Offer Annual as the strongest route once the user wants the best reward economics.",
         ],
