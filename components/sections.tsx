@@ -264,7 +264,7 @@ function getDashboardPriorityAction(data: DashboardData) {
                   : "One strong return move puts this pack back on pace";
     const supporting =
       returnPack.blockageState === "wallet_connection"
-        ? "Wallet connection is still the gate between this mission and the live reward rail."
+        ? "Wallet connection is still the gate between this mission and the live reward journey."
         : returnPack.blockageState === "trust"
           ? "The next unlock depends on verified activity and cleaner eligibility signals."
           : returnPack.blockageState === "level"
@@ -545,7 +545,7 @@ export function DashboardSnapshot({
       <div className="panel">
         <div className="panel__header">
           <div>
-            <p className="eyebrow">Player state</p>
+            <p className="eyebrow">Your account</p>
             <h3>{data.user.displayName}</h3>
           </div>
           <span className={tierClass(data.user.tier)}>{getTierLabel(data.user.tier)}</span>
@@ -635,32 +635,32 @@ export function DashboardSnapshot({
           <div className="panel panel--glass" id="campaign-mission">
             <div className="panel__header">
               <div>
-                <p className="eyebrow">Campaign bridge ladder</p>
+                <p className="eyebrow">Campaign path</p>
                 <h3>
                   {data.user.campaignSource === data.economy.campaignPreset.source
-                    ? `${data.user.campaignSource} onboarding path`
-                    : `${data.user.campaignSource} to ${data.economy.campaignPreset.source} bridge path`}
+                    ? `${data.user.campaignSource} conversion journey`
+                    : `${data.user.campaignSource} to ${data.economy.campaignPreset.source} conversion journey`}
                 </h3>
               </div>
               <span className="badge badge--pink">Source aware</span>
             </div>
             <p className="form-note">
               {data.user.campaignSource === data.economy.campaignPreset.source
-                ? `This account is running the ${data.economy.campaignPreset.source} lane directly.`
-                : `Attribution is preserved as ${data.user.campaignSource}, but the live onboarding flow is currently being routed through ${data.economy.campaignPreset.source}.`}
+                ? `This account is currently moving through the ${data.economy.campaignPreset.source} campaign journey directly.`
+                : `Attribution is preserved as ${data.user.campaignSource}, while the live onboarding flow is currently being routed through ${data.economy.campaignPreset.source}.`}
             </p>
             <div className="achievement-list">
               <article className="achievement-card">
                 <div>
-                  <strong>Arrival captured</strong>
-                  <p>This account is now recognized as a {data.user.campaignSource} entrant.</p>
+                  <strong>Campaign source captured</strong>
+                  <p>This account is now recognised as a {data.user.campaignSource} entrant.</p>
                 </div>
                 <span className="badge badge--pink">Done</span>
               </article>
               <article className="achievement-card">
                 <div>
-                  <strong>Bridge into the reward path</strong>
-                  <p>{`Wallet linking moves this sourced user into the full ${activeBrandCopy.walletProduct} and campaign path.`}</p>
+                  <strong>Move into the full reward journey</strong>
+                  <p>{`Wallet linking moves this sourced user into the full ${activeBrandCopy.walletProduct} and reward journey.`}</p>
                 </div>
                 <span className={data.user.starterPath.steps.some((step) => step.label === "Connect xPortal" && step.complete) ? "badge badge--pink" : "badge"}>
                   {data.user.starterPath.steps.some((step) => step.label === "Connect xPortal" && step.complete) ? "Done" : "Next"}
@@ -677,8 +677,8 @@ export function DashboardSnapshot({
               </article>
               <article className="achievement-card">
                 <div>
-                  <strong>Reach reward eligibility</strong>
-                  <p>Level 5 plus activation completion, trust, and wallet linkage opens the deeper campaign reward lanes.</p>
+                  <strong>Reach reward readiness</strong>
+                  <p>Level 5 plus activation completion, trust, and wallet linkage opens the deeper reward and campaign lanes.</p>
                 </div>
                 <span className={data.user.rewardEligibility.eligible ? "badge badge--pink" : "badge"}>
                   {data.user.rewardEligibility.eligible ? "Live" : "Pending"}
@@ -766,8 +766,8 @@ export function DashboardSnapshot({
           <div className="panel panel--glass">
             <div className="panel__header">
               <div>
-                <p className="eyebrow">Active campaign mission</p>
-                <h3>Your live pack progress</h3>
+                <p className="eyebrow">Active missions</p>
+                <h3>Your live mission progress</h3>
               </div>
               <span className="badge badge--pink">{data.campaignPacks.length} active</span>
             </div>
@@ -946,13 +946,13 @@ export function DashboardSnapshot({
           title="Live pack updates"
           eyebrow="Campaign inbox"
         />
-        <MissionPackDetailPanel
+      <MissionPackDetailPanel
           key={`mission-detail-${missionView}`}
           activePacks={data.campaignPacks}
           packHistory={data.campaignPackHistory}
           missionView={missionView}
           title="Mission route detail"
-          eyebrow="Campaign drill-in"
+          eyebrow="Campaign detail"
         />
         {data.campaignPackHistory.length > 0 ? (
           <div className="panel panel--glass">
@@ -1022,7 +1022,7 @@ export function DashboardSnapshot({
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Weekly reward band</p>
+              <p className="eyebrow">Weekly progress</p>
               <h3>{data.user.weeklyProgress.tierLabel}</h3>
             </div>
             <span className="badge">{data.user.weeklyProgress.xp} XP</span>
@@ -1058,8 +1058,8 @@ export function DashboardSnapshot({
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Token conversion</p>
-              <h3>{data.user.tokenProgram.status === "redeemable" ? "Redemption unlocked" : "Eligibility pipeline"}</h3>
+              <p className="eyebrow">Reward readiness</p>
+              <h3>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked" : "Progress toward rewards"}</h3>
             </div>
             <span className="badge badge--pink">{data.user.tokenProgram.eligibilityPoints} pts</span>
           </div>
@@ -1074,19 +1074,19 @@ export function DashboardSnapshot({
             </article>
             <article className="economy-step-card economy-step-card--bridge">
               <div className="quest-card__meta">
-                <span className="economy-badge economy-badge--bridge">Eligibility bridge</span>
+                <span className="economy-badge economy-badge--bridge">Reward readiness</span>
                 <span>{data.user.tokenProgram.eligibilityPoints} pts</span>
               </div>
-              <strong>Eligibility points convert XP momentum into reward readiness.</strong>
-              <p>xPortal linkage, trust, and recurring activity turn progression into redeemable reward state.</p>
+              <strong>Eligibility points turn progress into reward readiness.</strong>
+              <p>Wallet connection, trust, and recurring activity move you closer to real redeemable rewards.</p>
             </article>
             <article className="economy-step-card economy-step-card--rail">
               <div className="quest-card__meta">
-                <span className="economy-badge economy-badge--rail">Reward rail</span>
+                <span className="economy-badge economy-badge--rail">Payout layer</span>
                 <span>{data.user.tokenProgram.asset}</span>
               </div>
-              <strong>Tokens are configurable payout rails layered on top.</strong>
-              <p>Reward programs, partner assets, and direct payouts shape settlement without replacing XP as the core loop.</p>
+              <strong>Rewards sit on top of progression, not instead of it.</strong>
+              <p>Reward programs, partner assets, and direct payouts decide how value is delivered after progress has already been earned.</p>
             </article>
           </div>
           <div className="info-grid">
@@ -1166,7 +1166,7 @@ export function DashboardSnapshot({
                   <div>
                     <strong>{program.rewardProgramName}</strong>
                     <p>
-                      {program.asset} payouts from this reward rail.
+                      {program.asset} payouts from this reward program.
                     </p>
                   </div>
                   <div className="achievement-card__side">
@@ -1209,13 +1209,13 @@ export function DashboardSnapshot({
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Reward economy</p>
-              <h3>XP-first progression with configurable reward rails</h3>
+              <p className="eyebrow">How rewards work</p>
+              <h3>Progress first, rewards second</h3>
             </div>
             <span className="badge badge--pink">{data.economy.payoutAsset}</span>
           </div>
           <p className="form-note">
-            The product loop stays XP-first. Premium, referrals, partner assets, and direct payouts only accelerate or settle value after the progression layer is already doing the work.
+            Progress drives the system first. Premium, referrals, partner assets, and direct payouts only increase or settle value after the core journey is already moving.
           </p>
           <div className="reward-ladder">
             <article className="reward-ladder__card">
@@ -1288,7 +1288,7 @@ export function DashboardSnapshot({
           <div className="panel__header">
             <div>
               <p className="eyebrow">Achievement spotlight</p>
-              <h3>{unlockedAchievements.length} badges unlocked</h3>
+              <h3>{unlockedAchievements.length} achievements unlocked</h3>
             </div>
             <span className="badge badge--pink">Prestige</span>
           </div>
@@ -1337,8 +1337,8 @@ export function DashboardSnapshot({
       <div className="panel">
         <div className="panel__header">
           <div>
-            <p className="eyebrow">Featured quests</p>
-            <h3>Today&apos;s loop</h3>
+            <p className="eyebrow">Recommended quests</p>
+            <h3>Your next best moves</h3>
           </div>
           <span className="badge">Up to 155 XP</span>
         </div>
@@ -1384,8 +1384,8 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
       <div className="panel">
         <div className="panel__header">
           <div>
-            <p className="eyebrow">Conversion architecture</p>
-            <h3>Premium moments woven into progression</h3>
+            <p className="eyebrow">Premium path</p>
+            <h3>How premium fits into the journey</h3>
           </div>
           <span className="badge badge--pink">Save 44 EUR annually</span>
         </div>
@@ -1407,14 +1407,14 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
           {premiumOffer.hooks.map((hook) => (
             <article key={hook} className="achievement-card">
               <div>
-                <strong>Campaign-specific premium hook</strong>
+                <strong>Why premium helps here</strong>
                 <p>{hook}</p>
               </div>
             </article>
           ))}
           <article className="achievement-card">
             <div>
-              <strong>Active lane pressure</strong>
+              <strong>Current campaign effect</strong>
               <p>
                 {campaignPreset.source} currently adds {(campaignPreset.premiumUpsellMultiplier * 100 - 100).toFixed(0)}%
                 extra premium urgency and shifts weekly targets by {campaignPreset.weeklyTargetOffset} XP.
@@ -1427,7 +1427,7 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
           {campaignPreset.attributionSource !== campaignPreset.source ? (
             <article className="achievement-card">
               <div>
-                <strong>Attribution vs active lane</strong>
+                <strong>Source and live campaign</strong>
                 <p>
                   Attribution remains {campaignPreset.attributionSource}, but premium framing is currently coming from the {campaignPreset.source} bridge lane.
                 </p>
@@ -1445,7 +1445,7 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
           ))}
           <article className="achievement-card achievement-card--unlocked">
             <div>
-              <strong>Recommended premium sequence</strong>
+              <strong>Recommended upgrade sequence</strong>
               <p>{premiumJourney.nextAction}</p>
             </div>
             <span className="badge badge--pink">{premiumJourney.recommendedTier}</span>
@@ -1465,8 +1465,8 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
       <div className="panel">
         <div className="panel__header">
           <div>
-            <p className="eyebrow">Tier ladder</p>
-            <h3>Free to Annual</h3>
+            <p className="eyebrow">Membership tiers</p>
+            <h3>Free, Monthly, and Annual</h3>
           </div>
         </div>
         <div className="tier-grid">
@@ -1506,12 +1506,12 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
       <div className="panel__header">
         <div>
           <p className="eyebrow">Quest board</p>
-          <h3>Activation-first progression view with optional side lanes and previewed unlocks</h3>
+          <h3>Your quest journey, ordered by what matters most next</h3>
         </div>
         <span className="badge">{activeQuests.length} active / {lockedPreviews.length} previewed</span>
       </div>
       <p className="form-note">
-        The board now prioritizes the activation ladder first, then repeat-use momentum, then optional commitment and growth lanes.
+        Start with activation, build consistency, then move into optional commitment, rewards, and growth quests.
       </p>
       <div className="track-board">
         {groupedActivePhases.map((group) => (
@@ -1532,11 +1532,11 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Additional live quests</p>
-                <h3>Extra active routes</h3>
+                <h3>More active quests</h3>
               </div>
               <span className="badge">{overflowQuests.length} live</span>
             </div>
-            <p className="form-note">These are still active, but they sit outside the main activation-first journey.</p>
+            <p className="form-note">These are still active, but they sit outside the main core journey.</p>
             <div className="quest-grid">{overflowQuests.map(renderQuestCard)}</div>
           </section>
         ) : null}
@@ -1544,7 +1544,7 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
           <div className="panel__header">
             <div>
               <p className="eyebrow">Locked previews</p>
-              <h3>High-value unlocks waiting behind the next milestone</h3>
+              <h3>What unlocks later in the journey</h3>
             </div>
           </div>
           <div className="quest-grid">
@@ -1568,7 +1568,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">All-time leaderboard</p>
-            <h3>Social proof and pressure</h3>
+            <h3>See who is leading right now</h3>
           </div>
           <span className="badge">Weekly reset Monday 00:00 UTC</span>
         </div>
@@ -1585,7 +1585,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         </div>
         <div className="info-grid">
           <div className="info-card">
-            <span>Reward rail projection</span>
+            <span>Reward preview</span>
             <strong>{data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}</strong>
           </div>
           <div className="info-card">
@@ -1597,22 +1597,22 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             <strong>{data.economy.xpMultipliers.annual.toFixed(2)}x XP</strong>
           </div>
           <div className="info-card">
-            <span>Rail settlement</span>
+            <span>Reward settlement</span>
             <strong>{data.user.tokenProgram.claimedBalance} / {data.user.tokenProgram.settledBalance}</strong>
           </div>
           <div className="info-card">
-            <span>Lane momentum</span>
+            <span>Campaign momentum</span>
             <strong>{campaignPreset.leaderboardMomentumMultiplier.toFixed(2)}x</strong>
           </div>
           <div className="info-card">
-            <span>Premium lane pressure</span>
+            <span>Premium pressure</span>
             <strong>{campaignPreset.premiumUpsellMultiplier.toFixed(2)}x</strong>
           </div>
         </div>
         <div className="reward-visual-grid">
           <article className="reward-visual-card">
             <div className="quest-card__meta">
-              <span>Progression core</span>
+              <span>Progress</span>
               <span>{data.user.tokenProgram.status}</span>
             </div>
             <strong>
@@ -1625,11 +1625,11 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
                 style={{ width: `${Math.min(data.user.weeklyProgress.progress * 100, 100)}%` }}
               />
             </div>
-            <small>Leaderboard pressure feeds weekly XP first. Reward readiness is a second-layer consequence of that core progression engine.</small>
+            <small>Leaderboard movement reflects the progress you are building through quests, streaks, and repeat activity.</small>
           </article>
           <article className="reward-visual-card">
             <div className="quest-card__meta">
-              <span>Reward rail state</span>
+              <span>Reward status</span>
               <span>{data.user.tokenProgram.asset}</span>
             </div>
             <strong>{data.user.tokenProgram.claimedBalance} claimed / {data.user.tokenProgram.settledBalance} settled</strong>
@@ -1663,11 +1663,11 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
                 </div>
               </div>
             </div>
-            <small>Claimed rewards are reserved. Settled rewards have completed the manual payout path.</small>
+            <small>Claimed rewards are reserved. Settled rewards have already completed payout.</small>
           </article>
           <article className="reward-visual-card">
             <div className="quest-card__meta">
-              <span>{campaignPreset.source} reward preset</span>
+              <span>{campaignPreset.source} campaign effect</span>
               <span>{campaignPreset.attributionSource}</span>
             </div>
             <strong>
@@ -1680,20 +1680,18 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
                 style={{ width: `${Math.min((campaignPreset.leaderboardMomentumMultiplier / 1.5) * 100, 100)}%` }}
               />
             </div>
-            <small>
-              The active experience lane is not just copy. It changes how aggressively premium, weekly milestones, and leaderboard pressure are framed while keeping original attribution intact.
-            </small>
+            <small>The active campaign changes how strongly quests, weekly targets, and premium prompts are weighted while keeping source attribution intact.</small>
           </article>
         </div>
         <p className="form-note">
-          Rankings do not just signal vanity. Higher weekly output strengthens the XP core, and the configured reward rails decide how that value gets expressed and settled.
+          Rankings are not just cosmetic. Consistent weekly progress improves position, strengthens reward readiness, and shapes what opens next.
         </p>
       </div>
       <div className="panel">
         <div className="panel__header">
           <div>
             <p className="eyebrow">Referral campaign</p>
-            <h3>Who is converting the strongest invite loop</h3>
+            <h3>Who is bringing in the strongest referrals</h3>
           </div>
           <span className="badge badge--pink">#{data.user.referral.rank} for you</span>
         </div>
@@ -1704,7 +1702,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           </div>
           <strong>{topReferralEntry ? topReferralEntry.displayName : "Campaign waiting for invites"}</strong>
           <p>
-            Referral positions rank by earned invite XP first, then converted premium joins, so this board reflects actual conversion quality instead of raw sign-up volume.
+            Referral rank is shaped by earned invite XP first, then by converted premium joins, so it reflects quality as well as volume.
           </p>
           <div className="info-grid">
             <div className="info-card">
@@ -1801,7 +1799,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Profile</p>
-            <h3>Identity and connected surfaces</h3>
+            <h3>Connected accounts and account setup</h3>
           </div>
         </div>
         <div className="connections">
@@ -1831,7 +1829,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
         packHistory={data.campaignPackHistory}
         missionView="reward"
         title="Mission detail"
-        eyebrow="Profile drill-in"
+        eyebrow="Profile mission detail"
       />
       <MissionEventHistoryPanel
         entries={data.missionEventHistory}
@@ -1843,7 +1841,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Referral loop</p>
-            <h3>Invite performance</h3>
+            <h3>Referral performance</h3>
           </div>
           <span className="badge">{data.user.referralCode}</span>
         </div>
@@ -1917,7 +1915,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Progress gates</p>
-            <h3>Activation ladder and weekly reward status</h3>
+            <h3>Activation and reward progress</h3>
           </div>
           <span className="badge">{data.user.weeklyProgress.tierLabel}</span>
         </div>
@@ -1939,7 +1937,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
           </article>
           <article className="achievement-card">
             <div>
-              <strong>Token redemption path</strong>
+              <strong>Reward progress</strong>
               <p>
                 {data.user.tokenProgram.eligibilityPoints} eligibility points banked.{" "}
                 {data.user.tokenProgram.status === "redeemable"
@@ -1954,7 +1952,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
           </article>
           <article className="achievement-card">
             <div>
-              <strong>Claimed vs settled</strong>
+              <strong>Claimed and settled rewards</strong>
               <p>
                 Claimed redemptions are reserved and awaiting payout. Settled balances already reached the user’s reward history.
               </p>
@@ -1991,7 +1989,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Achievements</p>
-            <h3>Prestige markers</h3>
+            <h3>Achievements and milestones</h3>
           </div>
           <span className="badge">{unlockedAchievements.length} unlocked</span>
         </div>
@@ -2063,7 +2061,7 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Progress overview</p>
-            <h3>Prestige at a glance</h3>
+            <h3>Your achievements at a glance</h3>
           </div>
           <span className="badge badge--pink">{completionRate}% complete</span>
         </div>
@@ -2110,7 +2108,7 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Unlocked badges</p>
-            <h3>Your completed prestige markers</h3>
+            <h3>Your completed achievements</h3>
           </div>
         </div>
         <div className="achievement-list">
@@ -2125,7 +2123,7 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
               </article>
             ))
           ) : (
-            <p className="form-note">No unlocked badges yet. Keep pushing the quest loop.</p>
+            <p className="form-note">No achievements unlocked yet. Keep moving through the quest journey.</p>
           )}
         </div>
       </div>
@@ -2133,7 +2131,7 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">In progress</p>
-            <h3>What to chase next</h3>
+            <h3>What to focus on next</h3>
           </div>
         </div>
         <div className="achievement-list">

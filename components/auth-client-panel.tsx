@@ -89,7 +89,7 @@ export function AuthClientPanel({
       <div className="panel__header">
         <div>
           <p className="eyebrow">Account access</p>
-          <h3>Email auth</h3>
+          <h3>Email sign in</h3>
         </div>
       </div>
       <div className="auth-toggle">
@@ -152,7 +152,7 @@ export function AuthClientPanel({
       {message ? <p className="status status--success">{message}</p> : null}
       {message ? (
         <p className="mission-cue mission-cue--ready">
-          <strong>Next quest ready</strong> Your mission flow will reopen on the active campaign view after sign-in.
+          <strong>Next step ready</strong> Your dashboard will reopen on the most relevant live journey after sign-in.
         </p>
       ) : null}
       {error ? <p className="status status--error">{error}</p> : null}
@@ -168,7 +168,7 @@ export function AuthClientPanel({
           {premiumOffer.hooks.map((hook) => (
             <article key={hook} className="achievement-card">
               <div>
-                <strong>Premium hook</strong>
+                <strong>Premium benefit</strong>
                 <p>{hook}</p>
               </div>
             </article>
@@ -184,7 +184,7 @@ export function AuthClientPanel({
               </article>
               <article className="achievement-card lane-pressure-card">
                 <div>
-                  <strong>Live lane pressure</strong>
+                  <strong>Current premium push</strong>
                   <p>{premiumJourney.lanePressure}</p>
                 </div>
               </article>
@@ -205,7 +205,7 @@ export function AuthClientPanel({
         </div>
       ) : null}
       <p className="form-note">
-        Sign-up requires a password of at least 10 characters. Referral codes are optional, issue rewards to the inviter automatically, and feed into the monthly and annual premium reward path.
+        Sign-up requires a password of at least 10 characters. Referral codes are optional, reward the inviter automatically, and help shape what opens next in the premium journey.
       </p>
       {premiumOffer ? <p className="form-note">{premiumOffer.cta}</p> : null}
     </section>

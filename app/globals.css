@@ -1,16 +1,12 @@
 @font-face {
   font-family: "Emorya Display";
-  src:
-    local("Space Grotesk"),
-    url("/fonts/SpaceGrotesk-Variable.woff2") format("woff2");
+  src: local("Helvetica Neue"), local("HelveticaNeue"), local("Arial");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Emorya Body";
-  src:
-    local("Manrope"),
-    url("/fonts/Manrope-Variable.woff2") format("woff2");
+  src: local("Helvetica Neue"), local("HelveticaNeue"), local("Arial");
   font-display: swap;
 }
 
@@ -54,8 +50,8 @@ body {
     linear-gradient(180deg, var(--app-gradient-start) 0%, var(--app-gradient-mid) 44%, var(--app-gradient-end) 100%);
   font-family: var(--font-body), sans-serif;
   font-size: var(--text-body);
-  letter-spacing: -0.01em;
-  line-height: 1.55;
+  letter-spacing: -0.015em;
+  line-height: 1.5;
   text-rendering: optimizeLegibility;
   font-synthesis: none;
   overflow-x: hidden;
@@ -68,7 +64,7 @@ body::after {
   pointer-events: none;
   z-index: -1;
   filter: blur(68px);
-  opacity: 0.18;
+  opacity: 0.14;
 }
 
 body::before {
@@ -103,11 +99,11 @@ a {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.3;
+  opacity: 0.12;
   background:
     linear-gradient(var(--shell-mesh-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--shell-mesh-line) 1px, transparent 1px);
-  background-size: 72px 72px;
+  background-size: 88px 88px;
   mask-image: var(--shell-mesh-mask);
 }
 
@@ -205,13 +201,13 @@ a {
   align-items: center;
   max-width: var(--section-max);
   margin: 0 auto var(--space-6);
-  padding: 18px 18px 16px;
-  min-height: 88px;
+  padding: 16px 18px 14px;
+  min-height: 84px;
   background: var(--topbar-surface);
   backdrop-filter: blur(18px) saturate(130%);
   border: 1px solid var(--topbar-border);
   border-top: 0;
-  border-radius: 0 0 28px 28px;
+  border-radius: 0 0 24px 24px;
   box-shadow: var(--topbar-shadow);
 }
 
@@ -228,7 +224,7 @@ a {
 }
 
 .brand-logo {
-  width: 162px;
+  width: 178px;
   height: auto;
   max-width: 100%;
 }
@@ -253,7 +249,7 @@ a {
   padding: 6px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--nav-link-border);
-  background: var(--nav-link-bg);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .theme-switcher__link {
@@ -326,8 +322,8 @@ a {
   font-family: var(--font-display), sans-serif;
   font-size: clamp(1.4rem, 2.4vw, 2.05rem);
   line-height: 0.92;
-  letter-spacing: -0.05em;
-  font-weight: 700;
+  letter-spacing: -0.045em;
+  font-weight: 600;
   max-width: 18ch;
 }
 
@@ -374,13 +370,13 @@ a {
 }
 
 .nav__link {
-  padding: 10px 14px;
+  padding: 10px 15px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--nav-link-border);
   background: var(--nav-link-bg);
   color: var(--nav-link-text);
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .nav__link:hover,
@@ -443,7 +439,7 @@ a {
   border: 1px solid var(--border);
   background: var(--surface);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(14px);
 }
 
 .panel {
@@ -504,27 +500,27 @@ a {
   max-width: 12ch;
   font-family: var(--font-display), sans-serif;
   font-size: var(--text-hero);
-  line-height: 0.9;
-  letter-spacing: -0.05em;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
   margin-bottom: var(--space-3);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .panel h3 {
   font-family: var(--font-display), sans-serif;
   font-size: var(--text-title);
   margin-bottom: var(--space-1);
-  letter-spacing: -0.03em;
-  line-height: 1.02;
-  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  font-weight: 600;
 }
 
 .panel h4 {
   font-family: var(--font-display), sans-serif;
   font-size: 1.12rem;
   line-height: 1.08;
-  letter-spacing: -0.02em;
-  font-weight: 700;
+  letter-spacing: -0.018em;
+  font-weight: 600;
 }
 
 .panel--glass {
@@ -666,7 +662,7 @@ a {
 .achievement-card:hover,
 .quest-card:hover,
 .leaderboard__row:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   border-color: var(--card-hover-border);
   box-shadow: var(--card-hover-shadow);
 }
@@ -703,7 +699,7 @@ a {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
-  width: var(--metric-card-accent-width, 3px);
+  width: var(--metric-card-accent-width, 2px);
   border-radius: 999px;
   background: var(--metric-card-accent);
   opacity: var(--metric-card-accent-opacity, 0.72);
@@ -818,13 +814,13 @@ a {
   align-items: center;
   justify-content: center;
   min-height: 48px;
-  padding: 0 18px;
+  padding: 0 20px;
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
   font-family: var(--font-display), sans-serif;
-  font-weight: 800;
-  font-size: 0.94rem;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
   box-shadow: var(--shadow-button);
 }
 
@@ -842,6 +838,11 @@ a {
   box-shadow: var(--button-secondary-shadow);
 }
 
+.button--primary:hover,
+.button--secondary:hover {
+  filter: brightness(1.02);
+}
+
 .button--small {
   min-height: 40px;
   padding: 0 14px;
@@ -857,10 +858,10 @@ a {
   min-height: 32px;
   padding: 0 12px;
   border-radius: var(--radius-pill);
-  font-family: var(--font-display), sans-serif;
+  font-family: var(--font-body), sans-serif;
   font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   color: var(--badge-text);
   border: 1px solid var(--badge-border);
   background: var(--badge-bg);
@@ -908,7 +909,7 @@ a {
 
 .xp-meter__track {
   overflow: hidden;
-  height: 12px;
+  height: 10px;
   border-radius: 999px;
   background: var(--meter-track);
 }
@@ -1020,7 +1021,7 @@ a {
   border-radius: 999px;
   font-size: var(--text-caption);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   border: 1px solid var(--economy-badge-border, rgba(255, 255, 255, 0.14));
   background: var(--economy-badge-bg, rgba(255, 255, 255, 0.06));
 }
@@ -1124,6 +1125,19 @@ a {
 .leaderboard__row {
   padding: 18px;
   border-radius: var(--radius-card);
+}
+
+.panel,
+.metric-card,
+.info-card,
+.quest-card,
+.achievement-card,
+.leaderboard__row,
+.connection-row,
+.reward-ladder__card,
+.reward-visual-card,
+.economy-step-card {
+  backdrop-filter: blur(12px);
 }
 
 .achievement-card--urgent {

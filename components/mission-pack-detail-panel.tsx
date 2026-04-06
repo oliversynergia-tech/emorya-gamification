@@ -27,7 +27,7 @@ export function MissionPackDetailPanel({
   packHistory,
   missionView = "all",
   title = "Mission detail",
-  eyebrow = "Mission drill-in",
+  eyebrow = "Mission detail",
 }: {
   activePacks: DashboardData["campaignPacks"];
   packHistory: DashboardData["campaignPackHistory"];

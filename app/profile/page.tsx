@@ -34,14 +34,14 @@ export default async function ProfilePage() {
   });
 
   return (
-    <SiteShell eyebrow="Profile and social connections" currentUser={session?.user ?? null}>
+    <SiteShell eyebrow="Profile" currentUser={session?.user ?? null}>
       <section className="page-hero page-hero--profile">
         <div className={`panel panel--hero panel--hero-compact ${laneVisualProfile.themeClass}`}>
-          <p className="eyebrow">Identity surface</p>
-          <h2>Shape the public face of your account, referral loop, and linked wallet access.</h2>
+          <p className="eyebrow">Profile</p>
+          <h2>Keep your account, wallet, and referrals ready for what comes next.</h2>
           <p className="lede">
-            Profile, achievements, and wallet management now sit inside the same softer shell as the core
-            dashboard, with the referral story visible beside your connection state.
+            Your profile brings together account details, wallet connection, and referral visibility so the next part
+            of your journey feels smooth and fully connected.
           </p>
           <div className="lane-chip-row">
             {laneVisualProfile.chips.map((chip) => (
@@ -65,14 +65,14 @@ export default async function ProfilePage() {
           <div className="metric-card">
             <span>Current referral code</span>
             <strong>{data.user.referralCode}</strong>
-            <small>Share this code to grow invite XP, return visits, and stronger conversions.</small>
+            <small>Share this code to bring in new users, grow referral XP, and strengthen conversion quality.</small>
           </div>
           <div className="metric-card">
-            <span>Active lane</span>
+            <span>Current experience</span>
             <strong>{laneVisualProfile.label}</strong>
             <small>
               {data.user.campaignSource && data.user.campaignSource !== activeCampaignLane
-                ? `${laneVisualProfile.emphasis} Attribution stays on ${data.user.campaignSource}, but the live experience is currently routed through ${activeCampaignLane}.`
+                ? `${laneVisualProfile.emphasis} ${data.user.campaignSource} is still credited as the source, while your live experience is currently guided through ${activeCampaignLane}.`
                 : laneVisualProfile.emphasis}
             </small>
           </div>
@@ -104,11 +104,11 @@ export default async function ProfilePage() {
           <div className="panel__header">
             <div>
               <p className="eyebrow">Wallet link</p>
-              <h3>Sign in to manage identities</h3>
+              <h3>Sign in to manage your profile</h3>
             </div>
           </div>
           <p className="form-note">
-            Wallet linking is available for signed-in users. Go to{" "}
+            Wallet linking is available once you are signed in. Go to{" "}
             <Link href="/auth" className="text-link">
               the auth page
             </Link>{" "}

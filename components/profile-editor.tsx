@@ -94,7 +94,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
     <section className="panel auth-panel">
       <div className="panel__header">
         <div>
-          <p className="eyebrow">Profile editor</p>
+          <p className="eyebrow">Profile settings</p>
           <h3>Edit your account</h3>
         </div>
       </div>
@@ -136,8 +136,8 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
         <div className="panel panel--glass social-editor">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Social connection state</p>
-              <h3>Persist connected handles</h3>
+              <p className="eyebrow">Connected accounts</p>
+              <h3>Keep your public accounts up to date</h3>
             </div>
           </div>
           <div className="social-editor__list">
@@ -154,7 +154,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
                     <strong>{connection.platform}</strong>
                     <small>
                       {connection.verified
-                        ? "Connected in profile state"
+                        ? "Connected on your profile"
                         : `Mark as connected to reflect +${defaultConnectionRewards[connection.platform as keyof typeof defaultConnectionRewards] ?? 15} XP on the ${brandCopy.nativeLoop}`}
                     </small>
                   </div>
@@ -204,9 +204,9 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
         <div className="achievement-card achievement-card--progress">
           <div>
             <strong>Account changes saved</strong>
-            <p>Your mission surfaces will reopen with the same active lens, so you can jump back into the right next step.</p>
+            <p>Your main views will reopen with the same context, so you can jump straight back into the right next step.</p>
             <p className="mission-cue mission-cue--planning">
-              <strong>Review the route ahead</strong> Recheck the mission path now that your account details are up to date.
+              <strong>Review what is next</strong> Recheck your active journey now that your account details are up to date.
             </p>
           </div>
           <div className="achievement-card__side">
@@ -220,7 +220,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
                 }
               }}
             >
-              Return to mission
+              Return to dashboard
             </a>
             <a
               className="text-link"
@@ -232,7 +232,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
                 }
               }}
             >
-              Review mission recap
+              Review profile recap
             </a>
           </div>
         </div>

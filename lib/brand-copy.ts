@@ -15,7 +15,7 @@ const brandCopyProfiles: Record<string, BrandCopyProfile> = {
     walletProduct: "your wallet",
     nativeLoop: "an Emorya-native habit loop",
     progressionLabel: "real Emorya progression",
-    communitySurface: "an Emorya social surface",
+    communitySurface: "an Emorya community account",
     appSync: "the Emorya API",
   },
   multiversx: {
@@ -23,7 +23,7 @@ const brandCopyProfiles: Record<string, BrandCopyProfile> = {
     walletProduct: "your MultiversX wallet",
     nativeLoop: "a chain-native retention loop",
     progressionLabel: "real chain-native progression",
-    communitySurface: "a community surface",
+    communitySurface: "a community account",
     appSync: "a wallet or app sync",
   },
   xportal: {
@@ -31,7 +31,7 @@ const brandCopyProfiles: Record<string, BrandCopyProfile> = {
     walletProduct: "xPortal",
     nativeLoop: "a super app-native habit loop",
     progressionLabel: "real super app progression",
-    communitySurface: "a community surface",
+    communitySurface: "a community account",
     appSync: "an app sync",
   },
 };
@@ -88,5 +88,5 @@ export function getBrandSafeOnboardingHint() {
 }
 
 export function getBrandSafeRewardFocus(attributionSource: string, experienceLane: string, payoutAsset: string) {
-  return `${attributionSource} attribution is preserved, but this mission is currently flowing through the ${experienceLane} bridge into product progression and ${payoutAsset} rewards.`;
+  return `${attributionSource} is still credited as the source, while this journey is currently focused on product progress and ${payoutAsset} rewards through ${experienceLane}.`;
 }

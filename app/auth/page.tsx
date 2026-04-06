@@ -35,7 +35,7 @@ export default async function AuthPage() {
   const returnPack = data.campaignPacks.find((pack) => pack.returnAction) ?? null;
 
   return (
-    <SiteShell eyebrow="Account access" currentUser={session?.user ?? null}>
+    <SiteShell eyebrow="Get started" currentUser={session?.user ?? null}>
       <section className="page-hero page-hero--auth">
         <div className={`panel panel--hero panel--hero-compact ${laneVisualProfile.themeClass}`}>
           <p className="eyebrow">{campaignProfile.label}</p>
@@ -53,10 +53,10 @@ export default async function AuthPage() {
           <p className="form-note">{laneVisualProfile.emphasis}</p>
           <div className="hero__actions">
             <a className="button button--primary" href="#auth-panel">
-              Open auth form
+              Sign in or create account
             </a>
             <a className="button button--secondary" href="/dashboard#campaign-mission">
-              See dashboard
+              Explore the dashboard
             </a>
           </div>
         </div>
@@ -69,33 +69,33 @@ export default async function AuthPage() {
           <div className="metric-card">
             <span>Wallet linking</span>
             <strong>{brandCopy.walletProduct} path live</strong>
-            <small>Signed users can attach MultiversX identity without splitting their profile.</small>
+            <small>Signed-in users can connect their wallet without leaving the same account journey.</small>
           </div>
           <div className="metric-card">
-            <span>Reward path</span>
+            <span>Next reward milestone</span>
             <strong>{data.user.tokenProgram.minimumPoints} eligibility points</strong>
             <small>
-              Level 5 plus activation-ladder completion opens projected {data.user.tokenProgram.asset} redemption and partner campaign payout lanes.
+              Reach level 5 and finish the activation ladder to unlock projected {data.user.tokenProgram.asset} rewards and partner payouts.
             </small>
           </div>
           <div className="metric-card">
-            <span>Active lane</span>
+            <span>Current experience</span>
             <strong>{laneVisualProfile.label}</strong>
             <small>
               {data.user.campaignSource
                 ? data.user.campaignSource === activeCampaignLane
-                  ? `Your current experience is running through the ${activeCampaignLane} lane.`
-                  : `Attribution is preserved as ${data.user.campaignSource}, while the live onboarding flow is being routed through the ${activeCampaignLane} bridge lane.`
-                : "Direct onboarding follows the default activation ladder."}
+                  ? `Your current experience is being shaped by the ${activeCampaignLane} campaign journey.`
+                  : `${data.user.campaignSource} is still credited as the source, while onboarding is currently being guided through ${activeCampaignLane}.`
+                : "Direct sign-ups follow the default activation journey."}
             </small>
           </div>
           <div className="metric-card">
-            <span>Premium hook</span>
+            <span>Premium option</span>
             <strong>{premiumOffer.title}</strong>
             <small>{premiumOffer.cta}</small>
           </div>
           <div className="metric-card">
-            <span>Premium path</span>
+            <span>Best upgrade path</span>
             <strong>{premiumJourney.recommendedTier} first</strong>
             <small>{premiumJourney.nextAction}</small>
           </div>
@@ -105,8 +105,8 @@ export default async function AuthPage() {
         <section className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Reward preview</p>
-              <h3>What opens after account creation</h3>
+              <p className="eyebrow">After sign-up</p>
+              <h3>What opens once your account is live</h3>
             </div>
           </div>
           <div className="info-grid">
@@ -130,7 +130,7 @@ export default async function AuthPage() {
             </div>
           </div>
           <p className="form-note">
-            The funnel starts with XP, then opens token eligibility, then direct-token partner moments for the highest-value referral and premium outcomes.
+            The journey starts with XP, then opens reward eligibility, then deeper reward moments for the strongest referral and premium outcomes.
           </p>
           <div className="achievement-list">
             <article className={`achievement-card lane-summary-card ${laneVisualProfile.themeClass}`}>
@@ -145,7 +145,7 @@ export default async function AuthPage() {
             {premiumOffer.hooks.map((hook) => (
               <article key={hook} className="achievement-card">
                 <div>
-                  <strong>Why premium fits this lane</strong>
+                  <strong>Why premium fits this journey</strong>
                   <p>{hook}</p>
                 </div>
               </article>
@@ -205,7 +205,7 @@ export default async function AuthPage() {
               Best return window: {returnPack.returnWindow === "today" ? "today" : returnPack.returnWindow === "this_week" ? "this week" : "wait for next unlock"}.
             </p>
             <p className="form-note">
-              This pack is still reward-eligible. A return move worth roughly {returnPack.weeklyGoal.shortfallXp} XP closes the current weekly pace gap and keeps the mission lane warm.
+              This pack is still reward-eligible. A return move worth roughly {returnPack.weeklyGoal.shortfallXp} XP closes the current weekly pace gap and keeps momentum moving.
             </p>
             <p className={`mission-cue mission-cue--${returnPack.nextQuestActionable ? "ready" : "planning"}`}>
               <strong>{returnPack.nextQuestActionable ? "Next quest ready" : "Review the route ahead"}</strong>

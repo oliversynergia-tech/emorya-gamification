@@ -10,12 +10,12 @@ import type { AuthUser } from "@/lib/types";
 import { isAdminUser } from "@/server/auth/admin";
 
 const navItems = [
-  { href: "/", label: "Overview" },
+  { href: "/", label: "Home" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/achievements", label: "Achievements" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
-  { href: "/auth", label: "Auth" },
+  { href: "/auth", label: "Sign in" },
   { href: "/admin", label: "Admin" },
 ];
 

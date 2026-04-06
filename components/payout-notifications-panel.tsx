@@ -78,7 +78,7 @@ export function PayoutNotificationsPanel({
               </div>
               <strong>Direct reward scheduled</strong>
               <p>
-                {reward.amount} {reward.asset} is queued on the direct reward rail.
+                {reward.amount} {reward.asset} is queued as a direct reward payout.
                 {reward.rewardProgramName ? ` ${reward.rewardProgramName} is funding this payout.` : ""}
               </p>
             </div>

@@ -22,7 +22,7 @@ export default async function LeaderboardPage() {
   const activeMissionPack = data.campaignPacks[0] ?? null;
 
   return (
-    <SiteShell eyebrow="Competitive pressure" currentUser={session?.user ?? null}>
+    <SiteShell eyebrow="Leaderboard" currentUser={session?.user ?? null}>
       <section className="page-hero page-hero--leaderboard">
         <div className={`panel panel--hero panel--hero-compact ${laneVisualProfile.themeClass}`}>
           <p className="eyebrow">{campaignProfile.label}</p>
@@ -74,23 +74,23 @@ export default async function LeaderboardPage() {
             </small>
           </div>
           <div className="metric-card">
-            <span>Campaign lane</span>
+            <span>Current campaign</span>
             <strong>{campaignProfile.accent}</strong>
             <small>
               {data.user.campaignSource
                 ? data.user.campaignSource === campaignPreset.source
-                  ? `${campaignPreset.source} entrants should see that lane’s campaign quests near the top of the board.`
-                  : `${data.user.campaignSource} traffic is currently attributed upstream, but the live competitive and quest pressure is being routed through the ${campaignPreset.source} bridge lane.`
-                : "Direct entrants see the default Starter and Daily Momentum pressure first."}
+                  ? `${campaignPreset.source} users should see that campaign's strongest quests near the top of the board.`
+                  : `${data.user.campaignSource} is still credited as the source, while the live competitive flow is currently being guided through ${campaignPreset.source}.`
+                : "Direct users see the default activation and momentum journey first."}
             </small>
           </div>
           <div className="metric-card">
-            <span>Lane reward preset</span>
+            <span>Campaign reward effect</span>
             <strong>
               +{(campaignPreset.questXpBoost * 100).toFixed(0)}% XP / +{(campaignPreset.tokenYieldBoost * 100).toFixed(0)}% yield
             </strong>
             <small>
-              Active lane {campaignPreset.source}, attribution {campaignPreset.attributionSource}, weekly shaping {campaignPreset.weeklyTargetOffset} XP, premium pressure {campaignPreset.premiumUpsellMultiplier.toFixed(2)}x, featured tracks {campaignPreset.featuredTracks.join(", ")}.
+              Active campaign {campaignPreset.source}, source credit {campaignPreset.attributionSource}, weekly shift {campaignPreset.weeklyTargetOffset} XP, premium pressure {campaignPreset.premiumUpsellMultiplier.toFixed(2)}x, featured tracks {campaignPreset.featuredTracks.join(", ")}.
             </small>
           </div>
           {activeMissionPack ? (
@@ -108,8 +108,8 @@ export default async function LeaderboardPage() {
         <section className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Competitive loop</p>
-              <h3>Why climbing the board matters in a performance-driven reward loop</h3>
+              <p className="eyebrow">Why it matters</p>
+              <h3>How leaderboard position connects to progress and rewards</h3>
             </div>
           </div>
           <div className="economy-stack">
@@ -118,16 +118,16 @@ export default async function LeaderboardPage() {
                 <span className="economy-badge economy-badge--core">XP core</span>
                 <span>{data.user.totalXp.toLocaleString()} XP</span>
               </div>
-              <strong>The leaderboard is a progression ladder first.</strong>
-              <p>Rank, streaks, weekly output, and premium pressure all reinforce the XP engine before rewards settle anywhere else.</p>
+              <strong>The leaderboard reflects real progress first.</strong>
+              <p>Rank, streaks, weekly output, and premium momentum all build on top of the same core XP system.</p>
             </article>
             <article className="economy-step-card economy-step-card--rail">
               <div className="quest-card__meta">
-                <span className="economy-badge economy-badge--rail">Reward rail</span>
+                <span className="economy-badge economy-badge--rail">Reward layer</span>
                 <span>{data.user.tokenProgram.asset}</span>
               </div>
-              <strong>Tokens stay downstream from performance.</strong>
-              <p>Eligibility, partner assets, and payout workflow turn that XP momentum into configurable redemption and direct-reward outcomes.</p>
+              <strong>Rewards come after progress has been earned.</strong>
+              <p>Eligibility, partner assets, and payout flow turn that XP momentum into real redemption and direct-reward outcomes.</p>
             </article>
           </div>
           <div className="reward-ladder">
@@ -143,7 +143,7 @@ export default async function LeaderboardPage() {
               </div>
             </article>
             <article className="reward-ladder__card">
-              <span>2. Eligibility bank</span>
+              <span>2. Reward readiness</span>
               <strong>{data.user.tokenProgram.eligibilityPoints} pts</strong>
               <small>{data.user.tokenProgram.status === "redeemable" ? "Redemption is unlocked." : data.user.tokenProgram.nextStep}</small>
               <div className="reward-ladder__meter">
@@ -171,7 +171,7 @@ export default async function LeaderboardPage() {
               </small>
             </article>
             <article className="reward-ladder__card">
-              <span>4. Reward rail upside</span>
+              <span>4. Reward upside</span>
               <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} XP / +{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP</strong>
               <small>
                 Annual conversions also project{" "}
@@ -184,16 +184,16 @@ export default async function LeaderboardPage() {
           </div>
           <div className="reward-visual-grid">
             <article className="reward-visual-card">
-              <span>Configured reward rail</span>
+              <span>Reward preview</span>
               <strong>
                 {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
               </strong>
               <small>
-                XP drives position, eligibility points drive redemption readiness, and the configured rail determines how rewards settle.
+                XP drives position, eligibility points drive reward readiness, and the active program determines how rewards settle.
               </small>
             </article>
             <article className="reward-visual-card">
-              <span>Rail settlement</span>
+              <span>Reward settlement</span>
               <strong>
                 {data.user.tokenProgram.claimedBalance} claimed / {data.user.tokenProgram.settledBalance} settled
               </strong>
@@ -235,7 +235,7 @@ export default async function LeaderboardPage() {
             </article>
           </div>
           <p className="form-note">
-            Leaderboard pressure is only one layer. The stronger loop is weekly XP, referral quality, and wallet-linked reward readiness, with tokens acting as configurable payout rails rather than the main progression currency.
+            Leaderboard pressure is only one part of the story. The stronger loop is weekly XP, referral quality, and wallet-linked reward progress, with tokens acting as payouts rather than the main progression currency.
           </p>
           {activeMissionPack ? (
             <article className="achievement-card achievement-card--progress">
