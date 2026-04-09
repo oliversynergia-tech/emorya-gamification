@@ -58,7 +58,7 @@ export async function SiteShell({
         <div className="topbar__controls">
           <nav className="nav">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className="nav__link">
+              <Link key={item.href} href={item.href} className="nav__link button button--secondary">
                 {item.label}
               </Link>
             ))}

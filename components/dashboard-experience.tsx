@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { DashboardData, Quest, QuestProgressUpdate, QuestStatus } from "@/lib/types";
-import { DashboardSnapshot, PremiumFunnelSection, QuestBoardSection } from "@/components/sections";
+import { DashboardSnapshot, QuestBoardSection } from "@/components/sections";
 import { QuestActionsPanel } from "@/components/quest-actions-panel";
 
 type MissionView = "active" | "completed" | "all" | "reward";
@@ -235,7 +235,7 @@ export function DashboardExperience({
   walletAddresses?: string[];
 }) {
   const [data, setData] = useState(initialData);
-  const [missionView, setMissionView] = useState<MissionView>(() => {
+  const [missionView] = useState<MissionView>(() => {
     if (typeof window === "undefined") {
       return "active";
     }
@@ -243,13 +243,6 @@ export function DashboardExperience({
     return stored === "completed" || stored === "all" || stored === "reward" ? stored : "active";
   });
   const highlightedQuestId = data.campaignPacks.find((pack) => pack.nextQuestActionable && pack.nextQuestId)?.nextQuestId ?? null;
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    window.localStorage.setItem("emorya-dashboard-mission-view", missionView);
-  }, [missionView]);
   const filteredData = useMemo<DashboardData>(() => {
     const activePackIds = new Set(data.campaignPacks.map((pack) => pack.packId));
     const completedPackIds = new Set(data.campaignPackHistory.map((pack) => pack.packId));
@@ -354,8 +347,7 @@ export function DashboardExperience({
 
   return (
     <>
-      <DashboardSnapshot data={data} />
-      <DashboardSnapshot data={filteredData} missionView={missionView} onMissionViewChange={setMissionView} />
+      <DashboardSnapshot data={filteredData} missionView={missionView} />
       <QuestBoardSection data={filteredData} />
       <QuestActionsPanel
         quests={filteredData.quests}
@@ -365,7 +357,6 @@ export function DashboardExperience({
         onQuestResult={handleQuestResult}
         activeCampaignPack={data.campaignPacks[0] ?? null}
       />
-      <PremiumFunnelSection data={filteredData} />
     </>
   );
 }

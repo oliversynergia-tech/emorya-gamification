@@ -1,4 +1,4 @@
-import { DashboardSnapshot, HeroSection, LeaderboardSection, PremiumFunnelSection, ProfileSection, QuestBoardSection } from "@/components/sections";
+import { HeroSection, QuestBoardSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
@@ -12,11 +12,7 @@ export default async function HomePage() {
   return (
     <SiteShell currentUser={session?.user ?? null}>
       <HeroSection data={data} />
-      <DashboardSnapshot data={data} />
-      <PremiumFunnelSection data={data} />
       <QuestBoardSection data={data} />
-      <LeaderboardSection data={data} />
-      <ProfileSection data={data} />
     </SiteShell>
   );
 }

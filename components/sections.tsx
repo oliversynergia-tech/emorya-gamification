@@ -4,12 +4,10 @@ import {
   getCampaignPremiumOffer,
   getCampaignSourceProfile,
 } from "@/lib/campaign-source";
-import { getActiveBrandTheme } from "@/lib/brand-themes";
-import { getBrandCopyProfile } from "@/lib/brand-copy";
 import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
-import type { AdminOverviewData, DashboardData, Quest, QuestTrack, SubscriptionTier } from "@/lib/types";
+import type { AdminOverviewData, DashboardData, Quest, SubscriptionTier } from "@/lib/types";
 import { CampaignPackAnalyticsPanel } from "@/components/campaign-pack-analytics-panel";
 import { CampaignPackAlertPanel } from "@/components/campaign-pack-alert-panel";
 import { CampaignPackAuditPanel } from "@/components/campaign-pack-audit-panel";
@@ -98,33 +96,6 @@ const QUEST_BOARD_PHASES = [
 
 function tierClass(tier: SubscriptionTier) {
   return `tier-pill tier-pill--${tier}`;
-}
-
-const activeBrandCopy = getBrandCopyProfile(getActiveBrandTheme().id);
-
-function getTrackLabel(track: QuestTrack) {
-  switch (track) {
-    case "starter":
-      return "Starter Track";
-    case "daily":
-      return "Daily Momentum";
-    case "social":
-      return "Social Growth";
-    case "wallet":
-      return "Wallet Track";
-    case "referral":
-      return "Referral Track";
-    case "premium":
-      return "Premium Track";
-    case "ambassador":
-      return "Ambassador Track";
-    case "creative":
-      return "Creator Track";
-    case "campaign":
-      return "Campaign Track";
-    default:
-      return "Quest Track";
-  }
 }
 
 function getCampaignSourceLabel(source: "direct" | "zealy" | "galxe" | "taskon") {
@@ -520,11 +491,9 @@ export function HeroSection({ data }: { data: DashboardData }) {
 export function DashboardSnapshot({
   data,
   missionView = "active",
-  onMissionViewChange,
 }: {
   data: DashboardData;
   missionView?: "active" | "completed" | "all" | "reward";
-  onMissionViewChange?: (view: "active" | "completed" | "all" | "reward") => void;
 }) {
   const progress = getLevelProgress(data.user.totalXp);
   const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
@@ -533,72 +502,69 @@ export function DashboardSnapshot({
     data.economy.campaignPreset.source,
     data.user.campaignSource,
   );
-  const unlockedAchievements = data.achievements.filter((achievement) => achievement.unlocked);
-  const upcomingAchievements = data.achievements
-    .filter((achievement) => !achievement.unlocked)
-    .sort((left, right) => right.progress - left.progress)
-    .slice(0, 2);
   const priorityAction = getDashboardPriorityAction(data);
 
   return (
     <section className="grid grid--dashboard">
-      <div className="panel">
-        <div className="panel__header">
-          <div>
-            <p className="eyebrow">Your account</p>
-            <h3>{data.user.displayName}</h3>
+      <div className="dashboard-column">
+        <div className="panel">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Your account</p>
+              <h3>{data.user.displayName}</h3>
+            </div>
+            <span className={tierClass(data.user.tier)}>{getTierLabel(data.user.tier)}</span>
           </div>
-          <span className={tierClass(data.user.tier)}>{getTierLabel(data.user.tier)}</span>
+          <div className="xp-meter">
+            <div className="xp-meter__meta">
+              <span>Level {progress.level}</span>
+              <span>{data.user.totalXp} XP</span>
+            </div>
+            <div className="xp-meter__track">
+              <div className="xp-meter__fill" style={{ width: `${progress.progress * 100}%` }} />
+            </div>
+            <small>{progress.remainingXp} XP to Level {progress.level + 1}</small>
+          </div>
+          <div className="info-grid">
+            <div className="info-card">
+              <span>Rank</span>
+              <strong>#{data.user.rank}</strong>
+            </div>
+            <div className="info-card">
+              <span>Referral code</span>
+              <strong>{data.user.referralCode}</strong>
+            </div>
+            <div className="info-card">
+              <span>Invited</span>
+              <strong>{data.user.referral.invitedCount}</strong>
+            </div>
+            <div className="info-card">
+              <span>Referral XP</span>
+              <strong>{data.user.referral.rewardXpEarned}</strong>
+            </div>
+            <div className="info-card">
+              <span>Referral rank</span>
+              <strong>#{data.user.referral.rank}</strong>
+            </div>
+            <div className="info-card">
+              <span>Journey state</span>
+              <strong>{data.user.journeyState.replaceAll("_", " ")}</strong>
+            </div>
+            <div className="info-card">
+              <span>Campaign lane</span>
+              <strong>{laneVisualProfile.label}</strong>
+            </div>
+          </div>
+          <article className={`achievement-card lane-summary-card ${laneVisualProfile.themeClass}`}>
+            <div>
+              <strong>{laneVisualProfile.label}</strong>
+              <p>{laneVisualProfile.emphasis}</p>
+            </div>
+            <div className="achievement-card__side">
+              <span>{campaignProfile.accent}</span>
+            </div>
+          </article>
         </div>
-        <div className="xp-meter">
-          <div className="xp-meter__meta">
-            <span>Level {progress.level}</span>
-            <span>{data.user.totalXp} XP</span>
-          </div>
-          <div className="xp-meter__track">
-            <div className="xp-meter__fill" style={{ width: `${progress.progress * 100}%` }} />
-          </div>
-          <small>{progress.remainingXp} XP to Level {progress.level + 1}</small>
-        </div>
-        <div className="info-grid">
-          <div className="info-card">
-            <span>Rank</span>
-            <strong>#{data.user.rank}</strong>
-          </div>
-          <div className="info-card">
-            <span>Referral code</span>
-            <strong>{data.user.referralCode}</strong>
-          </div>
-          <div className="info-card">
-            <span>Invited</span>
-            <strong>{data.user.referral.invitedCount}</strong>
-          </div>
-          <div className="info-card">
-            <span>Referral XP</span>
-            <strong>{data.user.referral.rewardXpEarned}</strong>
-          </div>
-          <div className="info-card">
-            <span>Referral rank</span>
-            <strong>#{data.user.referral.rank}</strong>
-          </div>
-          <div className="info-card">
-            <span>Journey state</span>
-            <strong>{data.user.journeyState.replaceAll("_", " ")}</strong>
-          </div>
-          <div className="info-card">
-            <span>Campaign lane</span>
-            <strong>{laneVisualProfile.label}</strong>
-          </div>
-        </div>
-        <article className={`achievement-card lane-summary-card ${laneVisualProfile.themeClass}`}>
-          <div>
-            <strong>{laneVisualProfile.label}</strong>
-            <p>{laneVisualProfile.emphasis}</p>
-          </div>
-          <div className="achievement-card__side">
-            <span>{campaignProfile.accent}</span>
-          </div>
-        </article>
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>
@@ -631,139 +597,8 @@ export function DashboardSnapshot({
             ))}
           </div>
         </div>
-        {data.user.campaignSource ? (
-          <div className="panel panel--glass" id="campaign-mission">
-            <div className="panel__header">
-              <div>
-                <p className="eyebrow">Campaign path</p>
-                <h3>
-                  {data.user.campaignSource === data.economy.campaignPreset.source
-                    ? `${data.user.campaignSource} conversion journey`
-                    : `${data.user.campaignSource} to ${data.economy.campaignPreset.source} conversion journey`}
-                </h3>
-              </div>
-              <span className="badge badge--pink">Source aware</span>
-            </div>
-            <p className="form-note">
-              {data.user.campaignSource === data.economy.campaignPreset.source
-                ? `This account is currently moving through the ${data.economy.campaignPreset.source} campaign journey directly.`
-                : `Attribution is preserved as ${data.user.campaignSource}, while the live onboarding flow is currently being routed through ${data.economy.campaignPreset.source}.`}
-            </p>
-            <div className="achievement-list">
-              <article className="achievement-card">
-                <div>
-                  <strong>Campaign source captured</strong>
-                  <p>This account is now recognised as a {data.user.campaignSource} entrant.</p>
-                </div>
-                <span className="badge badge--pink">Done</span>
-              </article>
-              <article className="achievement-card">
-                <div>
-                  <strong>Move into the full reward journey</strong>
-                  <p>{`Wallet linking moves this sourced user into the full ${activeBrandCopy.walletProduct} and reward journey.`}</p>
-                </div>
-                <span className={data.user.starterPath.steps.some((step) => step.label === "Connect xPortal" && step.complete) ? "badge badge--pink" : "badge"}>
-                  {data.user.starterPath.steps.some((step) => step.label === "Connect xPortal" && step.complete) ? "Done" : "Next"}
-                </span>
-              </article>
-              <article className="achievement-card">
-                <div>
-                  <strong>Complete activation ladder</strong>
-                  <p>Turns campaign curiosity into a stable return loop, a wallet-ready account, and real product progression.</p>
-                </div>
-                <span className={data.user.starterPath.complete ? "badge badge--pink" : "badge"}>
-                  {data.user.starterPath.complete ? "Done" : "Open"}
-                </span>
-              </article>
-              <article className="achievement-card">
-                <div>
-                  <strong>Reach reward readiness</strong>
-                  <p>Level 5 plus activation completion, trust, and wallet linkage opens the deeper reward and campaign lanes.</p>
-                </div>
-                <span className={data.user.rewardEligibility.eligible ? "badge badge--pink" : "badge"}>
-                  {data.user.rewardEligibility.eligible ? "Live" : "Pending"}
-                </span>
-              </article>
-            </div>
-          </div>
-        ) : null}
-        {priorityAction && onMissionViewChange ? (
-          <div
-            className={`panel panel--glass ${
-              priorityAction.stateCategory === "Hard block"
-                ? "panel--priority-hard"
-                : priorityAction.stateCategory === "Momentum recovery"
-                  ? "panel--priority-recovery"
-                  : "panel--priority-soft"
-            }`}
-          >
-            <div className="panel__header">
-              <div>
-                <p className="eyebrow">{priorityAction.eyebrow}</p>
-                <h3>{priorityAction.title}</h3>
-              </div>
-              <span className="badge badge--pink">{priorityAction.packLabel}</span>
-            </div>
-            <p className="form-note">{priorityAction.detail}</p>
-            <p className="form-note">{priorityAction.supporting}</p>
-            <p className="form-note">{priorityAction.blockedStateLabel}.</p>
-            <p className="form-note">{priorityAction.stateCategory}.</p>
-            <p className="form-note">
-              {priorityAction.blockedStateLabel === "Blocked by weekly pace"
-                ? "This is a recovery problem, not a hard progression block."
-                : priorityAction.blockedStateLabel === "Ready to resume"
-                  ? "Nothing structural is blocking this pack right now."
-                  : "This pack still has a real progression gate in front of it."}
-            </p>
-            <p className="form-note">
-              {priorityAction.stateMetricLabel}: {priorityAction.stateMetricValue}.
-            </p>
-            <p className="form-note">
-              {priorityAction.secondaryMetricLabel}: {priorityAction.secondaryMetricValue}.
-            </p>
-            <p className="form-note">
-              {priorityAction.followupLabel}: {priorityAction.followupValue}.
-            </p>
-            <p className={`mission-cue mission-cue--${priorityAction.followupIntentLabel === "Immediate progress context" ? "ready" : "planning"}`}>
-              <strong>{priorityAction.followupCtaLabel}</strong> {priorityAction.followupIntentLabel}.
-            </p>
-            <p className="form-note">{priorityAction.followupIntentLabel}.</p>
-            <p className="form-note">
-              {priorityAction.stateCategory === "Momentum recovery"
-                ? "This is a short-term recovery action. The pack is still open, it just needs pace restored."
-                : priorityAction.stateCategory === "Soft block"
-                  ? "This is a lighter mission gate. One clean action should move the path forward."
-                  : "This is a harder progression gate. Clearing it changes what the mission can unlock next."}
-            </p>
-            <p className="form-note">Best return window: {priorityAction.timing}.</p>
-            <div className="hero__actions">
-              <MissionLink
-                className="button button--primary"
-                href={priorityAction.href}
-                packId={priorityAction.packId}
-                eventType="dashboard_priority_cta"
-                ctaLabel={priorityAction.label}
-                ctaVariant={priorityAction.ctaVariant}
-                missionView={missionView}
-              >
-                {priorityAction.label}
-              </MissionLink>
-              <MissionLink
-                className="button button--secondary"
-                href={priorityAction.followupHref}
-                packId={priorityAction.packId}
-                eventType="dashboard_priority_profile_cta"
-                ctaLabel={priorityAction.followupCtaLabel}
-                ctaVariant={priorityAction.followupCtaVariant}
-                missionView={missionView}
-              >
-                {priorityAction.followupCtaLabel}
-              </MissionLink>
-            </div>
-          </div>
-        ) : null}
         {data.campaignPacks.length > 0 ? (
-          <div className="panel panel--glass">
+          <div className="panel panel--glass" id="campaign-mission">
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Active missions</p>
@@ -771,39 +606,22 @@ export function DashboardSnapshot({
               </div>
               <span className="badge badge--pink">{data.campaignPacks.length} active</span>
             </div>
-            <div className="review-actions">
-              <button className={`button ${missionView === "active" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("active")}>
-                Active packs
-              </button>
-              <button className={`button ${missionView === "completed" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("completed")}>
-                Completed packs
-              </button>
-              <button className={`button ${missionView === "all" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("all")}>
-                All mission views
-              </button>
-              <button className={`button ${missionView === "reward" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("reward")}>
-                Reward-bearing
-              </button>
-            </div>
             <div className="achievement-list">
-              {data.campaignPacks.map((pack) => (
+              {data.campaignPacks.slice(0, 2).map((pack) => (
                 <article key={pack.packId} className={`achievement-card ${pack.urgency ? "achievement-card--urgent" : ""}`}>
                   {(() => {
                     const cue = getMissionCueForPack(pack);
                     return (
                   <>
-                  <div>
-                    <strong>{pack.label}</strong>
-                    <p>
+                    <div>
+                      <strong>{pack.label}</strong>
+                      <p>
                       {pack.kind === "feeder"
                         ? `${getCampaignSourceLabel(pack.attributionSource)} feeder flowing into ${getCampaignSourceLabel(pack.activeLane)}.`
                         : pack.kind === "bridge"
                           ? `${getCampaignSourceLabel(pack.activeLane)} bridge mission.`
                           : `${getCampaignSourceLabel(pack.attributionSource)} mission pack.`}{" "}
                       {pack.rewardFocus}
-                    </p>
-                    <p className="form-note">
-                      <span className={`badge ${pack.milestone.tone === "success" ? "badge--pink" : ""}`}>{pack.badgeLabel}</span>
                     </p>
                     <div className="xp-meter campaign-pack-meter">
                       <div className="xp-meter__meta">
@@ -820,66 +638,9 @@ export function DashboardSnapshot({
                         {pack.inProgressQuestCount} in progress, {pack.openQuestCount} open, {pack.rejectedQuestCount} rejected.
                       </small>
                     </div>
-                    <div className="reward-state-bars">
-                      <div>
-                        <span>First win</span>
-                        <div className="reward-state-bars__track">
-                          <div
-                            className="reward-state-bars__fill"
-                            style={{ width: `${pack.completedQuestCount > 0 ? 100 : 0}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <span>Halfway</span>
-                        <div className="reward-state-bars__track">
-                          <div
-                            className="reward-state-bars__fill"
-                            style={{ width: `${pack.totalQuestCount > 1 && pack.completedQuestCount >= Math.ceil(pack.totalQuestCount / 2) ? 100 : Math.min((pack.completedQuestCount / Math.max(Math.ceil(pack.totalQuestCount / 2), 1)) * 100, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <span>Pack complete</span>
-                        <div className="reward-state-bars__track">
-                          <div
-                            className="reward-state-bars__fill reward-state-bars__fill--gold"
-                            style={{ width: `${pack.totalQuestCount > 0 ? (pack.completedQuestCount / pack.totalQuestCount) * 100 : 0}%` }}
-                          />
-                        </div>
-                    </div>
-                    </div>
-                    <p className="form-note">{pack.nextAction}</p>
-                    <p className="form-note">{pack.sequenceReason}</p>
-                    <p className="form-note">{pack.tierPhaseCopy}</p>
-                    <p className="form-note">{pack.priorityReason}</p>
-                    <p className="form-note">{pack.unlockPreview}</p>
-                    <p className="form-note">{pack.unlockRewardPreview}</p>
-                    {pack.returnAction ? <p className="form-note">{pack.returnAction}</p> : null}
-                    {pack.returnAction ? (
-                      <p className="form-note">
-                        Return window: {pack.returnWindow === "today" ? "today" : pack.returnWindow === "this_week" ? "this week" : "wait for next unlock"}.
-                      </p>
-                    ) : null}
-                    <p className="form-note">{pack.leaderboardCallout}</p>
-                    <p className="form-note">{pack.weeklyGoal.label}</p>
-                    {pack.onboardingHint ? <p className="form-note">{pack.onboardingHint}</p> : null}
-                    {pack.urgency ? <p className="form-note">Mission window: {pack.urgency}</p> : null}
-                    {pack.directRewardSummary ? (
-                      <p className="form-note">
-                        Direct reward path: {pack.directRewardSummary.amount} {pack.directRewardSummary.asset} is attached to this mission route.
-                      </p>
-                    ) : null}
-                    {pack.directRewardState ? (
-                      <p className="form-note">
-                        <span className={`badge ${pack.directRewardState.tone === "success" ? "badge--pink" : ""}`}>{pack.directRewardState.label}</span>
-                      </p>
-                    ) : null}
-                    <p className="form-note">{pack.benchmarkNote}</p>
                     <p className={`mission-cue mission-cue--${cue.tone}`}>
-                      <strong>{cue.badge}</strong> {cue.note}
+                      <strong>Next move</strong> {pack.nextAction}
                     </p>
-                    {pack.premiumNudge ? <p className="form-note">{pack.premiumNudge}</p> : null}
                     <div className="hero__actions">
                       <MissionLink
                         className="button button--secondary"
@@ -908,12 +669,16 @@ export function DashboardSnapshot({
                     </div>
                   </div>
                   <div className="achievement-card__side">
+                    <span className={`badge ${pack.milestone.tone === "success" ? "badge--pink" : ""}`}>{pack.badgeLabel}</span>
                     <span>
                       {pack.completedQuestCount}/{pack.totalQuestCount} complete
                     </span>
-                    <span>{pack.inProgressQuestCount} in progress</span>
                     <span>{pack.openQuestCount} open</span>
-                    <span className={`mission-cue-badge mission-cue-badge--${cue.tone}`}>{cue.badge}</span>
+                    {pack.directRewardSummary ? (
+                      <span>{pack.directRewardSummary.amount} {pack.directRewardSummary.asset}</span>
+                    ) : (
+                      <span>{cue.badge}</span>
+                    )}
                   </div>
                   </>
                     );
@@ -921,102 +686,11 @@ export function DashboardSnapshot({
                 </article>
               ))}
             </div>
-            <div className="info-grid">
-              {data.campaignPacks.map((pack) => (
-                <div key={`${pack.packId}-summary`} className="info-card">
-                  <span>{pack.label}</span>
-                  <strong>{pack.nextQuestTitle ?? "Pack complete"}</strong>
-                  <small>
-                    Tracks:{" "}
-                    {pack.featuredTracks.length > 0
-                      ? pack.featuredTracks.map((track) => getTrackLabel(track)).join(", ")
-                      : "Campaign"}
-                  </small>
-                  <small>{pack.priorityReason}</small>
-                  <small>{pack.unlockPreview}</small>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-        <CampaignMissionInboxPanel
-          notifications={data.campaignNotifications}
-          activePacks={data.campaignPacks}
-          missionView={missionView}
-          title="Live pack updates"
-          eyebrow="Campaign inbox"
-        />
-      <MissionPackDetailPanel
-          key={`mission-detail-${missionView}`}
-          activePacks={data.campaignPacks}
-          packHistory={data.campaignPackHistory}
-          missionView={missionView}
-          title="Mission route detail"
-          eyebrow="Campaign detail"
-        />
-        {data.campaignPackHistory.length > 0 ? (
-          <div className="panel panel--glass">
-            <div className="panel__header">
-              <div>
-                <p className="eyebrow">Completed campaign packs</p>
-                <h3>Recent campaign wins</h3>
-              </div>
-              <span className="badge badge--pink">{data.campaignPackHistory.length} archived</span>
-            </div>
-            {data.campaignPacks.length === 0 ? (
-              <div className="review-actions">
-                <button className={`button ${missionView === "active" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("active")}>
-                  Active packs
-                </button>
-                <button className={`button ${missionView === "completed" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("completed")}>
-                  Completed packs
-                </button>
-                <button className={`button ${missionView === "all" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("all")}>
-                  All mission views
-                </button>
-                <button className={`button ${missionView === "reward" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => onMissionViewChange?.("reward")}>
-                  Reward-bearing
-                </button>
-              </div>
+            {data.campaignPacks.length > 2 ? (
+              <p className="form-note">
+                {data.campaignPacks.length - 2} more active mission pack{data.campaignPacks.length - 2 === 1 ? "" : "s"} continue below in your quest board.
+              </p>
             ) : null}
-            <div className="achievement-list">
-              {(() => {
-                const strongestXpPack = data.campaignPackHistory.reduce((best, pack) => (pack.totalXpAwarded > (best?.totalXpAwarded ?? -1) ? pack : best), null as (typeof data.campaignPackHistory)[number] | null);
-                const strongestReferralPack = data.campaignPackHistory.reduce((best, pack) => (pack.referralQuestCount > (best?.referralQuestCount ?? -1) ? pack : best), null as (typeof data.campaignPackHistory)[number] | null);
-                const strongestPremiumPack = data.campaignPackHistory.reduce((best, pack) => (pack.premiumQuestCount > (best?.premiumQuestCount ?? -1) ? pack : best), null as (typeof data.campaignPackHistory)[number] | null);
-
-                return (
-                  <article className="achievement-card achievement-card--progress">
-                    <div>
-                      <strong>Pack comparison snapshot</strong>
-                      <p>
-                        Strongest XP: {strongestXpPack?.label ?? "n/a"}. Strongest referral: {strongestReferralPack?.label ?? "n/a"}. Strongest premium path: {strongestPremiumPack?.label ?? "n/a"}.
-                      </p>
-                    </div>
-                  </article>
-                );
-              })()}
-              {data.campaignPackHistory.map((pack) => (
-                <article key={`history-${pack.packId}`} className="achievement-card">
-                  <div>
-                    <strong>{pack.label}</strong>
-                    <p>{pack.summary}</p>
-                    <p className="form-note">
-                      {pack.kind === "feeder"
-                        ? `${getCampaignSourceLabel(pack.attributionSource)} feeder into ${getCampaignSourceLabel(pack.activeLane)}.`
-                        : `${getCampaignSourceLabel(pack.activeLane)} lane pack.`}
-                    </p>
-                  </div>
-                  <div className="achievement-card__side">
-                    <span>{pack.totalQuestCount} missions</span>
-                    <span>{pack.totalXpAwarded} XP</span>
-                    <span>{pack.referralQuestCount} referral quests</span>
-                    <span>{pack.premiumQuestCount} premium quests</span>
-                    <span>{pack.completedAt ? new Date(pack.completedAt).toLocaleDateString() : "Completed"}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
           </div>
         ) : null}
         <div className="panel panel--glass">
@@ -1055,11 +729,73 @@ export function DashboardSnapshot({
             </p>
           ) : null}
         </div>
+      </div>
+      <div className="dashboard-column">
+        {priorityAction ? (
+          <div className="panel">
+            <div className="panel__header">
+              <div>
+                <p className="eyebrow">Next up</p>
+                <h3>What to do before the quest board</h3>
+              </div>
+              <span className="badge badge--pink">{priorityAction.packLabel}</span>
+            </div>
+            <div className="achievement-list">
+              <article className="achievement-card">
+                <div>
+                  <strong>{priorityAction.title}</strong>
+                  <p>{priorityAction.detail}</p>
+                </div>
+                <div className="achievement-card__side">
+                  <span>{priorityAction.blockedStateLabel}</span>
+                  <span>{priorityAction.stateMetricValue}</span>
+                </div>
+              </article>
+              <article className="achievement-card">
+                <div>
+                  <strong>{priorityAction.followupCtaLabel}</strong>
+                  <p>{priorityAction.supporting}</p>
+                </div>
+                <div className="achievement-card__side">
+                  <span>{priorityAction.secondaryMetricValue}</span>
+                  <span>{priorityAction.followupValue}</span>
+                </div>
+              </article>
+            </div>
+            <p className="mission-cue mission-cue--planning">
+              <strong>{priorityAction.label}</strong> {priorityAction.followupIntentLabel}.
+            </p>
+            <div className="hero__actions">
+              <MissionLink
+                className="button button--primary"
+                href={priorityAction.href}
+                packId={priorityAction.packId}
+                eventType="dashboard_priority_cta"
+                ctaLabel={priorityAction.label}
+                ctaVariant={priorityAction.ctaVariant}
+                missionView={missionView}
+              >
+                {priorityAction.label}
+              </MissionLink>
+              <MissionLink
+                className="button button--secondary"
+                href={priorityAction.followupHref}
+                packId={priorityAction.packId}
+                eventType="dashboard_priority_profile_cta"
+                ctaLabel={priorityAction.followupCtaLabel}
+                ctaVariant={priorityAction.followupCtaVariant}
+                missionView={missionView}
+              >
+                {priorityAction.followupCtaLabel}
+              </MissionLink>
+            </div>
+          </div>
+        ) : null}
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Reward readiness</p>
-              <h3>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked" : "Progress toward rewards"}</h3>
+              <p className="eyebrow">Progress and rewards</p>
+              <h3>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked" : "How progress is compounding"}</h3>
             </div>
             <span className="badge badge--pink">{data.user.tokenProgram.eligibilityPoints} pts</span>
           </div>
@@ -1124,63 +860,9 @@ export function DashboardSnapshot({
               eligibility points to the next redemption step.
             </p>
           ) : null}
-          {data.user.tokenProgram.scheduledDirectRewards.length > 0 ? (
-            <div className="achievement-list">
-              {data.user.tokenProgram.scheduledDirectRewards.map((reward) => (
-                <article key={`${reward.asset}-${reward.amount}`} className="achievement-card">
-                  <div>
-                    <strong>Scheduled direct reward</strong>
-                    <p>
-                      Partner and campaign quests can bypass XP conversion when direct payout rules apply.
-                      {reward.rewardProgramName ? ` ${reward.rewardProgramName} is attached to this lane.` : ""}
-                    </p>
-                  </div>
-                  <div className="achievement-card__side">
-                    <span>{reward.amount} {reward.asset}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : null}
-          {data.user.tokenProgram.assetBreakdown.length > 0 ? (
-            <div className="achievement-list">
-              {data.user.tokenProgram.assetBreakdown.map((asset) => (
-                <article key={asset.asset} className="achievement-card">
-                  <div>
-                    <strong>{asset.asset} payout mix</strong>
-                    <p>{asset.receiptCount} receipts across claimed and settled reward flow.</p>
-                  </div>
-                  <div className="achievement-card__side">
-                    <span>{asset.claimedAmount.toFixed(2)} claimed</span>
-                    <span>{asset.settledAmount.toFixed(2)} settled</span>
-                    <span>{asset.totalAmount.toFixed(2)} total</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : null}
-          {data.user.tokenProgram.programBreakdown.length > 0 ? (
-            <div className="achievement-list">
-              {data.user.tokenProgram.programBreakdown.map((program) => (
-                <article key={`${program.rewardProgramName}-${program.asset}`} className="achievement-card">
-                  <div>
-                    <strong>{program.rewardProgramName}</strong>
-                    <p>
-                      {program.asset} payouts from this reward program.
-                    </p>
-                  </div>
-                  <div className="achievement-card__side">
-                    <span>{program.claimedAmount.toFixed(2)} claimed</span>
-                    <span>{program.settledAmount.toFixed(2)} settled</span>
-                    <span>{program.receiptCount} receipts</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : null}
           {data.user.tokenProgram.redemptionHistory.length > 0 ? (
             <div className="achievement-list">
-              {data.user.tokenProgram.redemptionHistory.map((entry) => (
+              {data.user.tokenProgram.redemptionHistory.slice(0, 2).map((entry) => (
                 <article key={`${entry.asset}-${entry.createdAt}-${entry.tokenAmount}`} className="achievement-card">
                   <div>
                     <strong>{entry.status === "settled" ? "Settled redemption" : "Claimed redemption"}</strong>
@@ -1200,169 +882,6 @@ export function DashboardSnapshot({
               ))}
             </div>
           ) : null}
-        </div>
-        <PayoutNotificationsPanel
-          notifications={data.user.tokenProgram.notifications}
-          scheduledDirectRewards={data.user.tokenProgram.scheduledDirectRewards}
-          title="Claimed, settled, and scheduled reward events"
-        />
-        <div className="panel panel--glass">
-          <div className="panel__header">
-            <div>
-              <p className="eyebrow">How rewards work</p>
-              <h3>Progress first, rewards second</h3>
-            </div>
-            <span className="badge badge--pink">{data.economy.payoutAsset}</span>
-          </div>
-          <p className="form-note">
-            Progress drives the system first. Premium, referrals, partner assets, and direct payouts only increase or settle value after the core journey is already moving.
-          </p>
-          <div className="reward-ladder">
-            <article className="reward-ladder__card">
-              <span>1. Earn XP</span>
-              <strong>{data.user.weeklyProgress.xp} XP</strong>
-              <small>{data.user.weeklyProgress.tierLabel} band this week.</small>
-              <div className="reward-ladder__meter">
-                <div
-                  className="reward-ladder__fill"
-                  style={{ width: `${Math.min(data.user.weeklyProgress.progress * 100, 100)}%` }}
-                />
-              </div>
-            </article>
-            <article className="reward-ladder__card">
-              <span>2. Build eligibility</span>
-              <strong>{data.user.tokenProgram.eligibilityPoints} pts</strong>
-              <small>{data.user.tokenProgram.nextStep}</small>
-              <div className="reward-ladder__meter">
-                <div
-                  className="reward-ladder__fill reward-ladder__fill--gold"
-                  style={{
-                    width: `${Math.min(
-                      (data.user.tokenProgram.eligibilityPoints / Math.max(data.user.tokenProgram.nextRedemptionPoints ?? data.user.tokenProgram.minimumPoints, 1)) * 100,
-                      100,
-                    )}%`,
-                  }}
-                />
-              </div>
-            </article>
-            <article className="reward-ladder__card">
-              <span>3. Add accelerators</span>
-              <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} / +{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP</strong>
-              <small>
-                Premium and referral loops multiply the XP engine first. Annual referral also projects{" "}
-                {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward
-                  ? `${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.amount} ${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.asset}`
-                  : "direct token upside"}
-                .
-              </small>
-            </article>
-            <article className="reward-ladder__card">
-              <span>4. Settle through rails</span>
-              <strong>{data.economy.xpMultipliers.monthly.toFixed(2)}x / {data.economy.xpMultipliers.annual.toFixed(2)}x XP</strong>
-              <small>{data.economy.tokenMultipliers.monthly.toFixed(2)}x / {data.economy.tokenMultipliers.annual.toFixed(2)}x token yield across the active reward program and partner asset rails.</small>
-            </article>
-          </div>
-        </div>
-        <div className="referral-summary">
-          <div className="quest-card__meta">
-            <span>{data.user.referral.convertedCount} converted</span>
-            <span>{data.user.referral.pendingConversionXp} XP still available</span>
-          </div>
-          {data.user.referral.recentReferrals.length ? (
-            <div className="referral-list">
-              {data.user.referral.recentReferrals.map((referral) => (
-                <article key={`${referral.displayName}-${referral.joinedAt}`} className="referral-item">
-                  <div>
-                    <strong>{referral.displayName}</strong>
-                    <small>{referral.status === "converted" ? "Premium conversion" : "Joined with your code"}</small>
-                  </div>
-                  <span className={tierClass(referral.tier)}>{getTierLabel(referral.tier)}</span>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <small className="form-note">No referred users yet. Share your code to start the referral loop.</small>
-          )}
-        </div>
-        <div className="achievement-spotlight">
-          <div className="panel__header">
-            <div>
-              <p className="eyebrow">Achievement spotlight</p>
-              <h3>{unlockedAchievements.length} achievements unlocked</h3>
-            </div>
-            <span className="badge badge--pink">Prestige</span>
-          </div>
-          <div className="achievement-grid">
-            {data.campaignPacks.map((pack) => (
-              <article key={`pack-badge-${pack.packId}`} className="achievement-card achievement-card--unlocked">
-                <div className="quest-card__meta">
-                  <span>Campaign badge</span>
-                  <span>{pack.badgeLabel}</span>
-                </div>
-                <strong>{pack.label}</strong>
-                <p>{pack.milestone.label}. {pack.sequenceReason}</p>
-              </article>
-            ))}
-            {unlockedAchievements.slice(0, 2).map((achievement) => (
-              <article key={achievement.id} className="achievement-card achievement-card--unlocked">
-                <div className="quest-card__meta">
-                  <span>Unlocked</span>
-                  <span>100%</span>
-                </div>
-                <strong>{achievement.name}</strong>
-                <p>{achievement.description}</p>
-              </article>
-            ))}
-            {upcomingAchievements.map((achievement) => (
-              <article key={achievement.id} className="achievement-card achievement-card--progress">
-                <div className="quest-card__meta">
-                  <span>In progress</span>
-                  <span>{Math.round(achievement.progress * 100)}%</span>
-                </div>
-                <strong>{achievement.name}</strong>
-                <p>{achievement.description}</p>
-                <div className="achievement-progress">
-                  <div className="achievement-progress__fill" style={{ width: `${achievement.progress * 100}%` }} />
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-        <TokenReceiptHistoryPanel
-          history={data.user.tokenProgram.redemptionHistory}
-          title="Receipt and payout detail"
-          eyebrow="Payout receipts"
-        />
-      </div>
-      <div className="panel">
-        <div className="panel__header">
-          <div>
-            <p className="eyebrow">Recommended quests</p>
-            <h3>Your next best moves</h3>
-          </div>
-          <span className="badge">Up to 155 XP</span>
-        </div>
-        <div className="quest-list">
-          {data.quests.slice(0, 4).map((quest) => (
-            <article
-              key={quest.id}
-              className={`quest-card quest-card--state-${quest.status}`}
-            >
-              <div>
-                <div className="quest-card__meta">
-                  <span>{quest.category}</span>
-                  <span>{quest.difficulty}</span>
-                </div>
-                <h4>{quest.title}</h4>
-                <p>{quest.description}</p>
-                <small className="quest-card__note">{getQuestStatusNote(quest.status)}</small>
-              </div>
-              <div className="quest-card__footer">
-                <span>{quest.xpReward} XP</span>
-                <strong>{getQuestStatusLabel(quest.status)}</strong>
-              </div>
-            </article>
-          ))}
         </div>
       </div>
     </section>
