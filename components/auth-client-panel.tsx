@@ -152,7 +152,7 @@ export function AuthClientPanel({
       {message ? <p className="status status--success">{message}</p> : null}
       {message ? (
         <p className="mission-cue mission-cue--ready">
-          <strong>Next step ready</strong> Your dashboard will reopen on the most relevant live journey after sign-in.
+          <strong>Next step ready</strong> Your dashboard will reopen in the right place after sign-in.
         </p>
       ) : null}
       {error ? <p className="status status--error">{error}</p> : null}
@@ -184,7 +184,7 @@ export function AuthClientPanel({
               </article>
               <article className="achievement-card lane-pressure-card">
                 <div>
-                  <strong>Current premium push</strong>
+                  <strong>Premium focus</strong>
                   <p>{premiumJourney.lanePressure}</p>
                 </div>
               </article>
@@ -205,7 +205,7 @@ export function AuthClientPanel({
         </div>
       ) : null}
       <p className="form-note">
-        Sign-up requires a password of at least 10 characters. Referral codes are optional, reward the inviter automatically, and help shape what opens next in the premium journey.
+        Sign-up requires a password of at least 10 characters. Referral codes are optional and automatically reward the inviter.
       </p>
       {premiumOffer ? <p className="form-note">{premiumOffer.cta}</p> : null}
     </section>

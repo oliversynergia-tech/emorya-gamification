@@ -62,42 +62,32 @@ export default async function AuthPage() {
         </div>
         <div className="panel panel--stack page-aside">
           <div className="metric-card">
-            <span>Referral-ready</span>
-            <strong>Invite on sign-up</strong>
-            <small>New users can join with a referral code and trigger XP rewards automatically.</small>
+            <span>Fast start</span>
+            <strong>Create your account</strong>
+            <small>Get into the app, start your activation path, and unlock the first real rewards.</small>
           </div>
           <div className="metric-card">
             <span>Wallet linking</span>
-            <strong>{brandCopy.walletProduct} path live</strong>
-            <small>Signed-in users can connect their wallet without leaving the same account journey.</small>
+            <strong>Connect {brandCopy.walletProduct}</strong>
+            <small>Link your wallet when you are ready to move deeper into rewards and progression.</small>
           </div>
           <div className="metric-card">
-            <span>Next reward milestone</span>
-            <strong>{data.user.tokenProgram.minimumPoints} eligibility points</strong>
+            <span>First milestone</span>
+            <strong>Finish the activation ladder</strong>
             <small>
-              Reach level 5 and finish the activation ladder to unlock projected {data.user.tokenProgram.asset} rewards and partner payouts.
+              That is where setup gives way to real progress, momentum, and rewards.
             </small>
           </div>
           <div className="metric-card">
-            <span>Current experience</span>
-            <strong>{laneVisualProfile.label}</strong>
+            <span>Premium path</span>
+            <strong>{premiumOffer.title}</strong>
             <small>
               {data.user.campaignSource
                 ? data.user.campaignSource === activeCampaignLane
-                  ? `Your current experience is being shaped by the ${activeCampaignLane} campaign journey.`
-                  : `${data.user.campaignSource} is still credited as the source, while onboarding is currently being guided through ${activeCampaignLane}.`
-                : "Direct sign-ups follow the default activation journey."}
+                  ? premiumOffer.cta
+                  : `${data.user.campaignSource} remains the source while ${activeCampaignLane} is shaping this onboarding flow.`
+                : premiumOffer.cta}
             </small>
-          </div>
-          <div className="metric-card">
-            <span>Premium option</span>
-            <strong>{premiumOffer.title}</strong>
-            <small>{premiumOffer.cta}</small>
-          </div>
-          <div className="metric-card">
-            <span>Best upgrade path</span>
-            <strong>{premiumJourney.recommendedTier} first</strong>
-            <small>{premiumJourney.nextAction}</small>
           </div>
         </div>
       </section>
@@ -106,31 +96,29 @@ export default async function AuthPage() {
           <div className="panel__header">
             <div>
               <p className="eyebrow">After sign-up</p>
-              <h3>What opens once your account is live</h3>
+              <h3>What opens next</h3>
             </div>
           </div>
           <div className="info-grid">
             <div className="info-card">
-              <span>Monthly referral</span>
-              <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} XP</strong>
+              <span>Referral rewards</span>
+              <strong>Invite and grow faster</strong>
             </div>
             <div className="info-card">
-              <span>Annual referral</span>
-              <strong>
-                +{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP + {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.amount} {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.asset}
-              </strong>
+              <span>Wallet-linked rewards</span>
+              <strong>Deeper progression unlocks</strong>
             </div>
             <div className="info-card">
-              <span>Monthly multiplier</span>
-              <strong>1.15x redemption</strong>
+              <span>Premium lift</span>
+              <strong>{premiumJourney.recommendedTier} is the strongest first step</strong>
             </div>
             <div className="info-card">
-              <span>Annual multiplier</span>
-              <strong>1.30x redemption</strong>
+              <span>Reward direction</span>
+              <strong>{data.user.tokenProgram.asset} readiness follows progress</strong>
             </div>
           </div>
           <p className="form-note">
-            The journey starts with XP, then opens reward eligibility, then deeper reward moments for the strongest referral and premium outcomes.
+            Sign-up is only the start. The real value comes from activation, repeat use, and the stronger reward paths that open after that.
           </p>
           <div className="achievement-list">
             <article className={`achievement-card lane-summary-card ${laneVisualProfile.themeClass}`}>
@@ -142,22 +130,24 @@ export default async function AuthPage() {
                 <span>{campaignProfile.accent}</span>
               </div>
             </article>
-            {premiumOffer.hooks.map((hook) => (
-              <article key={hook} className="achievement-card">
-                <div>
-                  <strong>Why premium fits this journey</strong>
-                  <p>{hook}</p>
-                </div>
-              </article>
-            ))}
-            {premiumJourney.pathSteps.map((step, index) => (
-              <article key={step} className="achievement-card">
-                <div>
-                  <strong>Premium step {index + 1}</strong>
-                  <p>{step}</p>
-                </div>
-              </article>
-            ))}
+            <article className="achievement-card">
+              <div>
+                <strong>Activation comes first</strong>
+                <p>Complete your setup, connect the right tools, and start the first real in-app actions.</p>
+              </div>
+            </article>
+            <article className="achievement-card">
+              <div>
+                <strong>Momentum comes next</strong>
+                <p>Weekly progress, repeat use, and referrals are what turn a new account into real momentum.</p>
+              </div>
+            </article>
+            <article className="achievement-card">
+              <div>
+                <strong>Premium deepens the value</strong>
+                <p>{premiumJourney.nextAction}</p>
+              </div>
+            </article>
           </div>
         </section>
         <section className="panel panel--glass">
@@ -195,24 +185,20 @@ export default async function AuthPage() {
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Return path</p>
-                <h3>Your live mission needs a comeback move</h3>
+                <h3>Pick up where you left off</h3>
               </div>
               <span className="badge badge--pink">{returnPack.label}</span>
             </div>
             <p className="form-note">{returnPack.returnAction}</p>
-            <p className="form-note">{returnPack.unlockPreview}</p>
             <p className="form-note">
-              Best return window: {returnPack.returnWindow === "today" ? "today" : returnPack.returnWindow === "this_week" ? "this week" : "wait for next unlock"}.
-            </p>
-            <p className="form-note">
-              This pack is still reward-eligible. A return move worth roughly {returnPack.weeklyGoal.shortfallXp} XP closes the current weekly pace gap and keeps momentum moving.
+              Best return window: {returnPack.returnWindow === "today" ? "today" : returnPack.returnWindow === "this_week" ? "this week" : "after the next unlock"}.
             </p>
             <p className={`mission-cue mission-cue--${returnPack.nextQuestActionable ? "ready" : "planning"}`}>
               <strong>{returnPack.nextQuestActionable ? "Next quest ready" : "Review the route ahead"}</strong>
               {` `}
               {returnPack.nextQuestActionable && returnPack.nextQuestTitle
                 ? `${returnPack.nextQuestTitle} is ready as the strongest next comeback move.`
-                : "Open the mission path first to see which comeback step will move this route forward fastest."}
+                : "Open your missions to see the best next step."}
             </p>
             <div className="hero__actions">
               <MissionLink

@@ -74,19 +74,19 @@ export function getBrandSafeQuestDescription(description: string) {
 
 export function getBrandSafeWalletLinkPrompt() {
   const profile = getActiveBrandCopyProfile();
-  return `Connect ${profile.walletProduct} to move this campaign path into the full reward and payout flow.`;
+  return `Connect ${profile.walletProduct} to unlock the full reward and payout experience.`;
 }
 
 export function getBrandSafeStarterPathPrompt() {
   const profile = getActiveBrandCopyProfile();
-  return `Finish the activation ladder so this campaign interest turns into ${profile.nativeLoop}.`;
+  return `Finish the activation ladder to unlock ${profile.nativeLoop}.`;
 }
 
 export function getBrandSafeOnboardingHint() {
   const profile = getActiveBrandCopyProfile();
-  return `Start here: finish the activation ladder, connect ${profile.walletProduct}, and complete your first meaningful product actions. That is the shortest path from campaign arrival to ${profile.progressionLabel}.`;
+  return `Start here: finish the activation ladder, connect ${profile.walletProduct}, and complete your first meaningful product actions to unlock ${profile.progressionLabel}.`;
 }
 
 export function getBrandSafeRewardFocus(attributionSource: string, experienceLane: string, payoutAsset: string) {
-  return `${attributionSource} is still credited as the source, while this journey is currently focused on product progress and ${payoutAsset} rewards through ${experienceLane}.`;
+  return `${attributionSource} remains the source while ${experienceLane} is currently shaping progress and ${payoutAsset} rewards.`;
 }

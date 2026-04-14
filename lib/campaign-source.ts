@@ -10,7 +10,7 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
         label: "Zealy campaign",
         title: "Turn quest sign-ups into real Emorya users.",
         description:
-          "The focus here is simple: help new people create an account, connect their wallet, and come back often enough to build a habit.",
+          "This path helps new users get set up quickly, connect what they need, and build enough momentum to keep coming back.",
         accent: "Campaign to customer",
         mood: "bridge" as const,
       };
@@ -19,7 +19,7 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
         label: "Galxe campaign",
         title: "Turn discovery traffic into connected users who actually return.",
         description:
-          "Discovery only matters if it turns into account setup, product use, and repeat engagement. That is the job of this journey.",
+          "This path turns first discovery into account setup, real product use, and the kind of repeat engagement that lasts.",
         accent: "Discovery to loyalty",
         mood: "feeder" as const,
       };
@@ -28,13 +28,13 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
         label: "TaskOn campaign",
         title: "Convert high-intent participants into activated long-term users.",
         description:
-          "This journey should carry task momentum into product familiarity, repeat use, and deeper commitment after the first campaign touch.",
+          "This path carries early task momentum into product familiarity, repeat use, and deeper commitment over time.",
         accent: "Intent to commitment",
         mood: "feeder" as const,
       };
     default:
       return {
-        label: "Direct journey",
+        label: "Direct experience",
         title:
           activeThemeId === "xportal"
             ? "From crypto newbie to super app native, one quest at a time."
@@ -42,7 +42,7 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
               ? "Turn curious users into stakers, builders, and believers."
               : "Turn first interest into activation, loyalty, and real reward progress.",
         description:
-          "This path is about smooth onboarding, real app use, steady weekly momentum, and growth through trust and referrals.",
+          "Start smoothly, build real momentum, and grow through trust and referrals.",
         accent: "First touch to growth",
         mood: "direct" as const,
       };
@@ -59,8 +59,8 @@ export function getCampaignLaneVisualProfile(
   if (source === "zealy" || activeLane === "zealy") {
     return {
       themeClass: "lane-theme--bridge",
-      label: isBridged ? "Zealy-guided journey" : "Zealy journey",
-      emphasis: "Move people quickly from campaign curiosity into account setup, wallet connection, and repeat product use.",
+      label: isBridged ? "Zealy-guided experience" : "Zealy experience",
+      emphasis: "Bring users smoothly from first interest into account setup, wallet connection, and repeat product use.",
       chips: ["Campaign start", "Connect your wallet", "Come back weekly"],
     };
   }
@@ -68,10 +68,10 @@ export function getCampaignLaneVisualProfile(
   if (source === "galxe") {
     return {
       themeClass: "lane-theme--feeder",
-      label: isBridged ? "Galxe-led journey" : "Galxe journey",
+      label: isBridged ? "Galxe-led experience" : "Galxe experience",
       emphasis: isBridged
-        ? "Galxe is still credited as the source, but the live experience is being shaped around stronger activation and repeat use."
-        : "Galxe is running as its own discovery-to-activation journey.",
+        ? "Galxe remains the source while the current experience focuses on stronger activation and repeat use."
+        : "Galxe is currently running as its own discovery-to-activation experience.",
       chips: ["Discovery", isBridged ? "Stronger onboarding" : "Live campaign", "Build momentum"],
     };
   }
@@ -79,17 +79,17 @@ export function getCampaignLaneVisualProfile(
   if (source === "taskon") {
     return {
       themeClass: "lane-theme--task",
-      label: isBridged ? "TaskOn-led journey" : "TaskOn journey",
+      label: isBridged ? "TaskOn-led experience" : "TaskOn experience",
       emphasis: isBridged
-        ? "TaskOn is still the source, but the live experience is tuned to push faster onboarding and stronger follow-through."
-        : "TaskOn is running as its own high-intent journey with a stronger push toward activation.",
+        ? "TaskOn remains the source while the current experience pushes faster onboarding and stronger follow-through."
+        : "TaskOn is currently running as its own high-intent experience with a stronger push toward activation.",
       chips: ["High intent", isBridged ? "Faster setup" : "Live campaign", "Stay engaged"],
     };
   }
 
   return {
     themeClass: "lane-theme--direct",
-    label: "Core journey",
+    label: "Core experience",
     emphasis: "Start with activation, build weekly momentum, then open the higher-value commitment and reward paths.",
     chips: ["Get started", "Build momentum", "Unlock more"],
   };
@@ -115,14 +115,14 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
           "Monthly premium turns one-off discovery into recurring weekly reward accumulation.",
           "Annual premium makes referral conversions and claimed-to-settled payouts materially stronger.",
         ],
-        cta: "Use premium to turn campaign discovery into retention and redemption velocity.",
+        cta: "Use premium to turn early discovery into stronger retention and reward progress.",
       };
     case "taskon":
       return {
         title: "Push task momentum into higher-trust premium progression",
-        summary: "TaskOn users often arrive with strong intent, so premium should feel like the deeper version of a journey they already value.",
+        summary: "TaskOn users often arrive with strong intent, so premium should feel like the deeper version of an experience they already value.",
         hooks: [
-          "Monthly premium adds higher-yield missions on top of the core task journey.",
+          "Monthly premium adds higher-yield missions on top of the core task flow.",
           "Annual premium compounds XP, referral leverage, and direct-token upside for the most committed users.",
         ],
         cta: "Upgrade once you want deeper challenges and stronger rewards.",
@@ -179,14 +179,14 @@ export function getCampaignPremiumJourney(
         pathSteps: [
           "Capture the signup and make the first weekly reward band feel attainable.",
           "Use Monthly to create recurring reward accumulation and retention.",
-          "Promote Annual when referrals and redemption history start to matter.",
+          "Promote Annual when referrals and reward history start to matter.",
         ],
-        lanePressure: `Galxe traffic is currently being guided through an activation-first journey that emphasizes ${featuredTracks}, with ${premiumPressure} and ${weeklyShift} to keep discovery users returning.`,
+        lanePressure: `Galxe is currently emphasizing ${featuredTracks}, with ${premiumPressure} and ${weeklyShift} helping discovery users come back.`,
       };
     case "taskon":
       return {
         recommendedTier: "annual" as const,
-        nextAction: "Position premium as access to the deeper, higher-trust version of the journey.",
+        nextAction: "Position premium as the deeper, higher-trust version of the experience.",
         monthlyReason: "Monthly is still useful, but mostly as a proof step into higher-yield mission depth.",
         annualReason: "Annual is the real fit for TaskOn when platform differentiation is active, because the strongest upside comes from long-horizon mission depth, referrals, and token moments.",
         pathSteps: [
@@ -194,7 +194,7 @@ export function getCampaignPremiumJourney(
           "Use Monthly only if they need a softer first commitment.",
           "Push Annual once trust, mission depth, and direct-reward upside are visible.",
         ],
-        lanePressure: `TaskOn traffic is currently being guided through a higher-intent activation path that emphasizes ${featuredTracks} and uses ${premiumPressure} with ${weeklyShift} to frame premium as the serious next step.`,
+        lanePressure: `TaskOn is currently emphasizing ${featuredTracks}, with ${premiumPressure} and ${weeklyShift} framing premium as the serious next step.`,
       };
     default:
       return {
@@ -207,7 +207,7 @@ export function getCampaignPremiumJourney(
           "Convert to Monthly when weekly momentum and better quest yield become clear.",
           "Offer Annual as the strongest route once the user wants the best reward economics.",
         ],
-        lanePressure: `Direct onboarding is emphasizing ${featuredTracks} while applying ${premiumPressure} and ${weeklyShift} to the premium journey.`,
+        lanePressure: `Direct onboarding is currently emphasizing ${featuredTracks}, with ${premiumPressure} and ${weeklyShift} strengthening the premium path.`,
       };
   }
 }

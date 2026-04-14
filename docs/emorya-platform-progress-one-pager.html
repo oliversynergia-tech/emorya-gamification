@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emorya Platform Build Progress Report</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f0fb;
+        --paper: #ffffff;
+        --text: #1d1430;
+        --muted: #675a82;
+        --line: #ddd3f0;
+        --accent: #6f53b9;
+        --accent-strong: #42276f;
+        --accent-soft: #efe8ff;
+        --success: #16815a;
+        --success-soft: #e8f7f0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #f1edfa 0%, #fbf9ff 100%);
+        color: var(--text);
+        font: 16px/1.55 "Helvetica Neue", "Inter", "Segoe UI", sans-serif;
+      }
+
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 36px 24px 64px;
+      }
+
+      .sheet {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        padding: 36px;
+        box-shadow: 0 26px 70px rgba(44, 26, 82, 0.09);
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.08;
+      }
+
+      h1 {
+        font-size: 38px;
+        letter-spacing: -0.03em;
+      }
+
+      h2 {
+        margin-top: 28px;
+        font-size: 22px;
+        letter-spacing: -0.02em;
+      }
+
+      h3 {
+        font-size: 17px;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.8fr);
+        gap: 24px;
+        align-items: start;
+      }
+
+      .hero-copy p {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .status-card {
+        border: 1px solid #cfe9dd;
+        background: linear-gradient(180deg, #f3fbf7 0%, #ebf8f1 100%);
+        border-radius: 22px;
+        padding: 22px;
+      }
+
+      .status-card .label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        color: var(--success);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .status-card strong {
+        display: block;
+        font-size: 30px;
+        line-height: 1;
+        letter-spacing: -0.03em;
+      }
+
+      .status-card p {
+        margin-top: 10px;
+        color: #35614e;
+      }
+
+      .summary {
+        margin-top: 24px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+      }
+
+      .summary strong {
+        font-weight: 700;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 24px;
+      }
+
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px;
+        background: #fff;
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 24px;
+        letter-spacing: -0.03em;
+      }
+
+      .metric p {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .section {
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 1px solid var(--line);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 18px;
+        background: #fff;
+      }
+
+      .card h3 {
+        margin-bottom: 10px;
+      }
+
+      .card p {
+        color: var(--muted);
+      }
+
+      ul {
+        margin: 12px 0 0 18px;
+        padding: 0;
+      }
+
+      li {
+        margin: 0 0 8px;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .timeline .card {
+        background: linear-gradient(180deg, #ffffff 0%, #faf8ff 100%);
+      }
+
+      .timeline .step {
+        display: inline-block;
+        margin-bottom: 10px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .footnote {
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        main {
+          max-width: none;
+          margin: 0;
+          padding: 0;
+        }
+
+        .sheet {
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+          padding: 0;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .hero,
+        .metrics,
+        .grid,
+        .timeline {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <article class="sheet">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Internal Progress Report</p>
+            <h1>Emorya platform build is now in refinement, QA, and launch-hardening.</h1>
+            <p>
+              The core product is built. The remaining work is primarily polish, testing, and final launch tightening
+              rather than major feature development.
+            </p>
+          </div>
+          <aside class="status-card">
+            <div class="label">Current Status</div>
+            <strong>Close to completion</strong>
+            <p>
+              Core user journeys, admin operations, theming, rewards, and quest infrastructure are in place. Current
+              focus is quality, consistency, and launch readiness.
+            </p>
+          </aside>
+        </section>
+
+        <div class="summary">
+          <strong>Headline summary:</strong> the platform is already operating as a real multi-brand quest, activation,
+          reward, and campaign system. Emorya is now at the stage where the build is being refined and tested for a
+          launch-ready release, rather than still being assembled.
+        </div>
+
+        <section class="metrics">
+          <article class="metric">
+            <span>Product State</span>
+            <strong>Built</strong>
+            <p>Core platform architecture, user experience, and admin operations are live in the build.</p>
+          </article>
+          <article class="metric">
+            <span>Brand Skins</span>
+            <strong>Ready</strong>
+            <p>Emorya, xPortal, and MultiversX skins are already running through the same product shell.</p>
+          </article>
+          <article class="metric">
+            <span>Admin Posture</span>
+            <strong>Hardened</strong>
+            <p>Public admin exposure has been removed and control access is segmented behind protected roles.</p>
+          </article>
+          <article class="metric">
+            <span>Current Focus</span>
+            <strong>Refinement</strong>
+            <p>Testing, copy polish, visual tightening, and end-to-end launch QA are now the priority.</p>
+          </article>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">What Is Already In Place</p>
+          <div class="grid">
+            <article class="card">
+              <h3>Built-in login and identity</h3>
+              <p>The platform already supports native account creation and sign-in with a real identity model.</p>
+              <ul>
+                <li>Email/password authentication is live</li>
+                <li>Signed HTTP-only cookie sessions are in place</li>
+                <li>MultiversX wallet linking is built into the same user identity layer</li>
+                <li>Profile, leaderboard, achievements, and dashboard all run on the same session model</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Activation and quest system</h3>
+              <p>The Emorya journey is now structured around activation, progression, and repeat use.</p>
+              <ul>
+                <li>Activation-first quest board is in place</li>
+                <li>Custom tasks and guided quest creation are already built for admins</li>
+                <li>Reusable quest templates and task blocks are supported</li>
+                <li>Proof upload, text submission, wallet checks, API checks, and manual review are all supported</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Reward types and token registry</h3>
+              <p>The reward layer is already structured for real token-based campaign operations.</p>
+              <ul>
+                <li>Reward asset registry for accepted payout tokens is built</li>
+                <li>Reward programs can map assets to live payout logic</li>
+                <li>Direct rewards, redemption, referral rewards, premium rewards, and ambassador rewards are supported</li>
+                <li>Reward eligibility logic and settlement operations already exist in the admin layer</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Skins and reskinnable functionality</h3>
+              <p>The platform is already operating as a reusable shell rather than a one-brand prototype.</p>
+              <ul>
+                <li>Emorya, xPortal, and MultiversX skins are ready</li>
+                <li>The same product can be re-presented with different brand themes</li>
+                <li>Published brand theme control already exists</li>
+                <li>This makes the platform white-label ready for ecosystem use and partner campaigns</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">Operations and Control Layer</p>
+          <div class="grid">
+            <article class="card">
+              <h3>Segmented and secure admin access</h3>
+              <p>The admin surface has been tightened significantly for launch posture.</p>
+              <ul>
+                <li>No admin links are exposed in the public-facing user shell</li>
+                <li>The public <code>/admin</code> route is no longer the live entry point</li>
+                <li>Admin access has moved behind a non-public control-room route</li>
+                <li>Database-backed admin and super-admin role checks remain active</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Operational tooling already built</h3>
+              <p>The platform is not just front-end complete; the operating layer is also in place.</p>
+              <ul>
+                <li>Review queue and moderation flow are working</li>
+                <li>Quest authoring and template management are built</li>
+                <li>Reward assets and reward programs are manageable in admin</li>
+                <li>Payout operations and settlement surfaces already exist for controlled rollout</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">What This Means In Practice</p>
+          <div class="grid">
+            <article class="card">
+              <h3>For Emorya</h3>
+              <p>
+                The platform can already support a real user journey from sign-up, onboarding, and wallet connection
+                into progression, rewards, retention, and premium-style incentives.
+              </p>
+            </article>
+            <article class="card">
+              <h3>For partner use</h3>
+              <p>
+                The build is no longer tied to a single surface. The skin system, reward registry, and flexible quest
+                model mean the same core platform can support branded campaign deployments across the MultiversX ecosystem.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">Current Stage</p>
+          <div class="timeline">
+            <article class="card">
+              <span class="step">Completed</span>
+              <h3>Core product build</h3>
+              <p>
+                Platform architecture, auth, quest engine, reward layer, admin tooling, review flows, skins, and the
+                main user-facing surfaces are already in place.
+              </p>
+            </article>
+            <article class="card">
+              <span class="step">Now</span>
+              <h3>Refinement and testing</h3>
+              <p>
+                The current work is focused on copy tightening, UX polish, launch QA, render hardening, and quality
+                checks across the main Emorya journey.
+              </p>
+            </article>
+            <article class="card">
+              <span class="step">Next</span>
+              <h3>Launch freeze</h3>
+              <p>
+                Final manual QA, live quest-set freeze, and production-ready hardening are the remaining steps before
+                calling the Emorya version ready to launch.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">Recommended Team Readout</p>
+          <div class="card">
+            <p>
+              The platform is now beyond the “concept” or “prototype” stage. Most major system work is complete.
+              The build already supports native login, wallet-linked identity, custom task creation, multiple reward
+              types, token registry management, secure segmented admin access, and fully reskinnable branded deployment.
+              The current stage is about refinement, launch QA, and finishing touches rather than core platform invention.
+            </p>
+          </div>
+          <p class="footnote">
+            Suggested framing for team conversations: <strong>core build complete, refinement and testing in progress,
+            launch-hardening underway.</strong>
+          </p>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>

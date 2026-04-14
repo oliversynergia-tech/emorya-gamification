@@ -45,7 +45,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "First conversion",
         title: "First calorie conversion completed",
         detail:
-          "This is the point where setup turns into real product behavior. It is one of the clearest activation proof moments in the whole journey.",
+          "Setup is complete and real product progress is now underway.",
       };
     case "upgrade-to-premium-monthly":
       return {
@@ -93,7 +93,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "APY boost",
         title: "APY boost status unlocked",
         detail:
-          "The staking lane has now crossed into a true economic incentive moment, not just an XP or trust milestone.",
+          "Your staking status now unlocks a stronger reward incentive.",
       };
     case "weekly-warrior":
       return {
@@ -101,7 +101,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "7-day streak",
         title: "Weekly Warrior completed",
         detail:
-          "This is a real habit milestone. The user has proven repeat behavior, which is a much stronger retention signal than one-off onboarding completions.",
+          "A full week of consistency is complete and the streak is holding strong.",
       };
     case "emorya-marathon":
       return {

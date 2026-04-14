@@ -18,8 +18,10 @@ export default async function LeaderboardPage() {
   );
   const topEntry = data.leaderboard[0];
   const topReferralEntry = data.referralLeaderboard[0];
-  const campaignPreset = data.economy.campaignPreset;
   const activeMissionPack = data.campaignPacks[0] ?? null;
+  const weeklyProgressRemaining = data.user.weeklyProgress.nextThreshold
+    ? Math.max(data.user.weeklyProgress.nextThreshold - data.user.weeklyProgress.xp, 0)
+    : 0;
 
   return (
     <SiteShell eyebrow="Leaderboard" currentUser={session?.user ?? null}>
@@ -56,50 +58,31 @@ export default async function LeaderboardPage() {
             <small>{topReferralEntry ? `${topReferralEntry.xp.toLocaleString()} referral XP on the invite board.` : "Referral standings appear once invite rewards start moving."}</small>
           </div>
           <div className="metric-card">
+            <span>Your next climb</span>
+            <strong>{weeklyProgressRemaining} XP to the next band</strong>
+            <small>
+              Keep quests, streaks, and referrals moving to gain ground quickly.
+            </small>
+          </div>
+          <div className="metric-card">
             <span>Reward preview</span>
             <strong>{data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}</strong>
             <small>
-              {data.user.tokenProgram.status === "redeemable"
-                ? "Projected redemption unlocked from current eligibility points."
-                : `${Math.max((data.user.tokenProgram.nextRedemptionPoints ?? data.user.tokenProgram.minimumPoints) - data.user.tokenProgram.eligibilityPoints, 0)} more points to your next redemption step.`}
+              Build more progress and the reward upside grows with it.
             </small>
           </div>
           <div className="metric-card">
-            <span>Premium delta</span>
+            <span>Premium lift</span>
             <strong>
               {data.economy.xpMultipliers.monthly.toFixed(2)}x / {data.economy.xpMultipliers.annual.toFixed(2)}x
             </strong>
-            <small>
-              Monthly and annual tiers accelerate both XP accumulation and token yield on the active economy program.
-            </small>
-          </div>
-          <div className="metric-card">
-            <span>Current campaign</span>
-            <strong>{campaignProfile.accent}</strong>
-            <small>
-              {data.user.campaignSource
-                ? data.user.campaignSource === campaignPreset.source
-                  ? `${campaignPreset.source} users should see that campaign's strongest quests near the top of the board.`
-                  : `${data.user.campaignSource} is still credited as the source, while the live competitive flow is currently being guided through ${campaignPreset.source}.`
-                : "Direct users see the default activation and momentum journey first."}
-            </small>
-          </div>
-          <div className="metric-card">
-            <span>Campaign reward effect</span>
-            <strong>
-              +{(campaignPreset.questXpBoost * 100).toFixed(0)}% XP / +{(campaignPreset.tokenYieldBoost * 100).toFixed(0)}% yield
-            </strong>
-            <small>
-              Active campaign {campaignPreset.source}, source credit {campaignPreset.attributionSource}, weekly shift {campaignPreset.weeklyTargetOffset} XP, premium pressure {campaignPreset.premiumUpsellMultiplier.toFixed(2)}x, featured tracks {campaignPreset.featuredTracks.join(", ")}.
-            </small>
+            <small>Monthly and annual tiers increase both XP growth and reward potential.</small>
           </div>
           {activeMissionPack ? (
             <div className="metric-card">
-              <span>Live mission carryover</span>
+              <span>Live mission</span>
               <strong>{activeMissionPack.label}</strong>
-              <small>
-                {activeMissionPack.leaderboardCallout} Next move: {activeMissionPack.ctaLabel.toLowerCase()}.
-              </small>
+              <small>{activeMissionPack.leaderboardCallout}</small>
             </div>
           ) : null}
         </div>
@@ -119,7 +102,7 @@ export default async function LeaderboardPage() {
                 <span>{data.user.totalXp.toLocaleString()} XP</span>
               </div>
               <strong>The leaderboard reflects real progress first.</strong>
-              <p>Rank, streaks, weekly output, and premium momentum all build on top of the same core XP system.</p>
+              <p>Rank, streaks, weekly output, and premium momentum all build on the same progression system.</p>
             </article>
             <article className="economy-step-card economy-step-card--rail">
               <div className="quest-card__meta">
@@ -127,12 +110,12 @@ export default async function LeaderboardPage() {
                 <span>{data.user.tokenProgram.asset}</span>
               </div>
               <strong>Rewards come after progress has been earned.</strong>
-              <p>Eligibility, partner assets, and payout flow turn that XP momentum into real redemption and direct-reward outcomes.</p>
+              <p>As progress rises, rewards and payouts start to matter more.</p>
             </article>
           </div>
           <div className="reward-ladder">
             <article className="reward-ladder__card">
-              <span>1. Weekly XP</span>
+              <span>1. Weekly progress</span>
               <strong>{data.user.weeklyProgress.xp} XP</strong>
               <small>{data.user.weeklyProgress.tierLabel} is the current output band.</small>
               <div className="reward-ladder__meter">
@@ -145,7 +128,7 @@ export default async function LeaderboardPage() {
             <article className="reward-ladder__card">
               <span>2. Reward readiness</span>
               <strong>{data.user.tokenProgram.eligibilityPoints} pts</strong>
-              <small>{data.user.tokenProgram.status === "redeemable" ? "Redemption is unlocked." : data.user.tokenProgram.nextStep}</small>
+              <small>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked." : data.user.tokenProgram.nextStep}</small>
               <div className="reward-ladder__meter">
                 <div
                   className="reward-ladder__fill reward-ladder__fill--gold"
@@ -171,10 +154,10 @@ export default async function LeaderboardPage() {
               </small>
             </article>
             <article className="reward-ladder__card">
-              <span>4. Reward upside</span>
+              <span>4. Referral upside</span>
               <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} XP / +{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP</strong>
               <small>
-                Annual conversions also project{" "}
+                Stronger referrals also create{" "}
                 {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward
                   ? `${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.amount} ${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.asset}`
                   : "direct token upside"}
@@ -189,7 +172,7 @@ export default async function LeaderboardPage() {
                 {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
               </strong>
               <small>
-                XP drives position, eligibility points drive reward readiness, and the active program determines how rewards settle.
+                XP moves your position, and your rewards grow as you keep going.
               </small>
             </article>
             <article className="reward-visual-card">
@@ -235,7 +218,7 @@ export default async function LeaderboardPage() {
             </article>
           </div>
           <p className="form-note">
-            Leaderboard pressure is only one part of the story. The stronger loop is weekly XP, referral quality, and wallet-linked reward progress, with tokens acting as payouts rather than the main progression currency.
+            The strongest movement on the board comes from weekly consistency, strong referrals, and steady follow-through.
           </p>
           {activeMissionPack ? (
             <article className="achievement-card achievement-card--progress">

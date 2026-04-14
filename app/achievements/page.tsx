@@ -20,8 +20,7 @@ export default async function AchievementsPage() {
           <p className="eyebrow">Achievements</p>
           <h2>Celebrate the milestones that prove your progress is real.</h2>
           <p className="lede">
-            This is where streaks, referrals, activation wins, and bigger milestones turn into visible proof that
-            your journey is moving forward.
+            This is where streaks, referrals, activation wins, and bigger milestones show up as visible progress.
           </p>
         </div>
         <div className="panel panel--stack page-aside">

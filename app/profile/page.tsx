@@ -40,8 +40,7 @@ export default async function ProfilePage() {
           <p className="eyebrow">Profile</p>
           <h2>Keep your account, wallet, and referrals ready for what comes next.</h2>
           <p className="lede">
-            Your profile brings together account details, wallet connection, and referral visibility so the next part
-            of your journey feels smooth and fully connected.
+            Keep your account details, wallet connection, and referral code up to date so everything works smoothly.
           </p>
           <div className="lane-chip-row">
             {laneVisualProfile.chips.map((chip) => (
@@ -68,11 +67,11 @@ export default async function ProfilePage() {
             <small>Share this code to bring in new users, grow referral XP, and strengthen conversion quality.</small>
           </div>
           <div className="metric-card">
-            <span>Current experience</span>
+            <span>Current mode</span>
             <strong>{laneVisualProfile.label}</strong>
             <small>
               {data.user.campaignSource && data.user.campaignSource !== activeCampaignLane
-                ? `${laneVisualProfile.emphasis} ${data.user.campaignSource} is still credited as the source, while your live experience is currently guided through ${activeCampaignLane}.`
+                ? `${laneVisualProfile.emphasis} ${data.user.campaignSource} remains the source while ${activeCampaignLane} is shaping what you see right now.`
                 : laneVisualProfile.emphasis}
             </small>
           </div>

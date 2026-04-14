@@ -371,12 +371,22 @@ a {
 }
 
 .nav__link {
+  display: inline-block;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--nav-link-border);
   text-decoration: none;
   color: var(--nav-link-text);
   text-align: center;
   white-space: nowrap;
-  border-color: var(--nav-link-border);
   background: var(--nav-link-bg);
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 38px;
+  vertical-align: middle;
 }
 
 .nav__link:hover,
@@ -1946,6 +1956,7 @@ body[data-brand-theme="emorya"] .nav {
 body[data-brand-theme="emorya"] .nav__link {
   background: rgba(255, 255, 255, 0.026);
   border-color: rgba(255, 255, 255, 0.045);
+  line-height: 38px;
 }
 
 body[data-brand-theme="emorya"] .session-chip {

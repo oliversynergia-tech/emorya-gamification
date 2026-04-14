@@ -27,7 +27,7 @@ const QUEST_BOARD_PHASES = [
     key: "activation",
     eyebrow: "Core path",
     title: "Activation ladder",
-    description: "The main route from campaign arrival into a fully activated, reward-ready Emorya user.",
+    description: "Start here to get set up, unlock your account, and open the strongest next steps.",
     slugs: [
       "download-the-emorya-app",
       "open-the-app-for-the-first-time",
@@ -48,7 +48,7 @@ const QUEST_BOARD_PHASES = [
     key: "momentum",
     eyebrow: "Repeat use",
     title: "Daily momentum",
-    description: "Habit and streak quests that turn activation into repeat product behavior.",
+    description: "Keep coming back, build your streak, and turn early progress into a real routine.",
     slugs: [
       "500-in-24",
       "weekly-warrior",
@@ -60,7 +60,7 @@ const QUEST_BOARD_PHASES = [
     key: "commitment",
     eyebrow: "Optional lane",
     title: "Commitment and staking",
-    description: "Optional higher-commitment quests for premium, staking, and monetisation-readiness.",
+    description: "Go deeper with premium and staking once you are ready for bigger upside.",
     slugs: [
       "upgrade-to-premium-monthly",
       "upgrade-to-annual",
@@ -76,7 +76,7 @@ const QUEST_BOARD_PHASES = [
     key: "growth",
     eyebrow: "Amplification",
     title: "Trust and growth",
-    description: "Social proof, referrals, reviews, and creator moments that turn user progress into brand visibility.",
+    description: "Share progress, invite others, and build trust around what you are doing.",
     slugs: [
       "rate-emorya-on-the-app-store",
       "leave-your-first-emorya-review",
@@ -121,7 +121,7 @@ function getMissionCueForPack(pack: DashboardData["campaignPacks"][number]) {
   }
   return {
     badge: "Next route",
-    note: "Review the mission path to see which step opens the strongest route forward.",
+    note: "Check the next mission step to keep your progress moving.",
     tone: "planning",
   } as const;
 }
@@ -135,7 +135,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       return "Open mission board";
     }
     if (href === "/profile") {
-      return "Review premium path";
+      return "See premium options";
     }
     return fallback;
   };
@@ -163,7 +163,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       secondaryMetricValue: walletGatePack.weeklyGoal.label,
       followupLabel: "What changes after this",
       followupValue: walletGatePack.unlockRewardPreview,
-      followupCtaLabel: getFollowupLabelForHref(followupHref, "Review what opens next"),
+      followupCtaLabel: getFollowupLabelForHref(followupHref, "See what opens next"),
       followupHref,
       followupCtaVariant: "priority_followup_review",
       followupIntentLabel: "Immediate progress context",
@@ -177,7 +177,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     const followupHref = "/profile";
     return {
       eyebrow: "Top action",
-      title: "This mission has reached a premium-heavy phase",
+      title: "This mission is ready for the premium step",
       detail: premiumPack.premiumNudge ?? premiumPack.nextAction,
       supporting: premiumPack.unlockPreview,
       href: premiumPack.ctaHref ?? "/profile",
@@ -194,7 +194,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       secondaryMetricValue: premiumPack.weeklyGoal.label,
       followupLabel: "What changes after this",
       followupValue: premiumPack.unlockRewardPreview,
-      followupCtaLabel: getFollowupLabelForHref(followupHref, "Review premium path"),
+      followupCtaLabel: getFollowupLabelForHref(followupHref, "See premium options"),
       followupHref,
       followupCtaVariant: "priority_followup_review",
       followupIntentLabel: "Planning move",
@@ -235,7 +235,7 @@ function getDashboardPriorityAction(data: DashboardData) {
                   : "One strong return move puts this pack back on pace";
     const supporting =
       returnPack.blockageState === "wallet_connection"
-        ? "Wallet connection is still the gate between this mission and the live reward journey."
+        ? "Wallet connection is still the gate between this mission and your rewards."
         : returnPack.blockageState === "trust"
           ? "The next unlock depends on verified activity and cleaner eligibility signals."
           : returnPack.blockageState === "level"
@@ -327,7 +327,7 @@ function getDashboardPriorityAction(data: DashboardData) {
             ? "Plan today's recovery"
             : "Plan this week's recovery"
           : returnPack.blockageState === "ready"
-            ? "Review what opens next"
+            ? "See what opens next"
             : returnPack.blockageState === "wallet_connection"
               ? "See the wallet gate"
               : returnPack.blockageState === "starter_path"
@@ -376,7 +376,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     secondaryMetricValue: nextPack.weeklyGoal.label,
     followupLabel: "What changes after this",
     followupValue: nextPack.unlockRewardPreview,
-    followupCtaLabel: getFollowupLabelForHref(followupHref, "Review what opens next"),
+    followupCtaLabel: getFollowupLabelForHref(followupHref, "See what opens next"),
     followupHref,
     followupCtaVariant: "priority_followup_review",
     followupIntentLabel: "Planning move",
@@ -421,42 +421,41 @@ function renderQuestCard(quest: Quest) {
 
 export function HeroSection({ data }: { data: DashboardData }) {
   const progress = getLevelProgress(data.user.totalXp);
-  const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
-  const laneVisualProfile = getCampaignLaneVisualProfile(
-    data.user.campaignSource ?? data.economy.campaignPreset.source,
-    data.economy.campaignPreset.source,
-    data.user.campaignSource,
-  );
+  const nextStep = data.user.starterPath.nextStepLabel ?? "Open your dashboard";
+  const heroTitle = data.user.currentStreak > 0
+    ? "Keep your progress moving every day."
+    : "Get started, build momentum, and unlock more as you go.";
+  const heroDescription = data.user.currentStreak > 0
+    ? "Pick up where you left off, complete your next quest, and keep your streak alive."
+    : "Start with a few simple steps, come back regularly, and watch your rewards and progress grow.";
 
   return (
     <section className="hero grid">
-      <div className={`panel panel--hero ${laneVisualProfile.themeClass}`}>
-        <p className="eyebrow">{campaignProfile.label}</p>
-        <h2>{campaignProfile.title}</h2>
+      <div className="panel panel--hero lane-theme--direct">
+        <p className="eyebrow">Get started</p>
+        <h2>{heroTitle}</h2>
         <p className="lede">
-          {campaignProfile.description}
+          {heroDescription}
         </p>
         <div className="lane-chip-row">
-          {laneVisualProfile.chips.map((chip) => (
-            <span key={chip} className="badge">
-              {chip}
-            </span>
-          ))}
+          <span className="badge">Complete quests</span>
+          <span className="badge">Keep your streak</span>
+          <span className="badge">Unlock more</span>
         </div>
-        <p className="form-note">{laneVisualProfile.emphasis}</p>
+        <p className="form-note">Open your dashboard to see the best next step.</p>
         <div className="hero__actions">
           <a className="button button--primary" href="/dashboard#campaign-mission">
-            Open dashboard
+            Start now
           </a>
         </div>
         <div className="stats-row">
           <div className="stat-card">
-            <span>Primary goal</span>
-            <strong>Annual Premium</strong>
+            <span>Best next step</span>
+            <strong>{nextStep}</strong>
           </div>
           <div className="stat-card">
-            <span>User tier</span>
-            <strong>{getTierLabel(data.user.tier)}</strong>
+            <span>Current level</span>
+            <strong>Level {progress.level}</strong>
           </div>
           <div className="stat-card">
             <span>Time to next level</span>
@@ -546,6 +545,7 @@ export function DashboardSnapshot({
             <div className="info-card">
               <span>Journey state</span>
               <strong>{data.user.journeyState.replaceAll("_", " ")}</strong>
+              
             </div>
             <div className="info-card">
               <span>Campaign lane</span>
@@ -599,7 +599,7 @@ export function DashboardSnapshot({
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Active missions</p>
-                <h3>Your live mission progress</h3>
+                <h3>Your current mission progress</h3>
               </div>
               <span className="badge badge--pink">{data.campaignPacks.length} active</span>
             </div>
@@ -802,29 +802,29 @@ export function DashboardSnapshot({
                 <span className="economy-badge economy-badge--core">XP core</span>
                 <span>{data.user.totalXp.toLocaleString()} XP</span>
               </div>
-              <strong>XP is the main progression currency.</strong>
-              <p>Levels, streaks, weekly bands, quest ordering, and referral momentum are all driven here first.</p>
+              <strong>XP keeps everything moving.</strong>
+              <p>Levels, streaks, weekly progress, and referrals all build from here.</p>
             </article>
             <article className="economy-step-card economy-step-card--bridge">
               <div className="quest-card__meta">
                 <span className="economy-badge economy-badge--bridge">Reward readiness</span>
                 <span>{data.user.tokenProgram.eligibilityPoints} pts</span>
               </div>
-              <strong>Eligibility points turn progress into reward readiness.</strong>
-              <p>Wallet connection, trust, and recurring activity move you closer to real redeemable rewards.</p>
+              <strong>Eligibility points unlock rewards.</strong>
+              <p>Wallet connection, trust, and repeat activity move you closer to claiming them.</p>
             </article>
             <article className="economy-step-card economy-step-card--rail">
               <div className="quest-card__meta">
                 <span className="economy-badge economy-badge--rail">Payout layer</span>
                 <span>{data.user.tokenProgram.asset}</span>
               </div>
-              <strong>Rewards sit on top of progression, not instead of it.</strong>
-              <p>Reward programs, partner assets, and direct payouts decide how value is delivered after progress has already been earned.</p>
+              <strong>Rewards build on your progress.</strong>
+              <p>Once you qualify, rewards and payouts start to open up.</p>
             </article>
           </div>
           <div className="info-grid">
             <div className="info-card">
-              <span>Projected redemption</span>
+              <span>Reward preview</span>
               <strong>
                 {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
               </strong>
@@ -838,7 +838,7 @@ export function DashboardSnapshot({
               <strong>{data.user.tokenProgram.tierMultiplier.toFixed(2)}x</strong>
             </div>
             <div className="info-card">
-              <span>Status</span>
+              <span>Reward status</span>
               <strong>{data.user.tokenProgram.status.replaceAll("_", " ")}</strong>
             </div>
             <div className="info-card">
@@ -854,7 +854,7 @@ export function DashboardSnapshot({
           {data.user.tokenProgram.nextRedemptionPoints ? (
             <p className="form-note">
               {Math.max(data.user.tokenProgram.nextRedemptionPoints - data.user.tokenProgram.eligibilityPoints, 0)} more
-              eligibility points to the next redemption step.
+              points to the next reward step.
             </p>
           ) : null}
           {data.user.tokenProgram.redemptionHistory.length > 0 ? (
@@ -862,7 +862,7 @@ export function DashboardSnapshot({
               {data.user.tokenProgram.redemptionHistory.slice(0, 2).map((entry) => (
                 <article key={`${entry.asset}-${entry.createdAt}-${entry.tokenAmount}`} className="achievement-card">
                   <div>
-                    <strong>{entry.status === "settled" ? "Settled redemption" : "Claimed redemption"}</strong>
+                    <strong>{entry.status === "settled" ? "Reward settled" : "Reward claimed"}</strong>
                     <p>
                       {entry.eligibilityPointsSpent} eligibility points spent via {entry.source}.
                       {entry.rewardProgramName ? ` ${entry.rewardProgramName}.` : ""}
@@ -901,7 +901,7 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Premium path</p>
-            <h3>How premium fits into the journey</h3>
+            <h3>Why premium helps</h3>
           </div>
           <span className="badge badge--pink">Save 44 EUR annually</span>
         </div>
@@ -923,17 +923,17 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
           {premiumOffer.hooks.map((hook) => (
             <article key={hook} className="achievement-card">
               <div>
-                <strong>Why premium helps here</strong>
+                <strong>Premium benefit</strong>
                 <p>{hook}</p>
               </div>
             </article>
           ))}
-          <article className="achievement-card">
-            <div>
-              <strong>Current campaign effect</strong>
-              <p>
-                {campaignPreset.source} currently adds {(campaignPreset.premiumUpsellMultiplier * 100 - 100).toFixed(0)}%
-                extra premium urgency and shifts weekly targets by {campaignPreset.weeklyTargetOffset} XP.
+            <article className="achievement-card">
+              <div>
+                <strong>Campaign boost</strong>
+                <p>
+                  {campaignPreset.source} currently adds {(campaignPreset.premiumUpsellMultiplier * 100 - 100).toFixed(0)}%
+                  extra premium urgency and shifts weekly targets by {campaignPreset.weeklyTargetOffset} XP.
               </p>
             </div>
             <span className="badge">
@@ -943,9 +943,9 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
           {campaignPreset.attributionSource !== campaignPreset.source ? (
             <article className="achievement-card">
               <div>
-                <strong>Source and live campaign</strong>
+                <strong>Current source</strong>
                 <p>
-                  Attribution remains {campaignPreset.attributionSource}, but premium framing is currently coming from the {campaignPreset.source} bridge lane.
+                  Attribution remains {campaignPreset.attributionSource}, while premium offers are currently shaped by {campaignPreset.source}.
                 </p>
               </div>
             </article>
@@ -1022,7 +1022,7 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
       <div className="panel__header">
         <div>
           <p className="eyebrow">Quest board</p>
-          <h3>Your quest journey, ordered by what matters most next</h3>
+          <h3>Your quests, ordered by what matters most next</h3>
         </div>
         <span className="badge">{activeQuests.length} active / {lockedPreviews.length} previewed</span>
       </div>
@@ -1052,7 +1052,8 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
               </div>
               <span className="badge">{overflowQuests.length} live</span>
             </div>
-            <p className="form-note">These are still active, but they sit outside the main core journey.</p>
+            <p className="form-note">These quests are still live, but they sit outside the main core flow.</p>
+            
             <div className="quest-grid">{overflowQuests.map(renderQuestCard)}</div>
           </section>
         ) : null}
@@ -1060,7 +1061,7 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
           <div className="panel__header">
             <div>
               <p className="eyebrow">Locked previews</p>
-              <h3>What unlocks later in the journey</h3>
+              <h3>What unlocks later</h3>
             </div>
           </div>
           <div className="quest-grid">
@@ -1200,7 +1201,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           </article>
         </div>
         <p className="form-note">
-          Rankings are not just cosmetic. Consistent weekly progress improves position, strengthens reward readiness, and shapes what opens next.
+          Strong rankings are built through weekly progress, better referral performance, and steady follow-through.
         </p>
       </div>
       <div className="panel">
@@ -1218,7 +1219,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           </div>
           <strong>{topReferralEntry ? topReferralEntry.displayName : "Campaign waiting for invites"}</strong>
           <p>
-            Referral rank is shaped by earned invite XP first, then by converted premium joins, so it reflects quality as well as volume.
+            Referral rank reflects both invite momentum and the strength of the users those invites bring into the platform.
           </p>
           <div className="info-grid">
             <div className="info-card">
@@ -1284,7 +1285,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Live activity</p>
-            <h3>Live proof that the platform is moving</h3>
+            <h3>Recent activity</h3>
           </div>
         </div>
         <div className="activity-list">
@@ -1457,7 +1458,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
               <p>
                 {data.user.tokenProgram.eligibilityPoints} eligibility points banked.{" "}
                 {data.user.tokenProgram.status === "redeemable"
-                  ? `Projected redemption: ${data.user.tokenProgram.projectedRedemptionAmount} ${data.user.tokenProgram.asset}.`
+                  ? `Reward preview: ${data.user.tokenProgram.projectedRedemptionAmount} ${data.user.tokenProgram.asset}.`
                   : data.user.tokenProgram.nextStep}
               </p>
             </div>
@@ -1470,7 +1471,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
             <div>
               <strong>Claimed and settled rewards</strong>
               <p>
-                Claimed redemptions are reserved and awaiting payout. Settled balances already reached the user’s reward history.
+                Claimed rewards are reserved and awaiting payout. Settled balances have already been delivered.
               </p>
             </div>
             <div className="achievement-card__side">
@@ -1639,7 +1640,7 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
               </article>
             ))
           ) : (
-            <p className="form-note">No achievements unlocked yet. Keep moving through the quest journey.</p>
+            <p className="form-note">No achievements unlocked yet. Keep moving through the active quests.</p>
           )}
         </div>
       </div>

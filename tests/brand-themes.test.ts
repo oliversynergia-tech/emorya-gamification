@@ -20,7 +20,7 @@ test("active theme tokens include the shell-level variables needed by globals", 
   const cssVariables = getBrandThemeStyleVariables(theme);
 
   assert.equal(theme.brand.platformName, "Emorya Gamification");
-  assert.equal(theme.brand.logoSrc, "/brand/emorya-wordmark.svg");
+  assert.equal(theme.brand.logoSrc, "/brand/emorya-logo-final.png");
 
   for (const key of [
     "--font-display",

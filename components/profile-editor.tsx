@@ -204,9 +204,9 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
         <div className="achievement-card achievement-card--progress">
           <div>
             <strong>Account changes saved</strong>
-            <p>Your main views will reopen with the same context, so you can jump straight back into the right next step.</p>
+            <p>Your main views will reopen with the same context, so you can pick up where you left off.</p>
             <p className="mission-cue mission-cue--planning">
-              <strong>Review what is next</strong> Recheck your active journey now that your account details are up to date.
+              <strong>Check what is next</strong> Recheck your active view now that your account details are up to date.
             </p>
           </div>
           <div className="achievement-card__side">
