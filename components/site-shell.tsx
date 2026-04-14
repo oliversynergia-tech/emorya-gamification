@@ -16,7 +16,6 @@ const navItems = [
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
   { href: "/auth", label: "Sign in" },
-  { href: "/admin", label: "Admin" },
 ];
 
 export async function SiteShell({
@@ -58,7 +57,7 @@ export async function SiteShell({
         <div className="topbar__controls">
           <nav className="nav">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className="nav__link button button--secondary">
+              <Link key={item.href} href={item.href} className="nav__link">
                 {item.label}
               </Link>
             ))}

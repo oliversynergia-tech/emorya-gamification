@@ -448,9 +448,6 @@ export function HeroSection({ data }: { data: DashboardData }) {
           <a className="button button--primary" href="/dashboard#campaign-mission">
             Open dashboard
           </a>
-          <a className="button button--secondary" href="/admin">
-            View admin panel
-          </a>
         </div>
         <div className="stats-row">
           <div className="stat-card">
