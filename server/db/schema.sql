@@ -218,6 +218,7 @@ CREATE TABLE token_redemptions (
   cancelled_by UUID REFERENCES users(id),
   cancellation_reason TEXT,
   retry_count INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   settled_at TIMESTAMPTZ,
   settled_by UUID REFERENCES users(id),
   receipt_reference TEXT,

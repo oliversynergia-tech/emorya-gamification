@@ -118,7 +118,9 @@ function getPrimaryExample(
         return rightTasks - leftTasks;
       }
 
-      return right.updatedAt.localeCompare(left.updatedAt);
+      const leftUpdatedAt = new Date(left.updatedAt).getTime();
+      const rightUpdatedAt = new Date(right.updatedAt).getTime();
+      return rightUpdatedAt - leftUpdatedAt;
     })[0];
 }
 

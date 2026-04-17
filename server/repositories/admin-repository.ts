@@ -25,6 +25,22 @@ type AdminDirectoryRow = QueryResultRow & {
   granted_by_display_name: string | null;
 };
 
+function normalizeRoleList(value: AppRole[] | string | null | undefined): AppRole[] {
+  if (Array.isArray(value)) {
+    return value.filter((role): role is AppRole => typeof role === "string" && role.length > 0);
+  }
+
+  if (typeof value !== "string" || !value.trim()) {
+    return [];
+  }
+
+  return value
+    .replace(/^\{|\}$/g, "")
+    .split(",")
+    .map((role) => role.replace(/^"+|"+$/g, "").trim())
+    .filter((role): role is AppRole => role.length > 0);
+}
+
 export async function getUserRoles(userId: string) {
   const result = await runQuery<UserRoleRow>(
     `SELECT role
@@ -69,7 +85,7 @@ export async function listUsersWithRoles() {
     displayName: row.display_name,
     email: row.email,
     subscriptionTier: row.subscription_tier,
-    roles: row.roles ?? [],
+    roles: normalizeRoleList(row.roles as AppRole[] | string | null),
   }));
 }
 

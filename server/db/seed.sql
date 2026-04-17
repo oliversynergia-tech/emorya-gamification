@@ -741,13 +741,13 @@ INSERT INTO quest_definitions (
     'social',
     20,
     'easy',
-    'social-oauth',
+    'manual-review',
     'one-time',
     'free',
     1,
     FALSE,
     TRUE,
-    '{"track":"social","targetUrl":"https://example.com/join-telegram","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"social","platformLabel":"Telegram","targetUrl":"https://example.com/join-telegram","proofType":"screenshot","proofInstructions":"Submit a screenshot showing that you joined the official Emorya Telegram community.","submissionGuidance":{"evidence":["Telegram join screenshot"]},"unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '42011d57-13d1-4d3c-8cbf-af9db7f693b8',
@@ -757,13 +757,13 @@ INSERT INTO quest_definitions (
     'social',
     20,
     'easy',
-    'social-oauth',
+    'manual-review',
     'one-time',
     'free',
     1,
     FALSE,
     TRUE,
-    '{"track":"social","targetUrl":"https://example.com/join-discord","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"social","platformLabel":"Discord","targetUrl":"https://example.com/join-discord","proofType":"screenshot","proofInstructions":"Submit a screenshot showing that you joined the official Emorya Discord server.","submissionGuidance":{"evidence":["Discord join screenshot"]},"unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '7c8f4788-f2dd-45ad-a150-7f5957d4dd7f',
@@ -773,13 +773,13 @@ INSERT INTO quest_definitions (
     'social',
     20,
     'easy',
-    'social-oauth',
+    'manual-review',
     'one-time',
     'free',
     1,
     FALSE,
     TRUE,
-    '{"track":"social","targetUrl":"https://example.com/follow-x","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"social","platformLabel":"X","targetUrl":"https://example.com/follow-x","proofType":"screenshot","proofInstructions":"Submit a screenshot or profile link showing that you followed the official Emorya X account.","submissionGuidance":{"evidence":["X profile screenshot","X profile link"]},"unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'a96ee831-911f-4e15-86db-e8bbf8eb8a90',
