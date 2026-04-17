@@ -400,7 +400,7 @@ function renderQuestCard(quest: Quest) {
         {quest.status === "locked" && quest.unlockHint ? quest.unlockHint : getQuestStatusNote(quest.status)}
       </small>
       <div className="quest-card__footer">
-        <span>{quest.projectedXp ?? quest.xpReward} XP</span>
+        <span>{quest.xpReward} XP</span>
         <strong>
           {quest.status === "locked"
             ? quest.requiredTier === "free"
