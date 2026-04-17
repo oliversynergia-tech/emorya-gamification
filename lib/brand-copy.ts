@@ -88,5 +88,5 @@ export function getBrandSafeOnboardingHint() {
 }
 
 export function getBrandSafeRewardFocus(attributionSource: string, experienceLane: string, payoutAsset: string) {
-  return `${attributionSource} remains the source while ${experienceLane} is currently shaping progress and ${payoutAsset} rewards.`;
+  return `You came in through ${attributionSource}, and right now ${experienceLane} is the path shaping your progress and future ${payoutAsset} rewards.`;
 }

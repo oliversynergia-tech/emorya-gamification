@@ -505,11 +505,11 @@ export function QuestActionsPanel({
       <div className="panel__header">
         <div>
           <p className="eyebrow">Quest actions</p>
-          <h3>Submit work from the dashboard</h3>
+          <h3>Submit quests and keep your progress moving</h3>
         </div>
       </div>
       {!isAuthenticated ? (
-        <p className="form-note">Sign in to submit quests and send review-based items into the queue.</p>
+        <p className="form-note">Sign in to submit quests, upload proof when needed, and track what happens next.</p>
       ) : null}
       <div className="quest-action-grid">
         {actionableQuests.map((quest) => {

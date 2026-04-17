@@ -3,8 +3,6 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { UserSnapshot } from "@/lib/types";
-
 type AuthMode = "signin" | "signup";
 
 type AuthResponse = {
@@ -12,29 +10,9 @@ type AuthResponse = {
   error?: string;
 };
 
-export function AuthClientPanel({
-  campaignSource,
-  premiumOffer,
-  premiumJourney,
-}: {
-  campaignSource?: UserSnapshot["campaignSource"];
-  premiumOffer?: {
-    title: string;
-    summary: string;
-    hooks: string[];
-    cta: string;
-  };
-  premiumJourney?: {
-    recommendedTier: "monthly" | "annual";
-    nextAction: string;
-    monthlyReason: string;
-    annualReason: string;
-    pathSteps: string[];
-    lanePressure: string;
-  };
-}) {
+export function AuthClientPanel() {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>(campaignSource && campaignSource !== "direct" ? "signup" : "signin");
+  const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -152,62 +130,41 @@ export function AuthClientPanel({
       {message ? <p className="status status--success">{message}</p> : null}
       {message ? (
         <p className="mission-cue mission-cue--ready">
-          <strong>Next step ready</strong> Your dashboard will reopen in the right place after sign-in.
+          <strong>You&apos;re in</strong> Your dashboard will open with the best next step ready for you.
         </p>
       ) : null}
       {error ? <p className="status status--error">{error}</p> : null}
-      {premiumOffer ? (
-        <div className="achievement-list">
-          <article className="achievement-card lane-summary-card">
-            <div>
-              <strong>{premiumOffer.title}</strong>
-              <p>{premiumOffer.summary}</p>
-            </div>
-            <span className="badge badge--pink">{campaignSource ?? "direct"}</span>
-          </article>
-          {premiumOffer.hooks.map((hook) => (
-            <article key={hook} className="achievement-card">
-              <div>
-                <strong>Premium benefit</strong>
-                <p>{hook}</p>
-              </div>
-            </article>
-          ))}
-          {premiumJourney ? (
-            <>
-              <article className="achievement-card achievement-card--unlocked">
-                <div>
-                  <strong>Recommended first premium move</strong>
-                  <p>{premiumJourney.nextAction}</p>
-                </div>
-                <span className="badge badge--pink">{premiumJourney.recommendedTier}</span>
-              </article>
-              <article className="achievement-card lane-pressure-card">
-                <div>
-                  <strong>Premium focus</strong>
-                  <p>{premiumJourney.lanePressure}</p>
-                </div>
-              </article>
-              <article className="achievement-card">
-                <div>
-                  <strong>Why monthly first</strong>
-                  <p>{premiumJourney.monthlyReason}</p>
-                </div>
-              </article>
-              <article className="achievement-card">
-                <div>
-                  <strong>Why annual later</strong>
-                  <p>{premiumJourney.annualReason}</p>
-                </div>
-              </article>
-            </>
-          ) : null}
-        </div>
-      ) : null}
+      <div className="achievement-list">
+        <article className="achievement-card">
+          <div>
+            <strong>Premium is optional</strong>
+            <p>Start for free, build your routine, and upgrade later if you want faster progress and stronger rewards.</p>
+          </div>
+        </article>
+        <article className="achievement-card achievement-card--unlocked">
+          <div>
+            <strong>Best first upgrade</strong>
+            <p>Monthly is the best first step if you want more from the experience.</p>
+          </div>
+          <span className="badge badge--pink">monthly</span>
+        </article>
+        <article className="achievement-card">
+          <div>
+            <strong>Why monthly first</strong>
+            <p>Monthly is the easier first step if you want stronger progress without making a bigger commitment yet.</p>
+          </div>
+        </article>
+        <article className="achievement-card">
+          <div>
+            <strong>Why annual later</strong>
+            <p>Annual makes more sense once you know you want the full version of the experience for the long term.</p>
+          </div>
+        </article>
+      </div>
       <p className="form-note">
-        Sign-up requires a password of at least 10 characters. Referral codes are optional and automatically reward the inviter.
+        Sign-up requires a password of at least 10 characters. Referral codes are optional.
       </p>
-      {premiumOffer ? <p className="form-note">{premiumOffer.cta}</p> : null}
+      <p className="form-note">You can always start free and decide about premium later.</p>
     </section>
   );
 }

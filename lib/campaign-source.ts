@@ -7,43 +7,43 @@ export function getCampaignSourceProfile(source: UserSnapshot["campaignSource"])
   switch (source) {
     case "zealy":
       return {
-        label: "Zealy campaign",
-        title: "Turn quest sign-ups into real Emorya users.",
+        label: "Getting started",
+        title: "Get set up quickly and make your first progress count.",
         description:
-          "This path helps new users get set up quickly, connect what they need, and build enough momentum to keep coming back.",
-        accent: "Campaign to customer",
+          "Start with a few simple steps, connect what you need, and build enough momentum to keep coming back.",
+        accent: "Fast start",
         mood: "bridge" as const,
       };
     case "galxe":
       return {
-        label: "Galxe campaign",
-        title: "Turn discovery traffic into connected users who actually return.",
+        label: "Welcome back",
+        title: "Turn early interest into a routine you want to keep.",
         description:
-          "This path turns first discovery into account setup, real product use, and the kind of repeat engagement that lasts.",
-        accent: "Discovery to loyalty",
+          "Get your account ready, build a little momentum, and come back often enough for progress to stick.",
+        accent: "From interest to routine",
         mood: "feeder" as const,
       };
     case "taskon":
       return {
-        label: "TaskOn campaign",
-        title: "Convert high-intent participants into activated long-term users.",
+        label: "Ready to go deeper",
+        title: "Build on your early momentum and keep moving forward.",
         description:
-          "This path carries early task momentum into product familiarity, repeat use, and deeper commitment over time.",
-        accent: "Intent to commitment",
+          "Use your early momentum to unlock more, come back regularly, and move into the stronger parts of the experience.",
+        accent: "Keep moving forward",
         mood: "feeder" as const,
       };
     default:
       return {
-        label: "Direct experience",
+        label: "Get started",
         title:
           activeThemeId === "xportal"
             ? "From crypto newbie to super app native, one quest at a time."
             : activeThemeId === "multiversx"
               ? "Turn curious users into stakers, builders, and believers."
-              : "Turn first interest into activation, loyalty, and real reward progress.",
+              : "Start strong, build momentum, and unlock more as you go.",
         description:
-          "Start smoothly, build real momentum, and grow through trust and referrals.",
-        accent: "First touch to growth",
+          "Get set up, keep your streak alive, and turn early progress into something real.",
+        accent: "Start to progress",
         mood: "direct" as const,
       };
   }
@@ -59,38 +59,38 @@ export function getCampaignLaneVisualProfile(
   if (source === "zealy" || activeLane === "zealy") {
     return {
       themeClass: "lane-theme--bridge",
-      label: isBridged ? "Zealy-guided experience" : "Zealy experience",
-      emphasis: "Bring users smoothly from first interest into account setup, wallet connection, and repeat product use.",
-      chips: ["Campaign start", "Connect your wallet", "Come back weekly"],
+      label: isBridged ? "Guided start" : "Fast start",
+      emphasis: "Get your account ready, connect your wallet, and come back each week to keep moving.",
+      chips: ["Get started", "Connect your wallet", "Come back weekly"],
     };
   }
 
   if (source === "galxe") {
     return {
       themeClass: "lane-theme--feeder",
-      label: isBridged ? "Galxe-led experience" : "Galxe experience",
+      label: isBridged ? "Guided return" : "Welcome back",
       emphasis: isBridged
-        ? "Galxe remains the source while the current experience focuses on stronger activation and repeat use."
-        : "Galxe is currently running as its own discovery-to-activation experience.",
-      chips: ["Discovery", isBridged ? "Stronger onboarding" : "Live campaign", "Build momentum"],
+        ? "Start with a stronger setup, then keep building momentum through repeat use."
+        : "Use your early interest to get set up and turn progress into a habit.",
+      chips: ["Get set up", isBridged ? "Keep it moving" : "Build momentum", "Come back often"],
     };
   }
 
   if (source === "taskon") {
     return {
       themeClass: "lane-theme--task",
-      label: isBridged ? "TaskOn-led experience" : "TaskOn experience",
+      label: isBridged ? "Momentum path" : "Keep progressing",
       emphasis: isBridged
-        ? "TaskOn remains the source while the current experience pushes faster onboarding and stronger follow-through."
-        : "TaskOn is currently running as its own high-intent experience with a stronger push toward activation.",
-      chips: ["High intent", isBridged ? "Faster setup" : "Live campaign", "Stay engaged"],
+        ? "Move from a quick start into stronger follow-through, repeat use, and bigger milestones."
+        : "Keep your early momentum going and unlock the next layer of progress.",
+      chips: ["Start strong", isBridged ? "Go deeper" : "Build momentum", "Stay engaged"],
     };
   }
 
   return {
     themeClass: "lane-theme--direct",
     label: "Core experience",
-    emphasis: "Start with activation, build weekly momentum, then open the higher-value commitment and reward paths.",
+    emphasis: "Complete your setup, build weekly momentum, and unlock the next layer when you are ready.",
     chips: ["Get started", "Build momentum", "Unlock more"],
   };
 }
@@ -99,43 +99,43 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
   switch (source) {
     case "zealy":
       return {
-        title: "Turn campaign momentum into higher-value progression",
-        summary: "Zealy users should feel a clear step up from campaign entry into stronger rewards, better weekly progress, and deeper commitment.",
+        title: "Keep your early progress moving",
+        summary: "Once the basics are done, premium should feel like the easier way to keep progressing and earn more from the time you put in.",
         hooks: [
-          "Monthly premium multiplies your campaign bridge XP and opens stronger referral conversion rewards.",
-          "Annual premium is the fastest route from quest completions into direct-token reward moments.",
+          "Monthly premium helps your quests go further and opens stronger weekly progress.",
+          "Annual premium is the best fit once you know you want the full experience.",
         ],
-        cta: "Upgrade once the activation ladder starts turning into weekly reward momentum.",
+        cta: "Upgrade once the activation ladder turns into a weekly routine.",
       };
     case "galxe":
       return {
-        title: "Convert discovery into recurring, higher-value use",
-        summary: "Galxe entrants usually pass through the activation bridge, so premium should reinforce the move from discovery into repeat behavior and stronger reward value.",
+        title: "Turn early progress into something stronger",
+        summary: "Premium should feel like the natural next step once you are using the product regularly and want more value from that progress.",
         hooks: [
-          "Monthly premium turns one-off discovery into recurring weekly reward accumulation.",
-          "Annual premium makes referral conversions and claimed-to-settled payouts materially stronger.",
+          "Monthly premium helps turn one-off activity into steady weekly growth.",
+          "Annual premium makes the long-term version of the experience much stronger.",
         ],
-        cta: "Use premium to turn early discovery into stronger retention and reward progress.",
+        cta: "Upgrade when you want your regular progress to go further.",
       };
     case "taskon":
       return {
-        title: "Push task momentum into higher-trust premium progression",
-        summary: "TaskOn users often arrive with strong intent, so premium should feel like the deeper version of an experience they already value.",
+        title: "Take the next step when you want more from the experience",
+        summary: "Premium should feel like the deeper version of something you already know you want to keep using.",
         hooks: [
-          "Monthly premium adds higher-yield missions on top of the core task flow.",
-          "Annual premium compounds XP, referral leverage, and direct-token upside for the most committed users.",
+          "Monthly premium opens a stronger set of quests and faster progress.",
+          "Annual premium is the best fit for committed users who want the full upside.",
         ],
-        cta: "Upgrade once you want deeper challenges and stronger rewards.",
+        cta: "Upgrade when you want deeper challenges and stronger rewards.",
       };
     default:
       return {
-        title: "Use premium to accelerate the core progression path",
-        summary: "Direct entrants should see premium as faster activation follow-through, better rewards, and stronger referral economics.",
+        title: "Use premium when you want to go further, faster",
+        summary: "Premium should feel like the easier route to stronger progress, better rewards, and more value from your time in the app.",
         hooks: [
-          "Monthly premium unlocks higher-yield quests and lifts XP and token conversion value.",
-          "Annual premium creates the strongest referral upside and direct-token reward moments.",
+          "Monthly premium lifts your quest value and opens stronger weekly progress.",
+          "Annual premium is the strongest choice once you know you want the full experience.",
         ],
-        cta: "Upgrade when you want the fastest route from activation into the highest-value reward lanes.",
+        cta: "Upgrade when you want your progress to go further.",
       };
   }
 }
@@ -149,65 +149,59 @@ export function getCampaignPremiumJourney(
   },
 ) {
   const featuredTracks = options?.featuredTracks?.length ? options.featuredTracks.join(", ") : "premium, referral, and wallet";
-  const premiumPressure = options?.premiumUpsellMultiplier
-    ? `${(options.premiumUpsellMultiplier * 100 - 100).toFixed(0)}% extra premium urgency`
-    : "extra premium urgency";
-  const weeklyShift = options?.weeklyTargetOffset
-    ? `${options.weeklyTargetOffset > 0 ? "+" : ""}${options.weeklyTargetOffset} XP weekly target shaping`
-    : "weekly target shaping";
 
   switch (source) {
     case "zealy":
       return {
         recommendedTier: "monthly" as const,
-        nextAction: "Convert a quest entrant into a recurring premium user while momentum is high.",
-        monthlyReason: "Monthly is the cleanest bridge from campaign XP into repeat wallet-linked premium loops.",
-        annualReason: "Annual becomes the strongest move once the user is already completing bridge quests and ready for direct-token upside.",
+        nextAction: "Move from a quick start into a routine that keeps paying off.",
+        monthlyReason: "Monthly is the easiest next step when you want more from the quests you are already doing.",
+        annualReason: "Annual makes more sense once you already know you want the long-term version of the experience.",
         pathSteps: [
-          "Create the account and finish the campaign bridge starter quests.",
-          "Push Monthly when wallet-link and weekly momentum become visible.",
-          "Escalate to Annual after referral or direct-token interest appears.",
+          "Create the account and finish the first setup steps.",
+          "Move to Monthly when your weekly routine starts to feel real.",
+          "Choose Annual once you know you want to stick with it.",
         ],
-        lanePressure: `Zealy is currently emphasizing ${featuredTracks} while adding ${premiumPressure} and ${weeklyShift}.`,
+        lanePressure: `Right now the strongest progress is coming from ${featuredTracks}, with premium making that path more rewarding.`,
       };
     case "galxe":
       return {
         recommendedTier: "monthly" as const,
-        nextAction: "Turn one-off discovery into a repeating premium habit before the user drifts out.",
-        monthlyReason: "Monthly works best here because it converts discovery traffic into weekly return behavior quickly.",
-        annualReason: "Annual should be framed as the deeper retention step once repeated reward behavior is already established.",
+        nextAction: "Turn a one-off visit into a habit that keeps growing.",
+        monthlyReason: "Monthly is the best next step when you want to turn occasional activity into steady progress.",
+        annualReason: "Annual makes more sense once that routine is already established.",
         pathSteps: [
-          "Capture the signup and make the first weekly reward band feel attainable.",
-          "Use Monthly to create recurring reward accumulation and retention.",
-          "Promote Annual when referrals and reward history start to matter.",
+          "Finish the first setup steps and make the next milestone feel reachable.",
+          "Use Monthly to make weekly progress easier to maintain.",
+          "Choose Annual when the long-term version starts to feel worthwhile.",
         ],
-        lanePressure: `Galxe is currently emphasizing ${featuredTracks}, with ${premiumPressure} and ${weeklyShift} helping discovery users come back.`,
+        lanePressure: `Right now the strongest progress is coming from ${featuredTracks}, with premium helping you build on that faster.`,
       };
     case "taskon":
       return {
         recommendedTier: "annual" as const,
-        nextAction: "Position premium as the deeper, higher-trust version of the experience.",
-        monthlyReason: "Monthly is still useful, but mostly as a proof step into higher-yield mission depth.",
-        annualReason: "Annual is the real fit for TaskOn when platform differentiation is active, because the strongest upside comes from long-horizon mission depth, referrals, and token moments.",
+        nextAction: "Choose the deeper version of the experience when you know you want more from it.",
+        monthlyReason: "Monthly is a good lighter step if you want to test the added value first.",
+        annualReason: "Annual fits best once you know you want the full version and plan to stick with it.",
         pathSteps: [
-          "Move the user from task completion and wallet identity into deeper mission completion.",
-          "Use Monthly only if they need a softer first commitment.",
-          "Push Annual once trust, mission depth, and direct-reward upside are visible.",
+          "Finish the key setup steps and keep your progress moving.",
+          "Use Monthly if you want a lighter first commitment.",
+          "Choose Annual once you want the strongest version of the experience.",
         ],
-        lanePressure: `TaskOn is currently emphasizing ${featuredTracks}, with ${premiumPressure} and ${weeklyShift} framing premium as the serious next step.`,
+        lanePressure: `Right now the strongest progress is coming from ${featuredTracks}, with premium making the deeper path more valuable.`,
       };
     default:
       return {
         recommendedTier: "monthly" as const,
-        nextAction: "Use premium as the faster route through the core progression ladder.",
-        monthlyReason: "Monthly is the best first step for direct users because it immediately improves XP yield and quest value without a heavy commitment.",
-        annualReason: "Annual should be presented as the high-conviction choice once referrals, streaks, and direct-token moments are already proving out.",
+        nextAction: "Use premium as the faster route to stronger progress.",
+        monthlyReason: "Monthly is the easiest first step when you want more value without a big commitment.",
+        annualReason: "Annual is the stronger choice once you know you want the full version of the experience.",
         pathSteps: [
-          "Complete the activation ladder and expose the premium upside early.",
-          "Convert to Monthly when weekly momentum and better quest yield become clear.",
-          "Offer Annual as the strongest route once the user wants the best reward economics.",
+          "Complete the activation ladder and get your routine started.",
+          "Move to Monthly when the extra value feels useful.",
+          "Choose Annual once you know you want the full experience long-term.",
         ],
-        lanePressure: `Direct onboarding is currently emphasizing ${featuredTracks}, with ${premiumPressure} and ${weeklyShift} strengthening the premium path.`,
+        lanePressure: `Right now the strongest progress is coming from ${featuredTracks}, with premium helping that progress go further.`,
       };
   }
 }

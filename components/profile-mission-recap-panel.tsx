@@ -25,14 +25,14 @@ function getProfilePackHref(pack: DashboardCampaignPack) {
 function getProfilePackCue(pack: DashboardCampaignPack) {
   if (pack.nextQuestActionable && pack.nextQuestTitle) {
     return {
-      badge: "Next quest ready",
-      note: `${pack.nextQuestTitle} is ready now as the strongest next move.`,
+      badge: "Next step ready",
+      note: `${pack.nextQuestTitle} is ready now if you want to keep moving forward.`,
       tone: "ready",
     };
   }
   return {
-    badge: "Review the route ahead",
-    note: "Review the mission path to see which step opens the strongest route forward.",
+    badge: "See what's next",
+    note: "Open the mission path to see the next step waiting for you.",
     tone: "planning",
   };
 }
@@ -96,7 +96,7 @@ export function ProfileMissionRecapPanel({
       <div className="panel__header">
         <div>
           <p className="eyebrow">Mission recap</p>
-          <h3>Campaign progress outside the dashboard</h3>
+          <h3>Your mission progress in one place</h3>
         </div>
         <span className="badge badge--pink">
           {view === "completed"
@@ -108,13 +108,13 @@ export function ProfileMissionRecapPanel({
       </div>
       <div className="review-actions">
         <button className={`button ${view === "active" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setView("active")}>
-          Active packs
+          Active missions
         </button>
         <button className={`button ${view === "completed" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setView("completed")}>
-          Completed packs
+          Completed
         </button>
         <button className={`button ${view === "reward" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setView("reward")}>
-          Reward-bearing
+          Reward-linked
         </button>
       </div>
       {filtered.active.length > 0 ? (
@@ -187,7 +187,7 @@ export function ProfileMissionRecapPanel({
         </div>
       ) : null}
       {filtered.active.length === 0 && filtered.history.length === 0 ? (
-        <p className="form-note">No campaign mission recap yet for this view. Your next live mission will show up here as soon as it becomes relevant.</p>
+        <p className="form-note">Nothing to show here yet. Your next mission update will appear as soon as it matters.</p>
       ) : null}
     </div>
   );

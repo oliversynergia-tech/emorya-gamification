@@ -1,7 +1,6 @@
 import { MissionLink } from "@/components/mission-link";
 import { LeaderboardSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
-import { getCampaignLaneVisualProfile, getCampaignSourceProfile } from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -10,12 +9,6 @@ export const dynamic = "force-dynamic";
 export default async function LeaderboardPage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
-  const campaignProfile = getCampaignSourceProfile(data.economy.campaignPreset.source);
-  const laneVisualProfile = getCampaignLaneVisualProfile(
-    data.user.campaignSource ?? data.economy.campaignPreset.source,
-    data.economy.campaignPreset.source,
-    data.user.campaignSource,
-  );
   const topEntry = data.leaderboard[0];
   const topReferralEntry = data.referralLeaderboard[0];
   const activeMissionPack = data.campaignPacks[0] ?? null;
@@ -26,20 +19,18 @@ export default async function LeaderboardPage() {
   return (
     <SiteShell eyebrow="Leaderboard" currentUser={session?.user ?? null}>
       <section className="page-hero page-hero--leaderboard">
-        <div className={`panel panel--hero panel--hero-compact ${laneVisualProfile.themeClass}`}>
-          <p className="eyebrow">{campaignProfile.label}</p>
-          <h2>{campaignProfile.title}</h2>
-          <p className="lede">
-            {campaignProfile.description}
-          </p>
+        <div className="panel panel--hero panel--hero-compact">
+          <p className="eyebrow">Leaderboard</p>
+          <h2>See how your progress stacks up this week.</h2>
+          <p className="lede">Climb by completing quests, staying active, and bringing the right people into Emorya.</p>
           <div className="lane-chip-row">
-            {laneVisualProfile.chips.map((chip) => (
+            {["Complete quests", "Keep your streak alive", "Invite friends"].map((chip) => (
               <span key={chip} className="badge">
                 {chip}
               </span>
             ))}
           </div>
-          <p className="form-note">{laneVisualProfile.emphasis}</p>
+          <p className="form-note">Every quest, streak, and referral can help move you up the board.</p>
         </div>
         <div className="panel panel--stack page-aside">
           <div className="metric-card">
@@ -50,37 +41,23 @@ export default async function LeaderboardPage() {
           <div className="metric-card">
             <span>Your current rank</span>
             <strong>#{data.user.rank}</strong>
-            <small>Climb through verified quests, streaks, and referral rewards.</small>
+            <small>Climb by completing quests, keeping your streak alive, and inviting others in.</small>
           </div>
           <div className="metric-card">
-            <span>Referral campaign lead</span>
+            <span>Top referrer</span>
             <strong>{topReferralEntry ? topReferralEntry.displayName : "No referral leader yet"}</strong>
             <small>{topReferralEntry ? `${topReferralEntry.xp.toLocaleString()} referral XP on the invite board.` : "Referral standings appear once invite rewards start moving."}</small>
           </div>
           <div className="metric-card">
-            <span>Your next climb</span>
-            <strong>{weeklyProgressRemaining} XP to the next band</strong>
+            <span>Next rank push</span>
+            <strong>{weeklyProgressRemaining > 0 ? `${weeklyProgressRemaining} XP to the next band` : "Next band reached"}</strong>
             <small>
               Keep quests, streaks, and referrals moving to gain ground quickly.
             </small>
           </div>
-          <div className="metric-card">
-            <span>Reward preview</span>
-            <strong>{data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}</strong>
-            <small>
-              Build more progress and the reward upside grows with it.
-            </small>
-          </div>
-          <div className="metric-card">
-            <span>Premium lift</span>
-            <strong>
-              {data.economy.xpMultipliers.monthly.toFixed(2)}x / {data.economy.xpMultipliers.annual.toFixed(2)}x
-            </strong>
-            <small>Monthly and annual tiers increase both XP growth and reward potential.</small>
-          </div>
           {activeMissionPack ? (
             <div className="metric-card">
-              <span>Live mission</span>
+              <span>Current mission</span>
               <strong>{activeMissionPack.label}</strong>
               <small>{activeMissionPack.leaderboardCallout}</small>
             </div>
@@ -91,8 +68,8 @@ export default async function LeaderboardPage() {
         <section className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Why it matters</p>
-              <h3>How leaderboard position connects to progress and rewards</h3>
+              <p className="eyebrow">How it moves</p>
+              <h3>What actually helps you climb</h3>
             </div>
           </div>
           <div className="economy-stack">
@@ -102,15 +79,15 @@ export default async function LeaderboardPage() {
                 <span>{data.user.totalXp.toLocaleString()} XP</span>
               </div>
               <strong>The leaderboard reflects real progress first.</strong>
-              <p>Rank, streaks, weekly output, and premium momentum all build on the same progression system.</p>
+              <p>Your rank moves with the quests you finish, the streaks you keep, and the progress you build over time.</p>
             </article>
             <article className="economy-step-card economy-step-card--rail">
               <div className="quest-card__meta">
-                <span className="economy-badge economy-badge--rail">Reward layer</span>
+                <span className="economy-badge economy-badge--rail">Rewards</span>
                 <span>{data.user.tokenProgram.asset}</span>
               </div>
-              <strong>Rewards come after progress has been earned.</strong>
-              <p>As progress rises, rewards and payouts start to matter more.</p>
+              <strong>Progress comes first. Rewards follow later.</strong>
+              <p>As your activity grows, the reward side of the platform grows with it too.</p>
             </article>
           </div>
           <div className="reward-ladder">
@@ -126,7 +103,7 @@ export default async function LeaderboardPage() {
               </div>
             </article>
             <article className="reward-ladder__card">
-              <span>2. Reward readiness</span>
+              <span>2. Reward progress</span>
               <strong>{data.user.tokenProgram.eligibilityPoints} pts</strong>
               <small>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked." : data.user.tokenProgram.nextStep}</small>
               <div className="reward-ladder__meter">
@@ -144,7 +121,7 @@ export default async function LeaderboardPage() {
               </div>
             </article>
             <article className="reward-ladder__card">
-              <span>3. Premium lift</span>
+              <span>3. Premium boost</span>
               <strong>
                 {data.economy.xpMultipliers.monthly.toFixed(2)}x / {data.economy.xpMultipliers.annual.toFixed(2)}x XP
               </strong>
@@ -167,7 +144,7 @@ export default async function LeaderboardPage() {
           </div>
           <div className="reward-visual-grid">
             <article className="reward-visual-card">
-              <span>Reward preview</span>
+              <span>Reward progress</span>
               <strong>
                 {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
               </strong>
@@ -176,7 +153,7 @@ export default async function LeaderboardPage() {
               </small>
             </article>
             <article className="reward-visual-card">
-              <span>Reward settlement</span>
+              <span>Reward status</span>
               <strong>
                 {data.user.tokenProgram.claimedBalance} claimed / {data.user.tokenProgram.settledBalance} settled
               </strong>
@@ -214,16 +191,16 @@ export default async function LeaderboardPage() {
                   </div>
                 </div>
               </div>
-              <small>Claimed means reserved. Settled means payout completed.</small>
+              <small>Claimed means reserved. Settled means completed.</small>
             </article>
           </div>
           <p className="form-note">
-            The strongest movement on the board comes from weekly consistency, strong referrals, and steady follow-through.
+            The biggest jumps usually come from consistent weekly progress, strong referrals, and steady follow-through.
           </p>
           {activeMissionPack ? (
             <article className="achievement-card achievement-card--progress">
               <div>
-                <strong>{activeMissionPack.label} is your live competitive mission</strong>
+                <strong>{activeMissionPack.label} is one of the biggest movers right now</strong>
                 <p>{activeMissionPack.tierPhaseCopy}</p>
                 <p>{activeMissionPack.leaderboardCallout}</p>
               </div>

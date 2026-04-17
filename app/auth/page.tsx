@@ -4,12 +4,6 @@ import { SiteShell } from "@/components/site-shell";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
 import { getActiveBrandTheme } from "@/lib/brand-themes";
 import { getBrandCopyProfile } from "@/lib/brand-copy";
-import {
-  getCampaignLaneVisualProfile,
-  getCampaignPremiumJourney,
-  getCampaignPremiumOffer,
-  getCampaignSourceProfile,
-} from "@/lib/campaign-source";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -18,39 +12,24 @@ export const dynamic = "force-dynamic";
 export default async function AuthPage() {
   const session = await resolveCurrentSession();
   const data = await loadDashboardOverview(session?.user ?? null);
-  const activeCampaignLane = data.economy.campaignPreset.source;
   const brandCopy = getBrandCopyProfile(getActiveBrandTheme().id);
-  const campaignProfile = getCampaignSourceProfile(activeCampaignLane);
-  const laneVisualProfile = getCampaignLaneVisualProfile(
-    data.user.campaignSource ?? activeCampaignLane,
-    activeCampaignLane,
-    data.user.campaignSource,
-  );
-  const premiumOffer = getCampaignPremiumOffer(activeCampaignLane);
-  const premiumJourney = getCampaignPremiumJourney(activeCampaignLane, {
-    featuredTracks: data.economy.campaignPreset.featuredTracks,
-    premiumUpsellMultiplier: data.economy.campaignPreset.premiumUpsellMultiplier,
-    weeklyTargetOffset: data.economy.campaignPreset.weeklyTargetOffset,
-  });
   const returnPack = data.campaignPacks.find((pack) => pack.returnAction) ?? null;
 
   return (
     <SiteShell eyebrow="Get started" currentUser={session?.user ?? null}>
       <section className="page-hero page-hero--auth">
-        <div className={`panel panel--hero panel--hero-compact ${laneVisualProfile.themeClass}`}>
-          <p className="eyebrow">{campaignProfile.label}</p>
-          <h2>{campaignProfile.title}</h2>
+        <div className="panel panel--hero panel--hero-compact lane-theme--direct">
+          <p className="eyebrow">Get started</p>
+          <h2>Create your account and start building progress.</h2>
           <p className="lede">
-            {campaignProfile.description}
+            Set up your account, connect what you need, and come back regularly to build real momentum.
           </p>
           <div className="lane-chip-row">
-            {laneVisualProfile.chips.map((chip) => (
-              <span key={chip} className="badge">
-                {chip}
-              </span>
-            ))}
+            <span className="badge">Create your account</span>
+            <span className="badge">Connect your wallet</span>
+            <span className="badge">Come back often</span>
           </div>
-          <p className="form-note">{laneVisualProfile.emphasis}</p>
+          <p className="form-note">A few simple steps now make the rest of the experience much easier.</p>
           <div className="hero__actions">
             <a className="button button--primary" href="#auth-panel">
               Sign in or create account
@@ -80,13 +59,9 @@ export default async function AuthPage() {
           </div>
           <div className="metric-card">
             <span>Premium path</span>
-            <strong>{premiumOffer.title}</strong>
+            <strong>Go further when you are ready</strong>
             <small>
-              {data.user.campaignSource
-                ? data.user.campaignSource === activeCampaignLane
-                  ? premiumOffer.cta
-                  : `${data.user.campaignSource} remains the source while ${activeCampaignLane} is shaping this onboarding flow.`
-                : premiumOffer.cta}
+              Premium is there when you want faster progress, stronger rewards, and more from the time you put in.
             </small>
           </div>
         </div>
@@ -101,35 +76,26 @@ export default async function AuthPage() {
           </div>
           <div className="info-grid">
             <div className="info-card">
-              <span>Referral rewards</span>
-              <strong>Invite and grow faster</strong>
+              <span>Invite friends</span>
+              <strong>Grow faster together</strong>
             </div>
             <div className="info-card">
-              <span>Wallet-linked rewards</span>
-              <strong>Deeper progression unlocks</strong>
+              <span>Wallet connection</span>
+              <strong>Unlock more when you are ready</strong>
             </div>
             <div className="info-card">
-              <span>Premium lift</span>
-              <strong>{premiumJourney.recommendedTier} is the strongest first step</strong>
+              <span>Premium option</span>
+              <strong>Monthly is the easiest first upgrade</strong>
             </div>
             <div className="info-card">
-              <span>Reward direction</span>
-              <strong>{data.user.tokenProgram.asset} readiness follows progress</strong>
+              <span>Rewards</span>
+              <strong>{data.user.tokenProgram.asset} rewards come later as progress grows</strong>
             </div>
           </div>
           <p className="form-note">
-            Sign-up is only the start. The real value comes from activation, repeat use, and the stronger reward paths that open after that.
+            Signing up is just the first step. The real value comes from getting set up properly, coming back often, and building steady progress over time.
           </p>
           <div className="achievement-list">
-            <article className={`achievement-card lane-summary-card ${laneVisualProfile.themeClass}`}>
-              <div>
-                <strong>{laneVisualProfile.label}</strong>
-                <p>{laneVisualProfile.emphasis}</p>
-              </div>
-              <div className="achievement-card__side">
-                <span>{campaignProfile.accent}</span>
-              </div>
-            </article>
             <article className="achievement-card">
               <div>
                 <strong>Activation comes first</strong>
@@ -144,8 +110,8 @@ export default async function AuthPage() {
             </article>
             <article className="achievement-card">
               <div>
-                <strong>Premium deepens the value</strong>
-                <p>{premiumJourney.nextAction}</p>
+                <strong>Premium can come later</strong>
+                <p>Start free, learn the product, and upgrade later if you want stronger rewards and faster progress.</p>
               </div>
             </article>
           </div>
@@ -184,20 +150,20 @@ export default async function AuthPage() {
           <section className="panel panel--glass">
             <div className="panel__header">
               <div>
-                <p className="eyebrow">Return path</p>
+                <p className="eyebrow">Pick up again</p>
                 <h3>Pick up where you left off</h3>
               </div>
               <span className="badge badge--pink">{returnPack.label}</span>
             </div>
             <p className="form-note">{returnPack.returnAction}</p>
             <p className="form-note">
-              Best return window: {returnPack.returnWindow === "today" ? "today" : returnPack.returnWindow === "this_week" ? "this week" : "after the next unlock"}.
+              Best time to return: {returnPack.returnWindow === "today" ? "today" : returnPack.returnWindow === "this_week" ? "this week" : "after the next unlock"}.
             </p>
             <p className={`mission-cue mission-cue--${returnPack.nextQuestActionable ? "ready" : "planning"}`}>
-              <strong>{returnPack.nextQuestActionable ? "Next quest ready" : "Review the route ahead"}</strong>
+              <strong>{returnPack.nextQuestActionable ? "Your next quest is ready" : "See what to do next"}</strong>
               {` `}
               {returnPack.nextQuestActionable && returnPack.nextQuestTitle
-                ? `${returnPack.nextQuestTitle} is ready as the strongest next comeback move.`
+                ? `${returnPack.nextQuestTitle} is the best next step right now.`
                 : "Open your missions to see the best next step."}
             </p>
             <div className="hero__actions">
@@ -229,16 +195,12 @@ export default async function AuthPage() {
       </section>
       <section className="grid grid--auth">
         <div id="auth-panel">
-          <AuthClientPanel
-            campaignSource={data.user.campaignSource}
-            premiumOffer={premiumOffer}
-            premiumJourney={premiumJourney}
-          />
+          <AuthClientPanel />
         </div>
         {session ? (
           <WalletLinkPanel walletAddresses={session.walletAddresses} activeMissionView="active" />
         ) : (
-          <section className="panel auth-panel panel--glass">
+          <section className="panel auth-panel auth-panel--compact panel--glass">
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Wallet link</p>
@@ -248,6 +210,11 @@ export default async function AuthPage() {
             <p className="form-note">
               Wallet linking is available once you are signed in. After sign-in, refresh this page if needed.
             </p>
+            <div className="hero__actions">
+              <a className="button button--primary" href="#auth-panel">
+                Sign in above to connect your wallet
+              </a>
+            </div>
           </section>
         )}
       </section>

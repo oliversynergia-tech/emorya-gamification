@@ -1286,7 +1286,7 @@ INSERT INTO achievements (id, slug, name, description, category, condition) VALU
     '3105690b-c12b-4955-8f24-369953f3362c',
     'zealy-veteran',
     'Zealy Veteran',
-    'Recognised warm traffic from a prior campaign journey.',
+    'Joined Emorya through an earlier community campaign.',
     'recognition',
     '{"source":"zealy"}'::jsonb
   ),

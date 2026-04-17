@@ -410,6 +410,7 @@ a {
 
 .grid--auth {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
 }
 
 .grid {
@@ -421,7 +422,7 @@ a {
   display: grid;
   grid-template-columns: 1.35fr 0.8fr;
   gap: 20px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .hero,
@@ -487,6 +488,7 @@ a {
 
 .page-aside {
   position: relative;
+  align-self: start;
 }
 
 .page-aside::before {
@@ -740,6 +742,10 @@ a {
 
 .page-hero--leaderboard .panel--hero {
   background: var(--panel-hero-leaderboard-surface);
+}
+
+.page-hero__single {
+  grid-column: 1 / -1;
 }
 
 .page-hero--admin .panel--hero {
@@ -1422,6 +1428,11 @@ a {
 
 .auth-panel {
   min-height: 320px;
+}
+
+.auth-panel--compact {
+  min-height: 0;
+  align-self: start;
 }
 
 .social-editor {

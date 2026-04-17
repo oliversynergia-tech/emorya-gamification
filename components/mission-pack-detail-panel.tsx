@@ -10,14 +10,14 @@ type MissionView = "active" | "completed" | "all" | "reward";
 function getMissionCue(pack: DashboardData["campaignPacks"][number]) {
   if (pack.nextQuestActionable && pack.nextQuestTitle) {
     return {
-      badge: "Next quest ready",
-      note: `${pack.nextQuestTitle} is ready now as the strongest next move.`,
+      badge: "Next step ready",
+      note: `${pack.nextQuestTitle} is ready now if you want to keep going.`,
       tone: "ready",
     } as const;
   }
   return {
-    badge: "Review the route ahead",
-    note: "Review the remaining mission path to see which step opens the strongest route forward.",
+    badge: "See what's next",
+    note: "Open the remaining mission path to see the next step waiting for you.",
     tone: "planning",
   } as const;
 }

@@ -432,7 +432,7 @@ function buildStarterPathProgress(progressState: UserProgressState) {
     title: progressState.starterPathComplete ? "Activation ladder complete" : "Activation ladder in progress",
     summary: progressState.starterPathComplete
       ? "The account is fully activated and has crossed the onboarding bridge into reward-ready progression."
-      : "This is the shortest route from campaign arrival to a fully activated, wallet-ready Emorya user.",
+      : "Complete these steps to finish setup, connect your wallet, and unlock the strongest next parts of the experience.",
     nextStepLabel: nextStep?.label ?? null,
     nextStepDetail: nextStep?.detail ?? null,
     completionLabel: "Full activation reward",
@@ -676,19 +676,19 @@ async function getUserSnapshot(
 
   if (progressState.campaignSource) {
     const attributionDetail = progressState.campaignSource !== activeCampaignLane
-      ? ` Attributed from ${progressState.campaignSource}, but currently routed through the ${activeCampaignLane} bridge lane.`
+      ? ` You joined through ${progressState.campaignSource}, and the current setup is helping guide you toward ${activeCampaignLane}-style quests and rewards.`
       : "";
     tokenNotifications.push({
       id: `campaign-override-${progressState.campaignSource}`,
       tone: "info",
-      title: `${activeCampaignLane} reward preset active`,
-      detail: `The active experience lane adds +${campaignEconomy.questXpMultiplierBonus.toFixed(2)}x quest XP, ${(campaignEconomy.eligibilityPointsMultiplierBonus * 100).toFixed(0)}% extra eligibility-point growth, ${(campaignEconomy.tokenYieldMultiplierBonus * 100).toFixed(0)}% token-yield lift, ${campaignEconomy.minimumEligibilityPointsOffset} points on the redemption threshold, ${campaignEconomy.weeklyTargetXpOffset} XP on weekly target shaping, and ${(campaignEconomy.premiumUpsellBonusMultiplier * 100).toFixed(0)}% extra premium pressure.${attributionDetail}`,
+      title: "Your current rewards setup",
+      detail: `Right now your quests are getting a small boost to XP, reward progress, and token yield while launch settings are active.${attributionDetail}`,
     });
     tokenNotifications.push({
       id: `campaign-featured-${progressState.campaignSource}`,
       tone: "info",
-      title: `${activeCampaignLane} featured tracks`,
-      detail: `The active experience lane is currently pushing ${featuredTracks.join(", ")} higher in the funnel so onboarding pressure matches the live bridge path.${attributionDetail}`,
+      title: "What to focus on first",
+      detail: `Right now the clearest places to make progress are ${featuredTracks.join(", ")}.${attributionDetail}`,
     });
   }
 
@@ -993,6 +993,36 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
     return `${diffDays}d ago`;
   }
 
+  function sanitizeActorName(actor: string | null | undefined) {
+    const raw = actor?.trim();
+    if (!raw) {
+      return "Community member";
+    }
+
+    if (/qa|test/i.test(raw)) {
+      return "Community member";
+    }
+
+    return raw;
+  }
+
+  function getActivityDetail(row: ActivityRow) {
+    const metadataDetail = typeof row.metadata?.detail === "string" ? row.metadata.detail : null;
+    if (metadataDetail) {
+      return metadataDetail;
+    }
+
+    if (row.action_type === "achievement-unlocked") {
+      return "earned a new badge";
+    }
+
+    if (row.action_type === "quest-submitted") {
+      return "submitted a quest for review";
+    }
+
+    return "made progress";
+  }
+
   const [activityResult, packHistoryResult] = await Promise.all([
     runQuery<ActivityRow>(
     `SELECT al.id, al.action_type, al.created_at, u.display_name, al.metadata
@@ -1066,9 +1096,9 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
 
   const activityItems = activityResult.rows.map((row) => ({
     id: row.id,
-    actor: row.metadata?.actor ?? row.display_name ?? "User",
+    actor: sanitizeActorName((row.metadata?.actor as string | undefined) ?? row.display_name ?? "User"),
     action: row.metadata?.action ?? row.action_type.replaceAll("-", " "),
-    detail: row.metadata?.detail ?? "activity event",
+    detail: getActivityDetail(row),
     timeAgo: getRelativeTimeLabel(row.created_at),
     createdAt: row.created_at,
   }));

@@ -15,24 +15,23 @@ export default async function AchievementsPage() {
 
   return (
     <SiteShell eyebrow="Achievements" currentUser={session?.user ?? null}>
-      <section className="page-hero page-hero--profile">
-        <div className="panel panel--hero panel--hero-compact">
+      <section className="page-hero page-hero--achievements">
+        <div className="panel panel--hero panel--hero-compact page-hero__single">
           <p className="eyebrow">Achievements</p>
           <h2>Celebrate the milestones that prove your progress is real.</h2>
           <p className="lede">
             This is where streaks, referrals, activation wins, and bigger milestones show up as visible progress.
           </p>
-        </div>
-        <div className="panel panel--stack page-aside">
-          <div className="metric-card">
-            <span>Unlocked badges</span>
-            <strong>{unlockedCount}</strong>
-            <small>Your completed milestones now live together in one place.</small>
-          </div>
-          <div className="metric-card">
-            <span>Closest next unlock</span>
-            <strong>{nextAchievement ? nextAchievement.name : "All unlocked"}</strong>
-            <small>{nextAchievement ? `${Math.round(nextAchievement.progress * 100)}% complete` : "You have cleared everything in the current set."}</small>
+          <div className="info-grid">
+            <div className="info-card">
+              <span>Unlocked badges</span>
+              <strong>{unlockedCount}</strong>
+            </div>
+            <div className="info-card">
+              <span>Closest next unlock</span>
+              <strong>{nextAchievement ? nextAchievement.name : "All unlocked"}</strong>
+              <small>{nextAchievement ? `${Math.round(nextAchievement.progress * 100)}% complete` : "You have cleared everything in the current set."}</small>
+            </div>
           </div>
         </div>
       </section>
