@@ -1464,7 +1464,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
           />
         </div>
       </div>
-      <div className="panel">
+      <div className="panel panel--full-span">
         <div className="panel__header">
           <div>
             <p className="eyebrow">Achievements</p>
@@ -1606,7 +1606,7 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
           )}
         </div>
       </div>
-      <div className="panel">
+      <div className="panel panel--full-span">
         <div className="panel__header">
           <div>
             <p className="eyebrow">In progress</p>

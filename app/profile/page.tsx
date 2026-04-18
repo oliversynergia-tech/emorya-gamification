@@ -99,11 +99,11 @@ export default async function ProfilePage() {
             </div>
           </div>
           <p className="form-note">
-            Wallet linking is available once you are signed in. Go to{" "}
+            Sign in or create an account to update your profile and connect your wallet. Head to{" "}
             <Link href="/auth" className="text-link">
               the auth page
             </Link>{" "}
-            to sign in or create an account.
+            to get started.
           </p>
         </section>
       )}

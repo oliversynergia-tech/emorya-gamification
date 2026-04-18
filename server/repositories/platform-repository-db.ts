@@ -2539,7 +2539,7 @@ async function getUserCampaignPackJourneys({
       returnWindow,
       rewardFocus,
       badgeLabel: packBadgeLabel(firstRow.template_kind, milestone.label),
-      leaderboardCallout: `${experienceLane} currently adds ${(getCampaignLeaderboardMomentumMultiplier(economySettings, attributionSource === "direct" ? null : attributionSource) * 100 - 100).toFixed(0)}% leaderboard momentum, so this pack is helping shape your rank pressure now.`,
+      leaderboardCallout: `${experienceLane} is currently giving your leaderboard progress a ${(getCampaignLeaderboardMomentumMultiplier(economySettings, attributionSource === "direct" ? null : attributionSource) * 100 - 100).toFixed(0)}% boost, so this mission can help move your position faster.`,
       weeklyGoal: {
         targetXp: weeklyGoalTarget,
         shortfallXp: weeklyGoalShortfall,

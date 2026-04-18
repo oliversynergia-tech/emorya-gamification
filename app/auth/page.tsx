@@ -208,7 +208,7 @@ export default async function AuthPage() {
               </div>
             </div>
             <p className="form-note">
-              Wallet linking is available once you are signed in. After sign-in, refresh this page if needed.
+              Sign in above first, then come back here to connect your wallet and unlock the next parts of the experience.
             </p>
             <div className="hero__actions">
               <a className="button button--primary" href="#auth-panel">
