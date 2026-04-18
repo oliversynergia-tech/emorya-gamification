@@ -134,7 +134,7 @@ export async function grantAdminRole({
   confirmation: string;
 }) {
   const currentUser = await getAuthenticatedUser();
-  await assertAdminUser(currentUser);
+  await assertSuperAdminUser(currentUser);
 
   if (!currentUser) {
     throw new Error("You must be signed in to access admin controls.");
@@ -174,7 +174,7 @@ export async function revokeAdminRole({
   confirmation: string;
 }) {
   const currentUser = await getAuthenticatedUser();
-  await assertAdminUser(currentUser);
+  await assertSuperAdminUser(currentUser);
 
   if (!currentUser) {
     throw new Error("You must be signed in to access admin controls.");
