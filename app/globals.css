@@ -139,6 +139,10 @@ a {
   color: var(--text);
 }
 
+.mission-cue + .achievement-list {
+  margin-top: 12px;
+}
+
 .mission-cue strong {
   margin-right: 6px;
 }
@@ -471,6 +475,10 @@ a {
   min-width: 0;
 }
 
+.panel--full-span {
+  grid-column: 1 / -1;
+}
+
 .panel--hero {
   min-height: 392px;
   background: var(--panel-hero-surface);
@@ -587,7 +595,8 @@ a {
 .lane-chip-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  column-gap: 10px;
+  row-gap: 10px;
   margin: 14px 0 10px;
 }
 
@@ -906,6 +915,12 @@ a {
   white-space: normal;
 }
 
+:where(.panel, .stat-card, .metric-card, .info-card, .quest-card, .achievement-card, .admin-card, .leaderboard__row, .connection-row, .referral-item, .reward-timeline__step)
+  > :is(.badge, .tier-pill, .connection-pill, .button)
+  + :is(.badge, .tier-pill, .connection-pill, .button) {
+  margin-inline-start: 10px;
+}
+
 .badge--pink,
 .tier-pill--monthly {
   color: var(--badge-strong-text);
@@ -930,7 +945,8 @@ a {
 .connection-row {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  column-gap: 12px;
+  row-gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -1015,6 +1031,7 @@ a {
   gap: 12px;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   margin-top: 18px;
+  align-items: start;
 }
 
 .economy-stack--admin {
@@ -1051,6 +1068,10 @@ a {
 .economy-step-card--rail {
   border-color: var(--economy-step-card-rail-border, rgba(240, 214, 160, 0.24));
   background: var(--economy-step-card-rail-bg, radial-gradient(circle at top right, rgba(240, 214, 160, 0.09), transparent 0 34%), linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)), rgba(19, 11, 28, 0.92));
+}
+
+.economy-step-card--full-span {
+  grid-column: 1 / -1;
 }
 
 .economy-badge {
@@ -1151,6 +1172,7 @@ a {
 .quest-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  align-items: start;
 }
 
 .track-board {
@@ -1166,6 +1188,13 @@ a {
   padding: 16px;
   border-radius: var(--radius-card);
   min-width: 0;
+}
+
+.quest-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-self: start;
 }
 
 .panel,
@@ -1188,7 +1217,7 @@ a {
 
 .quest-card__note {
   display: block;
-  margin-top: 12px;
+  margin-top: 4px;
   color: var(--muted);
   line-height: 1.55;
   overflow-wrap: anywhere;
@@ -1213,7 +1242,7 @@ a {
 }
 
 .quest-card--board {
-  min-height: 220px;
+  min-height: 0;
 }
 
 .quest-card h4,
@@ -1401,7 +1430,14 @@ a {
 }
 
 .mission-ladder-card__side {
-  min-width: 92px;
+  min-width: 104px;
+  padding-top: 2px;
+}
+
+.mission-ladder-card .badge,
+.panel--glass .panel__header > .badge {
+  min-width: 84px;
+  justify-content: center;
 }
 
 .mission-ladder-group {
@@ -1524,6 +1560,7 @@ a {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
+  align-items: start;
 }
 
 .quest-action-card,
@@ -1532,6 +1569,13 @@ a {
   border-radius: var(--radius-soft);
   border: 1px solid var(--quest-action-card-border, rgba(223, 182, 255, 0.14));
   background: var(--quest-action-card-bg, rgba(255, 255, 255, 0.03));
+}
+
+.quest-action-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-self: start;
 }
 
 .quest-action-card--highlighted {
@@ -1543,6 +1587,13 @@ a {
 .review-item h4,
 .quest-action-card h4 {
   margin: 10px 0 8px;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  row-gap: 10px;
 }
 
 .review-payload {

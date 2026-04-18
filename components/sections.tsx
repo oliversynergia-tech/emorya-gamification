@@ -56,7 +56,7 @@ const QUEST_BOARD_PHASES = [
   },
   {
     key: "commitment",
-    eyebrow: "Optional lane",
+    eyebrow: "Optional extras",
     title: "Commitment and staking",
     description: "Go deeper with premium and staking once you are ready for bigger upside.",
     slugs: [
@@ -73,8 +73,8 @@ const QUEST_BOARD_PHASES = [
   {
     key: "growth",
     eyebrow: "Amplification",
-    title: "Trust and growth",
-    description: "Share progress, invite others, and build trust around what you are doing.",
+    title: "Community and growth",
+    description: "Share progress, invite others, and grow your place in the Emorya community.",
     slugs: [
       "rate-emorya-on-the-app-store",
       "leave-your-first-emorya-review",
@@ -99,13 +99,13 @@ function tierClass(tier: SubscriptionTier) {
 function getMissionCueForPack(pack: DashboardData["campaignPacks"][number]) {
   if (pack.nextQuestActionable && pack.nextQuestTitle) {
     return {
-      badge: "Next quest ready",
+      badge: "Ready now",
       note: `${pack.nextQuestTitle} is the cleanest live move right now.`,
       tone: "ready",
     } as const;
   }
   return {
-    badge: "Next route",
+    badge: "Next step",
     note: "Check the next mission step to keep your progress moving.",
     tone: "planning",
   } as const;
@@ -131,7 +131,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     const followupHref = "/profile#wallet-link-panel";
     return {
       eyebrow: "Top action",
-      title: "Link your wallet to unlock the mission path",
+      title: "Connect your wallet to open the next step",
       detail: walletGatePack.nextAction,
       supporting: walletGatePack.unlockPreview,
       href: walletGatePack.ctaHref ?? "/profile#wallet-link-panel",
@@ -140,18 +140,18 @@ function getDashboardPriorityAction(data: DashboardData) {
       ctaVariant: walletGatePack.ctaVariant,
       packLabel: walletGatePack.label,
       timing: "wait for unlock",
-      blockedStateLabel: "Blocked by wallet connection",
-      stateCategory: "Hard block",
-      stateMetricLabel: "Next unlock",
+      blockedStateLabel: "Wallet needed",
+      stateCategory: "Important",
+      stateMetricLabel: "Do this next",
       stateMetricValue: "Connect xPortal",
-      secondaryMetricLabel: "Mission pace",
+      secondaryMetricLabel: "Current goal",
       secondaryMetricValue: walletGatePack.weeklyGoal.label,
-      followupLabel: "What changes after this",
+      followupLabel: "What opens after this",
       followupValue: walletGatePack.unlockRewardPreview,
       followupCtaLabel: getFollowupLabelForHref(followupHref, "See what opens next"),
       followupHref,
       followupCtaVariant: "priority_followup_review",
-      followupIntentLabel: "Immediate progress context",
+      followupIntentLabel: "See the next step",
     };
   }
 
@@ -162,7 +162,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     const followupHref = "/profile";
     return {
       eyebrow: "Top action",
-      title: "This mission is ready for the premium step",
+      title: "You are ready for the premium step",
       detail: premiumPack.premiumNudge ?? premiumPack.nextAction,
       supporting: premiumPack.unlockPreview,
       href: premiumPack.ctaHref ?? "/profile",
@@ -171,18 +171,18 @@ function getDashboardPriorityAction(data: DashboardData) {
       ctaVariant: premiumPack.ctaVariant,
       packLabel: premiumPack.label,
       timing: "this week",
-      blockedStateLabel: "Blocked by premium phase",
-      stateCategory: "Hard block",
-      stateMetricLabel: "Next unlock",
-      stateMetricValue: "Premium phase push",
-      secondaryMetricLabel: "Mission pace",
+      blockedStateLabel: "Upgrade step",
+      stateCategory: "Important",
+      stateMetricLabel: "Best next move",
+      stateMetricValue: "Upgrade your plan",
+      secondaryMetricLabel: "Current goal",
       secondaryMetricValue: premiumPack.weeklyGoal.label,
-      followupLabel: "What changes after this",
+      followupLabel: "What opens after this",
       followupValue: premiumPack.unlockRewardPreview,
       followupCtaLabel: getFollowupLabelForHref(followupHref, "See premium options"),
       followupHref,
       followupCtaVariant: "priority_followup_review",
-      followupIntentLabel: "Planning move",
+      followupIntentLabel: "See what changes",
     };
   }
 
@@ -190,43 +190,43 @@ function getDashboardPriorityAction(data: DashboardData) {
   if (returnPack) {
     const blockedStateLabel =
       returnPack.blockageState === "level"
-        ? "Blocked by level"
+        ? "More XP needed"
         : returnPack.blockageState === "trust"
-          ? "Blocked by trust"
+          ? "More activity needed"
           : returnPack.blockageState === "starter_path"
-            ? "Blocked by activation progress"
+            ? "Finish setup first"
             : returnPack.blockageState === "premium_phase"
-              ? "Blocked by premium phase"
+              ? "Upgrade step"
               : returnPack.blockageState === "weekly_pace"
-                ? "Blocked by weekly pace"
+                ? "Behind this week"
                 : returnPack.blockageState === "wallet_connection"
-                  ? "Blocked by wallet connection"
+                  ? "Wallet needed"
                   : returnPack.returnWindow === "wait_for_unlock"
-                    ? "Blocked by eligibility"
-                    : "Ready to resume";
+                    ? "Not open yet"
+                    : "Ready now";
     const title =
       returnPack.blockageState === "wallet_connection"
-        ? "Connect your wallet to reopen this mission path"
+        ? "Connect your wallet to reopen this mission"
         : returnPack.blockageState === "trust"
-          ? "Rebuild trust signals to reopen the reward path"
+          ? "A little more activity will reopen this mission"
           : returnPack.blockageState === "level"
             ? "A quick XP push gets this mission moving again"
             : returnPack.blockageState === "starter_path"
-              ? "Finish the activation ladder to unblock this mission"
+              ? "Finish the activation ladder to reopen this mission"
               : returnPack.blockageState === "premium_phase"
-                ? "This mission is now strongest at the premium step"
+                ? "This mission is ready for the premium step"
                 : returnPack.blockageState === "weekly_pace"
-                  ? "One clean return move puts this pack back on pace"
+                  ? "One strong return gets this mission back on pace"
                   : "One strong return move puts this pack back on pace";
     const supporting =
       returnPack.blockageState === "wallet_connection"
-        ? "Wallet connection is still the gate between this mission and your rewards."
+        ? "Wallet connection is still the thing standing between this mission and what opens next."
         : returnPack.blockageState === "trust"
-          ? "The next unlock depends on verified activity and cleaner eligibility signals."
+          ? "A little more real activity is needed before the next step opens."
           : returnPack.blockageState === "level"
-            ? "The next mission step is mainly waiting on XP and level pressure."
+            ? "The next mission step is mainly waiting on more XP."
             : returnPack.blockageState === "starter_path"
-              ? "Activation-ladder completion is still the simplest unlock for the next mission step."
+              ? "Finishing setup is still the simplest way to open the next step."
               : returnPack.blockageState === "weekly_pace"
                 ? returnPack.unlockRewardPreview
                 : returnPack.unlockPreview;
@@ -235,33 +235,33 @@ function getDashboardPriorityAction(data: DashboardData) {
         ? "Return today"
         : returnPack.blockageState === "ready"
           ? "Resume mission"
-          : "Blocked mission";
+          : "Coming up next";
     const stateMetric =
       returnPack.blockageState === "weekly_pace"
         ? {
-            label: "Pace gap",
+            label: "Catch-up needed",
             value:
               returnPack.weeklyGoal.shortfallXp > 0
                 ? `${returnPack.weeklyGoal.shortfallXp} XP behind target`
                 : "On pace",
           }
         : returnPack.blockageState === "wallet_connection"
-          ? { label: "Next unlock", value: "Connect xPortal" }
+          ? { label: "Do this next", value: "Connect xPortal" }
           : returnPack.blockageState === "starter_path"
-            ? { label: "Next unlock", value: "Finish activation ladder" }
+            ? { label: "Do this next", value: "Finish activation ladder" }
             : returnPack.blockageState === "level"
-              ? { label: "Next unlock", value: returnPack.weeklyGoal.label }
+              ? { label: "Do this next", value: returnPack.weeklyGoal.label }
               : returnPack.blockageState === "trust"
-                ? { label: "Next unlock", value: "Rebuild trust and eligibility" }
+                ? { label: "Do this next", value: "Stay active a little longer" }
                 : returnPack.blockageState === "premium_phase"
-                  ? { label: "Next unlock", value: "Premium mission step" }
+                  ? { label: "Do this next", value: "Upgrade your plan" }
                   : returnPack.returnWindow === "wait_for_unlock"
-                    ? { label: "Next unlock", value: "Wait for unlock window" }
+                    ? { label: "Do this next", value: "Wait for the next opening" }
                     : { label: "Return window", value: returnPack.returnWindow.replaceAll("_", " ") };
     const secondaryMetric =
       returnPack.urgency
-        ? { label: "Urgency", value: returnPack.urgency }
-        : { label: "Mission pace", value: returnPack.weeklyGoal.label };
+        ? { label: "Priority", value: returnPack.urgency }
+        : { label: "Current goal", value: returnPack.weeklyGoal.label };
     const followupHref =
       returnPack.blockageState === "weekly_pace"
         ? getQuestBoardHref(returnPack.nextQuestId)
@@ -303,7 +303,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       stateMetricValue: stateMetric.value,
       secondaryMetricLabel: secondaryMetric.label,
       secondaryMetricValue: secondaryMetric.value,
-      followupLabel: "What changes after this",
+      followupLabel: "What opens after this",
       followupValue: returnPack.unlockRewardPreview,
       followupCtaLabel: getFollowupLabelForHref(
         followupHref,
@@ -330,8 +330,8 @@ function getDashboardPriorityAction(data: DashboardData) {
           : "priority_followup_gate",
       followupIntentLabel:
         returnPack.blockageState === "weekly_pace" || returnPack.blockageState === "ready"
-          ? "Planning move"
-          : "Immediate progress context",
+          ? "See what comes next"
+          : "See what this unlocks",
     };
   }
 
@@ -344,7 +344,7 @@ function getDashboardPriorityAction(data: DashboardData) {
 
   return {
     eyebrow: "Top action",
-    title: "Keep the active mission moving",
+    title: "Keep your current mission moving",
     detail: nextPack.nextAction,
     supporting: nextPack.unlockPreview,
     href: nextPack.ctaHref ?? "#quest-board",
@@ -353,18 +353,18 @@ function getDashboardPriorityAction(data: DashboardData) {
     ctaVariant: nextPack.ctaVariant,
     packLabel: nextPack.label,
     timing: "today",
-    blockedStateLabel: "Ready to progress",
-    stateCategory: "Soft block",
-    stateMetricLabel: "Next unlock",
+    blockedStateLabel: "Ready now",
+    stateCategory: "In progress",
+    stateMetricLabel: "Best next move",
     stateMetricValue: nextPack.unlockPreview,
-    secondaryMetricLabel: "Mission pace",
+    secondaryMetricLabel: "Current goal",
     secondaryMetricValue: nextPack.weeklyGoal.label,
-    followupLabel: "What changes after this",
+    followupLabel: "What opens after this",
     followupValue: nextPack.unlockRewardPreview,
     followupCtaLabel: getFollowupLabelForHref(followupHref, "See what opens next"),
     followupHref,
     followupCtaVariant: "priority_followup_review",
-    followupIntentLabel: "Planning move",
+    followupIntentLabel: "See what comes next",
   };
 }
 
@@ -522,11 +522,11 @@ export function DashboardSnapshot({
               <strong>#{data.user.referral.rank}</strong>
             </div>
             <div className="info-card">
-              <span>Journey state</span>
+              <span>Account status</span>
               <strong>{data.user.journeyState.replaceAll("_", " ")}</strong>
             </div>
             <div className="info-card">
-              <span>Current focus</span>
+              <span>Focus now</span>
               <strong>{data.economy.campaignPreset.featuredTracks[0] ?? "progress"}</strong>
             </div>
           </div>
@@ -565,13 +565,13 @@ export function DashboardSnapshot({
         </div>
         {data.campaignPacks.length > 0 ? (
           <div className="panel panel--glass" id="campaign-mission">
-            <div className="panel__header">
-              <div>
-                <p className="eyebrow">Active missions</p>
-                <h3>Your current mission progress</h3>
-              </div>
-              <span className="badge badge--pink">{data.campaignPacks.length} active</span>
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Active missions</p>
+              <h3>Your current mission progress</h3>
             </div>
+            <span className="badge badge--pink">{data.campaignPacks.length} active</span>
+          </div>
             <div className="achievement-list">
               {data.campaignPacks.slice(0, 2).map((pack) => (
                 <article key={pack.packId} className={`achievement-card ${pack.urgency ? "achievement-card--urgent" : ""}`}>
@@ -584,7 +584,7 @@ export function DashboardSnapshot({
                       <p>{pack.rewardFocus || pack.nextAction}</p>
                     <div className="xp-meter campaign-pack-meter">
                       <div className="xp-meter__meta">
-                        <span>Pack progress</span>
+                        <span>Progress</span>
                         <span>{pack.completedQuestCount}/{pack.totalQuestCount} complete</span>
                       </div>
                       <div className="xp-meter__track">
@@ -598,7 +598,7 @@ export function DashboardSnapshot({
                       </small>
                     </div>
                     <p className={`mission-cue mission-cue--${cue.tone}`}>
-                      <strong>Next move</strong> {pack.nextAction}
+                      <strong>Do this next</strong> {pack.nextAction}
                     </p>
                     <div className="hero__actions">
                       <MissionLink
@@ -647,58 +647,22 @@ export function DashboardSnapshot({
             </div>
             {data.campaignPacks.length > 2 ? (
               <p className="form-note">
-                {data.campaignPacks.length - 2} more active mission pack{data.campaignPacks.length - 2 === 1 ? "" : "s"} continue below in your quest board.
+                {data.campaignPacks.length - 2} more mission{data.campaignPacks.length - 2 === 1 ? "" : "s"} continue below in your quest board.
               </p>
             ) : null}
           </div>
         ) : null}
-        <div className="panel panel--glass">
-          <div className="panel__header">
-            <div>
-              <p className="eyebrow">Weekly progress</p>
-              <h3>{data.user.weeklyProgress.tierLabel}</h3>
-            </div>
-            <span className="badge">{data.user.weeklyProgress.xp} XP</span>
-          </div>
-          <div className="xp-meter">
-            <div className="xp-meter__meta">
-              <span>{data.user.weeklyProgress.currentThreshold} XP band</span>
-              <span>{data.user.weeklyProgress.maxThreshold} XP weekly max</span>
-            </div>
-            <div className="xp-meter__track">
-              <div className="xp-meter__fill" style={{ width: `${data.user.weeklyProgress.progress * 100}%` }} />
-            </div>
-            <small>
-              {data.user.weeklyProgress.nextThreshold
-                ? `${Math.max(data.user.weeklyProgress.nextThreshold - data.user.weeklyProgress.xp, 0)} XP to the next weekly milestone`
-                : "You are at the top weekly reward band."}
-            </small>
-          </div>
-          <p className="form-note">
-            {data.user.rewardEligibility.eligible
-              ? `Reward eligible with ${data.user.rewardEligibility.trustScoreBand} trust status.`
-              : `Next reward gate: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing through activation and weekly momentum"}.`}
-          </p>
-          <p className="form-note">
-            Focus this week: {data.economy.campaignPreset.featuredTracks.join(", ")}.
-          </p>
-          {data.campaignPacks[0] ? (
-            <p className="form-note">
-              Active mission goal: {data.campaignPacks[0].weeklyGoal.targetXp} XP this week. {data.campaignPacks[0].weeklyGoal.label}
-            </p>
-          ) : null}
-        </div>
       </div>
       <div className="dashboard-column">
         {priorityAction ? (
           <div className="panel">
-            <div className="panel__header">
-              <div>
-                <p className="eyebrow">Next up</p>
-                <h3>What to do before the quest board</h3>
-              </div>
-              <span className="badge badge--pink">{priorityAction.packLabel}</span>
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Next up</p>
+              <h3>Your best next move</h3>
             </div>
+            <span className="badge badge--pink">{priorityAction.packLabel}</span>
+          </div>
             <div className="achievement-list">
               <article className="achievement-card">
                 <div>
@@ -754,7 +718,7 @@ export function DashboardSnapshot({
           <div className="panel__header">
             <div>
               <p className="eyebrow">Progress and rewards</p>
-              <h3>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked" : "How progress is compounding"}</h3>
+              <h3>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked" : "How your progress is building"}</h3>
             </div>
             <span className="badge badge--pink">{data.user.tokenProgram.eligibilityPoints} pts</span>
           </div>
@@ -775,7 +739,7 @@ export function DashboardSnapshot({
               <strong>Your progress moves you closer to rewards.</strong>
               <p>Wallet connection, steady activity, and completed quests all help move this forward.</p>
             </article>
-            <article className="economy-step-card economy-step-card--rail">
+            <article className="economy-step-card economy-step-card--rail economy-step-card--full-span">
               <div className="quest-card__meta">
                 <span className="economy-badge economy-badge--rail">Rewards</span>
                 <span>{data.user.tokenProgram.asset}</span>
@@ -796,7 +760,7 @@ export function DashboardSnapshot({
               <strong>{data.user.tokenProgram.minimumPoints} pts</strong>
             </div>
             <div className="info-card">
-              <span>Tier multiplier</span>
+              <span>Bonus multiplier</span>
               <strong>{data.user.tokenProgram.tierMultiplier.toFixed(2)}x</strong>
             </div>
             <div className="info-card">
@@ -816,7 +780,7 @@ export function DashboardSnapshot({
           {data.user.tokenProgram.nextRedemptionPoints ? (
             <p className="form-note">
               {Math.max(data.user.tokenProgram.nextRedemptionPoints - data.user.tokenProgram.eligibilityPoints, 0)} more
-              points to the next reward step.
+              points to the next reward milestone.
             </p>
           ) : null}
           {data.user.tokenProgram.redemptionHistory.length > 0 ? (
@@ -840,6 +804,42 @@ export function DashboardSnapshot({
                 </article>
               ))}
             </div>
+          ) : null}
+        </div>
+        <div className="panel panel--glass">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Weekly progress</p>
+              <h3>{data.user.weeklyProgress.tierLabel}</h3>
+            </div>
+            <span className="badge">{data.user.weeklyProgress.xp} XP</span>
+          </div>
+          <div className="xp-meter">
+            <div className="xp-meter__meta">
+              <span>{data.user.weeklyProgress.currentThreshold} XP band</span>
+              <span>{data.user.weeklyProgress.maxThreshold} XP weekly max</span>
+            </div>
+            <div className="xp-meter__track">
+              <div className="xp-meter__fill" style={{ width: `${data.user.weeklyProgress.progress * 100}%` }} />
+            </div>
+            <small>
+              {data.user.weeklyProgress.nextThreshold
+                ? `${Math.max(data.user.weeklyProgress.nextThreshold - data.user.weeklyProgress.xp, 0)} XP to the next weekly milestone`
+                : "You are at the top weekly band."}
+            </small>
+          </div>
+          <p className="form-note">
+            {data.user.rewardEligibility.eligible
+              ? "Your rewards path is open."
+              : `Next reward step: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing through activation and weekly progress"}.`}
+          </p>
+          <p className="form-note">
+            Focus this week: {data.economy.campaignPreset.featuredTracks.join(", ")}.
+          </p>
+          {data.campaignPacks[0] ? (
+            <p className="form-note">
+              Active mission goal: {data.campaignPacks[0].weeklyGoal.targetXp} XP this week. {data.campaignPacks[0].weeklyGoal.label}
+            </p>
           ) : null}
         </div>
       </div>
@@ -1243,7 +1243,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         title="Reward status alerts"
         eyebrow="Payout status"
       />
-      <div className="panel">
+      <div className="panel panel--full-span">
         <div className="panel__header">
           <div>
             <p className="eyebrow">Live activity</p>

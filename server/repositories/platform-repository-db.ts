@@ -1028,6 +1028,9 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
     `SELECT al.id, al.action_type, al.created_at, u.display_name, al.metadata
      FROM activity_log al
      INNER JOIN users u ON u.id = al.user_id
+     WHERE lower(u.email) NOT LIKE '%qa%'
+       AND lower(u.email) NOT LIKE '%test%'
+       AND lower(u.email) NOT LIKE '%.local'
      ORDER BY created_at DESC
      LIMIT 8`,
     ),

@@ -29,7 +29,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "Activation complete",
         title: "The account is now fully activated",
         detail:
-          "This user has crossed the main onboarding bridge into real Emorya progression. From here, retention, premium, and optional staking lanes all make more sense.",
+          "Setup is complete and the strongest parts of the experience are now open.",
       };
     case "connect-your-xportal-wallet":
       return {
@@ -37,7 +37,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "Wallet linked",
         title: "xPortal is now connected",
         detail:
-          "This is one of the strongest trust and readiness moments in the flow. Reward-linked progression and deeper monetisation paths now feel real.",
+          "That unlocks a smoother path into rewards, wallet-based quests, and the next parts of the platform.",
       };
     case "convert-your-first-calories":
       return {
@@ -53,7 +53,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "Premium live",
         title: "Monthly premium is now live",
         detail:
-          "This user has moved from free participation into a stronger value lane. Weekly pace, rewards, and loyalty pressure should now feel more meaningful.",
+          "Your weekly progress, rewards, and member benefits should feel stronger from here.",
       };
     case "upgrade-to-annual":
       return {
@@ -61,7 +61,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "Annual unlocked",
         title: "Annual commitment reached",
         detail:
-          "This is one of the highest-value commercial moments in the platform. It marks a shift from active user into a deeper long-term loyalty state.",
+          "You have unlocked the strongest long-term version of the experience.",
       };
     case "stake-your-first-emr":
       return {
@@ -69,7 +69,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "First stake",
         title: "The staking lane has started",
         detail:
-          "This optional path now moves the user closer to monetisation readiness while also strengthening long-term token commitment.",
+          "You have started the staking path and opened the door to the milestones that come with it.",
       };
     case "reach-staking-threshold-a":
       return {
@@ -77,7 +77,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "Threshold A",
         title: "First meaningful staking threshold reached",
         detail:
-          "The user is no longer staking symbolically. This is the first serious commitment point inside the optional staking lane.",
+          "That is the first meaningful staking milestone and a clear sign of deeper commitment.",
       };
     case "reach-staking-threshold-b":
       return {
@@ -85,7 +85,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "Threshold B",
         title: "Second staking threshold reached",
         detail:
-          "This is the stronger commitment tier where the staking lane starts to matter more economically as well as psychologically.",
+          "That moves you into a stronger staking tier with bigger long-term significance.",
       };
     case "unlock-apy-boost-status":
       return {
@@ -109,7 +109,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "Marathon clear",
         title: "Emorya Marathon completed",
         detail:
-          "This is one of the flagship proof points in the product. It shows deep consistency, commitment, and strong eligibility for higher-trust reward moments.",
+          "That is a big consistency milestone and one of the clearest signs of real long-term progress.",
       };
     default:
       return null;
