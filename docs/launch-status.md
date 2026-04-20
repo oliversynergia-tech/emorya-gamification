@@ -92,8 +92,8 @@ These are the active launch decisions for the first Emorya release and should be
 
 - Launch owner: Product / platform lead
 - Final go/no-go approver: Product owner with operations sign-off
-- Last checklist review date: 2026-04-18
-- Last smoke-test run date: 2026-04-18
+- Last checklist review date: 2026-04-20
+- Last smoke-test run date: 2026-04-20
 - Notes:
   - [x] blocker decision recorded for `APP_URL`
   - [x] blocker decision recorded for snapshot ownership
@@ -123,6 +123,14 @@ These are the active launch decisions for the first Emorya release and should be
     - launch social quests now use manual review instead of unsupported `social-oauth`
     - hidden admin path is active and public `/admin` remains dead
     - admin grant / revoke is now restricted to `super_admin`
+- 2026-04-20
+  - environment: final local browser-style QA sweep
+  - result: pass
+  - notes:
+    - home, auth, dashboard, profile, leaderboard, and achievements were rechecked in rendered browser screenshots
+    - hidden admin route was rechecked in a signed-out state and remained restricted
+    - no new local launch blockers surfaced
+    - product state is stable enough to move from local QA into production setup work
 
 ## Go / No-Go
 

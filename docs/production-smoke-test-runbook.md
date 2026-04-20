@@ -47,9 +47,11 @@ Record each real run in [`docs/launch-status.md`](/Users/olivermills/Documents/E
 
 ## 7. Admin
 
-1. Open `/admin` with an admin-capable account.
-2. Confirm campaign operations, payout operations, and review/admin sections render.
-3. Confirm pack analytics, pack alerts, and payout ops panels load without missing critical data.
+1. Confirm public `/admin` remains unavailable.
+2. Open the hidden admin control-room path with an admin-capable account.
+3. Confirm campaign operations, payout operations, and review/admin sections render.
+4. Confirm pack analytics, pack alerts, and payout ops panels load without missing critical data.
+5. Confirm the review queue is usable for approving and rejecting submissions.
 
 ## 8. Reporting And Ops
 
