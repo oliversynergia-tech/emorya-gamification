@@ -458,12 +458,12 @@ export function HeroSection({ data }: { data: DashboardData }) {
         <div className="metric-card">
           <span>XP multiplier</span>
           <strong>{data.user.xpMultiplier.toFixed(2)}x</strong>
-          <small>Driven by the active XP economy settings.</small>
+          <small>Your current pace for eligible quest rewards.</small>
         </div>
         <div className="metric-card">
-          <span>Prize draw</span>
-          <strong>294 days</strong>
-          <small>Premium subscription required for entry.</small>
+          <span>Rewards ahead</span>
+          <strong>More ways to earn</strong>
+          <small>Build progress now and unlock stronger reward options as you go.</small>
         </div>
       </div>
     </section>
@@ -479,6 +479,7 @@ export function DashboardSnapshot({
 }) {
   const progress = getLevelProgress(data.user.totalXp);
   const priorityAction = getDashboardPriorityAction(data);
+  const recommendedFocus = data.user.starterPath.nextStepLabel ?? "Keep your progress moving";
 
   return (
     <section className="grid grid--dashboard">
@@ -523,12 +524,12 @@ export function DashboardSnapshot({
               <strong>#{data.user.referral.rank}</strong>
             </div>
             <div className="info-card">
-              <span>Account status</span>
-              <strong>{data.user.journeyState.replaceAll("_", " ")}</strong>
+              <span>Account progress</span>
+              <strong>{data.user.starterPath.complete ? "Activation complete" : "Activation in progress"}</strong>
             </div>
             <div className="info-card">
-              <span>Focus now</span>
-              <strong>{data.economy.campaignPreset.featuredTracks[0] ?? "progress"}</strong>
+              <span>Recommended focus</span>
+              <strong>{recommendedFocus}</strong>
             </div>
           </div>
           <ReferralSharePanel

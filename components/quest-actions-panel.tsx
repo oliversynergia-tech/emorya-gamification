@@ -231,8 +231,8 @@ export function QuestActionsPanel({
     }
     return {
       tone: "planning",
-      badge: "Review the route ahead",
-      note: "Review the mission path to see what opens next after this submission clears.",
+      badge: "Next step pending",
+      note: "Your next mission step will open once this submission clears.",
     } as const;
   }, [activeCampaignPack]);
   const questMilestoneCelebration = useMemo(

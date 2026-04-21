@@ -25,7 +25,7 @@ export default async function AuthPage({
   const returnPack = data.campaignPacks.find((pack) => pack.returnAction) ?? null;
 
   return (
-    <SiteShell eyebrow="Get started" currentUser={session?.user ?? null}>
+    <SiteShell eyebrow="Get started" currentUser={session?.user ?? null} hideAuthAction>
       <section className="page-hero page-hero--auth">
         <div className="panel panel--hero panel--hero-compact lane-theme--direct">
           <p className="eyebrow">Get started</p>
@@ -226,15 +226,25 @@ export default async function AuthPage({
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Wallet link</p>
-                <h3>Sign in first</h3>
+                <h3>Connect your wallet after account setup</h3>
               </div>
             </div>
             <p className="form-note">
-              Sign in above first, then come back here to connect your wallet and unlock the next parts of the experience.
+              Create an account or sign in first. Once you are in, this panel becomes your wallet connection step.
             </p>
+            <div className="info-grid">
+              <div className="info-card">
+                <span>Step 1</span>
+                <strong>Access your account</strong>
+              </div>
+              <div className="info-card">
+                <span>Step 2</span>
+                <strong>Connect your wallet</strong>
+              </div>
+            </div>
             <div className="hero__actions">
               <a className="button button--primary" href="#auth-panel">
-                Sign in above to connect your wallet
+                Go to account access
               </a>
             </div>
           </section>

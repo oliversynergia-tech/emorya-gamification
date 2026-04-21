@@ -410,7 +410,7 @@ export function WalletLinkPanel({
           <img src={qrCodeDataUrl} alt="xPortal QR code" className="qr-card__image" />
           <small>Open {walletLabel}, scan the QR code, then approve connect and sign requests.</small>
           <p className="mission-cue mission-cue--planning">
-            <strong>Review the route ahead</strong> Reopen the mission path after approval if the wallet gate is still the current blocker.
+            <strong>Next step pending</strong> Once approval is complete, return to your mission path to keep moving.
           </p>
         </div>
       ) : null}

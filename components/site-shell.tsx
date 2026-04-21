@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ReactNode } from "react";
 
 import { type BrandThemeId } from "@/lib/brand-themes";
+import { NavLinks } from "@/components/nav-links";
 import { resolveRuntimeBrandTheme } from "@/lib/brand-themes/server";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -21,10 +22,12 @@ export async function SiteShell({
   children,
   eyebrow,
   currentUser = null,
+  hideAuthAction = false,
 }: {
   children: ReactNode;
   eyebrow?: string;
   currentUser?: AuthUser | null;
+  hideAuthAction?: boolean;
 }) {
   const activeBrandTheme = await resolveRuntimeBrandTheme(currentUser);
   const showBrandCopy = activeBrandTheme.id === "emorya";
@@ -54,15 +57,9 @@ export async function SiteShell({
           ) : null}
         </div>
         <div className="topbar__controls topbar__controls--desktop">
-          <nav className="nav">
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className="nav__link">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <NavLinks items={navItems} />
           {canSwitchThemes ? <ThemeSwitcher activeTheme={activeBrandTheme.id as BrandThemeId} /> : null}
-          <div className="session-chip">
+          <div className={`session-chip${!currentUser && hideAuthAction ? " session-chip--hidden" : ""}`}>
             {currentUser ? (
               <>
                 <div>
@@ -84,15 +81,9 @@ export async function SiteShell({
             <span aria-hidden="true">+</span>
           </summary>
           <div className="mobile-nav__panel">
-            <nav className="mobile-nav__links">
-              {navItems.map((item) => (
-                <Link key={item.href} href={item.href} className="nav__link">
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <NavLinks items={navItems} className="mobile-nav__links" />
             {canSwitchThemes ? <ThemeSwitcher activeTheme={activeBrandTheme.id as BrandThemeId} /> : null}
-            <div className="session-chip">
+            <div className={`session-chip${!currentUser && hideAuthAction ? " session-chip--hidden" : ""}`}>
               {currentUser ? (
                 <>
                   <div>

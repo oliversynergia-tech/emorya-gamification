@@ -41,7 +41,7 @@ const verificationProfiles: Record<
   },
   "wallet-check": {
     label: "Wallet check",
-    summary: "Identity-linked quests that verify a connected wallet or wallet-ready state before unlocking deeper rails.",
+    summary: "Wallet quests that confirm a connected wallet before unlocking deeper reward steps.",
     bestFor: "Wallet connection, onchain readiness, token eligibility, and gated reward flows.",
   },
   "api-check": {
