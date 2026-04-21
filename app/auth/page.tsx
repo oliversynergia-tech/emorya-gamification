@@ -9,8 +9,17 @@ import { loadDashboardOverview } from "@/server/services/platform-overview";
 
 export const dynamic = "force-dynamic";
 
-export default async function AuthPage() {
+export default async function AuthPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ ref?: string | string[] }>;
+}) {
   const session = await resolveCurrentSession();
+  const resolvedSearchParams = await searchParams;
+  const referralParam = Array.isArray(resolvedSearchParams?.ref)
+    ? resolvedSearchParams?.ref[0]
+    : resolvedSearchParams?.ref;
+  const initialReferralCode = referralParam?.trim().toUpperCase() ?? "";
   const data = await loadDashboardOverview(session?.user ?? null);
   const brandCopy = getBrandCopyProfile(getActiveBrandTheme().id);
   const returnPack = data.campaignPacks.find((pack) => pack.returnAction) ?? null;
@@ -190,12 +199,25 @@ export default async function AuthPage() {
                 Return to dashboard mission
               </MissionLink>
             </div>
-          </section>
-        ) : null}
+        </section>
+      ) : null}
+      {initialReferralCode ? (
+        <section className="panel panel--glass referral-invite-banner">
+          <div>
+            <p className="eyebrow">Invite accepted</p>
+            <h3>Your referral code is ready.</h3>
+            <p>Create your account below and the code will be applied automatically.</p>
+          </div>
+          <span className="badge">{initialReferralCode}</span>
+        </section>
+      ) : null}
       </section>
       <section className="grid grid--auth">
         <div id="auth-panel">
-          <AuthClientPanel />
+          <AuthClientPanel
+            initialReferralCode={initialReferralCode}
+            initialMode={initialReferralCode ? "signup" : "signin"}
+          />
         </div>
         {session ? (
           <WalletLinkPanel walletAddresses={session.walletAddresses} activeMissionView="active" />

@@ -10,13 +10,19 @@ type AuthResponse = {
   error?: string;
 };
 
-export function AuthClientPanel() {
+export function AuthClientPanel({
+  initialReferralCode = "",
+  initialMode = "signin",
+}: {
+  initialReferralCode?: string;
+  initialMode?: AuthMode;
+}) {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>("signin");
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [referralCode, setReferralCode] = useState("");
+  const [referralCode, setReferralCode] = useState(initialReferralCode.toUpperCase());
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -89,6 +95,11 @@ export function AuthClientPanel() {
       <form className="form-stack" onSubmit={handleSubmit}>
         {mode === "signup" ? (
           <>
+            {initialReferralCode ? (
+              <p className="status status--success">
+                Invite code applied. Create your account to join through this referral.
+              </p>
+            ) : null}
             <label className="field">
               <span>Display name</span>
               <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} required />

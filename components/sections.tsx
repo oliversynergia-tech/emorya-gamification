@@ -17,6 +17,7 @@ import { MissionEventHistoryPanel } from "@/components/mission-event-history-pan
 import { MissionPackDetailPanel } from "@/components/mission-pack-detail-panel";
 import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
 import { ProfileMissionRecapPanel } from "@/components/profile-mission-recap-panel";
+import { ReferralSharePanel } from "@/components/referral-share-panel";
 import { SourceLaneReportPanel } from "@/components/source-lane-report-panel";
 import { TokenReceiptHistoryPanel } from "@/components/token-receipt-history-panel";
 
@@ -530,6 +531,12 @@ export function DashboardSnapshot({
               <strong>{data.economy.campaignPreset.featuredTracks[0] ?? "progress"}</strong>
             </div>
           </div>
+          <ReferralSharePanel
+            referralCode={data.user.referralCode}
+            invitedCount={data.user.referral.invitedCount}
+            convertedCount={data.user.referral.convertedCount}
+            rewardXpEarned={data.user.referral.rewardXpEarned}
+          />
         </div>
         <div className="panel panel--glass">
           <div className="panel__header">
@@ -1342,6 +1349,12 @@ export function ProfileSection({ data }: { data: DashboardData }) {
             <strong>{data.user.referral.pendingConversionXp}</strong>
           </div>
         </div>
+        <ReferralSharePanel
+          referralCode={data.user.referralCode}
+          invitedCount={data.user.referral.invitedCount}
+          convertedCount={data.user.referral.convertedCount}
+          rewardXpEarned={data.user.referral.rewardXpEarned}
+        />
         <div className="achievement-list">
           <article className="achievement-card">
             <div>

@@ -15,7 +15,6 @@ const navItems = [
   { href: "/achievements", label: "Achievements" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
-  { href: "/auth", label: "Sign in" },
 ];
 
 export async function SiteShell({
@@ -54,7 +53,7 @@ export async function SiteShell({
             </div>
           ) : null}
         </div>
-        <div className="topbar__controls">
+        <div className="topbar__controls topbar__controls--desktop">
           <nav className="nav">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className="nav__link">
@@ -79,6 +78,37 @@ export async function SiteShell({
             )}
           </div>
         </div>
+        <details className="mobile-nav">
+          <summary className="mobile-nav__summary">
+            <span>Menu</span>
+            <span aria-hidden="true">+</span>
+          </summary>
+          <div className="mobile-nav__panel">
+            <nav className="mobile-nav__links">
+              {navItems.map((item) => (
+                <Link key={item.href} href={item.href} className="nav__link">
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            {canSwitchThemes ? <ThemeSwitcher activeTheme={activeBrandTheme.id as BrandThemeId} /> : null}
+            <div className="session-chip">
+              {currentUser ? (
+                <>
+                  <div>
+                    <strong>{currentUser.displayName}</strong>
+                    <small>{currentUser.email ?? "Wallet-only account"}</small>
+                  </div>
+                  <SignOutButton />
+                </>
+              ) : (
+                <Link href="/auth" className="button button--secondary">
+                  Sign in
+                </Link>
+              )}
+            </div>
+          </div>
+        </details>
       </header>
       <main className="content">{children}</main>
     </div>

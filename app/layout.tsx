@@ -6,10 +6,24 @@ import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const activeBrandTheme = await resolveRuntimeBrandTheme();
+  const metadataBase = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://emorya.com");
 
   return {
+    metadataBase,
     title: activeBrandTheme.brand.metadataTitle,
     description: activeBrandTheme.brand.metadataDescription,
+    openGraph: {
+      title: activeBrandTheme.brand.metadataTitle,
+      description: activeBrandTheme.brand.metadataDescription,
+      url: "/",
+      siteName: activeBrandTheme.brand.platformName,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: activeBrandTheme.brand.metadataTitle,
+      description: activeBrandTheme.brand.metadataDescription,
+    },
   };
 }
 

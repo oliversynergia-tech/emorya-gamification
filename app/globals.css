@@ -37,11 +37,14 @@
 
 html {
   scroll-behavior: smooth;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  max-width: 100%;
   color: var(--text);
   background:
     radial-gradient(circle at 82% 6%, var(--app-radial-1), transparent 0 18%),
@@ -91,6 +94,8 @@ a {
 .shell {
   position: relative;
   overflow: clip;
+  width: 100%;
+  max-width: 100%;
   padding: 0 24px 80px;
 }
 
@@ -204,6 +209,7 @@ a {
   gap: 18px;
   align-items: center;
   max-width: var(--section-max);
+  width: 100%;
   margin: 0 auto 28px;
   padding: 14px 16px 12px;
   min-height: 78px;
@@ -245,6 +251,55 @@ a {
   justify-content: flex-end;
   gap: 10px;
   align-items: center;
+}
+
+.mobile-nav {
+  display: none;
+  width: 100%;
+}
+
+.mobile-nav__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--nav-link-border);
+  border-radius: var(--radius-pill);
+  color: var(--nav-link-text);
+  background: var(--nav-link-bg);
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.mobile-nav__summary::-webkit-details-marker {
+  display: none;
+}
+
+.mobile-nav[open] .mobile-nav__summary span:last-child {
+  transform: rotate(45deg);
+}
+
+.mobile-nav__panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: rgba(8, 4, 17, 0.92);
+}
+
+.mobile-nav:not([open]) .mobile-nav__panel {
+  display: none;
+}
+
+.mobile-nav__links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .theme-switcher {
@@ -409,6 +464,8 @@ a {
   flex-direction: column;
   gap: var(--space-5);
   max-width: var(--section-max);
+  width: 100%;
+  min-width: 0;
   margin: 0 auto;
 }
 
@@ -420,6 +477,8 @@ a {
 .grid {
   display: grid;
   gap: 24px;
+  width: 100%;
+  min-width: 0;
 }
 
 .page-hero {
@@ -427,6 +486,14 @@ a {
   grid-template-columns: 1.35fr 0.8fr;
   gap: 20px;
   align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.page-hero > *,
+.grid > *,
+.hero > * {
+  min-width: 0;
 }
 
 .hero,
@@ -575,6 +642,7 @@ a {
   color: var(--muted);
   line-height: 1.55;
   font-size: var(--text-subtitle);
+  overflow-wrap: anywhere;
 }
 
 .hero__actions,
@@ -723,6 +791,11 @@ a {
 .tier-card strong {
   display: block;
   font-size: 1.12rem;
+  overflow-wrap: anywhere;
+}
+
+.metric-card small {
+  overflow-wrap: anywhere;
 }
 
 .page-aside .metric-card strong {
@@ -838,6 +911,66 @@ a {
   display: block;
   color: var(--muted);
   margin-top: 4px;
+}
+
+.referral-share-card,
+.referral-invite-banner {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 0 34%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.referral-invite-banner {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  margin-top: 0;
+}
+
+.referral-share-card h3,
+.referral-invite-banner h3 {
+  margin: 4px 0 0;
+}
+
+.referral-share-card p,
+.referral-invite-banner p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.referral-share-card__link {
+  overflow-wrap: anywhere;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  font-size: var(--text-caption);
+}
+
+.referral-share-card__actions,
+.referral-share-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.referral-share-card__stats span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: var(--text-caption);
 }
 
 .achievement-spotlight {
@@ -2266,13 +2399,23 @@ body[data-brand-theme="xportal"] .button--primary {
   }
 
   .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-    padding-top: 16px;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px;
+    min-height: 72px;
   }
 
-  .topbar__controls,
-  .session-chip,
+  .topbar__controls--desktop {
+    display: none;
+  }
+
+  .mobile-nav {
+    display: block;
+    max-width: 300px;
+    margin-left: auto;
+  }
+
+  .mobile-nav .session-chip,
   .grid--auth {
     width: 100%;
   }
@@ -2292,9 +2435,9 @@ body[data-brand-theme="xportal"] .button--primary {
   }
 
   .brand-block {
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
+    width: auto;
+    flex-direction: row;
+    align-items: center;
   }
 
   .brand-logo {
@@ -2302,7 +2445,7 @@ body[data-brand-theme="xportal"] .button--primary {
   }
 
   body[data-brand-theme="emorya"] .brand-logo {
-    width: 210px;
+    width: 156px;
     height: auto;
   }
 
@@ -2317,7 +2460,60 @@ body[data-brand-theme="xportal"] .button--primary {
 
 @media (max-width: 640px) {
   .shell {
-    padding-inline: 16px;
+    padding-inline: 12px;
+  }
+
+  .topbar {
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .brand-block {
+    flex: 0 1 132px;
+  }
+
+  .brand-copy {
+    display: none;
+  }
+
+  body[data-brand-theme="emorya"] .brand-logo,
+  .brand-logo {
+    width: 132px;
+  }
+
+  .mobile-nav {
+    flex: 0 0 112px;
+    max-width: 112px;
+    margin-left: auto;
+  }
+
+  .mobile-nav__summary {
+    min-height: 44px;
+    padding: 0 14px;
+  }
+
+  .mobile-nav__links {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-nav__panel {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: calc(100% + 8px);
+    z-index: 50;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+  }
+
+  .lane-chip-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .lane-chip-row .badge {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
   }
 
   .brandmark {
@@ -2340,5 +2536,13 @@ body[data-brand-theme="xportal"] .button--primary {
 
   .panel {
     padding: 20px;
+  }
+
+  .referral-invite-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .referral-share-card__actions .button {
+    width: 100%;
   }
 }
