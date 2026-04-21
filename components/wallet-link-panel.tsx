@@ -33,6 +33,8 @@ const walletConnectProjectId = process.env.NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_
 const chainId = process.env.NEXT_PUBLIC_MULTIVERSX_CHAIN === "devnet" ? "D" : "1";
 let providerPromise: Promise<WalletConnectV2Provider> | null = null;
 
+const walletApprovalTimeoutMs = 120_000;
+
 function bytesToHex(bytes: Uint8Array) {
   return Array.from(bytes)
     .map((byte) => byte.toString(16).padStart(2, "0"))
@@ -75,6 +77,39 @@ async function getWalletProvider() {
   return providerPromise;
 }
 
+function truncateWalletAddress(address: string) {
+  return address.length > 18 ? `${address.slice(0, 8)}...${address.slice(-6)}` : address;
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string) {
+  return new Promise<T>((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => window.clearTimeout(timeout));
+  });
+}
+
+function getWalletRecoveryMessage(error: unknown, walletLabel: string) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (/reject|declin|cancel/i.test(message)) {
+    return `Connection was not approved in ${walletLabel}. Try again when you are ready and approve the request in your wallet.`;
+  }
+
+  if (/timed out|timeout|No wallet approval/i.test(message)) {
+    return `No wallet approval came through. Open ${walletLabel}, scan the QR again, and approve the request before it expires.`;
+  }
+
+  if (/Missing NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID/i.test(message)) {
+    return `${walletLabel} connection is not enabled in this environment yet.`;
+  }
+
+  return message || `${walletLabel} linking failed.`;
+}
+
 export function WalletLinkPanel({
   walletAddresses,
   activeMissionLabel = null,
@@ -91,6 +126,7 @@ export function WalletLinkPanel({
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
   const [walletStatus, setWalletStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [unlinkingAddress, setUnlinkingAddress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -173,22 +209,34 @@ export function WalletLinkPanel({
     setMessage(null);
 
     try {
+      if (!walletConnectProjectId) {
+        throw new Error("Missing NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID.");
+      }
+
       const provider = await getWalletProvider();
-      const { uri, approval } = await provider.connect();
+      const { uri, approval } = await withTimeout(
+        provider.connect(),
+        20_000,
+        "WalletConnect setup timed out.",
+      );
 
       if (uri) {
         setQrCodeDataUrl(await QRCode.toDataURL(uri, { margin: 1, width: 240 }));
         setWalletStatus(`Scan the QR code with ${walletLabel}, then approve the connection.`);
       }
 
-      const account = await provider.login({ approval });
+      const account = await withTimeout(
+        provider.login({ approval }),
+        walletApprovalTimeoutMs,
+        "No wallet approval received before the QR expired.",
+      );
 
       if (!account?.address) {
         throw new Error(`${walletLabel} did not return a wallet address.`);
       }
 
       setWalletAddress(account.address);
-      setWalletStatus(`Connected ${walletLabel} wallet ${account.address}`);
+      setWalletStatus(`Connected ${walletLabel} wallet ${truncateWalletAddress(account.address)}.`);
 
       const challengeResponse = await fetch("/api/auth/wallet/challenge", {
         method: "POST",
@@ -206,11 +254,15 @@ export function WalletLinkPanel({
       setChallenge(issuedChallenge);
       setMessage(`Challenge issued. Confirm the signing request in ${walletLabel}.`);
 
-      const signedMessage = await provider.signMessage(
-        new Message({
-          address: Address.newFromBech32(account.address),
-          data: new TextEncoder().encode(issuedChallenge.challengeMessage),
-        }),
+      const signedMessage = await withTimeout(
+        provider.signMessage(
+          new Message({
+            address: Address.newFromBech32(account.address),
+            data: new TextEncoder().encode(issuedChallenge.challengeMessage),
+          }),
+        ),
+        walletApprovalTimeoutMs,
+        "No wallet signature received before the request expired.",
       );
 
       if (!signedMessage.signature) {
@@ -248,9 +300,49 @@ export function WalletLinkPanel({
       setQrCodeDataUrl(null);
       router.refresh();
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : `${walletLabel} linking failed.`);
+      setQrCodeDataUrl(null);
+      setWalletStatus(null);
+      setError(getWalletRecoveryMessage(caughtError, walletLabel));
     } finally {
       setPending(false);
+    }
+  }
+
+  async function disconnectWallet(address: string) {
+    const confirmed = window.confirm("Disconnect this wallet from your Emorya account?");
+
+    if (!confirmed) {
+      return;
+    }
+
+    setUnlinkingAddress(address);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/auth/wallet/unlink", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress: address }),
+      });
+
+      const result = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        result?: { verificationNote?: string };
+      };
+
+      if (!response.ok || !result.ok) {
+        setError(result.error ?? "Unable to disconnect wallet.");
+        return;
+      }
+
+      setMessage(result.result?.verificationNote ?? "Wallet disconnected.");
+      router.refresh();
+    } catch {
+      setError("Unable to reach the wallet disconnect service.");
+    } finally {
+      setUnlinkingAddress(null);
     }
   }
 
@@ -266,7 +358,15 @@ export function WalletLinkPanel({
         {walletAddresses.length > 0 ? (
           walletAddresses.map((address) => (
             <div key={address} className="wallet-pill">
-              {address}
+              <span title={address}>{truncateWalletAddress(address)}</span>
+              <button
+                type="button"
+                className="text-link"
+                disabled={unlinkingAddress === address}
+                onClick={() => disconnectWallet(address)}
+              >
+                {unlinkingAddress === address ? "Disconnecting..." : "Disconnect"}
+              </button>
             </div>
           ))
         ) : (
@@ -299,7 +399,7 @@ export function WalletLinkPanel({
       </div>
       {!walletConnectProjectId ? (
         <p className="status status--error">
-          Add `NEXT_PUBLIC_MULTIVERSX_WALLETCONNECT_PROJECT_ID` to `.env.local` to enable xPortal.
+          {walletLabel} connection is not enabled in this environment yet.
         </p>
       ) : null}
       {walletStatus ? <p className="status status--success">{walletStatus}</p> : null}
@@ -372,7 +472,7 @@ export function WalletLinkPanel({
       ) : null}
       {error ? <p className="status status--error">{error}</p> : null}
       <p className="form-note">
-        This now expects a real MultiversX signature for the issued challenge message.
+        Wallet linking uses a real MultiversX signature for the issued challenge message. You can disconnect a linked wallet at any time.
       </p>
     </section>
   );

@@ -12,6 +12,7 @@ import {
   createWalletLinkChallenge,
   findActiveWalletChallenge,
   findWalletIdentityOwner,
+  revokeWalletIdentityForUser,
 } from "@/server/repositories/auth-repository";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
 
@@ -129,5 +130,34 @@ export async function completeWalletLinkForCurrentUser({
     walletAddress,
     verificationMode: "multiversx-sdk-core",
     verificationNote: "Wallet signature verified and linked successfully.",
+  };
+}
+
+export async function unlinkWalletForCurrentUser(walletAddressInput: string) {
+  const currentUser = await getAuthenticatedUser();
+
+  if (!currentUser) {
+    throw new Error("You must be signed in to disconnect a wallet.");
+  }
+
+  const walletAddress = normalizeMultiversxAddress(walletAddressInput);
+
+  if (!isValidMultiversxAddress(walletAddress)) {
+    throw new Error("Invalid MultiversX wallet address.");
+  }
+
+  const revoked = await revokeWalletIdentityForUser({
+    userId: currentUser.id,
+    walletAddress,
+  });
+
+  if (!revoked) {
+    throw new Error("That wallet is not linked to this account.");
+  }
+
+  return {
+    unlinked: true,
+    walletAddress,
+    verificationNote: "Wallet disconnected.",
   };
 }

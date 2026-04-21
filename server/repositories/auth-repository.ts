@@ -291,6 +291,26 @@ export async function attachWalletIdentity({
   );
 }
 
+export async function revokeWalletIdentityForUser({
+  userId,
+  walletAddress,
+}: {
+  userId: string;
+  walletAddress: string;
+}) {
+  const result = await runQuery(
+    `UPDATE user_identities
+     SET status = 'revoked'
+     WHERE user_id = $1
+       AND provider = 'multiversx'
+       AND provider_subject = $2
+       AND status = 'active'`,
+    [userId, walletAddress],
+  );
+
+  return (result.rowCount ?? 0) > 0;
+}
+
 export async function consumeWalletChallenge(challengeId: string) {
   await runQuery(
     `UPDATE wallet_link_challenges

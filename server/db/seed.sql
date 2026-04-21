@@ -923,7 +923,7 @@ INSERT INTO quest_definitions (
     5,
     FALSE,
     TRUE,
-    '{"track":"learn","platformLabel":"EMRS journey","proofType":"text","proofInstructions":"Summarize how calorie conversion connects to EMRS and rewards in your own words.","unlockRules":{"all":[{"type":"min_level","value":5}]},"rewardConfig":{"xp":{"base":125,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}},"previewConfig":{"label":"Reward understanding"}}'::jsonb
+    '{"track":"quiz","platformLabel":"EMRS journey","proofType":"text","proofInstructions":"Summarize how calorie conversion connects to EMRS and rewards in your own words.","unlockRules":{"all":[{"type":"min_level","value":5}]},"rewardConfig":{"xp":{"base":125,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}},"previewConfig":{"label":"Reward understanding"}}'::jsonb
   ),
   (
     'fe80b525-7453-40db-b224-53d2f39fc7db',
