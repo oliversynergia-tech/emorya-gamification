@@ -1152,6 +1152,26 @@ a {
   margin-top: 18px;
 }
 
+.leaderboard-view-card {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 0 34%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.leaderboard-view-card .panel__header {
+  margin-bottom: 0;
+}
+
+.leaderboard--complete {
+  margin-top: 0;
+}
+
 .reward-ladder,
 .reward-visual-grid,
 .reward-state-bars {
@@ -1471,12 +1491,56 @@ a {
   color: var(--muted);
 }
 
+.route-state {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.route-state__panel {
+  width: min(100%, 720px);
+}
+
+.route-state__skeleton {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.route-state__skeleton span {
+  display: block;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+  background-size: 220% 100%;
+  animation: routeStatePulse 1.35s ease-in-out infinite;
+}
+
+.route-state__skeleton span:nth-child(2) {
+  width: 74%;
+}
+
+.route-state__skeleton span:nth-child(3) {
+  width: 46%;
+}
+
 .leaderboard__row--annual {
   border-color: var(--leaderboard-row-annual-border, rgba(240, 214, 160, 0.35));
 }
 
 .leaderboard__row--monthly {
   border-color: var(--leaderboard-row-monthly-border, rgba(240, 80, 158, 0.4));
+}
+
+.leaderboard__row--current {
+  border-color: var(--leaderboard-row-current-border, rgba(223, 182, 255, 0.42));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+    var(--surface);
+  box-shadow:
+    0 0 0 1px rgba(223, 182, 255, 0.12),
+    var(--shadow-card);
 }
 
 .achievement-group {
@@ -2118,6 +2182,15 @@ a {
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes routeStatePulse {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
   }
 }
 

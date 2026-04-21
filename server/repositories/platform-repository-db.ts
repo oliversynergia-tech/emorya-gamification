@@ -64,6 +64,7 @@ import {
 import {
   getCurrentAllTimeRankForUser,
   getCurrentReferralRankForUser,
+  getLiveActivityLeaderboard,
   getLiveAllTimeLeaderboard,
   getLiveReferralLeaderboard,
   syncLeaderboardSnapshotsForToday,
@@ -693,6 +694,7 @@ async function getUserSnapshot(
   }
 
   return {
+    userId: user.id,
     displayName: user.display_name,
     level: user.level,
     totalXp: user.total_xp,
@@ -968,6 +970,14 @@ async function getLeaderboard(): Promise<LeaderboardEntry[]> {
 
 async function getReferralLeaderboard(): Promise<LeaderboardEntry[]> {
   return getLiveReferralLeaderboard(8);
+}
+
+async function getWeeklyLeaderboard(): Promise<LeaderboardEntry[]> {
+  return getLiveActivityLeaderboard("weekly", 8);
+}
+
+async function getMonthlyLeaderboard(): Promise<LeaderboardEntry[]> {
+  return getLiveActivityLeaderboard("monthly", 8);
 }
 
 async function getActivityFeed(): Promise<ActivityItem[]> {
@@ -2696,12 +2706,14 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     attributionSource: dashboardUser.attribution_source,
   });
 
-  const [user, quests, achievements, leaderboard, referralLeaderboard, activityFeed] = await Promise.all([
+  const [user, quests, achievements, leaderboard, referralLeaderboard, weeklyLeaderboard, monthlyLeaderboard, activityFeed] = await Promise.all([
     getUserSnapshot(dashboardUser, userProgressState, journeyState, economySettings),
     getQuestBoard({ user: dashboardUser, userProgressState, journeyState, economySettings }),
     getAchievements(userId),
     getLeaderboard(),
     getReferralLeaderboard(),
+    getWeeklyLeaderboard(),
+    getMonthlyLeaderboard(),
     getActivityFeed(),
   ]);
   const { campaignPacks, campaignNotifications, campaignPackHistory } = await getUserCampaignPackJourneys({
@@ -2760,6 +2772,8 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
     achievements,
     leaderboard,
     referralLeaderboard,
+    weeklyLeaderboard,
+    monthlyLeaderboard,
     activityFeed: mergedActivityFeed,
     missionEventHistory,
     premiumMoments: [

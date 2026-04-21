@@ -273,14 +273,37 @@ export function createDbToolContext(rootDir) {
     }
 
     const dateClause = snapshotDate ? `'${snapshotDate}'::date` : "CURRENT_DATE";
+    const dateWindowEnd =
+      period === "weekly"
+        ? `DATE_TRUNC('week', ${dateClause}) + INTERVAL '1 week'`
+        : period === "monthly"
+          ? `DATE_TRUNC('month', ${dateClause}) + INTERVAL '1 month'`
+          : null;
+    const activityWindow =
+      period === "weekly"
+        ? `DATE_TRUNC('week', ${dateClause})`
+        : period === "monthly"
+          ? `DATE_TRUNC('month', ${dateClause})`
+          : null;
     const xpExpression =
       period === "referral"
         ? "COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0)::int"
-        : "u.total_xp";
+        : activityWindow
+          ? "COALESCE(SUM(al.xp_earned), 0)::int"
+          : "u.total_xp";
     const rankOrder =
       period === "referral"
         ? `${xpExpression} DESC, COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE) DESC, u.created_at ASC`
-        : "u.total_xp DESC, u.level DESC, u.created_at ASC";
+        : activityWindow
+          ? `${xpExpression} DESC, u.total_xp DESC, u.level DESC, u.created_at ASC`
+          : "u.total_xp DESC, u.level DESC, u.created_at ASC";
+    const referralJoin = period === "referral" ? "LEFT JOIN referrals r ON r.referrer_user_id = u.id" : "";
+    const activityJoin = activityWindow
+      ? `LEFT JOIN activity_log al
+    ON al.user_id = u.id
+   AND al.created_at >= ${activityWindow}
+   AND al.created_at < ${dateWindowEnd}`
+      : "";
 
     const query = `
 WITH snapshot_source AS (
@@ -288,7 +311,8 @@ WITH snapshot_source AS (
          ${xpExpression} AS xp,
          RANK() OVER (ORDER BY ${rankOrder}) AS rank
   FROM users u
-  LEFT JOIN referrals r ON r.referrer_user_id = u.id
+  ${referralJoin}
+  ${activityJoin}
   GROUP BY u.id, u.total_xp, u.level, u.created_at
 )
 INSERT INTO leaderboard_snapshots (id, user_id, period, xp, rank, snapshot_date)

@@ -33,7 +33,7 @@ function getSnapshotDate(snapshotDate?: string) {
   return snapshotDate ?? new Date().toISOString().slice(0, 10);
 }
 
-async function getSnapshotSource(period: SnapshotPeriod) {
+async function getSnapshotSource(period: SnapshotPeriod, snapshotDate?: string) {
   if (period === "referral") {
     return runQuery<SnapshotSourceRow>(
       `SELECT u.id AS user_id,
@@ -46,6 +46,29 @@ async function getSnapshotSource(period: SnapshotPeriod) {
        FROM users u
        LEFT JOIN referrals r ON r.referrer_user_id = u.id
        GROUP BY u.id, u.created_at`,
+    );
+  }
+
+  if (period === "weekly" || period === "monthly") {
+    const interval = period === "weekly" ? "week" : "month";
+    const anchorDate = snapshotDate ? "$1::date" : "CURRENT_DATE";
+
+    return runQuery<SnapshotSourceRow>(
+      `SELECT u.id AS user_id,
+              COALESCE(SUM(al.xp_earned), 0)::int AS xp,
+              RANK() OVER (
+                ORDER BY COALESCE(SUM(al.xp_earned), 0) DESC,
+                         u.total_xp DESC,
+                         u.level DESC,
+                         u.created_at ASC
+              ) AS rank
+       FROM users u
+       LEFT JOIN activity_log al
+         ON al.user_id = u.id
+        AND al.created_at >= DATE_TRUNC('${interval}', ${anchorDate})
+        AND al.created_at < DATE_TRUNC('${interval}', ${anchorDate}) + INTERVAL '1 ${interval}'
+       GROUP BY u.id, u.total_xp, u.level, u.created_at`,
+      snapshotDate ? [snapshotDate] : [],
     );
   }
 
@@ -64,7 +87,7 @@ export async function syncLeaderboardSnapshot({
   period: SnapshotPeriod;
   snapshotDate?: string;
 }) {
-  const source = await getSnapshotSource(period);
+  const source = await getSnapshotSource(period, snapshotDate);
   const resolvedSnapshotDate = getSnapshotDate(snapshotDate);
 
   for (const row of source.rows) {
@@ -84,6 +107,8 @@ export async function syncLeaderboardSnapshotsForToday() {
   await Promise.all([
     syncLeaderboardSnapshot({ period: "all-time", snapshotDate: today }),
     syncLeaderboardSnapshot({ period: "referral", snapshotDate: today }),
+    syncLeaderboardSnapshot({ period: "weekly", snapshotDate: today }),
+    syncLeaderboardSnapshot({ period: "monthly", snapshotDate: today }),
   ]);
 }
 
@@ -164,6 +189,7 @@ export async function getLiveAllTimeLeaderboard(limit = 12): Promise<Leaderboard
   );
 
   return result.rows.map((entry) => ({
+    userId: entry.user_id,
     rank: entry.rank,
     displayName: entry.display_name,
     level: entry.level,
@@ -217,6 +243,65 @@ export async function getLiveReferralLeaderboard(limit = 8): Promise<Leaderboard
   );
 
   return result.rows.map((entry) => ({
+    userId: entry.user_id,
+    rank: entry.rank,
+    displayName: entry.display_name,
+    level: entry.level,
+    xp: entry.xp,
+    badges: entry.badge_count,
+    tier: entry.subscription_tier,
+    delta: mapLeaderboardDelta(entry.rank, entry.previous_rank),
+  }));
+}
+
+export async function getLiveActivityLeaderboard(period: Extract<SnapshotPeriod, "weekly" | "monthly">, limit = 8): Promise<LeaderboardEntry[]> {
+  const interval = period === "weekly" ? "week" : "month";
+  const result = await runQuery<LiveLeaderboardRow>(
+    `WITH current_activity_leaderboard AS (
+       SELECT u.id AS user_id,
+              RANK() OVER (
+                ORDER BY COALESCE(SUM(al.xp_earned), 0) DESC,
+                         u.total_xp DESC,
+                         u.level DESC,
+                         u.created_at ASC
+              ) AS rank,
+              u.display_name,
+              u.level,
+              COALESCE(SUM(al.xp_earned), 0)::int AS xp,
+              u.subscription_tier,
+              u.created_at
+       FROM users u
+       LEFT JOIN activity_log al
+         ON al.user_id = u.id
+        AND al.created_at >= DATE_TRUNC('${interval}', NOW())
+       GROUP BY u.id, u.display_name, u.level, u.total_xp, u.subscription_tier, u.created_at
+     ),
+     latest_previous_snapshot AS (
+       SELECT DISTINCT ON (ls.user_id) ls.user_id, ls.rank
+       FROM leaderboard_snapshots ls
+       WHERE ls.period = $2
+         AND ls.snapshot_date < CURRENT_DATE
+       ORDER BY ls.user_id, ls.snapshot_date DESC
+     )
+     SELECT cal.user_id,
+            cal.rank,
+            lps.rank AS previous_rank,
+            cal.display_name,
+            cal.level,
+            cal.xp,
+            cal.subscription_tier,
+            COUNT(ua.achievement_id)::int AS badge_count
+     FROM current_activity_leaderboard cal
+     LEFT JOIN latest_previous_snapshot lps ON lps.user_id = cal.user_id
+     LEFT JOIN user_achievements ua ON ua.user_id = cal.user_id AND ua.earned_at IS NOT NULL
+     GROUP BY cal.user_id, cal.rank, lps.rank, cal.display_name, cal.level, cal.xp, cal.subscription_tier, cal.created_at
+     ORDER BY cal.rank ASC, cal.created_at ASC
+     LIMIT $1`,
+    [limit, period],
+  );
+
+  return result.rows.map((entry) => ({
+    userId: entry.user_id,
     rank: entry.rank,
     displayName: entry.display_name,
     level: entry.level,

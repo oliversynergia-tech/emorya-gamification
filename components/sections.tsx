@@ -1047,6 +1047,26 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
   const annualDirectReward = data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward;
   const campaignPreset = data.economy.campaignPreset;
   const rankPressurePack = data.campaignPacks[0] ?? null;
+  const renderLeaderboardRows = (entries: DashboardData["leaderboard"], scoreLabel: string) => {
+    if (entries.length === 0) {
+      return <p className="form-note">Rankings appear here once activity starts moving.</p>;
+    }
+
+    return entries.map((entry) => (
+      <div
+        key={`${scoreLabel}-${entry.userId}`}
+        className={`leaderboard__row leaderboard__row--${entry.tier}${entry.userId === data.user.userId ? " leaderboard__row--current" : ""}`}
+      >
+        <span>#{entry.rank}</span>
+        <strong>{entry.displayName}</strong>
+        <span>Lv {entry.level}</span>
+        <span>
+          {entry.xp.toLocaleString()} {scoreLabel}
+        </span>
+        <span>{entry.delta > 0 ? `+${entry.delta}` : entry.delta}</span>
+      </div>
+    ));
+  };
 
   return (
     <section className="grid grid--leaderboard">
@@ -1056,18 +1076,22 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             <p className="eyebrow">All-time leaderboard</p>
             <h3>See who is leading right now</h3>
           </div>
-          <span className="badge">Weekly reset Monday 00:00 UTC</span>
+          <span className="badge">All-time rank</span>
         </div>
-        <div className="leaderboard">
-          {data.leaderboard.map((entry) => (
-            <div key={`${entry.rank}-${entry.displayName}`} className={`leaderboard__row leaderboard__row--${entry.tier}`}>
-              <span>#{entry.rank}</span>
-              <strong>{entry.displayName}</strong>
-              <span>Lv {entry.level}</span>
-              <span>{entry.xp.toLocaleString()} XP</span>
-              <span>{entry.delta > 0 ? `+${entry.delta}` : entry.delta}</span>
+        <div className="leaderboard leaderboard--complete">
+          {renderLeaderboardRows(data.leaderboard, "XP")}
+        </div>
+        <div className="leaderboard-view-card">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Weekly view</p>
+              <h3>This week’s movers</h3>
             </div>
-          ))}
+            <span className="badge">Resets Monday 00:00 UTC</span>
+          </div>
+          <div className="leaderboard leaderboard--complete">
+            {renderLeaderboardRows(data.weeklyLeaderboard, "weekly XP")}
+          </div>
         </div>
         <div className="info-grid">
           <div className="info-card">
@@ -1214,15 +1238,19 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           </div>
         </div>
         <div className="leaderboard leaderboard--referral">
-          {data.referralLeaderboard.map((entry) => (
-            <div key={`referral-${entry.rank}-${entry.displayName}`} className={`leaderboard__row leaderboard__row--${entry.tier}`}>
-              <span>#{entry.rank}</span>
-              <strong>{entry.displayName}</strong>
-              <span>Lv {entry.level}</span>
-              <span>{entry.xp.toLocaleString()} referral XP</span>
-              <span>{entry.delta > 0 ? `+${entry.delta}` : entry.delta}</span>
+          {renderLeaderboardRows(data.referralLeaderboard, "referral XP")}
+        </div>
+        <div className="leaderboard-view-card">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Monthly view</p>
+              <h3>This month’s strongest progress</h3>
             </div>
-          ))}
+            <span className="badge">Calendar month</span>
+          </div>
+          <div className="leaderboard leaderboard--complete">
+            {renderLeaderboardRows(data.monthlyLeaderboard, "monthly XP")}
+          </div>
         </div>
         {rankPressurePack ? (
           <div className="achievement-list">

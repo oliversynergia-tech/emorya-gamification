@@ -236,6 +236,7 @@ export type DashboardCampaignPack = DashboardData["campaignPacks"][number];
 export type DashboardCampaignPackHistory = DashboardData["campaignPackHistory"][number];
 
 export type LeaderboardEntry = {
+  userId: string;
   rank: number;
   displayName: string;
   level: number;
@@ -255,6 +256,7 @@ export type Achievement = {
 };
 
 export type UserSnapshot = {
+  userId: string;
   displayName: string;
   level: number;
   totalXp: number;
@@ -546,6 +548,8 @@ export type DashboardData = {
   achievements: Achievement[];
   leaderboard: LeaderboardEntry[];
   referralLeaderboard: LeaderboardEntry[];
+  weeklyLeaderboard: LeaderboardEntry[];
+  monthlyLeaderboard: LeaderboardEntry[];
   activityFeed: ActivityItem[];
   missionEventHistory: Array<{
     id: string;
