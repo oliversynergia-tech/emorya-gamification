@@ -1,17 +1,18 @@
 import type { QuestDefinitionAdminItem, QuestTaskBlock, VerificationType } from "@/lib/types";
 
-const verificationOrder: VerificationType[] = [
+type AvailableVerificationType = Exclude<VerificationType, "social-oauth">;
+
+const verificationOrder: AvailableVerificationType[] = [
   "link-visit",
   "manual-review",
   "text-submission",
   "quiz",
   "wallet-check",
   "api-check",
-  "social-oauth",
 ];
 
 const verificationProfiles: Record<
-  VerificationType,
+  AvailableVerificationType,
   {
     label: string;
     summary: string;
@@ -47,11 +48,6 @@ const verificationProfiles: Record<
     label: "API check",
     summary: "Server-side verification adapters that can automatically approve or escalate based on an external result.",
     bestFor: "Zealy, Galxe, partner backends, credential APIs, and custom campaign verifiers.",
-  },
-  "social-oauth": {
-    label: "Social OAuth",
-    summary: "Reserved lane for direct connected-account verification when we want fewer screenshots and more native checks.",
-    bestFor: "Future platform-native social verification with authenticated account connections.",
   },
 };
 

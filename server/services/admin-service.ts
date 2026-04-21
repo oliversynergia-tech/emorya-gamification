@@ -1,6 +1,7 @@
 import { normalizeTokenAsset } from "@/lib/economy-settings";
 import { resolveBrandThemeId } from "@/lib/brand-themes";
 import { validateCampaignPackTemplates } from "@/lib/campaign-pack";
+import { isSupportedLiveQuestVerificationType } from "@/lib/quest-verification-policy";
 import { assertAdminUser, assertSuperAdminUser } from "@/server/auth/admin";
 import { getAuthenticatedUser } from "@/server/services/auth-service";
 import { transitionPendingTokenRedemptionWithDependencies } from "@/server/services/token-redemption-transition";
@@ -219,6 +220,10 @@ function normalizeQuestDefinitionInput(input: Partial<Omit<QuestDefinitionAdminI
     typeof input.xpReward !== "number"
   ) {
     throw new Error("Quest definition requires slug, title, description, category, difficulty, verificationType, recurrence, requiredTier, requiredLevel, and xpReward.");
+  }
+
+  if (!isSupportedLiveQuestVerificationType(input.verificationType)) {
+    throw new Error(`${input.verificationType} verification is not available for live quests yet.`);
   }
 
   return {
@@ -536,6 +541,10 @@ function normalizeQuestDefinitionTemplateInput(
     typeof form.xpReward !== "number"
   ) {
     throw new Error("Quest definition template form requires category, difficulty, verificationType, recurrence, requiredTier, requiredLevel, and xpReward.");
+  }
+
+  if (!isSupportedLiveQuestVerificationType(form.verificationType)) {
+    throw new Error(`${form.verificationType} verification is not available for live quest templates yet.`);
   }
 
   return {

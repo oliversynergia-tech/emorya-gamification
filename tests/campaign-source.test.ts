@@ -12,7 +12,8 @@ test("getCampaignPremiumJourney recommends annual first for taskon lanes", () =>
 
   assert.equal(journey.recommendedTier, "annual");
   assert.match(journey.lanePressure, /premium, wallet, campaign/);
-  assert.match(journey.lanePressure, /\+35 XP/);
+  assert.doesNotMatch(journey.lanePressure, /\+35 XP/);
+  assert.match(journey.lanePressure, /deeper path/);
 });
 
 test("getCampaignPremiumJourney recommends monthly first for zealy lanes", () => {

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { defaultBrandThemeId } from "@/lib/brand-themes";
 import { getBrandCopyProfile, getBrandDisplayReferralCode } from "@/lib/brand-copy";
-import { defaultConnectionRewards, socialPlatformMeta, validateSocialHandle } from "@/lib/social-platforms";
+import { socialPlatformMeta, validateSocialHandle } from "@/lib/social-platforms";
 import type { ProfileData, SocialConnectionState } from "@/lib/types";
 
 export function ProfileEditor({ profile }: { profile: ProfileData }) {
@@ -14,7 +14,6 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
   const brandCopy = getBrandCopyProfile(activeThemeId);
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl ?? "");
-  const [attributionSource, setAttributionSource] = useState(profile.attributionSource ?? "");
   const [socialConnections, setSocialConnections] = useState<SocialConnectionState[]>(profile.socialConnections);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -34,12 +33,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
     socialConnections.map((connection) => {
       const platform = connection.platform as keyof typeof socialPlatformMeta;
       const validation = validateSocialHandle(platform, connection.handle ?? null);
-      const missingVerifiedHandle =
-        connection.verified && !validation.normalized
-          ? `Add a ${connection.platform} handle before marking this connection live.`
-          : null;
-
-      return [connection.platform, missingVerifiedHandle ?? validation.error];
+      return [connection.platform, validation.error];
     }),
   ) as Record<string, string | null>;
 
@@ -66,7 +60,6 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
         body: JSON.stringify({
           displayName,
           avatarUrl,
-          attributionSource,
           socialConnections,
         }),
       });
@@ -111,14 +104,6 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
             placeholder="https://..."
           />
         </label>
-        <label className="field">
-          <span>Attribution source</span>
-          <input
-            value={attributionSource}
-            onChange={(event) => setAttributionSource(event.target.value)}
-            placeholder="zealy, social, organic, referral"
-          />
-        </label>
         <div className="profile-meta">
           <div className="info-card">
             <span>Email</span>
@@ -154,25 +139,11 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
                     <strong>{connection.platform}</strong>
                     <small>
                       {connection.verified
-                        ? "Connected on your profile"
-                        : `Mark as connected to reflect +${defaultConnectionRewards[connection.platform as keyof typeof defaultConnectionRewards] ?? 15} XP on the ${brandCopy.nativeLoop}`}
+                        ? "Verified on your profile"
+                        : `Add your handle so Emorya can verify this account for ${brandCopy.nativeLoop} quests.`}
                     </small>
                   </div>
-                  <label className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      checked={connection.verified}
-                      onChange={(event) =>
-                        updateConnection(connection.platform, {
-                          verified: event.target.checked,
-                          connectedAt: event.target.checked
-                            ? connection.connectedAt ?? new Date().toISOString()
-                            : null,
-                        })
-                      }
-                    />
-                    <span>{connection.verified ? "Connected" : "Pending"}</span>
-                  </label>
+                  <span className="badge">{connection.verified ? "Verified" : "Needs review"}</span>
                 </div>
                 <label className="field">
                   <span>{connection.platform} handle</span>

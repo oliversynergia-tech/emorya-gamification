@@ -1884,7 +1884,7 @@ export function QuestDefinitionManagementPanel({
         <label className="field">
           <span>Verification</span>
           <select value={form.verificationType} onChange={(event) => setForm((current) => ({ ...current, verificationType: event.target.value }))}>
-            {["social-oauth", "wallet-check", "quiz", "manual-review", "link-visit", "api-check", "text-submission"].map((value) => (
+            {["wallet-check", "quiz", "manual-review", "link-visit", "api-check", "text-submission"].map((value) => (
               <option key={value} value={value}>{value}</option>
             ))}
           </select>
@@ -2311,7 +2311,7 @@ export function QuestDefinitionManagementPanel({
             <span>Proof type</span>
             <select value={metadataBuilder.proofType} onChange={(event) => updateMetadataBuilder((current) => ({ ...current, proofType: event.target.value }))}>
               <option value="">No proof guidance</option>
-              {["link", "text", "url", "screenshot", "file-upload", "wallet", "social-oauth", "quiz", "manual-review"].map((value) => (
+              {["link", "text", "url", "screenshot", "file-upload", "wallet", "quiz", "manual-review"].map((value) => (
                 <option key={value} value={value}>{value}</option>
               ))}
             </select>
@@ -2541,7 +2541,7 @@ export function QuestDefinitionManagementPanel({
                       }
                     >
                       <option value="">No proof guidance</option>
-                      {["link", "text", "url", "screenshot", "file-upload", "wallet", "social-oauth", "quiz", "manual-review"].map((value) => (
+                      {["link", "text", "url", "screenshot", "file-upload", "wallet", "quiz", "manual-review"].map((value) => (
                         <option key={value} value={value}>{value}</option>
                       ))}
                     </select>

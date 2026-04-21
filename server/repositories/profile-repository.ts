@@ -92,40 +92,33 @@ export async function updateProfileByUserId({
   userId,
   displayName,
   avatarUrl,
-  attributionSource,
   socialConnections,
 }: {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
-  attributionSource: string | null;
   socialConnections: SocialConnectionState[];
 }) {
   await runQuery(
     `UPDATE users
      SET display_name = $2,
          avatar_url = $3,
-         attribution_source = $4,
          updated_at = NOW()
      WHERE id = $1`,
-    [userId, displayName, avatarUrl, attributionSource],
+    [userId, displayName, avatarUrl],
   );
 
   for (const connection of socialConnections) {
     await runQuery(
       `INSERT INTO social_connections (id, user_id, platform, handle, verified, connected_at)
-       VALUES ($6, $1, $2, $3, $4, $5)
+       VALUES ($4, $1, $2, $3, FALSE, NULL)
        ON CONFLICT (user_id, platform)
        DO UPDATE SET
-         handle = EXCLUDED.handle,
-         verified = EXCLUDED.verified,
-         connected_at = EXCLUDED.connected_at`,
+         handle = EXCLUDED.handle`,
       [
         userId,
         connection.platform,
         connection.handle,
-        connection.verified,
-        connection.connectedAt,
         randomUUID(),
       ],
     );
