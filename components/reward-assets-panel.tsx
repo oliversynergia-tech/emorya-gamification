@@ -123,8 +123,8 @@ export function RewardAssetsPanel({
         <button className="button button--primary button--small" type="button" disabled={!canManage || pending} onClick={submit}>{pending ? "Saving..." : editingId ? "Update asset" : "Create asset"}</button>
         <button className="button button--secondary button--small" type="button" disabled={pending} onClick={reset}>Reset</button>
       </div>
-      {message ? <p className="status status--success">{message}</p> : null}
-      {error ? <p className="status status--error">{error}</p> : null}
+      {message ? <p className="status status--success" role="status" aria-live="polite">{message}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
       <div className="achievement-list">
         {assets.map((asset) => (
           <article key={asset.id} className="achievement-card">

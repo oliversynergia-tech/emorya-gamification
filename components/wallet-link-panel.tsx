@@ -364,6 +364,7 @@ export function WalletLinkPanel({
                 className="text-link"
                 disabled={unlinkingAddress === address}
                 onClick={() => disconnectWallet(address)}
+                aria-label={`Disconnect wallet ${address}`}
               >
                 {unlinkingAddress === address ? "Disconnecting..." : "Disconnect"}
               </button>
@@ -398,11 +399,11 @@ export function WalletLinkPanel({
         </button>
       </div>
       {!walletConnectProjectId ? (
-        <p className="status status--error">
+        <p className="status status--error" role="alert">
           {walletLabel} connection is not enabled in this environment yet.
         </p>
       ) : null}
-      {walletStatus ? <p className="status status--success">{walletStatus}</p> : null}
+      {walletStatus ? <p className="status status--success" role="status" aria-live="polite">{walletStatus}</p> : null}
       {qrCodeDataUrl ? (
         <div className="qr-card">
           <strong>{walletLabel} QR</strong>
@@ -438,7 +439,7 @@ export function WalletLinkPanel({
           </button>
         </div>
       ) : null}
-      {message ? <p className="status status--success">{message}</p> : null}
+      {message ? <p className="status status--success" role="status" aria-live="polite">{message}</p> : null}
       {message && activeMissionLabel ? (
         <div className="achievement-card achievement-card--progress">
           <div>
@@ -470,7 +471,7 @@ export function WalletLinkPanel({
           </div>
         </div>
       ) : null}
-      {error ? <p className="status status--error">{error}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
       <p className="form-note">
         Wallet linking uses a real MultiversX signature for the issued challenge message. You can disconnect a linked wallet at any time.
       </p>

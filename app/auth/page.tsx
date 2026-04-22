@@ -29,7 +29,7 @@ export default async function AuthPage({
       <section className="page-hero page-hero--auth">
         <div className="panel panel--hero panel--hero-compact lane-theme--direct">
           <p className="eyebrow">Get started</p>
-          <h2>Create your account and start building progress.</h2>
+          <h1>Create your account and start building progress.</h1>
           <p className="lede">
             Set up your account, connect what you need, and come back regularly to build real momentum.
           </p>
@@ -80,7 +80,7 @@ export default async function AuthPage({
           <div className="panel__header">
             <div>
               <p className="eyebrow">After sign-up</p>
-              <h3>What opens next</h3>
+              <h2>What opens next</h2>
             </div>
           </div>
           <div className="info-grid">
@@ -129,7 +129,7 @@ export default async function AuthPage({
           <div className="panel__header">
             <div>
               <p className="eyebrow">Activation ladder</p>
-              <h3>{data.user.starterPath.title}</h3>
+              <h2>{data.user.starterPath.title}</h2>
             </div>
             <span className="badge">{Math.round(data.user.starterPath.progress * 100)}%</span>
           </div>
@@ -160,7 +160,7 @@ export default async function AuthPage({
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Pick up again</p>
-                <h3>Pick up where you left off</h3>
+                <h2>Pick up where you left off</h2>
               </div>
               <span className="badge badge--pink">{returnPack.label}</span>
             </div>
@@ -205,7 +205,7 @@ export default async function AuthPage({
         <section className="panel panel--glass referral-invite-banner">
           <div>
             <p className="eyebrow">Invite accepted</p>
-            <h3>Your referral code is ready.</h3>
+            <h2>Your referral code is ready.</h2>
             <p>Create your account below and the code will be applied automatically.</p>
           </div>
           <span className="badge">{initialReferralCode}</span>
@@ -226,7 +226,7 @@ export default async function AuthPage({
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Wallet link</p>
-                <h3>Connect your wallet after account setup</h3>
+                <h2>Connect your wallet after account setup</h2>
               </div>
             </div>
             <p className="form-note">

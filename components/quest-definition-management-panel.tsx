@@ -1929,7 +1929,7 @@ export function QuestDefinitionManagementPanel({
         </label>
       </div>
       {duplicateSlug ? (
-        <p className="status status--error">
+        <p className="status status--error" role="alert">
           Slug collision: this would conflict with {duplicateSlug.title}.
         </p>
       ) : null}
@@ -2125,7 +2125,7 @@ export function QuestDefinitionManagementPanel({
             />
           </label>
         ) : null}
-        {bridgeTemplateWarning ? <p className="status status--error">{bridgeTemplateWarning}</p> : null}
+        {bridgeTemplateWarning ? <p className="status status--error" role="alert">{bridgeTemplateWarning}</p> : null}
         <div className="review-bulk-actions">
           <button
             className="button button--secondary button--small"
@@ -2179,9 +2179,9 @@ export function QuestDefinitionManagementPanel({
             This creates one live Zealy bridge quest plus Galxe and TaskOn feeder quests using the saved templates.
           </p>
           {campaignPackValidationError ? (
-            <p className="status status--error">{campaignPackValidationError}</p>
+            <p className="status status--error" role="alert">{campaignPackValidationError}</p>
           ) : (
-            <p className="status status--success">Campaign pack validation passed.</p>
+            <p className="status status--success" role="status" aria-live="polite">Campaign pack validation passed.</p>
           )}
         </div>
         <div className="review-history__list">
@@ -2627,8 +2627,8 @@ export function QuestDefinitionManagementPanel({
           Reset form
         </button>
       </div>
-      {message ? <p className="status status--success">{message}</p> : null}
-      {error ? <p className="status status--error">{error}</p> : null}
+      {message ? <p className="status status--success" role="status" aria-live="polite">{message}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
       <div className="review-history__list">
         {loading ? (
           <p className="form-note">Loading quest definitions...</p>

@@ -501,11 +501,11 @@ export function QuestActionsPanel({
   }
 
   return (
-    <section className="panel" id="quest-actions">
+    <section className="panel" id="quest-actions" role="region" aria-labelledby="quest-actions-title" aria-busy={Boolean(pendingQuestId)}>
       <div className="panel__header">
         <div>
           <p className="eyebrow">Quest actions</p>
-          <h3>Submit quests and keep your progress moving</h3>
+          <h2 id="quest-actions-title">Submit quests and keep your progress moving</h2>
         </div>
       </div>
       {!isAuthenticated ? (
@@ -755,6 +755,7 @@ export function QuestActionsPanel({
                     type="button"
                     onClick={() => handleLinkVisit(quest)}
                     disabled={disabled || pending}
+                    aria-label={`Record ${quest.ctaLabel?.toLowerCase() ?? "visit"} for ${quest.title}`}
                   >
                     {pending ? "Submitting..." : `Record ${quest.ctaLabel?.toLowerCase() ?? "visit"}`}
                   </button>
@@ -784,6 +785,7 @@ export function QuestActionsPanel({
                     type="button"
                     onClick={() => handleWalletCheck(quest)}
                     disabled={disabled || pending || walletAddresses.length === 0}
+                    aria-label={`Verify linked wallet for ${quest.title}`}
                   >
                     {pending ? "Submitting..." : "Verify linked wallet"}
                   </button>
@@ -825,7 +827,7 @@ export function QuestActionsPanel({
                       disabled={disabled || pending}
                     />
                   </label>
-                  <button className="button button--primary" type="submit" disabled={disabled || pending}>
+                  <button className="button button--primary" type="submit" disabled={disabled || pending} aria-label={`Run external verification for ${quest.title}`}>
                     {pending ? "Verifying..." : "Run external verification"}
                   </button>
                 </form>
@@ -864,7 +866,7 @@ export function QuestActionsPanel({
                       disabled={disabled || pending}
                     />
                   </label>
-                  <button className="button button--primary" type="submit" disabled={disabled || pending}>
+                  <button className="button button--primary" type="submit" disabled={disabled || pending} aria-label={`Send text submission for ${quest.title}`}>
                     {pending ? "Submitting..." : "Send text submission"}
                   </button>
                 </form>
@@ -882,7 +884,7 @@ export function QuestActionsPanel({
           );
         })}
       </div>
-      {message ? <p className="status status--success">{message}</p> : null}
+      {message ? <p className="status status--success" role="status" aria-live="polite">{message}</p> : null}
       {message && !progressUpdate && activeCampaignPack && missionCue ? (
         <p className={`mission-cue mission-cue--${missionCue.tone}`}>
           <strong>{missionCue.badge}</strong> {missionCue.note}
@@ -958,7 +960,7 @@ export function QuestActionsPanel({
           ) : null}
         </div>
       ) : null}
-      {error ? <p className="status status--error">{error}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
     </section>
   );
 }

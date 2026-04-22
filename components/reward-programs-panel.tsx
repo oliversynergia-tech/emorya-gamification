@@ -239,8 +239,8 @@ export function RewardProgramsPanel({
           Reset
         </button>
       </div>
-      {message ? <p className="status status--success">{message}</p> : null}
-      {error ? <p className="status status--error">{error}</p> : null}
+      {message ? <p className="status status--success" role="status" aria-live="polite">{message}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
       <div className="review-history__list">
         {programs.map((program) => (
           <article key={program.id} className="review-history__item">

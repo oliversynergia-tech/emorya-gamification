@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ReactNode } from "react";
 
 import { type BrandThemeId } from "@/lib/brand-themes";
+import { MobileNavMenu } from "@/components/mobile-nav-menu";
 import { NavLinks } from "@/components/nav-links";
 import { resolveRuntimeBrandTheme } from "@/lib/brand-themes/server";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -35,6 +36,9 @@ export async function SiteShell({
 
   return (
     <div className="shell">
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <div className="shell__glow shell__glow--left" />
       <div className="shell__glow shell__glow--right" />
       <div className="shell__mesh" />
@@ -52,7 +56,7 @@ export async function SiteShell({
           {showBrandCopy ? (
             <div className="brand-copy">
               <p className="eyebrow">{eyebrow ?? activeBrandTheme.brand.defaultEyebrow}</p>
-              <h1 className="brandmark">{activeBrandTheme.brand.defaultTagline}</h1>
+              <p className="brandmark">{activeBrandTheme.brand.defaultTagline}</p>
             </div>
           ) : null}
         </div>
@@ -75,33 +79,29 @@ export async function SiteShell({
             )}
           </div>
         </div>
-        <details className="mobile-nav">
-          <summary className="mobile-nav__summary">
-            <span>Menu</span>
-            <span aria-hidden="true">+</span>
-          </summary>
-          <div className="mobile-nav__panel">
-            <NavLinks items={navItems} className="mobile-nav__links" />
-            {canSwitchThemes ? <ThemeSwitcher activeTheme={activeBrandTheme.id as BrandThemeId} /> : null}
-            <div className={`session-chip${!currentUser && hideAuthAction ? " session-chip--hidden" : ""}`}>
-              {currentUser ? (
-                <>
-                  <div>
-                    <strong>{currentUser.displayName}</strong>
-                    <small>{currentUser.email ?? "Wallet-only account"}</small>
-                  </div>
-                  <SignOutButton />
-                </>
-              ) : (
-                <Link href="/auth" className="button button--secondary">
-                  Sign in
-                </Link>
-              )}
-            </div>
+        <MobileNavMenu>
+          <NavLinks items={navItems} className="mobile-nav__links" />
+          {canSwitchThemes ? <ThemeSwitcher activeTheme={activeBrandTheme.id as BrandThemeId} /> : null}
+          <div className={`session-chip${!currentUser && hideAuthAction ? " session-chip--hidden" : ""}`}>
+            {currentUser ? (
+              <>
+                <div>
+                  <strong>{currentUser.displayName}</strong>
+                  <small>{currentUser.email ?? "Wallet-only account"}</small>
+                </div>
+                <SignOutButton />
+              </>
+            ) : (
+              <Link href="/auth" className="button button--secondary">
+                Sign in
+              </Link>
+            )}
           </div>
-        </details>
+        </MobileNavMenu>
       </header>
-      <main className="content">{children}</main>
+      <main id="main-content" className="content" tabIndex={-1}>
+        {children}
+      </main>
     </div>
   );
 }

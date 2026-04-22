@@ -21,7 +21,7 @@ export default async function LeaderboardPage() {
       <section className="page-hero page-hero--leaderboard">
         <div className="panel panel--hero panel--hero-compact">
           <p className="eyebrow">Leaderboard</p>
-          <h2>See how your progress stacks up this week.</h2>
+          <h1>See how your progress stacks up this week.</h1>
           <p className="lede">Climb by completing quests, staying active, and bringing the right people into Emorya.</p>
           <div className="lane-chip-row">
             {["Complete quests", "Keep your streak alive", "Invite friends"].map((chip) => (
@@ -69,7 +69,7 @@ export default async function LeaderboardPage() {
           <div className="panel__header">
             <div>
               <p className="eyebrow">How it moves</p>
-              <h3>What actually helps you climb</h3>
+              <h2>What actually helps you climb</h2>
             </div>
           </div>
           <div className="economy-stack">

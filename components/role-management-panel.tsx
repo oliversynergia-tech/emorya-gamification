@@ -279,8 +279,8 @@ export function RoleManagementPanel({
           );
         })}
       </div>
-      {message ? <p className="status status--success">{message}</p> : null}
-      {error ? <p className="status status--error">{error}</p> : null}
+      {message ? <p className="status status--success" role="status" aria-live="polite">{message}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
     </section>
   );
 }

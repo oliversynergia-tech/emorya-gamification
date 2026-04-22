@@ -158,32 +158,35 @@ export function CampaignMissionCtaAnalyticsPanel({
         <span className="badge">{filtered.length} CTA rows</span>
       </div>
       <div className="review-actions">
-        <input
-          className="input"
-          value={packSearch}
-          onChange={(event) => setPackSearch(event.target.value)}
-          placeholder="Search pack label or id"
-        />
+        <label className="field">
+          <span>Search pack label or id</span>
+          <input
+            className="input"
+            value={packSearch}
+            onChange={(event) => setPackSearch(event.target.value)}
+            placeholder="Search pack label or id"
+          />
+        </label>
         <button className="button button--secondary" type="button" onClick={exportRows}>
           Export CSV
         </button>
       </div>
       <div className="review-actions">
-        <button className={`button ${laneFilter === "all" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setLaneFilter("all")}>
+        <button className={`button ${laneFilter === "all" ? "button--primary" : "button--secondary"}`} type="button" aria-pressed={laneFilter === "all"} onClick={() => setLaneFilter("all")}>
           All lanes
         </button>
         {(["direct", "zealy", "galxe", "taskon"] as const).map((lane) => (
-          <button key={lane} className={`button ${laneFilter === lane ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setLaneFilter(lane)}>
+          <button key={lane} className={`button ${laneFilter === lane ? "button--primary" : "button--secondary"}`} type="button" aria-pressed={laneFilter === lane} onClick={() => setLaneFilter(lane)}>
             {lane}
           </button>
         ))}
       </div>
       <div className="review-actions">
-        <button className={`button ${variantFilter === "all" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setVariantFilter("all")}>
+        <button className={`button ${variantFilter === "all" ? "button--primary" : "button--secondary"}`} type="button" aria-pressed={variantFilter === "all"} onClick={() => setVariantFilter("all")}>
           All variants
         </button>
         {variants.map((variant) => (
-          <button key={variant} className={`button ${variantFilter === variant ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setVariantFilter(variant)}>
+          <button key={variant} className={`button ${variantFilter === variant ? "button--primary" : "button--secondary"}`} type="button" aria-pressed={variantFilter === variant} onClick={() => setVariantFilter(variant)}>
             {variant}
           </button>
         ))}

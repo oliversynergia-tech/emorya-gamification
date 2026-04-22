@@ -35,7 +35,7 @@ export default async function ProfilePage() {
       <section className="page-hero page-hero--profile">
         <div className="panel panel--hero panel--hero-compact">
           <p className="eyebrow">Profile</p>
-          <h2>Keep your account details, wallet, and invites ready to go.</h2>
+          <h1>Keep your account details, wallet, and invites ready to go.</h1>
           <p className="lede">
             Manage the essentials here so signing in, sharing your code, and picking up the next quest stays easy.
           </p>
@@ -95,7 +95,7 @@ export default async function ProfilePage() {
           <div className="panel__header">
             <div>
               <p className="eyebrow">Wallet link</p>
-              <h3>Sign in to manage your profile</h3>
+              <h2>Sign in to manage your profile</h2>
             </div>
           </div>
           <p className="form-note">

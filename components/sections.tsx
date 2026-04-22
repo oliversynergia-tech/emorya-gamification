@@ -416,10 +416,10 @@ export function HeroSection({ data }: { data: DashboardData }) {
     : "Start with a few simple steps, come back regularly, and watch your rewards and progress grow.";
 
   return (
-    <section className="hero grid">
+    <section className="hero grid" aria-labelledby="home-title">
       <div className="panel panel--hero lane-theme--direct">
         <p className="eyebrow">Get started</p>
-        <h2>{heroTitle}</h2>
+        <h1 id="home-title">{heroTitle}</h1>
         <p className="lede">
           {heroDescription}
         </p>
@@ -482,13 +482,14 @@ export function DashboardSnapshot({
   const recommendedFocus = data.user.starterPath.nextStepLabel ?? "Keep your progress moving";
 
   return (
-    <section className="grid grid--dashboard">
+    <section className="grid grid--dashboard" aria-labelledby="dashboard-title">
+      <h1 id="dashboard-title" className="sr-only">Daily loop dashboard</h1>
       <div className="dashboard-column">
         <div className="panel">
           <div className="panel__header">
             <div>
               <p className="eyebrow">Your account</p>
-              <h3>{data.user.displayName}</h3>
+              <h2>{data.user.displayName}</h2>
             </div>
             <span className={tierClass(data.user.tier)}>{getTierLabel(data.user.tier)}</span>
           </div>
@@ -543,7 +544,7 @@ export function DashboardSnapshot({
           <div className="panel__header">
             <div>
               <p className="eyebrow">Activation ladder</p>
-              <h3>{data.user.starterPath.title}</h3>
+              <h2>{data.user.starterPath.title}</h2>
             </div>
             <span className={`badge ${data.user.starterPath.complete ? "badge--pink" : ""}`}>
               {Math.round(data.user.starterPath.progress * 100)}%
@@ -576,7 +577,7 @@ export function DashboardSnapshot({
           <div className="panel__header">
             <div>
               <p className="eyebrow">Active missions</p>
-              <h3>Your current mission progress</h3>
+              <h2>Your current mission progress</h2>
             </div>
             <span className="badge badge--pink">{data.campaignPacks.length} active</span>
           </div>
@@ -667,7 +668,7 @@ export function DashboardSnapshot({
           <div className="panel__header">
             <div>
               <p className="eyebrow">Next up</p>
-              <h3>Your best next move</h3>
+              <h2>Your best next move</h2>
             </div>
             <span className="badge badge--pink">{priorityAction.packLabel}</span>
           </div>
@@ -726,7 +727,7 @@ export function DashboardSnapshot({
           <div className="panel__header">
             <div>
               <p className="eyebrow">Progress and rewards</p>
-              <h3>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked" : "How your progress is building"}</h3>
+              <h2>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked" : "How your progress is building"}</h2>
             </div>
             <span className="badge badge--pink">{data.user.tokenProgram.eligibilityPoints} pts</span>
           </div>
@@ -818,7 +819,7 @@ export function DashboardSnapshot({
           <div className="panel__header">
             <div>
               <p className="eyebrow">Weekly progress</p>
-              <h3>{data.user.weeklyProgress.tierLabel}</h3>
+              <h2>{data.user.weeklyProgress.tierLabel}</h2>
             </div>
             <span className="badge">{data.user.weeklyProgress.xp} XP</span>
           </div>
@@ -988,11 +989,11 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
   const overflowQuests = activeQuests.filter((quest) => !phasedQuestIds.has(quest.id));
 
   return (
-    <section className="panel" id="quest-board">
+    <section className="panel" id="quest-board" role="region" aria-labelledby="quest-board-title">
       <div className="panel__header">
         <div>
           <p className="eyebrow">Quest board</p>
-          <h3>Your quests, ordered by what matters most next</h3>
+          <h2 id="quest-board-title">Your quests, ordered by what matters most next</h2>
         </div>
         <span className="badge">{activeQuests.length} active / {lockedPreviews.length} previewed</span>
       </div>
@@ -1001,11 +1002,11 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
       </p>
       <div className="track-board">
         {groupedActivePhases.map((group) => (
-          <section key={group.key} className="panel panel--glass">
+          <section key={group.key} className="panel panel--glass" role="region" aria-labelledby={`quest-phase-${group.key}`}>
             <div className="panel__header">
               <div>
                 <p className="eyebrow">{group.eyebrow}</p>
-                <h3>{group.title}</h3>
+                <h3 id={`quest-phase-${group.key}`}>{group.title}</h3>
               </div>
               <span className="badge">{group.quests.length} live</span>
             </div>
@@ -1014,11 +1015,11 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
           </section>
         ))}
         {overflowQuests.length > 0 ? (
-          <section className="panel panel--glass">
+          <section className="panel panel--glass" role="region" aria-labelledby="quest-overflow-title">
             <div className="panel__header">
               <div>
                 <p className="eyebrow">Additional live quests</p>
-                <h3>More active quests</h3>
+                <h3 id="quest-overflow-title">More active quests</h3>
               </div>
               <span className="badge">{overflowQuests.length} live</span>
             </div>
@@ -1027,11 +1028,11 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
             <div className="quest-grid">{overflowQuests.map(renderQuestCard)}</div>
           </section>
         ) : null}
-        <section className="panel panel--glass">
+        <section className="panel panel--glass" role="region" aria-labelledby="quest-locked-title">
           <div className="panel__header">
             <div>
               <p className="eyebrow">Locked previews</p>
-              <h3>What unlocks later</h3>
+              <h3 id="quest-locked-title">What unlocks later</h3>
             </div>
           </div>
           <div className="quest-grid">
@@ -1050,36 +1051,48 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
   const rankPressurePack = data.campaignPacks[0] ?? null;
   const renderLeaderboardRows = (entries: DashboardData["leaderboard"], scoreLabel: string) => {
     if (entries.length === 0) {
-      return <p className="form-note">Rankings appear here once activity starts moving.</p>;
+      return (
+        <div className="leaderboard__row" role="row">
+          <span role="cell">Rankings appear here once activity starts moving.</span>
+        </div>
+      );
     }
 
     return entries.map((entry) => (
       <div
         key={`${scoreLabel}-${entry.userId}`}
         className={`leaderboard__row leaderboard__row--${entry.tier}${entry.userId === data.user.userId ? " leaderboard__row--current" : ""}`}
+        role="row"
       >
-        <span>#{entry.rank}</span>
-        <strong>{entry.displayName}</strong>
-        <span>Lv {entry.level}</span>
-        <span>
+        <span role="cell">#{entry.rank}</span>
+        <strong role="cell">{entry.displayName}</strong>
+        <span role="cell">Lv {entry.level}</span>
+        <span role="cell">
           {entry.xp.toLocaleString()} {scoreLabel}
         </span>
-        <span>{entry.delta > 0 ? `+${entry.delta}` : entry.delta}</span>
+        <span role="cell">{entry.delta > 0 ? `+${entry.delta}` : entry.delta}</span>
       </div>
     ));
   };
 
   return (
-    <section className="grid grid--leaderboard">
+    <section className="grid grid--leaderboard" role="region" aria-labelledby="leaderboard-title">
       <div className="panel">
         <div className="panel__header">
           <div>
             <p className="eyebrow">All-time leaderboard</p>
-            <h3>See who is leading right now</h3>
+            <h2 id="leaderboard-title">See who is leading right now</h2>
           </div>
           <span className="badge">All-time rank</span>
         </div>
-        <div className="leaderboard leaderboard--complete">
+        <div className="leaderboard leaderboard--complete" role="table" aria-label="All-time leaderboard">
+          <div className="sr-only" role="row">
+            <span role="columnheader">Rank</span>
+            <span role="columnheader">Player</span>
+            <span role="columnheader">Level</span>
+            <span role="columnheader">Score</span>
+            <span role="columnheader">Change</span>
+          </div>
           {renderLeaderboardRows(data.leaderboard, "XP")}
         </div>
         <div className="leaderboard-view-card">
@@ -1090,7 +1103,14 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             </div>
             <span className="badge">Resets Monday 00:00 UTC</span>
           </div>
-          <div className="leaderboard leaderboard--complete">
+          <div className="leaderboard leaderboard--complete" role="table" aria-label="Weekly leaderboard">
+            <div className="sr-only" role="row">
+              <span role="columnheader">Rank</span>
+              <span role="columnheader">Player</span>
+              <span role="columnheader">Level</span>
+              <span role="columnheader">Score</span>
+              <span role="columnheader">Change</span>
+            </div>
             {renderLeaderboardRows(data.weeklyLeaderboard, "weekly XP")}
           </div>
         </div>
@@ -1238,7 +1258,14 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             </div>
           </div>
         </div>
-        <div className="leaderboard leaderboard--referral">
+        <div className="leaderboard leaderboard--referral" role="table" aria-label="Referral leaderboard">
+          <div className="sr-only" role="row">
+            <span role="columnheader">Rank</span>
+            <span role="columnheader">Player</span>
+            <span role="columnheader">Level</span>
+            <span role="columnheader">Score</span>
+            <span role="columnheader">Change</span>
+          </div>
           {renderLeaderboardRows(data.referralLeaderboard, "referral XP")}
         </div>
         <div className="leaderboard-view-card">
@@ -1249,7 +1276,14 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             </div>
             <span className="badge">Calendar month</span>
           </div>
-          <div className="leaderboard leaderboard--complete">
+          <div className="leaderboard leaderboard--complete" role="table" aria-label="Monthly leaderboard">
+            <div className="sr-only" role="row">
+              <span role="columnheader">Rank</span>
+              <span role="columnheader">Player</span>
+              <span role="columnheader">Level</span>
+              <span role="columnheader">Score</span>
+              <span role="columnheader">Change</span>
+            </div>
             {renderLeaderboardRows(data.monthlyLeaderboard, "monthly XP")}
           </div>
         </div>
@@ -1309,7 +1343,8 @@ export function ProfileSection({ data }: { data: DashboardData }) {
     .sort((left, right) => right.progress - left.progress);
 
   return (
-    <section className="grid grid--profile">
+    <section className="grid grid--profile" role="region" aria-labelledby="profile-region-title">
+      <h2 id="profile-region-title" className="sr-only">Profile details and progress</h2>
       <div className="panel">
         <div className="panel__header">
           <div>
@@ -1577,12 +1612,12 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
   const nextAchievement = progressingAchievements[0] ?? null;
 
   return (
-    <section className="grid grid--profile">
+    <section className="grid grid--profile" role="region" aria-labelledby="achievements-hub-title">
       <div className="panel">
         <div className="panel__header">
           <div>
             <p className="eyebrow">Progress overview</p>
-            <h3>Your achievements at a glance</h3>
+            <h2 id="achievements-hub-title">Your achievements at a glance</h2>
           </div>
           <span className="badge badge--pink">{completionRate}% complete</span>
         </div>
@@ -1629,7 +1664,7 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Unlocked badges</p>
-            <h3>Your completed achievements</h3>
+            <h2>Your completed achievements</h2>
           </div>
         </div>
         <div className="achievement-list">
@@ -1652,7 +1687,7 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">In progress</p>
-            <h3>What to focus on next</h3>
+            <h2>What to focus on next</h2>
           </div>
         </div>
         <div className="achievement-list">

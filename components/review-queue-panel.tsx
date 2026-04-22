@@ -388,11 +388,11 @@ export function ReviewQueuePanel({
   }
 
   return (
-    <section className="panel">
+    <section className="panel" role="region" aria-labelledby="review-queue-title" aria-busy={Boolean(pendingId)}>
       <div className="panel__header">
         <div>
           <p className="eyebrow">Review queue</p>
-          <h3>Pending quest submissions</h3>
+          <h2 id="review-queue-title">Pending quest submissions</h2>
         </div>
       </div>
       {!isAuthenticated ? <p className="form-note">Sign in to review pending submissions.</p> : null}
@@ -512,14 +512,16 @@ export function ReviewQueuePanel({
                   <p className="form-note">Note: {String(item.submissionData.moderationNote)}</p>
                 ) : null}
                 <button
-                  className="button button--secondary button--small"
-                  type="button"
-                  onClick={() => setExpandedHistoryId((current) => (current === item.id ? null : item.id))}
-                >
+                className="button button--secondary button--small"
+                type="button"
+                onClick={() => setExpandedHistoryId((current) => (current === item.id ? null : item.id))}
+                aria-expanded={expandedHistoryId === item.id}
+                aria-controls={`review-history-detail-${item.id}`}
+              >
                   {expandedHistoryId === item.id ? "Hide details" : "View details"}
                 </button>
                 {expandedHistoryId === item.id ? (
-                  <div className="review-history__detail">
+                  <div className="review-history__detail" id={`review-history-detail-${item.id}`}>
                     <div className="info-grid">
                       <div className="info-card">
                         <span>User</span>
@@ -566,6 +568,7 @@ export function ReviewQueuePanel({
             type="button"
             disabled={!isAuthenticated || pendingId === "bulk" || bulkConfirmation.trim() !== `BULK ${selectedIds.length}`}
             onClick={() => bulkReview("approved")}
+            aria-label={`Approve ${selectedIds.length} selected submissions`}
           >
             {pendingId === "bulk" ? "Working..." : `Approve selected (${selectedIds.length})`}
           </button>
@@ -574,6 +577,7 @@ export function ReviewQueuePanel({
             type="button"
             disabled={!isAuthenticated || pendingId === "bulk" || bulkConfirmation.trim() !== `BULK ${selectedIds.length}`}
             onClick={() => bulkReview("rejected")}
+            aria-label={`Reject ${selectedIds.length} selected submissions`}
           >
             Reject selected
           </button>
@@ -625,6 +629,7 @@ export function ReviewQueuePanel({
                 type="button"
                 onClick={() => reviewSubmission(item, "approved")}
                 disabled={!isAuthenticated || pendingId === item.id}
+                aria-label={`Approve ${item.questTitle} submission from ${item.userDisplayName}`}
               >
                 {pendingId === item.id ? "Working..." : "Approve"}
               </button>
@@ -633,6 +638,7 @@ export function ReviewQueuePanel({
                 type="button"
                 onClick={() => reviewSubmission(item, "rejected")}
                 disabled={!isAuthenticated || pendingId === item.id}
+                aria-label={`Reject ${item.questTitle} submission from ${item.userDisplayName}`}
               >
                 Reject
               </button>
@@ -640,8 +646,8 @@ export function ReviewQueuePanel({
           </article>
         ))}
       </div>
-      {message ? <p className="status status--success">{message}</p> : null}
-      {error ? <p className="status status--error">{error}</p> : null}
+      {message ? <p className="status status--success" role="status" aria-live="polite">{message}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
     </section>
   );
 }

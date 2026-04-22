@@ -683,8 +683,8 @@ export function TokenSettlementPanel({
         ))}
       </div>
       {analyticsPending ? <p className="form-note">Refreshing analytics…</p> : null}
-      {message ? <p className="status status--success">{message}</p> : null}
-      {error ? <p className="status status--error">{error}</p> : null}
+      {message ? <p className="status status--success" role="status" aria-live="polite">{message}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
       {queue.length > 0 ? (
         <div className="achievement-list">
           <article className="achievement-card">

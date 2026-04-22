@@ -158,7 +158,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
                   />
                 </label>
                 <p className="form-note">{platformMeta.hint}</p>
-                {validationError ? <p className="status status--error">{validationError}</p> : null}
+                {validationError ? <p className="status status--error" role="alert">{validationError}</p> : null}
                     </>
                   );
                 })()}
@@ -170,7 +170,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
           {pending ? "Saving..." : "Save profile"}
         </button>
       </form>
-      {message ? <p className="status status--success">{message}</p> : null}
+      {message ? <p className="status status--success" role="status" aria-live="polite">{message}</p> : null}
       {message ? (
         <div className="achievement-card achievement-card--progress">
           <div>
@@ -208,7 +208,7 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
           </div>
         </div>
       ) : null}
-      {error ? <p className="status status--error">{error}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
     </section>
   );
 }

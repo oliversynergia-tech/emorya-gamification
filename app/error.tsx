@@ -11,7 +11,7 @@ export default function Error({
     <main className="route-state">
       <section className="panel panel--glass route-state__panel" role="alert">
         <p className="eyebrow">Something did not load</p>
-        <h2>Refresh this step and keep going.</h2>
+        <h1>Refresh this step and keep going.</h1>
         <p className="lede">
           We could not load this part of your Emorya progress. Try again now, or come back in a moment if the network is
           still catching up.

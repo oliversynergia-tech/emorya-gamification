@@ -84,7 +84,7 @@ export function ReferralSharePanel({
       </div>
       <p className="form-note">Referral code: {referralCode}</p>
       <p className="form-note">{shareText}</p>
-      {status ? <p className="status status--success">{status}</p> : null}
+      {status ? <p className="status status--success" role="status" aria-live="polite">{status}</p> : null}
     </section>
   );
 }

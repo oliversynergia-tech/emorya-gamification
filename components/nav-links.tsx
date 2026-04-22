@@ -18,7 +18,7 @@ export function NavLinks({
   const pathname = usePathname();
 
   return (
-    <nav className={className}>
+    <nav className={className} aria-label="Primary navigation">
       {items.map((item) => {
         const isActive = item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
 

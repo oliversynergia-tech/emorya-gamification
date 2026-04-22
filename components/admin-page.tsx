@@ -28,7 +28,7 @@ export async function AdminPageContent() {
         <section className="page-hero page-hero--admin">
           <div className="panel panel--hero panel--hero-compact">
             <p className="eyebrow">Moderation layer</p>
-            <h2>Admin surfaces now match the rest of the product shell, even when access is restricted.</h2>
+            <h1>Admin surfaces now match the rest of the product shell, even when access is restricted.</h1>
             <p className="lede">
               Review actions, progression effects, and moderation notes sit behind database-backed role checks.
             </p>
@@ -45,7 +45,7 @@ export async function AdminPageContent() {
           <div className="panel__header">
             <div>
               <p className="eyebrow">Restricted</p>
-              <h3>Admin access required</h3>
+              <h2>Admin access required</h2>
             </div>
           </div>
           <p className="form-note">
@@ -63,7 +63,7 @@ export async function AdminPageContent() {
       <section className="page-hero page-hero--admin">
         <div className="panel panel--hero panel--hero-compact">
           <p className="eyebrow">Operating view</p>
-          <h2>Moderate quests, watch live progression effects, and steer campaign pressure from one control surface.</h2>
+          <h1>Moderate quests, watch live progression effects, and steer campaign pressure from one control surface.</h1>
           <p className="lede">
             This area now carries the same atmosphere as the player experience, while keeping the review queue
             front and center.
@@ -96,11 +96,11 @@ export async function AdminPageContent() {
         </p>
       </section>
       <AdminSection data={data} canManageCampaignPacks={hasAdminAccess} />
-      <section className="admin-section-group" id="payout-ops">
+      <section className="admin-section-group" id="payout-ops" role="region" aria-labelledby="payout-ops-title">
         <div className="admin-section-group__header">
           <div>
             <p className="eyebrow">Payout operations deck</p>
-            <h3>Control reward rails, queue health, and settlement decisions</h3>
+            <h2 id="payout-ops-title">Control reward rails, queue health, and settlement decisions</h2>
           </div>
           <p className="form-note">
             This surface is now dedicated to payout risk and reward-rail operations, separate from campaign authoring and funnel performance.
@@ -150,11 +150,11 @@ export async function AdminPageContent() {
         <ModerationNotificationHistoryPanel initialHistory={data.moderationNotificationHistory} />
       </section>
 
-      <section className="admin-section-group" id="campaign-ops">
+      <section className="admin-section-group" id="campaign-ops" role="region" aria-labelledby="campaign-ops-title">
         <div className="admin-section-group__header">
           <div>
             <p className="eyebrow">Campaign operations deck</p>
-            <h3>Manage templates, packs, live quest definitions, and funnel behavior</h3>
+            <h2 id="campaign-ops-title">Manage templates, packs, live quest definitions, and funnel behavior</h2>
           </div>
           <p className="form-note">
             This surface is dedicated to bridge mode, pack lifecycle, template authoring, and campaign performance rather than payout handling.
@@ -170,11 +170,11 @@ export async function AdminPageContent() {
         />
       </section>
 
-      <section className="admin-section-group" id="access-ops">
+      <section className="admin-section-group" id="access-ops" role="region" aria-labelledby="access-ops-title">
         <div className="admin-section-group__header">
           <div>
             <p className="eyebrow">Access and moderation</p>
-            <h3>Review content, assign roles, and manage queue throughput</h3>
+            <h2 id="access-ops-title">Review content, assign roles, and manage queue throughput</h2>
           </div>
           <p className="form-note">
             Keep role changes rare and deliberate. The review queue should remain the main daily operating surface for admins.

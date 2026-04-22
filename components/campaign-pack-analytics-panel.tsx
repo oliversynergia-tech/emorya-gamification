@@ -1318,7 +1318,7 @@ export function CampaignPackAnalyticsPanel({
           Print partner PDF
         </button>
       </div>
-      {error ? <p className="status status--error">{error}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
       {comparisonBasePack ? (
         <div className="achievement-list">
           <article className="achievement-card">

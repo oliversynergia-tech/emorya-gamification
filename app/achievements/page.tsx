@@ -18,7 +18,7 @@ export default async function AchievementsPage() {
       <section className="page-hero page-hero--achievements">
         <div className="panel panel--hero panel--hero-compact page-hero__single">
           <p className="eyebrow">Achievements</p>
-          <h2>Celebrate the milestones that prove your progress is real.</h2>
+          <h1>Celebrate the milestones that prove your progress is real.</h1>
           <p className="lede">
             This is where streaks, referrals, activation wins, and bigger milestones show up as visible progress.
           </p>

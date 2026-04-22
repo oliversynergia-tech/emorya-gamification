@@ -76,11 +76,12 @@ export function AuthClientPanel({
           <h3>Email sign in</h3>
         </div>
       </div>
-      <div className="auth-toggle">
+      <div className="auth-toggle" role="group" aria-label="Choose account access mode">
         <button
           type="button"
           className={`toggle-chip ${mode === "signin" ? "toggle-chip--active" : ""}`}
           onClick={() => setMode("signin")}
+          aria-pressed={mode === "signin"}
         >
           Sign in
         </button>
@@ -88,6 +89,7 @@ export function AuthClientPanel({
           type="button"
           className={`toggle-chip ${mode === "signup" ? "toggle-chip--active" : ""}`}
           onClick={() => setMode("signup")}
+          aria-pressed={mode === "signup"}
         >
           Sign up
         </button>
@@ -96,7 +98,7 @@ export function AuthClientPanel({
         {mode === "signup" ? (
           <>
             {initialReferralCode ? (
-              <p className="status status--success">
+              <p className="status status--success" role="status" aria-live="polite">
                 Invite code applied. Create your account to join through this referral.
               </p>
             ) : null}
@@ -138,13 +140,13 @@ export function AuthClientPanel({
           {pending ? "Submitting..." : mode === "signin" ? "Sign in" : "Create account"}
         </button>
       </form>
-      {message ? <p className="status status--success">{message}</p> : null}
+      {message ? <p className="status status--success" role="status" aria-live="polite">{message}</p> : null}
       {message ? (
         <p className="mission-cue mission-cue--ready">
           <strong>You&apos;re in</strong> Your dashboard will open with the best next step ready for you.
         </p>
       ) : null}
-      {error ? <p className="status status--error">{error}</p> : null}
+      {error ? <p className="status status--error" role="alert">{error}</p> : null}
       <div className="achievement-list">
         <article className="achievement-card">
           <div>

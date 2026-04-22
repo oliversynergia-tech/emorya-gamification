@@ -106,14 +106,14 @@ export function ProfileMissionRecapPanel({
               : `${filtered.active.length} active`}
         </span>
       </div>
-      <div className="review-actions">
-        <button className={`button ${view === "active" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setView("active")}>
+      <div className="review-actions" role="group" aria-label="Mission recap view">
+        <button className={`button ${view === "active" ? "button--primary" : "button--secondary"}`} type="button" aria-pressed={view === "active"} onClick={() => setView("active")}>
           Active missions
         </button>
-        <button className={`button ${view === "completed" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setView("completed")}>
+        <button className={`button ${view === "completed" ? "button--primary" : "button--secondary"}`} type="button" aria-pressed={view === "completed"} onClick={() => setView("completed")}>
           Completed
         </button>
-        <button className={`button ${view === "reward" ? "button--primary" : "button--secondary"}`} type="button" onClick={() => setView("reward")}>
+        <button className={`button ${view === "reward" ? "button--primary" : "button--secondary"}`} type="button" aria-pressed={view === "reward"} onClick={() => setView("reward")}>
           Reward-linked
         </button>
       </div>
