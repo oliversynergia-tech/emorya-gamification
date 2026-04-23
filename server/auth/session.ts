@@ -3,8 +3,8 @@ import { createHash, randomBytes } from "crypto";
 import { cookies } from "next/headers";
 
 import { getConfig } from "@/lib/config";
+import { SESSION_COOKIE_NAME } from "@/lib/session-cookie";
 
-export const SESSION_COOKIE_NAME = "emorya_session";
 const SESSION_LIFETIME_MS = 1000 * 60 * 60 * 24 * 30;
 
 export function generateSessionToken() {

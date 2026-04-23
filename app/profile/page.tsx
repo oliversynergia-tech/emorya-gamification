@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { ProfileEditor } from "@/components/profile-editor";
 import { ProfileSection } from "@/components/sections";
@@ -14,9 +14,14 @@ export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
   const session = await resolveCurrentSession();
-  const data = await loadDashboardOverview(session?.user ?? null);
+
+  if (!session) {
+    redirect("/auth");
+  }
+
+  const data = await loadDashboardOverview(session.user);
   const profile = await getCurrentProfile();
-  const walletCount = session?.walletAddresses.length ?? 0;
+  const walletCount = session.walletAddresses.length;
   const activeTheme = getActiveBrandTheme();
   const brandCopy = getBrandCopyProfile(activeTheme.id);
   const subscriptionLabel =
@@ -31,7 +36,7 @@ export default async function ProfilePage() {
       : `Connect ${brandCopy.walletProduct} when you are ready to unlock more quests and features.`;
 
   return (
-    <SiteShell eyebrow="Profile" currentUser={session?.user ?? null}>
+    <SiteShell eyebrow="Profile" currentUser={session.user}>
       <section className="page-hero page-hero--profile">
         <div className="panel panel--hero panel--hero-compact">
           <p className="eyebrow">Profile</p>
@@ -80,33 +85,13 @@ export default async function ProfilePage() {
         </div>
       </section>
       <ProfileSection data={data} />
-      {session ? (
-        <>
-          {profile ? <ProfileEditor profile={profile} /> : null}
-          <WalletLinkPanel
-            walletAddresses={session.walletAddresses}
-            activeMissionLabel={data.campaignPacks[0]?.label ?? null}
-            activeMissionView="reward"
-            walletProductLabel={brandCopy.walletProduct}
-          />
-        </>
-      ) : (
-        <section className="panel auth-panel panel--glass">
-          <div className="panel__header">
-            <div>
-              <p className="eyebrow">Wallet link</p>
-              <h2>Sign in to manage your profile</h2>
-            </div>
-          </div>
-          <p className="form-note">
-            Sign in or create an account to update your profile and connect your wallet. Head to{" "}
-            <Link href="/auth" className="text-link">
-              the auth page
-            </Link>{" "}
-            to get started.
-          </p>
-        </section>
-      )}
+      {profile ? <ProfileEditor profile={profile} /> : null}
+      <WalletLinkPanel
+        walletAddresses={session.walletAddresses}
+        activeMissionLabel={data.campaignPacks[0]?.label ?? null}
+        activeMissionView="reward"
+        walletProductLabel={brandCopy.walletProduct}
+      />
     </SiteShell>
   );
 }

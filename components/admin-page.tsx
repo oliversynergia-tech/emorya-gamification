@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { EconomySettingsPanel } from "@/components/economy-settings-panel";
 import { ModerationNotificationHistoryPanel } from "@/components/moderation-notification-history-panel";
 import { PayoutOperationsDashboard } from "@/components/payout-operations-dashboard";
@@ -22,9 +24,13 @@ export async function AdminPageContent() {
   const hasSuperAdminAccess = await isSuperAdminUser(session?.user);
   const payoutPermissions = await getTokenRedemptionPermissions(session?.user);
 
-  if (!session || !hasAdminAccess) {
+  if (!session) {
+    redirect("/auth");
+  }
+
+  if (!hasAdminAccess) {
     return (
-      <SiteShell eyebrow="Admin controls" currentUser={session?.user ?? null}>
+      <SiteShell eyebrow="Admin controls" currentUser={session.user}>
         <section className="page-hero page-hero--admin">
           <div className="panel panel--hero panel--hero-compact">
             <p className="eyebrow">Moderation layer</p>
@@ -59,7 +65,7 @@ export async function AdminPageContent() {
   const data = await loadAdminOverview();
 
   return (
-    <SiteShell eyebrow="Admin controls" currentUser={session?.user ?? null}>
+    <SiteShell eyebrow="Admin controls" currentUser={session.user}>
       <section className="page-hero page-hero--admin">
         <div className="panel panel--hero panel--hero-compact">
           <p className="eyebrow">Operating view</p>

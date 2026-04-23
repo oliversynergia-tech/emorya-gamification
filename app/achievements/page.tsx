@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { AchievementsHubSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
 import { resolveCurrentSession } from "@/server/auth/current-user";
@@ -7,14 +9,19 @@ export const dynamic = "force-dynamic";
 
 export default async function AchievementsPage() {
   const session = await resolveCurrentSession();
-  const data = await loadDashboardOverview(session?.user ?? null);
+
+  if (!session) {
+    redirect("/auth");
+  }
+
+  const data = await loadDashboardOverview(session.user);
   const unlockedCount = data.achievements.filter((achievement) => achievement.unlocked).length;
   const nextAchievement = data.achievements
     .filter((achievement) => !achievement.unlocked)
     .sort((left, right) => right.progress - left.progress)[0];
 
   return (
-    <SiteShell eyebrow="Achievements" currentUser={session?.user ?? null}>
+    <SiteShell eyebrow="Achievements" currentUser={session.user}>
       <section className="page-hero page-hero--achievements">
         <div className="panel panel--hero panel--hero-compact page-hero__single">
           <p className="eyebrow">Achievements</p>

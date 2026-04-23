@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { MissionLink } from "@/components/mission-link";
 import { LeaderboardSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
@@ -8,7 +10,12 @@ export const dynamic = "force-dynamic";
 
 export default async function LeaderboardPage() {
   const session = await resolveCurrentSession();
-  const data = await loadDashboardOverview(session?.user ?? null);
+
+  if (!session) {
+    redirect("/auth");
+  }
+
+  const data = await loadDashboardOverview(session.user);
   const topEntry = data.leaderboard[0];
   const topReferralEntry = data.referralLeaderboard[0];
   const activeMissionPack = data.campaignPacks[0] ?? null;
@@ -17,7 +24,7 @@ export default async function LeaderboardPage() {
     : 0;
 
   return (
-    <SiteShell eyebrow="Leaderboard" currentUser={session?.user ?? null}>
+    <SiteShell eyebrow="Leaderboard" currentUser={session.user}>
       <section className="page-hero page-hero--leaderboard">
         <div className="panel panel--hero panel--hero-compact">
           <p className="eyebrow">Leaderboard</p>

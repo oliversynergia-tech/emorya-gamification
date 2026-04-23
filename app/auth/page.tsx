@@ -1,7 +1,8 @@
+import { redirect } from "next/navigation";
+
 import { AuthClientPanel } from "@/components/auth-client-panel";
 import { MissionLink } from "@/components/mission-link";
 import { SiteShell } from "@/components/site-shell";
-import { WalletLinkPanel } from "@/components/wallet-link-panel";
 import { getActiveBrandTheme } from "@/lib/brand-themes";
 import { getBrandCopyProfile } from "@/lib/brand-copy";
 import { resolveCurrentSession } from "@/server/auth/current-user";
@@ -15,17 +16,22 @@ export default async function AuthPage({
   searchParams?: Promise<{ ref?: string | string[] }>;
 }) {
   const session = await resolveCurrentSession();
+
+  if (session) {
+    redirect("/dashboard");
+  }
+
   const resolvedSearchParams = await searchParams;
   const referralParam = Array.isArray(resolvedSearchParams?.ref)
     ? resolvedSearchParams?.ref[0]
     : resolvedSearchParams?.ref;
   const initialReferralCode = referralParam?.trim().toUpperCase() ?? "";
-  const data = await loadDashboardOverview(session?.user ?? null);
+  const data = await loadDashboardOverview(null);
   const brandCopy = getBrandCopyProfile(getActiveBrandTheme().id);
   const returnPack = data.campaignPacks.find((pack) => pack.returnAction) ?? null;
 
   return (
-    <SiteShell eyebrow="Get started" currentUser={session?.user ?? null} hideAuthAction>
+    <SiteShell eyebrow="Get started" currentUser={null} hideAuthAction>
       <section className="page-hero page-hero--auth">
         <div className="panel panel--hero panel--hero-compact lane-theme--direct">
           <p className="eyebrow">Get started</p>
@@ -219,36 +225,32 @@ export default async function AuthPage({
             initialMode={initialReferralCode ? "signup" : "signin"}
           />
         </div>
-        {session ? (
-          <WalletLinkPanel walletAddresses={session.walletAddresses} activeMissionView="active" />
-        ) : (
-          <section className="panel auth-panel auth-panel--compact panel--glass">
-            <div className="panel__header">
-              <div>
-                <p className="eyebrow">Wallet link</p>
-                <h2>Connect your wallet after account setup</h2>
-              </div>
+        <section className="panel auth-panel auth-panel--compact panel--glass">
+          <div className="panel__header">
+            <div>
+              <p className="eyebrow">Wallet link</p>
+              <h2>Connect your wallet after account setup</h2>
             </div>
-            <p className="form-note">
-              Create an account or sign in first. Once you are in, this panel becomes your wallet connection step.
-            </p>
-            <div className="info-grid">
-              <div className="info-card">
-                <span>Step 1</span>
-                <strong>Access your account</strong>
-              </div>
-              <div className="info-card">
-                <span>Step 2</span>
-                <strong>Connect your wallet</strong>
-              </div>
+          </div>
+          <p className="form-note">
+            Create an account or sign in first. Once you are in, this panel becomes your wallet connection step.
+          </p>
+          <div className="info-grid">
+            <div className="info-card">
+              <span>Step 1</span>
+              <strong>Access your account</strong>
             </div>
-            <div className="hero__actions">
-              <a className="button button--primary" href="#auth-panel">
-                Go to account access
-              </a>
+            <div className="info-card">
+              <span>Step 2</span>
+              <strong>Connect your wallet</strong>
             </div>
-          </section>
-        )}
+          </div>
+          <div className="hero__actions">
+            <a className="button button--primary" href="#auth-panel">
+              Go to account access
+            </a>
+          </div>
+        </section>
       </section>
     </SiteShell>
   );

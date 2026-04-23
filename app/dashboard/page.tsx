@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { DashboardExperience } from "@/components/dashboard-experience";
 import { SiteShell } from "@/components/site-shell";
 import { resolveCurrentSession } from "@/server/auth/current-user";
@@ -7,14 +9,19 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const session = await resolveCurrentSession();
-  const data = await loadDashboardOverview(session?.user ?? null);
+
+  if (!session) {
+    redirect("/auth");
+  }
+
+  const data = await loadDashboardOverview(session.user);
 
   return (
-    <SiteShell eyebrow="Daily loop" currentUser={session?.user ?? null}>
+    <SiteShell eyebrow="Daily loop" currentUser={session.user}>
       <DashboardExperience
         initialData={data}
-        isAuthenticated={Boolean(session)}
-        walletAddresses={session?.walletAddresses ?? []}
+        isAuthenticated
+        walletAddresses={session.walletAddresses}
       />
     </SiteShell>
   );

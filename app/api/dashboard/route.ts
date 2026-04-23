@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { resolveCurrentUser } from "@/server/auth/current-user";
+import { getAuthenticatedUser } from "@/server/services/auth-service";
 import { getDashboardData } from "@/server/repositories/platform-repository";
 import { isDatabaseEnabled } from "@/server/repositories/platform-repository-db";
 
@@ -8,7 +8,15 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const currentUser = await resolveCurrentUser();
+    const currentUser = await getAuthenticatedUser();
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { ok: false, error: "You must be signed in to load dashboard data." },
+        { status: 401 },
+      );
+    }
+
     const data = await getDashboardData(currentUser);
 
     return NextResponse.json({
