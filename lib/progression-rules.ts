@@ -40,12 +40,12 @@ export const activationPathStepGroups = [
   },
   {
     label: "Prepare xPortal",
-    detail: "Get xPortal ready so the account can move into wallet-linked rewards and monetisation-ready progression.",
+    detail: "Get xPortal ready so the account can move into optional wallet-linked quests and XP progression.",
     slugs: ["download-xportal", "open-or-create-your-xportal-wallet"],
   },
   {
     label: "Connect xPortal and view your reward path",
-    detail: "Link your wallet and open the EMRS path so the user sees exactly how product actions become rewards.",
+    detail: "Link your wallet and view the future reward path so product actions stay connected to XP progress.",
     slugs: ["connect-your-xportal-wallet", "view-your-emrs-reward-path"],
   },
   {
@@ -54,8 +54,8 @@ export const activationPathStepGroups = [
     slugs: ["convert-your-first-calories"],
   },
   {
-    label: "Claim your full activation reward",
-    detail: "Complete the full ladder and unlock the largest onboarding reward in the product.",
+    label: "Submit your full activation quest",
+    detail: "Complete the full ladder and unlock the strongest onboarding XP milestone in the product.",
     slugs: [activationPathCompletionQuestSlug],
   },
 ] as const;

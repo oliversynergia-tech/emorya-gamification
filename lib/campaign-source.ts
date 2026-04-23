@@ -125,7 +125,7 @@ export function getCampaignPremiumOffer(source: UserSnapshot["campaignSource"]) 
           "Monthly premium opens a stronger set of quests and faster progress.",
           "Annual premium is the best fit for committed users who want the full upside.",
         ],
-        cta: "Upgrade when you want deeper challenges and stronger rewards.",
+        cta: "Upgrade when you want deeper quests and stronger XP progress.",
       };
     default:
       return {

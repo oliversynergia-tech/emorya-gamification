@@ -15,11 +15,9 @@ import { CampaignPackNotificationHistoryPanel } from "@/components/campaign-pack
 import { MissionLink } from "@/components/mission-link";
 import { MissionEventHistoryPanel } from "@/components/mission-event-history-panel";
 import { MissionPackDetailPanel } from "@/components/mission-pack-detail-panel";
-import { PayoutNotificationsPanel } from "@/components/payout-notifications-panel";
 import { ProfileMissionRecapPanel } from "@/components/profile-mission-recap-panel";
 import { ReferralSharePanel } from "@/components/referral-share-panel";
 import { SourceLaneReportPanel } from "@/components/source-lane-report-panel";
-import { TokenReceiptHistoryPanel } from "@/components/token-receipt-history-panel";
 
 const QUEST_BOARD_PHASES = [
   {
@@ -107,7 +105,7 @@ function getMissionCueForPack(pack: DashboardData["campaignPacks"][number]) {
   }
   return {
     badge: "Next step",
-    note: "Check the next mission step to keep your progress moving.",
+    note: "Check the next quest step to keep your progress moving.",
     tone: "planning",
   } as const;
 }
@@ -118,7 +116,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       return "Go to wallet";
     }
     if (href.includes("quest-board")) {
-      return "Open mission board";
+      return "Open quest board";
     }
     if (href === "/profile") {
       return "See premium options";
@@ -132,7 +130,7 @@ function getDashboardPriorityAction(data: DashboardData) {
     const followupHref = "/profile#wallet-link-panel";
     return {
       eyebrow: "Top action",
-      title: "Connect your wallet to open the next step",
+      title: "Connect your wallet when you are ready for the next optional step",
       detail: walletGatePack.nextAction,
       supporting: walletGatePack.unlockPreview,
       href: walletGatePack.ctaHref ?? "/profile#wallet-link-panel",
@@ -207,25 +205,25 @@ function getDashboardPriorityAction(data: DashboardData) {
                     : "Ready now";
     const title =
       returnPack.blockageState === "wallet_connection"
-        ? "Connect your wallet to reopen this mission"
+        ? "Connect your wallet when you are ready to reopen this quest path"
         : returnPack.blockageState === "trust"
-          ? "A little more activity will reopen this mission"
+          ? "A little more activity will reopen this quest path"
           : returnPack.blockageState === "level"
-            ? "A quick XP push gets this mission moving again"
+            ? "A quick XP push gets this quest path moving again"
             : returnPack.blockageState === "starter_path"
-              ? "Finish the activation ladder to reopen this mission"
+              ? "Finish the activation ladder to reopen this quest path"
               : returnPack.blockageState === "premium_phase"
-                ? "This mission is ready for the premium step"
+                ? "This quest path is ready for the premium step"
                 : returnPack.blockageState === "weekly_pace"
-                  ? "One strong return gets this mission back on pace"
-                  : "One strong return move puts this pack back on pace";
+                  ? "One strong return gets this quest path back on pace"
+                  : "One strong return move puts this quest pack back on pace";
     const supporting =
       returnPack.blockageState === "wallet_connection"
-        ? "Wallet connection is still the thing standing between this mission and what opens next."
+        ? "Wallet connection is optional, but it is the next thing needed for this quest path."
         : returnPack.blockageState === "trust"
           ? "A little more real activity is needed before the next step opens."
           : returnPack.blockageState === "level"
-            ? "The next mission step is mainly waiting on more XP."
+            ? "The next quest step is mainly waiting on more XP."
             : returnPack.blockageState === "starter_path"
               ? "Finishing setup is still the simplest way to open the next step."
               : returnPack.blockageState === "weekly_pace"
@@ -235,7 +233,7 @@ function getDashboardPriorityAction(data: DashboardData) {
       returnPack.blockageState === "weekly_pace"
         ? "Return today"
         : returnPack.blockageState === "ready"
-          ? "Resume mission"
+          ? "Resume quest path"
           : "Coming up next";
     const stateMetric =
       returnPack.blockageState === "weekly_pace"
@@ -345,7 +343,7 @@ function getDashboardPriorityAction(data: DashboardData) {
 
   return {
     eyebrow: "Top action",
-    title: "Keep your current mission moving",
+    title: "Keep your current quest path moving",
     detail: nextPack.nextAction,
     supporting: nextPack.unlockPreview,
     href: nextPack.ctaHref ?? "#quest-board",
@@ -397,7 +395,7 @@ function renderQuestCard(quest: Quest) {
       </div>
       {quest.projectedDirectTokenReward ? (
         <small>
-          +{quest.projectedDirectTokenReward.amount} {quest.projectedDirectTokenReward.asset} direct reward
+          Future reward path
         </small>
       ) : null}
       {quest.timebox ? <small>{quest.timebox}</small> : null}
@@ -413,7 +411,7 @@ export function HeroSection({ data }: { data: DashboardData }) {
     : "Get started, build momentum, and unlock more as you go.";
   const heroDescription = data.user.currentStreak > 0
     ? "Pick up where you left off, complete your next quest, and keep your streak alive."
-    : "Start with a few simple steps, come back regularly, and watch your rewards and progress grow.";
+    : "Start with a few simple steps, come back regularly, and watch your XP progress grow.";
 
   return (
     <section className="hero grid" aria-labelledby="home-title">
@@ -463,7 +461,7 @@ export function HeroSection({ data }: { data: DashboardData }) {
         <div className="metric-card">
           <span>Rewards ahead</span>
           <strong>More ways to earn</strong>
-          <small>Build progress now and unlock stronger reward options as you go.</small>
+          <small>Build XP progress now. Future reward options can open later.</small>
         </div>
       </div>
     </section>
@@ -576,8 +574,8 @@ export function DashboardSnapshot({
           <div className="panel panel--glass" id="campaign-mission">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Active missions</p>
-              <h2>Your current mission progress</h2>
+              <p className="eyebrow">Active quest paths</p>
+              <h2>Your current quest progress</h2>
             </div>
             <span className="badge badge--pink">{data.campaignPacks.length} active</span>
           </div>
@@ -642,11 +640,7 @@ export function DashboardSnapshot({
                       {pack.completedQuestCount}/{pack.totalQuestCount} complete
                     </span>
                     <span>{pack.openQuestCount} open</span>
-                    {pack.directRewardSummary ? (
-                      <span>{pack.directRewardSummary.amount} {pack.directRewardSummary.asset}</span>
-                    ) : (
-                      <span>{cue.badge}</span>
-                    )}
+                    <span>{cue.badge}</span>
                   </div>
                   </>
                     );
@@ -656,7 +650,7 @@ export function DashboardSnapshot({
             </div>
             {data.campaignPacks.length > 2 ? (
               <p className="form-note">
-                {data.campaignPacks.length - 2} more mission{data.campaignPacks.length - 2 === 1 ? "" : "s"} continue below in your quest board.
+                {data.campaignPacks.length - 2} more quest path{data.campaignPacks.length - 2 === 1 ? "" : "s"} continue below in your quest board.
               </p>
             ) : null}
           </div>
@@ -726,8 +720,8 @@ export function DashboardSnapshot({
         <div className="panel panel--glass">
           <div className="panel__header">
             <div>
-              <p className="eyebrow">Progress and rewards</p>
-              <h2>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked" : "How your progress is building"}</h2>
+              <p className="eyebrow">Progress and XP</p>
+              <h2>How your progress is building</h2>
             </div>
             <span className="badge badge--pink">{data.user.tokenProgram.eligibilityPoints} pts</span>
           </div>
@@ -750,22 +744,20 @@ export function DashboardSnapshot({
             </article>
             <article className="economy-step-card economy-step-card--rail economy-step-card--full-span">
               <div className="quest-card__meta">
-                <span className="economy-badge economy-badge--rail">Rewards</span>
-                <span>{data.user.tokenProgram.asset}</span>
+                <span className="economy-badge economy-badge--rail">Future rewards</span>
+                <span>Coming soon</span>
               </div>
-              <strong>Rewards grow with your progress.</strong>
-              <p>As your progress builds, the reward side of the experience becomes more meaningful.</p>
+              <strong>Rewards stay XP-first for launch.</strong>
+              <p>Keep building progress now. Future reward options can open later after review.</p>
             </article>
           </div>
           <div className="info-grid">
             <div className="info-card">
-              <span>Reward preview</span>
-              <strong>
-                {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
-              </strong>
+              <span>Launch reward</span>
+              <strong>XP progress</strong>
             </div>
             <div className="info-card">
-              <span>Minimum unlock</span>
+              <span>Future unlock</span>
               <strong>{data.user.tokenProgram.minimumPoints} pts</strong>
             </div>
             <div className="info-card">
@@ -773,16 +765,16 @@ export function DashboardSnapshot({
               <strong>{data.user.tokenProgram.tierMultiplier.toFixed(2)}x</strong>
             </div>
             <div className="info-card">
-              <span>Reward status</span>
-              <strong>{data.user.tokenProgram.status.replaceAll("_", " ")}</strong>
+              <span>Launch status</span>
+              <strong>XP-first</strong>
             </div>
             <div className="info-card">
-              <span>Claimed</span>
-              <strong>{data.user.tokenProgram.claimedBalance} {data.user.tokenProgram.asset}</strong>
+              <span>Token redemption</span>
+              <strong>Coming soon</strong>
             </div>
             <div className="info-card">
-              <span>Settled</span>
-              <strong>{data.user.tokenProgram.settledBalance} {data.user.tokenProgram.asset}</strong>
+              <span>Payout mode</span>
+              <strong>Manual review</strong>
             </div>
           </div>
           <p className="form-note">{data.user.tokenProgram.nextStep}</p>
@@ -791,28 +783,6 @@ export function DashboardSnapshot({
               {Math.max(data.user.tokenProgram.nextRedemptionPoints - data.user.tokenProgram.eligibilityPoints, 0)} more
               points to the next reward milestone.
             </p>
-          ) : null}
-          {data.user.tokenProgram.redemptionHistory.length > 0 ? (
-            <div className="achievement-list">
-              {data.user.tokenProgram.redemptionHistory.slice(0, 2).map((entry) => (
-                <article key={`${entry.asset}-${entry.createdAt}-${entry.tokenAmount}`} className="achievement-card">
-                  <div>
-                    <strong>{entry.status === "settled" ? "Reward settled" : "Reward claimed"}</strong>
-                    <p>
-                      {entry.eligibilityPointsSpent} eligibility points spent via {entry.source}.
-                      {entry.rewardProgramName ? ` ${entry.rewardProgramName}.` : ""}
-                      {entry.receiptReference ? ` Receipt: ${entry.receiptReference}.` : ""}
-                      {entry.settlementNote ? ` ${entry.settlementNote}` : ""}
-                    </p>
-                  </div>
-                  <div className="achievement-card__side">
-                    <span>{entry.tokenAmount} {entry.asset}</span>
-                    <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
-                    <span>{entry.status === "settled" && entry.settledAt ? `Settled ${new Date(entry.settledAt).toLocaleDateString()}` : "Awaiting payout"}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
           ) : null}
         </div>
         <div className="panel panel--glass">
@@ -839,15 +809,15 @@ export function DashboardSnapshot({
           </div>
           <p className="form-note">
             {data.user.rewardEligibility.eligible
-              ? "Your rewards path is open."
-              : `Next reward step: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing through activation and weekly progress"}.`}
+              ? "Your future reward path is prepared for review."
+              : `Next XP step: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing through activation and weekly progress"}.`}
           </p>
           <p className="form-note">
             Focus this week: {data.economy.campaignPreset.featuredTracks.join(", ")}.
           </p>
           {data.campaignPacks[0] ? (
             <p className="form-note">
-              Active mission goal: {data.campaignPacks[0].weeklyGoal.targetXp} XP this week. {data.campaignPacks[0].weeklyGoal.label}
+              Active quest goal: {data.campaignPacks[0].weeklyGoal.targetXp} XP this week. {data.campaignPacks[0].weeklyGoal.label}
             </p>
           ) : null}
         </div>
@@ -1046,7 +1016,6 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
 
 export function LeaderboardSection({ data }: { data: DashboardData }) {
   const topReferralEntry = data.referralLeaderboard[0];
-  const annualDirectReward = data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward;
   const campaignPreset = data.economy.campaignPreset;
   const rankPressurePack = data.campaignPacks[0] ?? null;
   const renderLeaderboardRows = (entries: DashboardData["leaderboard"], scoreLabel: string) => {
@@ -1117,7 +1086,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         <div className="info-grid">
           <div className="info-card">
               <span>Reward progress</span>
-              <strong>{data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}</strong>
+              <strong>Coming soon</strong>
             </div>
           <div className="info-card">
             <span>Monthly XP uplift</span>
@@ -1128,8 +1097,8 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             <strong>{data.economy.xpMultipliers.annual.toFixed(2)}x XP</strong>
           </div>
             <div className="info-card">
-              <span>Reward status</span>
-              <strong>{data.user.tokenProgram.claimedBalance} / {data.user.tokenProgram.settledBalance}</strong>
+              <span>Launch status</span>
+              <strong>XP-first</strong>
             </div>
           <div className="info-card">
             <span>Current momentum</span>
@@ -1144,11 +1113,10 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           <article className="reward-visual-card">
             <div className="quest-card__meta">
               <span>Progress</span>
-              <span>{data.user.tokenProgram.status}</span>
+              <span>XP-first launch</span>
             </div>
             <strong>
-              {data.user.totalXp.toLocaleString()} XP to {data.user.tokenProgram.eligibilityPoints} pts to{" "}
-              {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
+              {data.user.totalXp.toLocaleString()} XP and {data.user.tokenProgram.eligibilityPoints} progress points
             </strong>
             <div className="reward-ladder__meter">
               <div
@@ -1161,18 +1129,18 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           <article className="reward-visual-card">
             <div className="quest-card__meta">
               <span>Reward status</span>
-              <span>{data.user.tokenProgram.asset}</span>
+              <span>Coming soon</span>
             </div>
-            <strong>{data.user.tokenProgram.claimedBalance} claimed / {data.user.tokenProgram.settledBalance} settled</strong>
+            <strong>XP is live now. Token redemption remains disabled for launch.</strong>
             <div className="reward-state-bars">
               <div>
-                <span>Claimed</span>
+                <span>Prepared</span>
                 <div className="reward-state-bars__track">
                   <div
                     className="reward-state-bars__fill"
                     style={{
                       width: `${Math.min(
-                        (data.user.tokenProgram.claimedBalance / Math.max(data.user.tokenProgram.claimedBalance + data.user.tokenProgram.settledBalance, 1)) * 100,
+                        data.user.starterPath.progress * 100,
                         100,
                       )}%`,
                     }}
@@ -1180,13 +1148,13 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
                 </div>
               </div>
               <div>
-                <span>Settled</span>
+                <span>Future</span>
                 <div className="reward-state-bars__track">
                   <div
                     className="reward-state-bars__fill reward-state-bars__fill--gold"
                     style={{
                       width: `${Math.min(
-                        (data.user.tokenProgram.settledBalance / Math.max(data.user.tokenProgram.claimedBalance + data.user.tokenProgram.settledBalance, 1)) * 100,
+                        data.user.rewardEligibility.eligible ? 100 : 30,
                         100,
                       )}%`,
                     }}
@@ -1194,7 +1162,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
                 </div>
               </div>
             </div>
-            <small>Claimed rewards are reserved. Settled rewards have already completed payout.</small>
+            <small>Future rewards will be handled manually after review, not through launch redemption.</small>
           </article>
           <article className="reward-visual-card">
             <div className="quest-card__meta">
@@ -1203,7 +1171,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             </div>
             <strong>
               +{(campaignPreset.questXpBoost * 100).toFixed(0)}% quest XP, +{(campaignPreset.eligibilityBoost * 100).toFixed(0)}%
-              eligibility growth, +{(campaignPreset.tokenYieldBoost * 100).toFixed(0)}% token yield
+              eligibility growth. Token yield remains off for launch.
             </strong>
             <div className="reward-ladder__meter">
               <div
@@ -1211,7 +1179,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
                 style={{ width: `${Math.min((campaignPreset.leaderboardMomentumMultiplier / 1.5) * 100, 100)}%` }}
               />
             </div>
-            <small>Your current setup changes how quickly progress, reward progress, and yield build over time.</small>
+            <small>Your current setup changes how quickly XP and future reward readiness build over time.</small>
           </article>
         </div>
         <p className="form-note">
@@ -1253,8 +1221,8 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
               <strong>{data.user.referral.pendingConversionXp}</strong>
             </div>
             <div className="info-card">
-              <span>Annual referral direct reward</span>
-              <strong>{annualDirectReward ? `${annualDirectReward.amount} ${annualDirectReward.asset}` : "Projected only"}</strong>
+              <span>Annual referral upside</span>
+              <strong>Future reward path</strong>
             </div>
           </div>
         </div>
@@ -1302,17 +1270,6 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           </div>
         ) : null}
       </div>
-      <TokenReceiptHistoryPanel
-        history={data.user.tokenProgram.redemptionHistory}
-        title="Reward receipts and settlement history"
-        eyebrow="Token receipts"
-      />
-      <PayoutNotificationsPanel
-        notifications={data.user.tokenProgram.notifications}
-        scheduledDirectRewards={data.user.tokenProgram.scheduledDirectRewards}
-        title="Reward status alerts"
-        eyebrow="Payout status"
-      />
       <div className="panel panel--full-span">
         <div className="panel__header">
           <div>
@@ -1371,15 +1328,15 @@ export function ProfileSection({ data }: { data: DashboardData }) {
         notifications={data.campaignNotifications}
         activePacks={data.campaignPacks}
         missionView="reward"
-        title="Mission inbox"
-        eyebrow="Profile mission inbox"
+        title="Quest inbox"
+        eyebrow="Profile quest inbox"
       />
       <MissionPackDetailPanel
         activePacks={data.campaignPacks}
         packHistory={data.campaignPackHistory}
         missionView="reward"
-        title="Mission detail"
-        eyebrow="Profile mission detail"
+        title="Quest path detail"
+        eyebrow="Profile quest detail"
       />
       <MissionEventHistoryPanel
         entries={data.missionEventHistory}
@@ -1433,14 +1390,12 @@ export function ProfileSection({ data }: { data: DashboardData }) {
           <article className="achievement-card">
             <div>
               <strong>Annual upgrade referral</strong>
-              <p>The strongest referral outcome, with more XP and the biggest added reward upside.</p>
+              <p>The strongest referral outcome, with more XP and the biggest future reward readiness.</p>
             </div>
             <div className="achievement-card__side">
               <span>+{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP</span>
               <span>
-                {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.amount}
-                {" "}
-                {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward?.asset}
+                Future reward path
               </span>
             </div>
           </article>
@@ -1455,7 +1410,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
               <div className="achievement-card__side">
                 <span>{bonus.source}</span>
                 <span>
-                  +{bonus.annualDirectTokenReward.amount} {bonus.annualDirectTokenReward.asset}
+                  Future reward path
                 </span>
               </div>
             </article>
@@ -1482,8 +1437,8 @@ export function ProfileSection({ data }: { data: DashboardData }) {
               <p>
                 {Math.round(data.user.starterPath.progress * 100)}% complete.{" "}
                 {data.user.rewardEligibility.eligible
-                  ? "Reward eligibility is live."
-                  : `Next reward gate: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing through the activation ladder and weekly flow"}.`}
+                  ? "Future reward readiness is prepared for review."
+                  : `Next XP gate: ${data.user.rewardEligibility.nextRequirement ?? "keep progressing through the activation ladder and weekly flow"}.`}
               </p>
             </div>
             <div className="achievement-card__side">
@@ -1493,52 +1448,29 @@ export function ProfileSection({ data }: { data: DashboardData }) {
           </article>
           <article className="achievement-card">
             <div>
-              <strong>Reward progress</strong>
+              <strong>Future reward progress</strong>
               <p>
                 {data.user.tokenProgram.eligibilityPoints} eligibility points banked.{" "}
-                {data.user.tokenProgram.status === "redeemable"
-                  ? `Reward preview: ${data.user.tokenProgram.projectedRedemptionAmount} ${data.user.tokenProgram.asset}.`
-                  : data.user.tokenProgram.nextStep}
+                Token redemption remains disabled for launch while XP progress stays live.
               </p>
             </div>
             <div className="achievement-card__side">
-              <span>{data.user.tokenProgram.status}</span>
+              <span>XP-first</span>
               <span>{data.user.tokenProgram.tierMultiplier.toFixed(2)}x tier bonus</span>
             </div>
           </article>
           <article className="achievement-card">
             <div>
-              <strong>Claimed and settled rewards</strong>
+              <strong>Manual reward review</strong>
               <p>
-                Claimed rewards are reserved and awaiting payout. Settled balances have already been delivered.
+                Future rewards are reviewed manually for launch. Nothing is available to redeem or withdraw yet.
               </p>
             </div>
             <div className="achievement-card__side">
-              <span>{data.user.tokenProgram.claimedBalance} claimed</span>
-              <span>{data.user.tokenProgram.settledBalance} settled</span>
+              <span>Redemption off</span>
+              <span>Review-first</span>
             </div>
           </article>
-          {data.user.tokenProgram.redemptionHistory.slice(0, 2).map((entry) => (
-            <article key={entry.id} className="achievement-card">
-              <div>
-                <strong>{entry.status === "settled" ? "Latest settled payout" : "Latest claimed payout"}</strong>
-                <p>
-                  {entry.tokenAmount} {entry.asset} from {entry.source}.
-                  {entry.receiptReference ? ` Receipt ${entry.receiptReference}.` : ""}
-                </p>
-              </div>
-              <div className="achievement-card__side">
-                <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
-                <span>{entry.status === "settled" && entry.settledAt ? "Receipt logged" : "Awaiting payout"}</span>
-              </div>
-            </article>
-          ))}
-          <PayoutNotificationsPanel
-            notifications={data.user.tokenProgram.notifications}
-            scheduledDirectRewards={data.user.tokenProgram.scheduledDirectRewards}
-            title="Profile payout status"
-            eyebrow="Payout notifications"
-          />
         </div>
       </div>
       <div className="panel panel--full-span">

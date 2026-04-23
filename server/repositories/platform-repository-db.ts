@@ -402,7 +402,7 @@ function getNextRewardRequirement(progressState: UserProgressState, journeyState
   }
 
   if (journeyState === "monthly_premium") {
-    return "Upgrade to Annual for direct reward spikes";
+    return "Upgrade to Annual for stronger XP progress";
   }
 
   return null;
@@ -774,12 +774,12 @@ async function getUserSnapshot(
     redemptionHistory,
       nextStep:
         redemptionProjection.status === "redeemable"
-          ? `Redeem ${redemptionProjection.asset} once payout rails are enabled.`
+          ? "Future reward options are being prepared for manual review."
           : !economySettings.redemptionEnabled
-            ? `Redemption is currently paused by the active token program.`
+            ? "Token redemption is disabled for launch while XP progress stays live."
             : progressState.walletLinked
-            ? `Reach ${redemptionProjection.minimumPoints} eligibility points to unlock your first redemption.`
-            : "Connect xPortal to unlock token redemption.",
+            ? `Reach ${redemptionProjection.minimumPoints} progress points to prepare future reward review.`
+            : "Connect xPortal only when you are ready for optional wallet-linked quests.",
       notifications: tokenNotifications.slice(0, 6),
     },
     referral: {
@@ -1125,7 +1125,7 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
         ? "completed campaign pack"
         : approvedQuestCount >= halfwayTarget && totalQuestCount > 1
           ? "reached halfway in campaign pack"
-          : "cleared the first mission in";
+          : "cleared the first quest in";
     const detailBase =
       row.attribution_source && row.experience_lane && row.attribution_source !== row.experience_lane
         ? `${row.pack_label ?? "Campaign pack"} through ${row.attribution_source} into ${row.experience_lane}`
@@ -1133,7 +1133,7 @@ async function getActivityFeed(): Promise<ActivityItem[]> {
     const detail =
       approvedQuestCount >= totalQuestCount && totalQuestCount > 0
         ? detailBase
-        : `${detailBase} (${approvedQuestCount}/${totalQuestCount} missions approved)`;
+        : `${detailBase} (${approvedQuestCount}/${totalQuestCount} quests approved)`;
 
     return {
       id: `campaign-pack-progress-${row.pack_id}-${approvedQuestCount}-${row.completed_at ?? "na"}`,
@@ -1293,18 +1293,18 @@ function dataUserWeeklyTarget(nextThreshold: number | null, currentThreshold: nu
 
 function packBadgeLabel(templateKind: "bridge" | "feeder" | "mixed" | null, milestoneLabel: string) {
   if (milestoneLabel === "Pack complete") {
-    return "Mission cleared";
+    return "Quest path cleared";
   }
 
   if (templateKind === "bridge") {
-    return "Bridge mission";
+    return "Bridge quest";
   }
 
   if (templateKind === "feeder") {
-    return "Feeder mission";
+    return "Feeder quest";
   }
 
-  return "Campaign mission";
+  return "Campaign quest";
 }
 
 function getPackTierPhaseCopy(
@@ -1318,10 +1318,10 @@ function getPackTierPhaseCopy(
   }
 
   if (tier === "monthly") {
-    return `${packLabel} is in the accelerated Monthly phase. You have the lift to push this ${packKind === "feeder" ? "feeder" : "mission"} pack through faster and compound the weekly XP loop.`;
+    return `${packLabel} is in the accelerated Monthly phase. You have the lift to push this ${packKind === "feeder" ? "feeder" : "quest"} pack through faster and compound the weekly XP loop.`;
   }
 
-  return `${packLabel} is still in the free phase. Focus on trust steps, wallet readiness, and clean mission clears before the heavier-value premium phase matters.`;
+  return `${packLabel} is still in the free phase. Focus on trust steps, wallet readiness, and clean quest clears before the heavier-value premium phase matters.`;
 }
 
 function getPackPriorityReason({
@@ -1336,22 +1336,22 @@ function getPackPriorityReason({
   attributionSource: CampaignSource | "direct";
 }) {
   if (!userProgressState.walletLinked) {
-    return "This mission is prioritized because wallet linking is still the gating step into the full reward path.";
+    return "This quest path is prioritized because wallet linking is still the optional step into future reward readiness.";
   }
 
   if (!userProgressState.starterPathComplete) {
-    return "This mission is prioritized because activation-path completion matters more than deeper reward steps right now.";
+    return "This quest path is prioritized because activation-path completion matters more than future reward steps right now.";
   }
 
   if (!rewardEligible) {
-    return "This mission is prioritized because it is the cleanest route toward reward eligibility and repeat trust signals.";
+    return "This quest path is prioritized because it is the cleanest route toward XP readiness and repeat trust signals.";
   }
 
   if (attributionSource !== activeLane) {
-    return `This mission is prioritized because your attributed source is still being bridged into the ${activeLane} experience lane.`;
+    return `This quest path is prioritized because your attributed source is still being bridged into the ${activeLane} experience lane.`;
   }
 
-  return "This mission is prioritized because it is the strongest live route for your current weekly momentum and lane pressure.";
+  return "This quest path is prioritized because it is the strongest live route for your current weekly momentum and lane pressure.";
 }
 
 function getCampaignPackBlockageState({
@@ -1411,18 +1411,18 @@ function getPackUnlockPreview({
   const remainingQuestCount = questStatuses.filter((quest) => quest.status !== "completed").length;
 
   if (remainingQuestCount <= 1 && directRewardMetadata) {
-    return `One more clean step can turn this mission into a ${directRewardMetadata.amount} ${directRewardMetadata.asset} direct reward route.`;
+    return "One more clean step can prepare this quest path for future manual reward review.";
   }
 
   if (featuredTracks.includes("premium")) {
-    return "The next phase of this mission leans harder into premium-weighted quests and stronger XP yield.";
+    return "The next phase of this quest path leans harder into premium-weighted quests and stronger XP yield.";
   }
 
   if (featuredTracks.includes("referral")) {
-    return "The next phase of this mission opens a stronger referral moment if you keep the pack moving.";
+    return "The next phase of this quest path opens a stronger referral moment if you keep the pack moving.";
   }
 
-  return `There are ${remainingQuestCount} mission step${remainingQuestCount === 1 ? "" : "s"} left in this pack, with the next unlock biased toward the current lane focus.`;
+  return `There are ${remainingQuestCount} quest step${remainingQuestCount === 1 ? "" : "s"} left in this pack, with the next unlock biased toward the current lane focus.`;
 }
 
 function getPackUnlockRewardPreview({
@@ -1442,11 +1442,11 @@ function getPackUnlockRewardPreview({
   rewardEligible: boolean;
   premiumNudge: string | null;
 }) {
-  const currentLabel = currentQuestTitle ?? "this now quest";
-  const nextLabel = nextQuestTitle ?? "the next mission step";
+  const currentLabel = currentQuestTitle ?? "this quest";
+  const nextLabel = nextQuestTitle ?? "the next quest step";
 
   if (blockageState === "wallet_connection") {
-    return `Finishing ${currentLabel} keeps this pack pointed at the wallet gate so ${nextLabel} can move into the live reward rail.`;
+    return `Finishing ${currentLabel} keeps this pack pointed at the optional wallet step so ${nextLabel} can move into future reward readiness.`;
   }
 
   if (blockageState === "starter_path") {
@@ -1458,11 +1458,11 @@ function getPackUnlockRewardPreview({
   }
 
   if (premiumNudge) {
-    return `Finishing ${currentLabel} sets up ${nextLabel} as a stronger premium-conversion moment without dropping mission pace.`;
+    return `Finishing ${currentLabel} sets up ${nextLabel} as a stronger premium-conversion moment without dropping quest pace.`;
   }
 
   if (directRewardMetadata && rewardEligible) {
-    return `Finishing ${currentLabel} keeps ${nextLabel} on track for the ${directRewardMetadata.amount} ${directRewardMetadata.asset} direct reward route.`;
+    return `Finishing ${currentLabel} keeps ${nextLabel} on track for future manual reward review.`;
   }
 
   if (featuredTracks.includes("referral")) {
@@ -1494,7 +1494,7 @@ function getReminderVariantForPack(pack: DashboardData["campaignPacks"][number])
     case "weekly_pace":
       return pack.returnWindow === "today" ? "today_return" : "weekly_return";
     default:
-      return pack.returnWindow === "wait_for_unlock" ? "unlock_wait" : "mission_progress";
+      return pack.returnWindow === "wait_for_unlock" ? "unlock_wait" : "quest_progress";
   }
 }
 
@@ -1563,15 +1563,15 @@ function getPackUnlockOutcomePreview({
           : blockageState === "trust"
             ? "Eligibility is mainly waiting on stronger verified activity and trust signals."
             : rewardEligible
-              ? "Eligibility is already live, so this step is about pushing deeper into the active reward loop."
+              ? "Future reward readiness is prepared, so this step is about pushing deeper into the XP loop."
               : "Eligibility pressure improves as this quest moves the pack closer to its next gate.",
     premium:
       premiumNudge
-        ? "This mission is entering a premium-relevant phase, so the next unlock has stronger upgrade weight."
+        ? "This quest path is entering a premium-relevant phase, so the next unlock has stronger upgrade weight."
         : null,
     directReward:
       directRewardMetadata && rewardEligible
-        ? `This pack is still aligned with a ${directRewardMetadata.amount} ${directRewardMetadata.asset} direct reward route.`
+        ? "This pack is still aligned with future manual reward review."
         : null,
   };
 }
@@ -1619,8 +1619,8 @@ function getPackDependencySummary({
 
   if (directRewardMetadata) {
     items.push({
-      label: "Reward rail",
-      detail: `The pack is still aligned with the ${directRewardMetadata.amount} ${directRewardMetadata.asset} direct reward rail.`,
+      label: "Future reward path",
+      detail: "The pack is still aligned with future manual reward review.",
     });
   }
 
@@ -1654,7 +1654,7 @@ function getQuestGateLabel({
   }
 
   if (hasDirectReward) {
-    return "Helps move the direct reward rail forward";
+    return "Helps prepare future reward review";
   }
 
   if (track === "starter") {
@@ -1662,7 +1662,7 @@ function getQuestGateLabel({
   }
 
   if (track === "daily" || track === "campaign") {
-    return "Helps recover weekly pace and mission momentum";
+    return "Helps recover weekly pace and quest momentum";
   }
 
   return "Helps build trust, eligibility, and progression pressure";
@@ -1682,7 +1682,7 @@ function getQuestDependencyDetail({
   blockageState: DashboardData["campaignPacks"][number]["blockageState"];
 }) {
   if (verificationType === "wallet-check" || track === "wallet") {
-    return "Clearing this step is the most direct route into wallet-enabled mission progression.";
+    return "Clearing this step is the most direct route into optional wallet-enabled quest progression.";
   }
 
   if (blockageState === "starter_path" || track === "starter") {
@@ -1702,7 +1702,7 @@ function getQuestDependencyDetail({
   }
 
   if (hasDirectReward) {
-    return "This step keeps the direct reward rail intact so payout value is still reachable.";
+    return "This step keeps the future reward path prepared while launch remains XP-first.";
   }
 
   if (track === "daily" || track === "campaign") {
@@ -1740,7 +1740,7 @@ function getPackOperatorNextMove({
   if (blockageState === "trust" || blockageState === "level") {
     return {
       title: "Lean on eligibility-building copy",
-      detail: "This pack still needs level/trust movement, so operators should emphasize verified progress over payout excitement.",
+      detail: "This pack still needs level/trust movement, so operators should emphasize verified XP progress over reward excitement.",
     };
   }
 
@@ -1786,7 +1786,7 @@ function getPackOperatorOutcome({
   if (reminderHandledRate >= 0.6 && ctaReach >= 0.35 && approvalDensity >= 0.2) {
     return {
       title: "Signals improving",
-      detail: "Reminder handling, CTA reach, and mission progression are all in a healthy range for this pack.",
+      detail: "Reminder handling, CTA reach, and quest progression are all in a healthy range for this pack.",
     };
   }
 
@@ -1806,8 +1806,8 @@ function getPackOperatorOutcome({
 
   if (approvalDensity < 0.15) {
     return {
-      title: "Mission progression is still thin",
-      detail: "People are touching the pack, but those actions are not yet turning into enough approved mission movement.",
+      title: "Quest progression is still thin",
+      detail: "People are touching the pack, but those actions are not yet turning into enough approved quest movement.",
     };
   }
 
@@ -1891,7 +1891,7 @@ function getQuestDependencyProgressLabel(index: number, actionable: boolean, sta
     return "Mid-pack dependency after the next unlock";
   }
 
-  return "Later dependency in the remaining mission path";
+  return "Later dependency in the remaining quest path";
 }
 
 function resolvePackPrimaryCta({
@@ -1935,7 +1935,7 @@ function resolvePackPrimaryCta({
   }
 
   return {
-    ctaLabel: nextQuestId ? (nextQuestActionable ? "Open next mission" : "View next mission") : "Review pack",
+    ctaLabel: nextQuestId ? (nextQuestActionable ? "Open next quest" : "View next quest") : "Review pack",
     ctaHref: nextQuestId ? (nextQuestActionable ? `#quest-action-${nextQuestId}` : "#quest-board") : "#quest-board",
   };
 }
@@ -1991,13 +1991,13 @@ function buildCampaignNotifications(
       if (pack.lifecycleState === "live") {
         detailParts.push(
           pack.kind === "feeder"
-            ? `${pack.attributionSource} is feeding into ${pack.activeLane} and this mission is live now.`
-            : `${pack.activeLane} is active and this mission is live now.`,
+            ? `${pack.attributionSource} is feeding into ${pack.activeLane} and this quest path is live now.`
+            : `${pack.activeLane} is active and this quest path is live now.`,
         );
       }
 
       if (pack.milestone.tone === "success") {
-        detailParts.push(`${pack.completedQuestCount}/${pack.totalQuestCount} missions are complete.`);
+        detailParts.push(`${pack.completedQuestCount}/${pack.totalQuestCount} quests are complete.`);
       }
 
       if (pack.directRewardState) {
@@ -2018,7 +2018,7 @@ function buildCampaignNotifications(
         title:
           pack.milestone.tone === "success"
             ? `${pack.label}: ${pack.milestone.label}`
-            : `${pack.label} is active in your mission flow`,
+            : `${pack.label} is active in your quest flow`,
         detail: `${detailParts.join(" ")} ${pack.nextAction}`.trim(),
         packId: pack.packId,
         reminderVariant: getReminderVariantForPack(pack),
@@ -2050,7 +2050,7 @@ function buildCampaignNotifications(
       id: `pack-inactivity-${inactivityNotification.packId}`,
       tone: "warning",
       title: `${inactivityNotification.label} is cooling off`,
-      detail: `Weekly pace is slipping by ${inactivityNotification.weeklyGoal.shortfallXp} XP. A clean mission clear now will pull this pack back onto its current target.`,
+      detail: `Weekly pace is slipping by ${inactivityNotification.weeklyGoal.shortfallXp} XP. A clean quest clear now will pull this pack back onto its current target.`,
       packId: inactivityNotification.packId,
       reminderVariant: getReminderVariantForPack(inactivityNotification),
       reminderSchedule: getReminderScheduleForPack(inactivityNotification).schedule,
@@ -2097,7 +2097,7 @@ function buildMissionActivityFeedItems(
     if (pack.weeklyGoal.shortfallXp > Math.max(pack.weeklyGoal.targetXp * 0.4, 80)) {
       items.push({
         id: `mission-cooling-${pack.packId}`,
-        actor: "Mission monitor",
+        actor: "Quest monitor",
         action: "flagged a campaign pack as cooling off",
         detail: `${pack.label} is ${pack.weeklyGoal.shortfallXp} XP behind its current weekly pace.`,
         timeAgo: "just now",
@@ -2106,8 +2106,8 @@ function buildMissionActivityFeedItems(
       if (pack.returnAction) {
         items.push({
           id: `mission-return-${pack.packId}`,
-          actor: "Mission reminder",
-          action: "scheduled a mission return reminder",
+          actor: "Quest reminder",
+          action: "scheduled a quest return reminder",
           detail: `${pack.label}: ${pack.returnAction}`,
           timeAgo: "just now",
           createdAt: nowIso,
@@ -2116,9 +2116,9 @@ function buildMissionActivityFeedItems(
     } else if (pack.weeklyGoal.shortfallXp === 0) {
       items.push({
         id: `mission-on-pace-${pack.packId}`,
-        actor: "Mission monitor",
+        actor: "Quest monitor",
         action: "marked a campaign pack back on pace",
-        detail: `${pack.label} is hitting its current weekly mission target again.`,
+        detail: `${pack.label} is hitting its current weekly quest target again.`,
         timeAgo: "just now",
         createdAt: nowIso,
       });
@@ -2269,17 +2269,17 @@ async function getUserCampaignPackJourneys({
         actionable: ["quiz", "manual-review", "link-visit", "wallet-check", "api-check", "text-submission"].includes(row.verification_type),
         nextHint:
           status === "completed"
-            ? "This mission step is already banked."
+            ? "This quest step is already banked."
             : track === "wallet"
-              ? "This step matters because wallet identity unlocks the deeper reward rail."
+              ? "This step matters because wallet identity unlocks optional future reward readiness."
               : track === "premium"
-                ? "This step becomes more valuable once the mission enters its premium phase."
+                ? "This step becomes more valuable once the quest path enters its premium phase."
                 : status === "available"
-                  ? "This is the cleanest next mission move right now."
+                  ? "This is the cleanest next quest move right now."
                   : "Clear the current blocker and this step will move forward.",
         rewardLabel:
           directReward && typeof directReward.amount === "number"
-            ? `${directReward.amount} ${typeof directReward.asset === "string" ? directReward.asset.toUpperCase() : economySettings.payoutAsset} direct reward`
+            ? "Future reward review step"
             : row.is_premium_preview
               ? "Premium progression step"
               : "XP-first progression step",
@@ -2310,9 +2310,9 @@ async function getUserCampaignPackJourneys({
         ),
         rewardTimingLabel:
           directReward && typeof directReward.amount === "number"
-            ? "Direct reward follows the pack payout state once this mission path is approved."
+            ? "Future rewards stay manual-review only after this quest path is approved."
             : row.is_premium_preview
-              ? "This step influences the premium phase rather than immediate payout timing."
+              ? "This step influences the premium phase rather than any reward timing."
               : "This step pays back mainly through XP progression timing.",
       };
     });
@@ -2363,38 +2363,38 @@ async function getUserCampaignPackJourneys({
       };
     } else if (completedQuestCount > 0) {
       milestone = {
-        label: "First mission cleared",
+        label: "First quest cleared",
         tone: "success",
       };
     } else if (rejectedQuestCount > 0) {
       milestone = {
-        label: "Review needed on one mission",
+        label: "Review needed on one quest",
         tone: "warning",
       };
     }
 
     let nextAction = `Complete ${nextQuestTitle ?? "the next campaign quest"} to keep your pack momentum moving.`;
-    let sequenceReason = "The next mission is simply the first incomplete step in this pack.";
+    let sequenceReason = "The next quest is simply the first incomplete step in this pack.";
     if (!userProgressState.walletLinked) {
       nextAction = getBrandSafeWalletLinkPrompt();
-      sequenceReason = "Wallet linking is the gating step that turns this pack from campaign traffic into reward-ready progression.";
+      sequenceReason = "Wallet linking is the optional step that turns this pack from campaign traffic into future reward readiness.";
     } else if (!userProgressState.starterPathComplete) {
       nextAction = getBrandSafeStarterPathPrompt();
       sequenceReason = "Activation-path completion comes first because it stabilizes the account before the heavier-value steps matter.";
     } else if (!user.rewardEligibility.eligible) {
       nextAction = `Stay on the progression path: ${user.rewardEligibility.nextRequirement ?? "keep building XP and trust"}.`;
-      sequenceReason = "Reward eligibility is the current bottleneck, so the pack is biasing toward trust and repeat activity.";
+      sequenceReason = "XP readiness is the current bottleneck, so the pack is biasing toward trust and repeat activity.";
     } else if (openQuestCount === 0 && inProgressQuestCount === 0) {
-      nextAction = "This pack is complete. Keep weekly XP and referrals active so the reward rail stays valuable.";
+      nextAction = "This pack is complete. Keep weekly XP and referrals active so future reward readiness stays strong.";
       sequenceReason = "There are no remaining quests in this pack, so the next value comes from the wider weekly and referral loop.";
     }
 
     const premiumTrackPressure = featuredTracks.includes("premium") || rows.some((row) => row.is_premium_preview);
     const premiumNudge =
       user.tier === "free" && premiumTrackPressure && completedQuestCount >= Math.ceil(rows.length / 2)
-        ? `${firstRow.pack_label ?? "This pack"} is moving into a premium-heavy phase. Monthly or Annual will increase XP yield and unlock stronger follow-on missions.`
+        ? `${firstRow.pack_label ?? "This pack"} is moving into a premium-heavy phase. Monthly or Annual will increase XP yield and unlock stronger follow-on quests.`
         : user.tier === "monthly" && premiumTrackPressure && completedQuestCount >= Math.ceil(rows.length / 2)
-          ? `${firstRow.pack_label ?? "This pack"} is now worth treating as an annual-scale mission. Annual sharpens the XP lift and direct reward upside at this stage.`
+          ? `${firstRow.pack_label ?? "This pack"} is now worth treating as an annual-scale quest path. Annual sharpens the XP lift and future reward readiness at this stage.`
         : null;
     const weeklyGoalTarget = Math.max(dataUserWeeklyTarget(user.weeklyProgress.nextThreshold, user.weeklyProgress.currentThreshold) + Math.max(economySettings.campaignOverrides[experienceLane]?.weeklyTargetXpOffset ?? 0, 0), user.weeklyProgress.currentThreshold);
     const weeklyGoalShortfall = Math.max(weeklyGoalTarget - user.weeklyProgress.xp, 0);
@@ -2419,26 +2419,26 @@ async function getUserCampaignPackJourneys({
       : null;
     const directRewardState = directRewardMetadata
       ? settledDirectMatch
-        ? { label: "Direct reward settled", tone: "success" as const }
+        ? { label: "Future reward reviewed", tone: "success" as const }
         : claimedDirectMatch
-          ? { label: "Direct reward claimed", tone: "info" as const }
+          ? { label: "Future reward prepared", tone: "info" as const }
           : scheduledDirectMatch
-            ? { label: "Direct reward scheduled", tone: "info" as const }
-            : { label: "Direct reward projected", tone: "warning" as const }
+            ? { label: "Manual review scheduled", tone: "info" as const }
+            : { label: "Future reward path", tone: "warning" as const }
       : null;
 
     const rewardFocus =
       firstRow.template_kind === "feeder"
-        ? `${attributionSource} is acting as the feeder source here. The short-term win is reaching the ${experienceLane} bridge cleanly, then letting XP and wallet progress unlock the deeper ${economySettings.payoutAsset} rail.`
+        ? `${attributionSource} is acting as the feeder source here. The short-term win is reaching the ${experienceLane} bridge cleanly, then letting XP and wallet progress prepare future rewards.`
         : firstRow.template_kind === "bridge"
-          ? `${experienceLane} is the live bridge lane for this mission. XP momentum, starter-path completion, and wallet trust are what turn this into reward-bearing progress.`
+          ? `${experienceLane} is the live bridge lane for this quest path. XP momentum, starter-path completion, and wallet trust are what turn this into future reward readiness.`
           : attributionSource === experienceLane
-            ? `${experienceLane} is driving this mission directly. XP builds the core loop, then ${economySettings.payoutAsset} settles the reward rail.`
-            : getBrandSafeRewardFocus(attributionSource, experienceLane, economySettings.payoutAsset);
+            ? `${experienceLane} is driving this quest path directly. XP builds the core loop while future rewards stay manual-review only for launch.`
+            : getBrandSafeRewardFocus(attributionSource, experienceLane);
 
     const tierPhaseCopy = getPackTierPhaseCopy(
       user.tier,
-      firstRow.pack_label ?? "This mission",
+      firstRow.pack_label ?? "This quest path",
       (firstRow.template_kind ?? "mixed") as "bridge" | "feeder" | "mixed",
       experienceLane,
     );
@@ -2458,7 +2458,7 @@ async function getUserCampaignPackJourneys({
               : returnWindow === "this_week"
                 ? "Come back this week"
                 : "Wait for the next unlock"
-          }: ${firstRow.pack_label ?? "this mission"} needs ${nextQuestTitle ?? "the next mission"} to recover the current pace gap.`
+          }: ${firstRow.pack_label ?? "this quest path"} needs ${nextQuestTitle ?? "the next quest"} to recover the current pace gap.`
         : null;
     const priorityReason = getPackPriorityReason({
       userProgressState,
@@ -2553,7 +2553,7 @@ async function getUserCampaignPackJourneys({
       weeklyGoal: {
         targetXp: weeklyGoalTarget,
         shortfallXp: weeklyGoalShortfall,
-        label: weeklyGoalShortfall > 0 ? `${weeklyGoalShortfall} XP to hit this mission's short-term pace` : "Weekly mission pace is already on track",
+        label: weeklyGoalShortfall > 0 ? `${weeklyGoalShortfall} XP to hit this quest path's short-term pace` : "Weekly quest pace is already on track",
       },
       urgency: typeof firstTimebox === "string" ? firstTimebox : null,
       onboardingHint,
@@ -2728,7 +2728,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
   const missionActivityItems = buildMissionActivityFeedItems(campaignPacks);
   const mergedActivityFeed = [...missionActivityItems, ...activityFeed].slice(0, 8);
   const missionEventHistory = mergedActivityFeed
-    .filter((item) => item.action.includes("campaign pack") || item.actor === "Mission monitor" || item.actor === "Mission reminder" || item.action.includes("mission CTA"))
+    .filter((item) => item.action.includes("campaign pack") || item.actor === "Quest monitor" || item.actor === "Quest reminder" || item.action.includes("mission CTA"))
     .map((item) => {
       const matchedPack =
         campaignPacks.find((pack) => item.detail.includes(pack.label)) ??
@@ -2738,7 +2738,7 @@ export async function getDashboardDataFromDb(currentUser?: AuthUser | null): Pro
       return {
         id: item.id,
         packId: matchedPack?.packId ?? "unknown",
-        packLabel: matchedPack?.label ?? "Mission event",
+        packLabel: matchedPack?.label ?? "Quest event",
         title: item.action,
         detail: item.detail,
         timeAgo: item.timeAgo,
@@ -3548,7 +3548,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         },
         operatorOutcome: {
           title: "Outcome signal is still forming",
-          detail: "Reminder handling, CTA traffic, and mission approvals need a little more pack activity before the operator outcome call becomes meaningful.",
+          detail: "Reminder handling, CTA traffic, and quest approvals need a little more pack activity before the operator outcome call becomes meaningful.",
           trend: {
             currentCompletions: 0,
             previousCompletions: 0,
@@ -4449,7 +4449,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
         entry.state === "wallet_connection"
           ? "The biggest blocker is wallet connection, so pack CTAs should point directly to wallet-linked actions."
           : entry.state === "starter_path"
-            ? "Users are still getting stuck in the activation path, so simplify early mission steps and reinforce first wins."
+            ? "Users are still getting stuck in the activation path, so simplify early quest steps and reinforce first wins."
             : entry.state === "level"
               ? "Users need more XP and level momentum before the pack can pay off, so keep progression CTAs front and center."
               : entry.state === "trust"
@@ -4458,7 +4458,7 @@ export async function getAdminOverviewDataFromDb(): Promise<AdminOverviewData> {
                   ? "This pack is entering premium-heavy territory, so CTA language should support the upgrade path."
                   : entry.state === "weekly_pace"
                     ? "This pack is slipping on weekly pace, so recovery messaging and short-term return actions matter most."
-                    : "Most users are not blocked, so default mission progression CTAs are fine.",
+                    : "Most users are not blocked, so default quest progression CTAs are fine.",
     }));
 
   return {

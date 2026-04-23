@@ -63,7 +63,7 @@ export function ReferralSharePanel({
         <p className="eyebrow">Invite link</p>
         <h3>Bring friends into your progress loop.</h3>
         <p>
-          Share your invite link with people who want to start using Emorya. When they join and keep progressing, your referral rewards can grow too.
+          Share your invite link with people who want to start using Emorya. When they join and keep progressing, your referral XP can grow too.
         </p>
       </div>
       <div className="referral-share-card__link" aria-label="Referral invite link">

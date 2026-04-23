@@ -6,23 +6,39 @@ import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const activeBrandTheme = await resolveRuntimeBrandTheme();
-  const metadataBase = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://emorya.com");
+  const metadataBase = new URL(process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "https://emorya.com");
+  const ogImage = "/brand/emorya-og.svg";
 
   return {
     metadataBase,
     title: activeBrandTheme.brand.metadataTitle,
     description: activeBrandTheme.brand.metadataDescription,
+    alternates: {
+      canonical: "/",
+    },
     openGraph: {
       title: activeBrandTheme.brand.metadataTitle,
       description: activeBrandTheme.brand.metadataDescription,
       url: "/",
       siteName: activeBrandTheme.brand.platformName,
       type: "website",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: `${activeBrandTheme.brand.platformName} quest progress preview`,
+        },
+      ],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: activeBrandTheme.brand.metadataTitle,
       description: activeBrandTheme.brand.metadataDescription,
+      images: [ogImage],
+    },
+    icons: {
+      icon: "/icon.svg",
     },
   };
 }

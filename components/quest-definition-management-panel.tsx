@@ -321,7 +321,7 @@ function getGuidedQuestBlueprint(platform: GuidedPlatform, questType: GuidedQues
                   ? "https://app.galxe.com/quest/example"
                   : platform === "taskon"
                     ? "https://taskon.xyz/campaign/detail/"
-                    : "https://example.com/";
+                    : "https://emorya.com/";
 
   switch (questType) {
     case "community-join":
@@ -423,7 +423,7 @@ function getGuidedQuestBlueprint(platform: GuidedPlatform, questType: GuidedQues
           proofType: "url",
           proofInstructions: "Complete the external task, then submit a reference URL or completion id for verification.",
           apiVerification: {
-            endpointUrl: "https://example.com/api/verify",
+            endpointUrl: "https://gravity.emorya.com/api/verify",
             method: "POST",
             failureMode: "pending-review",
           },
@@ -734,8 +734,8 @@ export function QuestDefinitionManagementPanel({
         },
       },
       {
-        label: "Partner token flash quest",
-        description: "Annual or premium spike quest with direct token payout and program mapping.",
+        label: "Partner manual reward quest",
+        description: "Annual or premium spike quest with review-first reward queueing and program mapping.",
         form: {
           category: "limited",
           difficulty: "hard",
@@ -760,13 +760,13 @@ export function QuestDefinitionManagementPanel({
             all: [{ type: "subscription_tier", value: "annual" }],
           },
           previewConfig: {
-            label: "Partner flash payout",
+            label: "Partner manual reward",
           },
         },
       },
       {
         label: "Referral annual win",
-        description: "High-value referral milestone with direct payout and referral gating.",
+        description: "High-value referral milestone with review-first reward gating.",
         form: {
           category: "referral",
           difficulty: "hard",
@@ -938,8 +938,8 @@ export function QuestDefinitionManagementPanel({
           track: "social",
           platformLabel: "App Store",
           ctaLabel: "Open store listing",
-          targetUrl: "https://apps.apple.com/app/example",
-          helpUrl: "https://example.com/review-guide",
+          targetUrl: "https://apps.apple.com/app/emorya",
+          helpUrl: "https://emorya.com/review-guide",
           proofType: "screenshot",
           proofInstructions: "Leave a genuine rating or written review, then upload proof for moderation.",
           rewardConfig: {
@@ -967,11 +967,11 @@ export function QuestDefinitionManagementPanel({
           track: "campaign",
           platformLabel: "Zealy",
           ctaLabel: "Open Zealy task",
-          targetUrl: "https://zealy.io/c/example/quest-board",
+          targetUrl: "https://zealy.io/c/emorya/quest-board",
           proofType: "url",
           proofInstructions: "Complete the Zealy action, then submit the external reference URL or completion id for API verification.",
           apiVerification: {
-            endpointUrl: "https://example.com/api/verify/zealy",
+            endpointUrl: "https://gravity.emorya.com/api/verify/zealy",
             method: "POST",
             failureMode: "pending-review",
           },
@@ -1003,11 +1003,11 @@ export function QuestDefinitionManagementPanel({
           track: "campaign",
           platformLabel: "Galxe",
           ctaLabel: "Open Galxe campaign",
-          targetUrl: "https://app.galxe.com/quest/example",
+          targetUrl: "https://app.galxe.com/quest/emorya",
           proofType: "url",
           proofInstructions: "Complete the credential step, then submit the Galxe profile or participation reference for verification.",
           apiVerification: {
-            endpointUrl: "https://example.com/api/verify/galxe",
+            endpointUrl: "https://gravity.emorya.com/api/verify/galxe",
             method: "POST",
             failureMode: "pending-review",
           },
@@ -1038,7 +1038,7 @@ export function QuestDefinitionManagementPanel({
         metadata: {
           track: "campaign",
           rewardProgramId: coreProgram,
-          targetUrl: "https://example.com/zealy-bridge",
+          targetUrl: "https://emorya.com/quests/zealy-bridge",
           campaignTemplateKind: "bridge",
           campaignAttributionSource: "zealy",
           campaignExperienceLane: "zealy",
@@ -1072,7 +1072,7 @@ export function QuestDefinitionManagementPanel({
         metadata: {
           track: "campaign",
           rewardProgramId: coreProgram,
-          targetUrl: "https://example.com/galxe-bridge",
+          targetUrl: "https://emorya.com/quests/galxe-bridge",
           campaignTemplateKind: "feeder",
           campaignAttributionSource: "galxe",
           campaignExperienceLane: "zealy",
@@ -1107,7 +1107,7 @@ export function QuestDefinitionManagementPanel({
         metadata: {
           track: "campaign",
           rewardProgramId: coreProgram,
-          targetUrl: "https://example.com/taskon-bridge",
+          targetUrl: "https://emorya.com/quests/taskon-bridge",
           campaignTemplateKind: "feeder",
           campaignAttributionSource: "taskon",
           campaignExperienceLane: "zealy",
@@ -2606,7 +2606,7 @@ export function QuestDefinitionManagementPanel({
           </div>
           <div className="achievement-card__side">
             <span>{form.xpReward} XP</span>
-            <span>{preview.directTokenReward ?? "No direct token reward"}</span>
+            <span>{preview.directTokenReward ?? "No manual reward"}</span>
           </div>
         </article>
         {bridgeTemplateWarning ? (

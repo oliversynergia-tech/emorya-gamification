@@ -173,7 +173,7 @@ function renderTaskSubmissionSummary(submissionData: Record<string, unknown>) {
 
   return (
     <div className="form-stack">
-      <p className="form-note">Task steps submitted:</p>
+      <p className="form-note">Quest steps submitted:</p>
       {submissionData.taskSubmissions.map((rawSubmission, index) => {
         if (!rawSubmission || typeof rawSubmission !== "object") {
           return null;
@@ -185,10 +185,10 @@ function renderTaskSubmissionSummary(submissionData: Record<string, unknown>) {
         return (
           <div key={taskId} className="info-card">
             <span>{taskId}</span>
-            <strong>{String(submission.contentUrl ?? submission.note ?? "Task evidence submitted")}</strong>
+            <strong>{String(submission.contentUrl ?? submission.note ?? "Step evidence submitted")}</strong>
             {typeof submission.proofFileUrl === "string" && submission.proofFileUrl ? (
               <a href={submission.proofFileUrl} target="_blank" rel="noreferrer">
-                {String(submission.proofFileName ?? "Open uploaded task proof")}
+                {String(submission.proofFileName ?? "Open uploaded step proof")}
               </a>
             ) : null}
           </div>

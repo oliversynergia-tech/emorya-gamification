@@ -17,7 +17,7 @@ function getMissionCue(pack: DashboardData["campaignPacks"][number]) {
   }
   return {
     badge: "See what's next",
-    note: "Open the remaining mission path to see the next step waiting for you.",
+    note: "Open the remaining quest path to see the next step waiting for you.",
     tone: "planning",
   } as const;
 }
@@ -26,8 +26,8 @@ export function MissionPackDetailPanel({
   activePacks,
   packHistory,
   missionView = "all",
-  title = "Mission detail",
-  eyebrow = "Mission detail",
+  title = "Quest path detail",
+  eyebrow = "Quest path detail",
 }: {
   activePacks: DashboardData["campaignPacks"];
   packHistory: DashboardData["campaignPackHistory"];
@@ -146,7 +146,7 @@ export function MissionPackDetailPanel({
                 : quest.dependencyProgressLabel.toLowerCase().includes("trust") ||
                     quest.dependencyProgressLabel.toLowerCase().includes("eligibility")
                   ? "Trust and eligibility"
-                  : "Mission progression";
+                  : "Quest progression";
       const current = groups.get(label) ?? [];
       current.push(quest);
       groups.set(label, current);
@@ -242,7 +242,7 @@ export function MissionPackDetailPanel({
                 ))}
                 <article className="achievement-card achievement-card--progress mission-ladder-card mission-ladder-card--summary">
                   <div>
-                    <strong>Mission ladder</strong>
+                    <strong>Quest ladder</strong>
                     <p>The ladder starts with the current quest, then moves through the next unlocks until the pack milestone clears.</p>
                   </div>
                   <div className="achievement-card__side">
@@ -285,14 +285,14 @@ export function MissionPackDetailPanel({
                       </p>
                       <p>
                         {quest.status === "completed"
-                          ? "Already completed for this mission."
+                          ? "Already completed for this quest path."
                           : quest.status === "in-progress"
-                            ? "Currently in progress inside this mission."
+                            ? "Currently in progress inside this quest path."
                             : quest.status === "rejected"
-                              ? "Needs a cleaner re-submit before this mission can move."
+                              ? "Needs a cleaner resubmit before this quest path can move."
                               : quest.actionable
                                 ? "This is ready to take right now."
-                                : "This unlocks after the current mission step moves forward."}
+                                : "This unlocks after the current quest step moves forward."}
                       </p>
                       <p className="form-note">
                         {quest.track} track. {quest.rewardLabel}

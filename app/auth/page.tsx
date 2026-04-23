@@ -104,7 +104,7 @@ export default async function AuthPage({
             </div>
             <div className="info-card">
               <span>Rewards</span>
-              <strong>{data.user.tokenProgram.asset} rewards come later as progress grows</strong>
+              <strong>Future rewards come later as XP progress grows</strong>
             </div>
           </div>
           <p className="form-note">
@@ -179,7 +179,7 @@ export default async function AuthPage({
               {` `}
               {returnPack.nextQuestActionable && returnPack.nextQuestTitle
                 ? `${returnPack.nextQuestTitle} is the best next step right now.`
-                : "Open your missions to see the best next step."}
+                : "Open your quests to see the best next step."}
             </p>
             <div className="hero__actions">
               <MissionLink
@@ -198,11 +198,11 @@ export default async function AuthPage({
                 href="/dashboard#campaign-mission"
                 packId={returnPack.packId}
                 eventType="auth_dashboard_return_cta"
-                ctaLabel="Return to dashboard mission"
+                ctaLabel="Return to dashboard quests"
                 ctaVariant="return_path"
                 missionView="active"
               >
-                Return to dashboard mission
+                Return to dashboard quests
               </MissionLink>
             </div>
         </section>

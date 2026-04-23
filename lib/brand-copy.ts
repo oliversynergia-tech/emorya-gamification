@@ -74,7 +74,7 @@ export function getBrandSafeQuestDescription(description: string) {
 
 export function getBrandSafeWalletLinkPrompt() {
   const profile = getActiveBrandCopyProfile();
-  return `Connect ${profile.walletProduct} to unlock the full reward and payout experience.`;
+  return `Connect ${profile.walletProduct} when you are ready to unlock the next optional quest step.`;
 }
 
 export function getBrandSafeStarterPathPrompt() {
@@ -87,6 +87,6 @@ export function getBrandSafeOnboardingHint() {
   return `Start here: finish the activation ladder, connect ${profile.walletProduct}, and complete your first meaningful product actions to unlock ${profile.progressionLabel}.`;
 }
 
-export function getBrandSafeRewardFocus(attributionSource: string, experienceLane: string, payoutAsset: string) {
-  return `You came in through ${attributionSource}, and right now ${experienceLane} is the path shaping your progress and future ${payoutAsset} rewards.`;
+export function getBrandSafeRewardFocus(attributionSource: string, experienceLane: string) {
+  return `You came in through ${attributionSource}, and right now ${experienceLane} is the path shaping your XP progress and future reward readiness.`;
 }

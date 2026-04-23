@@ -1,0 +1,17 @@
+<!-- Placeholder OG image for launch; replace with final 1200x630 Emorya campaign artwork before broad public distribution. -->
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Emorya Quests</title>
+  <desc id="desc">Emorya XP-first quest platform social preview.</desc>
+  <rect width="1200" height="630" fill="#12081D"/>
+  <circle cx="1020" cy="82" r="310" fill="#F0509E" fill-opacity="0.18"/>
+  <circle cx="158" cy="566" r="286" fill="#8F5DFF" fill-opacity="0.16"/>
+  <path d="M154 146H1046" stroke="#FFFFFF" stroke-opacity="0.08"/>
+  <path d="M154 484H1046" stroke="#FFFFFF" stroke-opacity="0.08"/>
+  <g transform="translate(154 170)">
+    <rect width="118" height="118" rx="26" fill="#F0509E"/>
+    <path d="M34 82V36H86V50H51V55H82V68H51V68H88V82H34Z" fill="#12081D"/>
+  </g>
+  <text x="154" y="360" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="76" font-weight="800">Emorya Quests</text>
+  <text x="158" y="426" fill="#E4DCF4" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="500">Build XP, complete quests, and grow your place in the Emorya community.</text>
+  <text x="158" y="516" fill="#F0D6A0" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">XP-first launch</text>
+</svg>

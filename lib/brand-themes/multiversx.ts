@@ -4,9 +4,9 @@ export const multiversxTheme: BrandTheme = {
   id: "multiversx",
   label: "MultiversX",
   brand: {
-    platformName: "MultiversX Missions",
-    metadataTitle: "MultiversX Missions",
-    metadataDescription: "Chain-native campaign and rewards platform for the MultiversX ecosystem.",
+    platformName: "MultiversX Quests",
+    metadataTitle: "MultiversX Quests",
+    metadataDescription: "Chain-native quests, XP, and progression for the MultiversX ecosystem.",
     homeAriaLabel: "MultiversX home",
     logoSrc: "https://cdn.multiversx.com/webflow/MultiversX-Logo_1.svg",
     logoAlt: "MultiversX",

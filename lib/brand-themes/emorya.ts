@@ -4,9 +4,9 @@ export const emoryaTheme: BrandTheme = {
   id: "emorya",
   label: "Emorya",
   brand: {
-    platformName: "Emorya Gamification",
-    metadataTitle: "Emorya Gamification",
-    metadataDescription: "Quest-led onboarding, activation, and retention designed to turn curiosity into everyday Emorya use.",
+    platformName: "Emorya Quests",
+    metadataTitle: "Emorya Quests",
+    metadataDescription: "Complete XP-first quests, build momentum, and grow your place in the Emorya community.",
     homeAriaLabel: "Emorya home",
     logoSrc: "/brand/emorya-logo-final.png",
     logoAlt: "Emorya",

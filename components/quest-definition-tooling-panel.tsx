@@ -33,7 +33,7 @@ const supportedRules = [
 
 const exampleMetadata = `{
   "track": "campaign",
-  "targetUrl": "https://example.com/zealy-bridge",
+  "targetUrl": "https://emorya.com/quests/zealy-bridge",
   "unlockRules": {
     "all": [{ "type": "campaign_source", "value": "zealy" }]
   },

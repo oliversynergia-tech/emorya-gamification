@@ -134,11 +134,11 @@ export function MissionEventHistoryPanel({
       {selectedPackId !== "all" && (selectedActivePack || selectedHistoryPack) ? (
         <article className="achievement-card achievement-card--progress">
           <div>
-            <strong>{selectedActivePack?.label ?? selectedHistoryPack?.label ?? "Mission detail"}</strong>
+            <strong>{selectedActivePack?.label ?? selectedHistoryPack?.label ?? "Quest detail"}</strong>
             <p>
               {selectedActivePack
-                ? `${selectedActivePack.completedQuestCount}/${selectedActivePack.totalQuestCount} missions complete. ${selectedActivePack.sequenceReason}`
-                : selectedHistoryPack?.summary ?? "Completed mission path."}
+                ? `${selectedActivePack.completedQuestCount}/${selectedActivePack.totalQuestCount} quests complete. ${selectedActivePack.sequenceReason}`
+                : selectedHistoryPack?.summary ?? "Completed quest path."}
             </p>
             {selectedActivePack ? (
               <>

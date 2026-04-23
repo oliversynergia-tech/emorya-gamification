@@ -4,9 +4,9 @@ export const xportalTheme: BrandTheme = {
   id: "xportal",
   label: "xPortal",
   brand: {
-    platformName: "xPortal Missions",
-    metadataTitle: "xPortal Missions",
-    metadataDescription: "App-native missions, rewards, and progression for the xPortal ecosystem.",
+    platformName: "xPortal Quests",
+    metadataTitle: "xPortal Quests",
+    metadataDescription: "App-native quests, XP, and progression for the xPortal ecosystem.",
     homeAriaLabel: "xPortal home",
     logoSrc: "/brand/xportal-wordmark.svg",
     logoAlt: "xPortal",

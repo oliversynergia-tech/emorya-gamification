@@ -37,7 +37,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "Wallet linked",
         title: "xPortal is now connected",
         detail:
-          "That unlocks a smoother path into rewards, wallet-based quests, and the next parts of the platform.",
+          "That unlocks a smoother path into optional wallet-based quests and the next parts of the platform.",
       };
     case "convert-your-first-calories":
       return {
@@ -53,7 +53,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "Premium live",
         title: "Monthly premium is now live",
         detail:
-          "Your weekly progress, rewards, and member benefits should feel stronger from here.",
+          "Your weekly XP progress and member benefits should feel stronger from here.",
       };
     case "upgrade-to-annual":
       return {
@@ -93,7 +93,7 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
         badge: "APY boost",
         title: "APY boost status unlocked",
         detail:
-          "Your staking status now unlocks a stronger reward incentive.",
+          "Your staking status now unlocks stronger future reward readiness.",
       };
     case "weekly-warrior":
       return {
@@ -198,21 +198,21 @@ export function QuestActionsPanel({
     if (activeCampaignPack.milestone.label === "Pack complete") {
       return {
         title: `${activeCampaignPack.label} is complete`,
-        detail: "That mission path is now closed out cleanly. This is the strongest moment to convert the momentum into referrals, premium lift, or another live pack.",
+        detail: "That quest path is now closed out cleanly. This is the strongest moment to convert the momentum into referrals, premium lift, or another live pack.",
       };
     }
 
     if (activeCampaignPack.milestone.label === "Halfway complete") {
       return {
         title: `${activeCampaignPack.label} just hit halfway`,
-        detail: "You now have enough mission momentum for the pack to start paying off more clearly in weekly pace, referrals, and premium pressure.",
+        detail: "You now have enough quest momentum for the pack to show more clearly in weekly pace, referrals, and premium pressure.",
       };
     }
 
-    if (activeCampaignPack.milestone.label === "First mission cleared") {
+    if (activeCampaignPack.milestone.label === "First quest cleared") {
       return {
         title: `${activeCampaignPack.label} is underway`,
-        detail: "The first clean mission is in. That shifts this pack from intent into real progression.",
+        detail: "The first clean quest is in. That shifts this pack from intent into real progression.",
       };
     }
 
@@ -232,7 +232,7 @@ export function QuestActionsPanel({
     return {
       tone: "planning",
       badge: "Next step pending",
-      note: "Your next mission step will open once this submission clears.",
+      note: "Your next quest step will open once this submission clears review.",
     } as const;
   }, [activeCampaignPack]);
   const questMilestoneCelebration = useMemo(
@@ -449,7 +449,7 @@ export function QuestActionsPanel({
           note: notes[quest.id] ?? "",
           taskSubmissions,
         },
-        "Manual review submitted.",
+        "Submitted for review.",
       );
     })();
   }
@@ -566,7 +566,7 @@ export function QuestActionsPanel({
               {quest.taskBlocks?.length ? (
                 <div className="form-stack">
                   <p className="form-note">
-                    {quest.taskBlocks.length} task step{quest.taskBlocks.length === 1 ? "" : "s"} in this quest.
+                    {quest.taskBlocks.length} proof step{quest.taskBlocks.length === 1 ? "" : "s"} in this quest.
                   </p>
                   {quest.taskBlocks.map((task, index) => (
                     <article key={task.id} className="info-card">
@@ -578,7 +578,7 @@ export function QuestActionsPanel({
                       {task.description ? <p>{task.description}</p> : null}
                       {task.platformLabel || task.proofType ? (
                         <p className="form-note">
-                          {task.platformLabel ? task.platformLabel : "Custom task"}
+                          {task.platformLabel ? task.platformLabel : "Custom step"}
                           {task.platformLabel && task.proofType ? " · " : ""}
                           {task.proofType ? `Proof: ${task.proofType}` : ""}
                         </p>
@@ -654,7 +654,7 @@ export function QuestActionsPanel({
                   {quest.taskBlocks?.length ? (
                     <div className="form-stack">
                       <p className="form-note">
-                        Add proof per task step. The main content URL can stay empty if the task submissions contain the evidence.
+                        Add proof per step. The main content URL can stay empty if the step submissions contain the evidence.
                       </p>
                       {quest.taskBlocks.map((task) => {
                         const proofKey = getTaskProofKey(quest.id, task.id);
@@ -663,7 +663,7 @@ export function QuestActionsPanel({
                           <article key={task.id} className="info-card">
                             <strong>{task.label}</strong>
                             <label className="field">
-                              <span>Task URL or proof link</span>
+                              <span>Step URL or proof link</span>
                               <input
                                 value={taskContentUrls[proofKey] ?? ""}
                                 onChange={(event) =>
@@ -674,7 +674,7 @@ export function QuestActionsPanel({
                               />
                             </label>
                             <label className="field">
-                              <span>Task note</span>
+                              <span>Step note</span>
                               <input
                                 value={taskNotes[proofKey] ?? ""}
                                 onChange={(event) =>
@@ -685,7 +685,7 @@ export function QuestActionsPanel({
                               />
                             </label>
                             <label className="field">
-                              <span>Task proof file</span>
+                              <span>Step proof file</span>
                               <input
                                 type="file"
                                 accept="image/*,application/pdf,text/plain,video/mp4,video/quicktime"

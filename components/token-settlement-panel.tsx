@@ -504,7 +504,7 @@ export function TokenSettlementPanel({
       ) : null}
       <p className="form-note">
         Payout mode <strong>{payoutControls.payoutMode}</strong> · settlement processing{" "}
-        <strong>{payoutControls.settlementProcessingEnabled ? "enabled" : "disabled"}</strong> · direct reward queue{" "}
+        <strong>{payoutControls.settlementProcessingEnabled ? "enabled" : "disabled"}</strong> · manual reward queue{" "}
         <strong>{payoutControls.directRewardQueueEnabled ? "enabled" : "disabled"}</strong>
       </p>
       <p className="form-note">

@@ -82,9 +82,9 @@ function updateCampaignPacks(
         : completedQuestCount >= Math.ceil(nextQuestStatuses.length / 2) && nextQuestStatuses.length > 1
           ? { label: "Halfway complete", tone: "success" as const }
           : completedQuestCount > 0
-            ? { label: "First mission cleared", tone: "success" as const }
+            ? { label: "First quest cleared", tone: "success" as const }
             : rejectedQuestCount > 0
-              ? { label: "Review needed on one mission", tone: "warning" as const }
+              ? { label: "Review needed on one quest", tone: "warning" as const }
               : { label: "Pack is ready to start", tone: "info" as const };
 
     return {
@@ -97,7 +97,7 @@ function updateCampaignPacks(
       nextQuestId: nextQuest?.questId ?? null,
       nextQuestTitle: nextQuest?.title ?? null,
       nextQuestActionable: nextQuest?.actionable ?? false,
-      ctaLabel: nextQuest ? (nextQuest.actionable ? "Open next mission" : "View next mission") : "Review pack",
+      ctaLabel: nextQuest ? (nextQuest.actionable ? "Open next quest" : "View next quest") : "Review pack",
       milestone,
     };
   });
@@ -124,13 +124,13 @@ function buildCampaignNotifications(
     if (pack.lifecycleState === "live") {
       detailParts.push(
         pack.kind === "feeder"
-          ? `${pack.attributionSource} is feeding into ${pack.activeLane} and this mission is live now.`
-          : `${pack.activeLane} is active and this mission is live now.`,
+          ? `${pack.attributionSource} is feeding into ${pack.activeLane} and this quest path is live now.`
+          : `${pack.activeLane} is active and this quest path is live now.`,
       );
     }
 
     if (pack.milestone.tone === "success") {
-      detailParts.push(`${pack.completedQuestCount}/${pack.totalQuestCount} missions are complete.`);
+      detailParts.push(`${pack.completedQuestCount}/${pack.totalQuestCount} quests are complete.`);
     }
 
     if (pack.directRewardState) {
@@ -151,7 +151,7 @@ function buildCampaignNotifications(
       title:
         pack.milestone.tone === "success"
           ? `${pack.label}: ${pack.milestone.label}`
-          : `${pack.label} is active in your mission flow`,
+          : `${pack.label} is active in your quest flow`,
       detail: `${detailParts.join(" ")} ${pack.nextAction}`.trim(),
       packId: pack.packId,
       ctaLabel:
@@ -214,7 +214,7 @@ function updateCampaignPackHistory(
       summary:
         pack.kind === "feeder"
           ? `Completed as a feeder pack into ${pack.activeLane}.`
-          : `Completed across ${pack.totalQuestCount} mission${pack.totalQuestCount === 1 ? "" : "s"}.`,
+          : `Completed across ${pack.totalQuestCount} quest${pack.totalQuestCount === 1 ? "" : "s"}.`,
       totalXpAwarded: 0,
       approvedQuestCount: pack.completedQuestCount,
       premiumQuestCount: 0,

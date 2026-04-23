@@ -32,7 +32,7 @@ function getProfilePackCue(pack: DashboardCampaignPack) {
   }
   return {
     badge: "See what's next",
-    note: "Open the mission path to see the next step waiting for you.",
+    note: "Open the quest path to see the next step waiting for you.",
     tone: "planning",
   };
 }
@@ -95,8 +95,8 @@ export function ProfileMissionRecapPanel({
     <div className="panel" id="mission-recap">
       <div className="panel__header">
         <div>
-          <p className="eyebrow">Mission recap</p>
-          <h3>Your mission progress in one place</h3>
+          <p className="eyebrow">Quest recap</p>
+          <h3>Your quest progress in one place</h3>
         </div>
         <span className="badge badge--pink">
           {view === "completed"
@@ -106,15 +106,15 @@ export function ProfileMissionRecapPanel({
               : `${filtered.active.length} active`}
         </span>
       </div>
-      <div className="review-actions" role="group" aria-label="Mission recap view">
+      <div className="review-actions" role="group" aria-label="Quest recap view">
         <button className={`button ${view === "active" ? "button--primary" : "button--secondary"}`} type="button" aria-pressed={view === "active"} onClick={() => setView("active")}>
-          Active missions
+          Active quests
         </button>
         <button className={`button ${view === "completed" ? "button--primary" : "button--secondary"}`} type="button" aria-pressed={view === "completed"} onClick={() => setView("completed")}>
           Completed
         </button>
         <button className={`button ${view === "reward" ? "button--primary" : "button--secondary"}`} type="button" aria-pressed={view === "reward"} onClick={() => setView("reward")}>
-          Reward-linked
+          Future reward path
         </button>
       </div>
       {filtered.active.length > 0 ? (
@@ -128,7 +128,7 @@ export function ProfileMissionRecapPanel({
                   <p>{pack.nextAction}</p>
                   <p className="form-note">{pack.tierPhaseCopy}</p>
                   <p className="form-note">
-                    {pack.completedQuestCount}/{pack.totalQuestCount} missions complete. {pack.sequenceReason}
+                    {pack.completedQuestCount}/{pack.totalQuestCount} quests complete. {pack.sequenceReason}
                   </p>
                   <p className={`mission-cue mission-cue--${cue.tone}`}>
                     <strong>{cue.badge}</strong> {cue.note}
@@ -187,7 +187,7 @@ export function ProfileMissionRecapPanel({
         </div>
       ) : null}
       {filtered.active.length === 0 && filtered.history.length === 0 ? (
-        <p className="form-note">Nothing to show here yet. Your next mission update will appear as soon as it matters.</p>
+        <p className="form-note">Nothing to show here yet. Your next quest update will appear as soon as it matters.</p>
       ) : null}
     </div>
   );

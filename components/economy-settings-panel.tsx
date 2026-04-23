@@ -391,7 +391,7 @@ export function EconomySettingsPanel({
           />
         </label>
         <label className="field">
-          <span>Annual referral direct reward</span>
+          <span>Annual referral manual reward</span>
           <input
             disabled={!canManage || pending}
             type="number"
@@ -403,10 +403,10 @@ export function EconomySettingsPanel({
       </div>
       <div className="achievement-list">
         {[
-          ["Global direct rewards", settings.directRewardsEnabled, "Applies to direct-token quest payouts overall."],
-          ["Annual referral direct rewards", settings.directAnnualReferralEnabled, "Controls direct token payouts for annual premium referrals."],
-          ["Premium flash direct rewards", settings.directPremiumFlashEnabled, "Controls premium-track direct-token quest payouts."],
-          ["Ambassador direct rewards", settings.directAmbassadorEnabled, "Controls ambassador and creator direct-token quest payouts."],
+          ["Global manual rewards", settings.directRewardsEnabled, "Controls whether review-first reward queueing is available."],
+          ["Annual referral manual rewards", settings.directAnnualReferralEnabled, "Controls manual reward queueing for annual premium referrals."],
+          ["Premium flash manual rewards", settings.directPremiumFlashEnabled, "Controls review-first premium-track reward queueing."],
+          ["Ambassador manual rewards", settings.directAmbassadorEnabled, "Controls review-first ambassador and creator reward queueing."],
         ].map(([label, checked, detail], index) => (
           <article key={String(label)} className="achievement-card">
             <div>
@@ -608,7 +608,7 @@ export function EconomySettingsPanel({
               type="url"
               value={settings.campaignAlertChannels.webhookUrl ?? ""}
               onChange={(event) => updateCampaignAlertChannel("webhookUrl", event.target.value)}
-              placeholder="https://example.com/campaign-alerts"
+              placeholder="https://gravity.emorya.com/campaign-alerts"
             />
           </label>
           <label className="field">

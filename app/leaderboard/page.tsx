@@ -64,7 +64,7 @@ export default async function LeaderboardPage() {
           </div>
           {activeMissionPack ? (
             <div className="metric-card">
-              <span>Current mission</span>
+              <span>Current quest path</span>
               <strong>{activeMissionPack.label}</strong>
               <small>{activeMissionPack.leaderboardCallout}</small>
             </div>
@@ -91,10 +91,10 @@ export default async function LeaderboardPage() {
             <article className="economy-step-card economy-step-card--rail">
               <div className="quest-card__meta">
                 <span className="economy-badge economy-badge--rail">Rewards</span>
-                <span>{data.user.tokenProgram.asset}</span>
+                <span>Coming soon</span>
               </div>
               <strong>Progress comes first. Rewards follow later.</strong>
-              <p>As your activity grows, the reward side of the platform grows with it too.</p>
+              <p>For launch, XP is the main reward. Future reward options can expand after the progress loop is proven.</p>
             </article>
           </div>
           <div className="reward-ladder">
@@ -112,7 +112,7 @@ export default async function LeaderboardPage() {
             <article className="reward-ladder__card">
               <span>2. Reward progress</span>
               <strong>{data.user.tokenProgram.eligibilityPoints} pts</strong>
-              <small>{data.user.tokenProgram.status === "redeemable" ? "Rewards are unlocked." : data.user.tokenProgram.nextStep}</small>
+              <small>{data.user.tokenProgram.status === "redeemable" ? "Future rewards are being prepared." : data.user.tokenProgram.nextStep}</small>
               <div className="reward-ladder__meter">
                 <div
                   className="reward-ladder__fill reward-ladder__fill--gold"
@@ -133,19 +133,14 @@ export default async function LeaderboardPage() {
                 {data.economy.xpMultipliers.monthly.toFixed(2)}x / {data.economy.xpMultipliers.annual.toFixed(2)}x XP
               </strong>
               <small>
-                Token yield also scales to {data.economy.tokenMultipliers.monthly.toFixed(2)}x /{" "}
-                {data.economy.tokenMultipliers.annual.toFixed(2)}x.
+                Premium keeps the launch focus on faster XP progress.
               </small>
             </article>
             <article className="reward-ladder__card">
               <span>4. Referral upside</span>
               <strong>+{data.user.referral.rewardPreview.monthlyPremiumReferral.xp} XP / +{data.user.referral.rewardPreview.annualPremiumReferral.xp} XP</strong>
               <small>
-                Stronger referrals also create{" "}
-                {data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward
-                  ? `${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.amount} ${data.user.referral.rewardPreview.annualPremiumReferral.directTokenReward.asset}`
-                  : "direct token upside"}
-                .
+                Stronger referrals also create more XP upside as invited users keep progressing.
               </small>
             </article>
           </div>
@@ -153,7 +148,7 @@ export default async function LeaderboardPage() {
             <article className="reward-visual-card">
               <span>Reward progress</span>
               <strong>
-                {data.user.tokenProgram.projectedRedemptionAmount} {data.user.tokenProgram.asset}
+                Coming soon
               </strong>
               <small>
                 XP moves your position, and your rewards grow as you keep going.
@@ -162,19 +157,17 @@ export default async function LeaderboardPage() {
             <article className="reward-visual-card">
               <span>Reward status</span>
               <strong>
-                {data.user.tokenProgram.claimedBalance} claimed / {data.user.tokenProgram.settledBalance} settled
+                XP-first launch
               </strong>
               <div className="reward-state-bars">
                 <div>
-                  <span>Claimed</span>
+                  <span>Prepared</span>
                   <div className="reward-state-bars__track">
                     <div
                       className="reward-state-bars__fill"
                       style={{
                         width: `${Math.min(
-                          (data.user.tokenProgram.claimedBalance /
-                            Math.max(data.user.tokenProgram.claimedBalance + data.user.tokenProgram.settledBalance, 1)) *
-                            100,
+                          data.user.starterPath.progress * 100,
                           100,
                         )}%`,
                       }}
@@ -182,15 +175,13 @@ export default async function LeaderboardPage() {
                   </div>
                 </div>
                 <div>
-                  <span>Settled</span>
+                  <span>Future</span>
                   <div className="reward-state-bars__track">
                     <div
                       className="reward-state-bars__fill reward-state-bars__fill--gold"
                       style={{
                         width: `${Math.min(
-                          (data.user.tokenProgram.settledBalance /
-                            Math.max(data.user.tokenProgram.claimedBalance + data.user.tokenProgram.settledBalance, 1)) *
-                            100,
+                          data.user.rewardEligibility.eligible ? 100 : 0,
                           100,
                         )}%`,
                       }}
@@ -198,7 +189,7 @@ export default async function LeaderboardPage() {
                   </div>
                 </div>
               </div>
-              <small>Claimed means reserved. Settled means completed.</small>
+              <small>XP is live now. Token redemption remains disabled for launch.</small>
             </article>
           </div>
           <p className="form-note">

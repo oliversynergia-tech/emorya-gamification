@@ -1,0 +1,5 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Emorya">
+  <rect width="64" height="64" rx="14" fill="#12081D"/>
+  <rect x="8" y="8" width="48" height="48" rx="12" fill="#F0509E"/>
+  <path d="M20 43V21H45V28H28V30H43V36H28V36H46V43H20Z" fill="#12081D"/>
+</svg>

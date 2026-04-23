@@ -10,7 +10,7 @@ export function CampaignMissionInboxPanel({
   notifications,
   activePacks = [],
   missionView = "active",
-  title = "Mission inbox",
+  title = "Quest inbox",
   eyebrow = "Campaign inbox",
 }: {
   notifications: DashboardData["campaignNotifications"];
@@ -65,7 +65,7 @@ export function CampaignMissionInboxPanel({
         body: JSON.stringify({
           packId: notification?.packId,
           eventType: "mission_inbox_state",
-          ctaLabel: status === "handled" ? "Handled mission inbox item" : "Snoozed mission inbox item",
+          ctaLabel: status === "handled" ? "Handled quest inbox item" : "Snoozed quest inbox item",
           ctaVariant: "mission_inbox_state",
           href: pathname ?? "/dashboard",
           notificationId,

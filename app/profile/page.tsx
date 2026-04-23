@@ -60,7 +60,7 @@ export default async function ProfilePage() {
             <small>
               {walletCount > 0
                 ? "Identity link is active."
-                : `Attach ${brandCopy.walletProduct} to unlock the next mission gate.`}
+                : `Attach ${brandCopy.walletProduct} when you are ready to unlock the next optional quest step.`}
             </small>
           </div>
           <div className="metric-card">
