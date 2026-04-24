@@ -1,21 +1,21 @@
 UPDATE quest_definitions
 SET
   xp_reward = 75,
-  metadata = '{"track":"starter","targetUrl":"https://example.com/download-app","unlockRules":{"all":[]},"submissionGuidance":{"evidence":["app install screenshot"]},"rewardConfig":{"xp":{"base":75,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb,
+  metadata = '{"track":"starter","targetUrl":"https://website.emorya.com/#/landing","unlockRules":{"all":[]},"submissionGuidance":{"evidence":["app install screenshot"]},"rewardConfig":{"xp":{"base":75,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb,
   updated_at = NOW()
 WHERE slug = 'download-the-emorya-app';
 
 UPDATE quest_definitions
 SET
   xp_reward = 100,
-  metadata = '{"track":"starter","targetUrl":"https://example.com/open-app","unlockRules":{"all":[{"type":"quest_completed","value":"download-the-emorya-app"}]},"rewardConfig":{"xp":{"base":100,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb,
+  metadata = '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/app-open","_urlNote":"PENDING: Need Emorya app deep link or universal link to open the app. Ask dev team. Fall back to app store page if no deep link exists.","unlockRules":{"all":[{"type":"quest_completed","value":"download-the-emorya-app"}]},"rewardConfig":{"xp":{"base":100,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb,
   updated_at = NOW()
 WHERE slug = 'open-the-app-for-the-first-time';
 
 UPDATE quest_definitions
 SET
   xp_reward = 200,
-  metadata = '{"track":"starter","targetUrl":"https://example.com/create-account","unlockRules":{"all":[{"type":"quest_completed","value":"open-the-app-for-the-first-time"}]},"rewardConfig":{"xp":{"base":200,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb,
+  metadata = '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/create-account","_urlNote":"PENDING: Need Emorya app deep link to the account creation screen.","unlockRules":{"all":[{"type":"quest_completed","value":"open-the-app-for-the-first-time"}]},"rewardConfig":{"xp":{"base":200,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb,
   updated_at = NOW()
 WHERE slug = 'create-emorya-account';
 
@@ -23,14 +23,14 @@ UPDATE quest_definitions
 SET
   xp_reward = 35,
   required_level = 2,
-  metadata = '{"track":"daily","targetUrl":"https://example.com/daily-wheel","unlockRules":{"all":[{"type":"min_level","value":2},{"type":"quest_completed","value":"confirm-your-starter-setup"}]},"rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}}}'::jsonb,
+  metadata = '{"track":"daily","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/daily-wheel","_urlNote":"PENDING: Need Emorya app deep link to the daily wheel spin feature.","unlockRules":{"all":[{"type":"min_level","value":2},{"type":"quest_completed","value":"confirm-your-starter-setup"}]},"rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}}}'::jsonb,
   updated_at = NOW()
 WHERE slug = 'complete-daily-wheel-spin';
 
 UPDATE quest_definitions
 SET
   required_level = 2,
-  metadata = '{"track":"daily","targetUrl":"https://example.com/emoryan-adventure","unlockRules":{"all":[{"type":"quest_completed","value":"complete-daily-wheel-spin"}]},"rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb,
+  metadata = '{"track":"daily","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/emoryan-adventure","_urlNote":"PENDING: Need Emorya app deep link to the Emoryan Adventure game.","unlockRules":{"all":[{"type":"quest_completed","value":"complete-daily-wheel-spin"}]},"rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb,
   updated_at = NOW()
 WHERE slug = 'play-emoryan-adventure-game';
 
@@ -46,7 +46,7 @@ WHERE slug = 'connect-your-xportal-wallet';
 UPDATE quest_definitions
 SET
   xp_reward = 125,
-  metadata = '{"track":"starter","targetUrl":"https://example.com/emrs-reward-path","unlockRules":{"all":[{"type":"min_level","value":2},{"type":"quest_completed","value":"connect-your-xportal-wallet"}]},"rewardConfig":{"xp":{"base":125,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":16}}}'::jsonb,
+  metadata = '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/emrs-reward-path","_urlNote":"PENDING: Need Emorya app deep link to the EMRS reward path screen.","unlockRules":{"all":[{"type":"min_level","value":2},{"type":"quest_completed","value":"connect-your-xportal-wallet"}]},"rewardConfig":{"xp":{"base":125,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":16}}}'::jsonb,
   updated_at = NOW()
 WHERE slug = 'view-your-emrs-reward-path';
 
@@ -60,14 +60,14 @@ WHERE slug = 'convert-your-first-calories';
 UPDATE quest_definitions
 SET
   xp_reward = 450,
-  metadata = '{"track":"premium","targetUrl":"https://example.com/upgrade-monthly","unlockRules":{"all":[{"type":"min_level","value":3},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":450,"premiumMultiplierEligible":false},"tokenEffect":"token_bonus","tokenBonus":{"multiplier":1.3}}}'::jsonb,
+  metadata = '{"track":"premium","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/upgrade-monthly","_urlNote":"PENDING: Need Emorya app deep link to the monthly Premium upgrade/purchase screen.","unlockRules":{"all":[{"type":"min_level","value":3},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":450,"premiumMultiplierEligible":false},"tokenEffect":"token_bonus","tokenBonus":{"multiplier":1.3}}}'::jsonb,
   updated_at = NOW()
 WHERE slug = 'upgrade-to-premium-monthly';
 
 UPDATE quest_definitions
 SET
   xp_reward = 3200,
-  metadata = '{"track":"premium","targetUrl":"https://example.com/upgrade-annual","unlockRules":{"all":[{"type":"min_level","value":5},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":3200,"premiumMultiplierEligible":false},"tokenEffect":"direct_token_reward","directTokenReward":{"asset":"EMR","amount":25,"requiresWallet":true}},"annualBonus":{"stakedEmrBase":25,"perConvertedReferral":10}}'::jsonb,
+  metadata = '{"track":"premium","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/upgrade-annual","_urlNote":"PENDING: Need Emorya app deep link to the annual Premium upgrade/purchase screen.","unlockRules":{"all":[{"type":"min_level","value":5},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":3200,"premiumMultiplierEligible":false},"tokenEffect":"direct_token_reward","directTokenReward":{"asset":"EMR","amount":25,"requiresWallet":true}},"annualBonus":{"stakedEmrBase":25,"perConvertedReferral":10}}'::jsonb,
   updated_at = NOW()
 WHERE slug = 'upgrade-to-annual';
 
@@ -103,7 +103,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/complete-profile","unlockRules":{"all":[{"type":"quest_completed","value":"create-emorya-account"}]},"rewardConfig":{"xp":{"base":150,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/complete-profile","_urlNote":"PENDING: Need Emorya app deep link to the profile completion screen.","unlockRules":{"all":[{"type":"quest_completed","value":"create-emorya-account"}]},"rewardConfig":{"xp":{"base":150,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '64146c5c-88d1-45a9-90ab-4e15c4824f11',
@@ -119,7 +119,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/starter-setup","unlockRules":{"all":[{"type":"quest_completed","value":"complete-your-profile"}]},"rewardConfig":{"xp":{"base":125,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/starter-setup","_urlNote":"PENDING: Need Emorya app deep link to the starter setup review screen.","unlockRules":{"all":[{"type":"quest_completed","value":"complete-your-profile"}]},"rewardConfig":{"xp":{"base":125,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '502ab487-aa29-4f45-8c09-b3724c1612fc',
@@ -167,7 +167,7 @@ INSERT INTO quest_definitions (
     3,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/activation-complete","unlockRules":{"all":[{"type":"min_level","value":3},{"type":"quest_completed","value":"convert-your-first-calories"}]},"rewardConfig":{"xp":{"base":750,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":60}},"previewConfig":{"label":"Activation complete"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/activation-complete","_urlNote":"PENDING: Need Emorya app deep link or gamification platform URL for activation completion confirmation.","unlockRules":{"all":[{"type":"min_level","value":3},{"type":"quest_completed","value":"convert-your-first-calories"}]},"rewardConfig":{"xp":{"base":750,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":60}},"previewConfig":{"label":"Activation complete"}}'::jsonb
   ),
   (
     '2f675c6a-8d50-4136-8534-7aec49f5dc94',

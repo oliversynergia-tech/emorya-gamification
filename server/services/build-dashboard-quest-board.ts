@@ -46,13 +46,19 @@ export type DashboardQuestRow = {
 const EMORYA_LAUNCH_ORDER = new Map<string, number>([
   ["join-emorya-telegram", 1],
   ["follow-emorya-on-x", 2],
+  ["zealy-bridge-sprint", 2.1],
+  ["galxe-migration-loop", 2.2],
+  ["taskon-conversion-lane", 2.3],
   ["download-the-emorya-app", 3],
   ["open-the-app-for-the-first-time", 4],
   ["create-emorya-account", 5],
   ["complete-your-profile", 6],
   ["confirm-your-starter-setup", 7],
-  ["complete-daily-wheel-spin", 8],
-  ["play-emoryan-adventure-game", 9],
+  ["log-todays-calorie-burn", 8],
+  ["hit-daily-200-calorie-target", 8.1],
+  ["check-your-emrs-balance", 8.2],
+  ["complete-daily-wheel-spin", 8.3],
+  ["play-emoryan-adventure-game", 8.4],
   ["download-xportal", 10],
   ["open-or-create-your-xportal-wallet", 11],
   ["connect-your-xportal-wallet", 12],
@@ -64,6 +70,7 @@ const EMORYA_LAUNCH_ORDER = new Map<string, number>([
   ["500-in-24", 18],
   ["reach-staking-threshold-a", 19],
   ["weekly-warrior", 20],
+  ["fourteen-day-calorie-streak", 20.1],
   ["convert-2000-calories-to-emrs", 21],
   ["upgrade-to-annual", 22],
   ["reach-staking-threshold-b", 23],
@@ -191,6 +198,14 @@ function mapEvaluatedQuestToQuest({
       typeof quest.metadata?.verificationReferenceUrl === "string" ? quest.metadata.verificationReferenceUrl : undefined,
     proofType: typeof quest.metadata?.proofType === "string" ? quest.metadata.proofType : undefined,
     proofInstructions: typeof quest.metadata?.proofInstructions === "string" ? quest.metadata.proofInstructions : undefined,
+    submissionEvidence:
+      quest.metadata?.submissionGuidance &&
+      typeof quest.metadata.submissionGuidance === "object" &&
+      Array.isArray((quest.metadata.submissionGuidance as { evidence?: unknown[] }).evidence)
+        ? (quest.metadata.submissionGuidance as { evidence: unknown[] }).evidence.filter(
+            (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
+          )
+        : undefined,
     taskBlocks: normalizeQuestTaskBlocks(quest.metadata),
     campaignPackId: typeof quest.metadata?.campaignPackId === "string" ? quest.metadata.campaignPackId : undefined,
     campaignPackLabel: typeof quest.metadata?.campaignPackLabel === "string" ? quest.metadata.campaignPackLabel : undefined,

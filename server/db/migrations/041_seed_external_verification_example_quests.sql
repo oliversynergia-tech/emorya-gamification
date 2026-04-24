@@ -3,7 +3,7 @@ SET metadata = '{
   "track":"social",
   "platformLabel":"X",
   "ctaLabel":"Open X task",
-  "targetUrl":"https://x.com/emoryaapp",
+      "targetUrl":"https://x.com/EmoryaApp",
   "proofType":"url",
   "proofInstructions":"Open the active Emorya post, share or repost it on X, then submit the public post URL for review.",
   "taskBlocks":[
@@ -12,7 +12,7 @@ SET metadata = '{
       "label":"Open the active Emorya post",
       "platformLabel":"X",
       "ctaLabel":"Open thread",
-      "targetUrl":"https://x.com/emoryaapp/status/example",
+      "targetUrl":"https://x.com/EmoryaApp",
       "proofType":"link",
       "proofInstructions":"Open the active X thread before completing the proof step.",
       "required":true
@@ -39,8 +39,8 @@ SET metadata = '{
   "track":"social",
   "platformLabel":"App Store",
   "ctaLabel":"Open store listing",
-  "targetUrl":"https://apps.apple.com/app/example",
-  "helpUrl":"https://example.com/review-guide",
+  "targetUrl":"https://apps.apple.com/us/app/emorya/id6449254736",
+  "helpUrl":"https://apps.apple.com/us/app/emorya/id6449254736",
   "proofType":"screenshot",
   "proofInstructions":"Leave a genuine written review, then upload a review screenshot or paste the visible review proof for moderation.",
   "unlockRules":{"all":[{"type":"min_level","value":4}]},
@@ -85,10 +85,11 @@ INSERT INTO quest_definitions (
       "track":"campaign",
       "platformLabel":"Zealy",
       "ctaLabel":"Open Zealy task",
-      "targetUrl":"https://zealy.io/c/example/quest-board",
+      "targetUrl":"https://PENDING-CAMPAIGN.emorya.com/zealy-quest",
+      "_urlNote":"PENDING: Both the Zealy task URL and the API verification endpoint need real values.",
       "proofType":"url",
       "proofInstructions":"Complete the Zealy task, then submit the external reference URL or completion id for verification.",
-      "apiVerification":{"endpointUrl":"https://example.com/api/verify/zealy","method":"POST","failureMode":"pending-review"},
+      "apiVerification":{"endpointUrl":"https://PENDING-API.emorya.com/api/verify/zealy","method":"POST","failureMode":"pending-review"},
       "rewardConfig":{"xp":{"base":80,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":15}},
       "previewConfig":{"label":"Zealy API check"}
     }'::jsonb
@@ -111,10 +112,11 @@ INSERT INTO quest_definitions (
       "track":"campaign",
       "platformLabel":"Galxe",
       "ctaLabel":"Open Galxe campaign",
-      "targetUrl":"https://app.galxe.com/quest/example",
+      "targetUrl":"https://PENDING-CAMPAIGN.emorya.com/galxe-credential",
+      "_urlNote":"PENDING: Both the Galxe campaign URL and the API verification endpoint need real values.",
       "proofType":"url",
       "proofInstructions":"Complete the credential step, then submit the Galxe profile or participation reference for verification.",
-      "apiVerification":{"endpointUrl":"https://example.com/api/verify/galxe","method":"POST","failureMode":"pending-review"},
+      "apiVerification":{"endpointUrl":"https://PENDING-API.emorya.com/api/verify/galxe","method":"POST","failureMode":"pending-review"},
       "rewardConfig":{"xp":{"base":70,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}},
       "previewConfig":{"label":"Galxe credential check"}
     }'::jsonb

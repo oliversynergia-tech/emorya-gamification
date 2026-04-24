@@ -16,8 +16,8 @@ SET slug = 'taskon-conversion-lane',
     description = 'Complete the TaskOn bridge checkpoint that sends users into the Zealy campaign path.',
     metadata = replace(
       replace(metadata::text, 'layer3', 'taskon'),
-      'https://example.com/taskon-bridge',
-      'https://example.com/taskon-bridge'
+      'https://PENDING-CAMPAIGN.emorya.com/taskon-bridge',
+      'https://PENDING-CAMPAIGN.emorya.com/taskon-bridge'
     )::jsonb
 WHERE slug = 'layer3-conversion-lane' OR metadata::text LIKE '%layer3%';
 

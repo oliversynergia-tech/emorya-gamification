@@ -68,6 +68,7 @@ export function evaluateQuest({
   }
 
   const unmetRules = [...unlockEvaluation.unmetAll, ...unlockEvaluation.unmetAny];
+  const hiddenByCampaignSourceMismatch = unmetRules.some((rule) => rule.type === "campaign_source");
   const unlockHint = status === "locked" ? generateUnlockHint(unmetRules) : null;
 
   let sortScore = projectedReward.xp;
@@ -90,7 +91,7 @@ export function evaluateQuest({
     track,
     launchOrder,
     status,
-    visible: status !== "completed" || track === "daily",
+    visible: !hiddenByCampaignSourceMismatch && (status !== "completed" || track === "daily"),
     lockedReason: status === "locked" ? "Requirements not met yet." : null,
     unlockHint,
     projectedReward,

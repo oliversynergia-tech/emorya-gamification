@@ -11,7 +11,7 @@ INSERT INTO quest_definition_templates (
     'Zealy bridge quest',
     'Live Zealy bridge step that turns campaign momentum into wallet-linked Emorya progress.',
     '{"category":"app","difficulty":"medium","verificationType":"link-visit","recurrence":"one-time","requiredTier":"free","requiredLevel":1,"xpReward":85,"isPremiumPreview":false,"isActive":true}'::jsonb,
-    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://example.com/zealy-bridge","campaignTemplateKind":"bridge","campaignAttributionSource":"zealy","campaignExperienceLane":"zealy","rewardConfig":{"xp":{"base":85,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}},"unlockRules":{"all":[{"type":"campaign_source","value":"zealy"}]},"previewConfig":{"label":"Zealy bridge"}}'::jsonb,
+    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/zealy-bridge","_urlNote":"PENDING: Replace with live Zealy campaign URL once campaign is published (e.g., https://zealy.io/c/emorya/questboard).","campaignTemplateKind":"bridge","campaignAttributionSource":"zealy","campaignExperienceLane":"zealy","rewardConfig":{"xp":{"base":85,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}},"unlockRules":{"all":[{"type":"campaign_source","value":"zealy"}]},"previewConfig":{"label":"Zealy bridge"}}'::jsonb,
     TRUE
   ),
   (
@@ -19,7 +19,7 @@ INSERT INTO quest_definition_templates (
     'Galxe feeder quest',
     'External discovery quest that captures Galxe users and hands them into the Zealy bridge.',
     '{"category":"social","difficulty":"easy","verificationType":"link-visit","recurrence":"one-time","requiredTier":"free","requiredLevel":1,"xpReward":55,"isPremiumPreview":false,"isActive":true}'::jsonb,
-    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://example.com/galxe-bridge","campaignTemplateKind":"feeder","campaignAttributionSource":"galxe","campaignExperienceLane":"zealy","requiresUpstreamDifferentiation":false,"rewardConfig":{"xp":{"base":55,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}},"unlockRules":{"all":[{"type":"campaign_source","value":"galxe"}]},"previewConfig":{"label":"Galxe to Zealy feeder"}}'::jsonb,
+    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/galxe-bridge","_urlNote":"PENDING: Replace with live Galxe campaign URL once campaign is published.","campaignTemplateKind":"feeder","campaignAttributionSource":"galxe","campaignExperienceLane":"zealy","requiresUpstreamDifferentiation":false,"rewardConfig":{"xp":{"base":55,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}},"unlockRules":{"all":[{"type":"campaign_source","value":"galxe"}]},"previewConfig":{"label":"Galxe to Zealy feeder"}}'::jsonb,
     TRUE
   ),
   (
@@ -27,7 +27,7 @@ INSERT INTO quest_definition_templates (
     'TaskOn feeder quest',
     'Task-completion handoff quest that moves TaskOn users into the Zealy bridge path.',
     '{"category":"app","difficulty":"medium","verificationType":"link-visit","recurrence":"one-time","requiredTier":"free","requiredLevel":1,"xpReward":60,"isPremiumPreview":false,"isActive":true}'::jsonb,
-    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://example.com/taskon-bridge","campaignTemplateKind":"feeder","campaignAttributionSource":"taskon","campaignExperienceLane":"zealy","requiresUpstreamDifferentiation":false,"rewardConfig":{"xp":{"base":60,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}},"unlockRules":{"all":[{"type":"campaign_source","value":"taskon"}]},"previewConfig":{"label":"TaskOn to Zealy feeder"}}'::jsonb,
+    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/taskon-bridge","_urlNote":"PENDING: Replace with live TaskOn campaign URL once campaign is published.","campaignTemplateKind":"feeder","campaignAttributionSource":"taskon","campaignExperienceLane":"zealy","requiresUpstreamDifferentiation":false,"rewardConfig":{"xp":{"base":60,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}},"unlockRules":{"all":[{"type":"campaign_source","value":"taskon"}]},"previewConfig":{"label":"TaskOn to Zealy feeder"}}'::jsonb,
     TRUE
   )
 ON CONFLICT (label) DO UPDATE SET

@@ -82,7 +82,7 @@ INSERT INTO quest_definitions (
     3,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/emrs-reward-path","unlockRules":{"all":[{"type":"min_level","value":3}]},"rewardConfig":{"xp":{"base":40,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/emrs-reward-path","_urlNote":"PENDING: Need Emorya app deep link to the EMRS reward path screen.","unlockRules":{"all":[{"type":"min_level","value":3}]},"rewardConfig":{"xp":{"base":40,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}}}'::jsonb
   )
 ON CONFLICT (id) DO UPDATE SET
   slug = EXCLUDED.slug,

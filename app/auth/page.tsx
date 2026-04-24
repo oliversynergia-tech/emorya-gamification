@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function AuthPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ ref?: string | string[] }>;
+  searchParams?: Promise<{ ref?: string | string[]; source?: string | string[] }>;
 }) {
   const session = await resolveCurrentSession();
 
@@ -25,7 +25,11 @@ export default async function AuthPage({
   const referralParam = Array.isArray(resolvedSearchParams?.ref)
     ? resolvedSearchParams?.ref[0]
     : resolvedSearchParams?.ref;
+  const sourceParam = Array.isArray(resolvedSearchParams?.source)
+    ? resolvedSearchParams?.source[0]
+    : resolvedSearchParams?.source;
   const initialReferralCode = referralParam?.trim().toUpperCase() ?? "";
+  const initialAttributionSource = sourceParam?.trim().toLowerCase() ?? "";
   const data = await loadDashboardOverview(null);
   const brandCopy = getBrandCopyProfile(getActiveBrandTheme().id);
   const returnPack = data.campaignPacks.find((pack) => pack.returnAction) ?? null;
@@ -222,7 +226,8 @@ export default async function AuthPage({
         <div id="auth-panel">
           <AuthClientPanel
             initialReferralCode={initialReferralCode}
-            initialMode={initialReferralCode ? "signup" : "signin"}
+            initialAttributionSource={initialAttributionSource}
+            initialMode={initialReferralCode || initialAttributionSource ? "signup" : "signin"}
           />
         </div>
         <section className="panel auth-panel auth-panel--compact panel--glass">

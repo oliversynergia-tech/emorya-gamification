@@ -1,3 +1,4 @@
+import { resolveSignupAttributionSource } from "@/lib/attribution-source";
 import type { AuthSession, AuthUser } from "@/lib/types";
 import { clearSessionCookie, generateSessionToken, getSessionExpiryDate, hashSessionToken, readSessionCookie, setSessionCookie } from "@/server/auth/session";
 import { hashPassword, verifyPassword } from "@/server/auth/passwords";
@@ -9,11 +10,13 @@ export async function signUpWithEmail({
   password,
   displayName,
   referralCode,
+  source,
 }: {
   email: string;
   password: string;
   displayName: string;
   referralCode?: string;
+  source?: string;
 }): Promise<AuthUser> {
   const existingUser = await findUserByEmail(email);
 
@@ -27,10 +30,16 @@ export async function signUpWithEmail({
     throw new Error("Referral code not found.");
   }
 
+  const attributionSource = resolveSignupAttributionSource({
+    source,
+    referralCode,
+  });
+
   const user = await createEmailUser({
     email,
     displayName,
     passwordHash: hashPassword(password),
+    attributionSource,
     referredByUserId,
   });
 

@@ -6,12 +6,14 @@ export async function handleSignUpRequest(
     password?: string;
     displayName?: string;
     referralCode?: string;
+    source?: string;
   },
   signUpWithEmail: (input: {
     email: string;
     password: string;
     displayName: string;
     referralCode?: string;
+    source?: string;
   }) => Promise<AuthUser>,
 ) {
   const email = body.email?.trim().toLowerCase();
@@ -34,7 +36,8 @@ export async function handleSignUpRequest(
 
   try {
     const referralCode = body.referralCode?.trim().toUpperCase() || undefined;
-    const user = await signUpWithEmail({ email, password, displayName, referralCode });
+    const source = body.source?.trim() || undefined;
+    const user = await signUpWithEmail({ email, password, displayName, referralCode, source });
 
     return {
       status: 201,

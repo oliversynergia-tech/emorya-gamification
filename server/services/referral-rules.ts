@@ -1,3 +1,4 @@
+import { normalizeCampaignAttributionSource } from "../../lib/attribution-source.ts";
 import { defaultEconomySettings, resolveCampaignExperienceSource } from "../../lib/economy-settings.ts";
 import { getLevelProgress } from "../../lib/progression.ts";
 import type { EconomySettings, SubscriptionTier, UserSnapshot } from "../../lib/types.ts";
@@ -81,13 +82,7 @@ function applyCampaignOverride(
 }
 
 export function normalizeReferralCampaignSource(source: string | null | undefined): ReferralCampaignSource {
-  const normalized = source?.trim().toLowerCase() ?? "";
-
-  if (normalized === "zealy" || normalized === "galxe" || normalized === "taskon" || normalized === "direct") {
-    return normalized;
-  }
-
-  return normalized ? "direct" : null;
+  return normalizeCampaignAttributionSource(source);
 }
 
 export function getReferralCampaignIncentive(source: string | null | undefined): ReferralCampaignIncentive {

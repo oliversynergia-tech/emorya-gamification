@@ -4,7 +4,7 @@ SET verification_type = 'manual-review',
     metadata = jsonb_build_object(
       'track', 'social',
       'platformLabel', 'Telegram',
-      'targetUrl', 'https://example.com/join-telegram',
+      'targetUrl', 'https://t.me/EmoryaFinanceInternational',
       'proofType', 'screenshot',
       'proofInstructions', 'Submit a screenshot showing that you joined the official Emorya Telegram community.',
       'submissionGuidance', jsonb_build_object(
@@ -25,7 +25,7 @@ SET verification_type = 'manual-review',
     metadata = jsonb_build_object(
       'track', 'social',
       'platformLabel', 'Discord',
-      'targetUrl', 'https://example.com/join-discord',
+      'targetUrl', 'https://discord.com/invite/9Jrj7U9Y9R',
       'proofType', 'screenshot',
       'proofInstructions', 'Submit a screenshot showing that you joined the official Emorya Discord server.',
       'submissionGuidance', jsonb_build_object(
@@ -46,7 +46,7 @@ SET verification_type = 'manual-review',
     metadata = jsonb_build_object(
       'track', 'social',
       'platformLabel', 'X',
-      'targetUrl', 'https://example.com/follow-x',
+      'targetUrl', 'https://x.com/EmoryaFinance',
       'proofType', 'screenshot',
       'proofInstructions', 'Submit a screenshot or profile link showing that you followed the official Emorya X account.',
       'submissionGuidance', jsonb_build_object(

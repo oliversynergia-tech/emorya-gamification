@@ -12,7 +12,7 @@ SET
   required_level = 1,
   is_premium_preview = FALSE,
   is_active = TRUE,
-  metadata = '{"track":"starter","targetUrl":"https://example.com/create-account","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb,
+  metadata = '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/create-account","_urlNote":"PENDING: Need Emorya app deep link to the account creation screen.","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb,
   updated_at = NOW()
 WHERE id = 'ca8d9fdd-aa13-4e69-8ae7-615f7a2a0f83'
    OR slug = 'complete-welcome-setup';
@@ -31,7 +31,7 @@ SET
   required_level = 1,
   is_premium_preview = FALSE,
   is_active = TRUE,
-  metadata = '{"track":"wallet","targetUrl":"https://example.com/connect-xportal-wallet","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}}}'::jsonb,
+  metadata = '{"track":"wallet","targetUrl":"https://xportal.com","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}}}'::jsonb,
   updated_at = NOW()
 WHERE id = '5a425a67-b7ab-4bca-9629-a90a507663e5'
    OR slug = 'open-the-xportal-setup-guide';

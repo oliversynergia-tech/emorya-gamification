@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type AuthMode = "signin" | "signup";
 
@@ -12,12 +12,15 @@ type AuthResponse = {
 
 export function AuthClientPanel({
   initialReferralCode = "",
+  initialAttributionSource = "",
   initialMode = "signin",
 }: {
   initialReferralCode?: string;
+  initialAttributionSource?: string;
   initialMode?: AuthMode;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +29,7 @@ export function AuthClientPanel({
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const attributionSource = searchParams.get("source")?.trim().toLowerCase() ?? initialAttributionSource;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,7 +40,7 @@ export function AuthClientPanel({
     const endpoint = mode === "signin" ? "/api/auth/signin" : "/api/auth/signup";
     const payload = mode === "signin"
       ? { email, password }
-      : { email, password, displayName, referralCode };
+      : { email, password, displayName, referralCode, source: attributionSource };
 
     try {
       const response = await fetch(endpoint, {
@@ -100,6 +104,11 @@ export function AuthClientPanel({
             {initialReferralCode ? (
               <p className="status status--success" role="status" aria-live="polite">
                 Invite code applied. Create your account to join through this referral.
+              </p>
+            ) : null}
+            {attributionSource ? (
+              <p className="status status--success" role="status" aria-live="polite">
+                Campaign source detected. Your account will be created with this onboarding source.
               </p>
             ) : null}
             <label className="field">

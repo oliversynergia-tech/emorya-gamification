@@ -7,6 +7,7 @@ import {
   firstTokenEligibilityLevel,
   inferQuestTrack,
 } from "../../lib/progression-rules.ts";
+import { normalizeCampaignAttributionSource } from "../../lib/attribution-source.ts";
 import type { QuestCategory, TrustScoreBand, UserProgressState } from "../../lib/types.ts";
 
 type ProgressUserRow = QueryResultRow & {
@@ -69,13 +70,7 @@ type DeriveUserProgressStateInput = {
 };
 
 function normalizeCampaignSource(source: string | null): UserProgressState["campaignSource"] {
-  const normalized = source?.trim().toLowerCase() ?? "";
-
-  if (normalized === "zealy" || normalized === "galxe" || normalized === "taskon" || normalized === "direct") {
-    return normalized;
-  }
-
-  return normalized ? "direct" : null;
+  return normalizeCampaignAttributionSource(source);
 }
 
 function isWellnessQuest(category: QuestCategory, slug: string) {

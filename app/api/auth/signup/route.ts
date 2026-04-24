@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     password?: string;
     displayName?: string;
     referralCode?: string;
+    source?: string;
   };
 
   const result = await handleSignUpRequest(body, signUpWithEmail);

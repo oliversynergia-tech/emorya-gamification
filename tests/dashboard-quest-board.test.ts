@@ -230,3 +230,69 @@ test("buildDashboardQuestBoard filters emorya-only and brand-scoped quests for p
   assert.equal(xportalBoard.some((quest) => quest.title === "Create Emorya account"), false);
   assert.equal(xportalBoard.some((quest) => quest.title === "Connect your XPortal Wallet"), true);
 });
+
+test("buildDashboardQuestBoard hides campaign quests from mismatched attribution sources", () => {
+  const quests = [
+    {
+      id: "campaign-galxe",
+      slug: "galxe-migration-loop",
+      title: "Galxe migration loop",
+      description: "Galxe campaign",
+      category: "limited" as const,
+      xp_reward: 90,
+      difficulty: "medium" as const,
+      verification_type: "link-visit" as const,
+      required_level: 3,
+      required_tier: "free" as const,
+      is_premium_preview: false,
+      recurrence: "weekly" as const,
+      metadata: { track: "campaign", unlockRules: { all: [{ type: "campaign_source", value: "galxe" }] } },
+      completion_status: null,
+    },
+    {
+      id: "campaign-zealy",
+      slug: "zealy-bridge-sprint",
+      title: "Zealy bridge sprint",
+      description: "Zealy campaign",
+      category: "limited" as const,
+      xp_reward: 85,
+      difficulty: "easy" as const,
+      verification_type: "link-visit" as const,
+      required_level: 3,
+      required_tier: "free" as const,
+      is_premium_preview: false,
+      recurrence: "weekly" as const,
+      metadata: { track: "campaign", unlockRules: { all: [{ type: "campaign_source", value: "zealy" }] } },
+      completion_status: null,
+    },
+    {
+      id: "campaign-taskon",
+      slug: "taskon-conversion-lane",
+      title: "TaskOn conversion lane",
+      description: "TaskOn campaign",
+      category: "limited" as const,
+      xp_reward: 90,
+      difficulty: "medium" as const,
+      verification_type: "link-visit" as const,
+      required_level: 3,
+      required_tier: "free" as const,
+      is_premium_preview: false,
+      recurrence: "weekly" as const,
+      metadata: { track: "campaign", unlockRules: { all: [{ type: "campaign_source", value: "taskon" }] } },
+      completion_status: null,
+    },
+  ];
+
+  const galxeBoard = buildDashboardQuestBoard({
+    quests,
+    userProgressState: {
+      ...baseUserState,
+      campaignSource: "galxe",
+    },
+    journeyState: "signed_up_free",
+  });
+
+  assert.equal(galxeBoard.some((quest) => quest.title === "Galxe migration loop"), true);
+  assert.equal(galxeBoard.some((quest) => quest.title === "Zealy bridge sprint"), false);
+  assert.equal(galxeBoard.some((quest) => quest.title === "TaskOn conversion lane"), false);
+});

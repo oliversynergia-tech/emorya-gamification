@@ -219,7 +219,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     FALSE,
-    '{"track":"starter","targetUrl":"https://example.com/premium-explainer","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/premium-explainer","_urlNote":"PENDING: Need Emorya app deep link to the premium benefits explainer screen.","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'ca8d9fdd-aa13-4e69-8ae7-615f7a2a0f83',
@@ -235,7 +235,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/create-account","unlockRules":{"all":[{"type":"quest_completed","value":"open-the-app-for-the-first-time"}]},"rewardConfig":{"xp":{"base":200,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/create-account","_urlNote":"PENDING: Need Emorya app deep link to the account creation screen.","unlockRules":{"all":[{"type":"quest_completed","value":"open-the-app-for-the-first-time"}]},"rewardConfig":{"xp":{"base":200,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'e8f9f44f-0707-4e9d-9f31-e2b4c00d7ed7',
@@ -251,7 +251,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/complete-profile","unlockRules":{"all":[{"type":"quest_completed","value":"create-emorya-account"}]},"rewardConfig":{"xp":{"base":150,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/complete-profile","_urlNote":"PENDING: Need Emorya app deep link to the profile completion screen.","unlockRules":{"all":[{"type":"quest_completed","value":"create-emorya-account"}]},"rewardConfig":{"xp":{"base":150,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '64146c5c-88d1-45a9-90ab-4e15c4824f11',
@@ -267,7 +267,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/starter-setup","unlockRules":{"all":[{"type":"quest_completed","value":"complete-your-profile"}]},"rewardConfig":{"xp":{"base":125,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/starter-setup","_urlNote":"PENDING: Need Emorya app deep link to the starter setup review screen.","unlockRules":{"all":[{"type":"quest_completed","value":"complete-your-profile"}]},"rewardConfig":{"xp":{"base":125,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '502ab487-aa29-4f45-8c09-b3724c1612fc',
@@ -334,6 +334,54 @@ INSERT INTO quest_definitions (
     '{"track":"starter","unlockRules":{"all":[{"type":"min_level","value":3},{"type":"quest_completed","value":"view-your-emrs-reward-path"}]},"submissionGuidance":{"evidence":["first calorie conversion screenshot"]},"rewardConfig":{"xp":{"base":350,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":30}},"challengeConfig":{"firstConversion":true}}'::jsonb
   ),
   (
+    '3ed24320-55f4-4a2e-b9a1-d54d30931b17',
+    'log-todays-calorie-burn',
+    'Log today''s calorie burn',
+    'Submit a screenshot of your daily calorie burn from the Emorya app to keep your daily momentum active.',
+    'app',
+    50,
+    'easy',
+    'manual-review',
+    'daily',
+    'free',
+    2,
+    FALSE,
+    TRUE,
+    '{"track":"daily","unlockRules":{"all":[{"type":"min_level","value":2},{"type":"quest_completed","value":"confirm-your-starter-setup"}]},"submissionGuidance":{"evidence":["daily calorie burn screenshot from the Emorya app"]},"rewardConfig":{"xp":{"base":50,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}},"challengeConfig":{"dailyCalorieLog":true},"questPortability":"emorya_only"}'::jsonb
+  ),
+  (
+    '2cf0dce0-1952-4d8a-9995-e149a16aa38d',
+    'hit-daily-200-calorie-target',
+    'Hit your daily 200 calorie target',
+    'Burn at least 200 calories today and submit a screenshot showing you hit the target.',
+    'app',
+    40,
+    'easy',
+    'manual-review',
+    'daily',
+    'free',
+    2,
+    FALSE,
+    TRUE,
+    '{"track":"daily","unlockRules":{"all":[{"type":"min_level","value":2},{"type":"quest_completed","value":"confirm-your-starter-setup"}]},"submissionGuidance":{"evidence":["screenshot showing 200+ calories burned today in the Emorya app"]},"rewardConfig":{"xp":{"base":40,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}},"challengeConfig":{"dailyCalorieTarget":200},"questPortability":"emorya_only"}'::jsonb
+  ),
+  (
+    '806d5e79-a695-4035-9c3f-82051c5566c3',
+    'check-your-emrs-balance',
+    'Check your EMRS balance',
+    'Open your EMRS reward balance to stay connected to your progression and reward momentum.',
+    'app',
+    15,
+    'easy',
+    'link-visit',
+    'daily',
+    'free',
+    2,
+    FALSE,
+    TRUE,
+    '{"track":"daily","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/emrs-balance","_urlNote":"PENDING: Need Emorya app deep link to the EMRS reward balance screen.","unlockRules":{"all":[{"type":"min_level","value":2}]},"rewardConfig":{"xp":{"base":15,"premiumMultiplierEligible":true},"tokenEffect":"none"},"questPortability":"emorya_only"}'::jsonb
+  ),
+  (
     '7cc727ca-e6eb-4bb1-917d-ef9b6d9bf9bd',
     'play-emoryan-adventure-game',
     'Play Emoryan Adventure Game',
@@ -347,7 +395,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"track":"daily","targetUrl":"https://example.com/emoryan-adventure","unlockRules":{"all":[{"type":"quest_completed","value":"complete-daily-wheel-spin"}]},"rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"daily","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/emoryan-adventure","_urlNote":"PENDING: Need Emorya app deep link to the Emoryan Adventure game.","unlockRules":{"all":[{"type":"quest_completed","value":"complete-daily-wheel-spin"}]},"rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'ef257868-6d9d-4fcf-9ce9-3ee1920548e4',
@@ -363,7 +411,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"track":"daily","targetUrl":"https://example.com/daily-wheel","unlockRules":{"all":[{"type":"min_level","value":2},{"type":"quest_completed","value":"confirm-your-starter-setup"}]},"rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}}}'::jsonb
+    '{"track":"daily","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/daily-wheel","_urlNote":"PENDING: Need Emorya app deep link to the daily wheel spin feature.","unlockRules":{"all":[{"type":"min_level","value":2},{"type":"quest_completed","value":"confirm-your-starter-setup"}]},"rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}}}'::jsonb
   ),
   (
     'e62bc5b8-3280-4d18-b2fd-a1524c21b453',
@@ -426,7 +474,7 @@ INSERT INTO quest_definitions (
     'free',
     7,
     FALSE,
-    FALSE,
+    TRUE,
     '{"track":"daily","unlockRules":{"all":[{"type":"min_level","value":7}]},"submissionGuidance":{"evidence":["timestamped start screenshot","timestamped finish screenshot","daily calorie conversion proof"]},"rewardConfig":{"xp":{"base":900,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":110}},"challengeConfig":{"dailyCalorieTarget":500,"consecutiveDays":14}}'::jsonb
   ),
   (
@@ -459,7 +507,7 @@ INSERT INTO quest_definitions (
     3,
     FALSE,
     FALSE,
-    '{"track":"social","targetUrl":"https://example.com/community-triangle","unlockRules":{"all":[{"type":"connected_social_count","value":1}]},"rewardConfig":{"xp":{"base":75,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":22}}}'::jsonb
+    '{"track":"social","targetUrls":["https://x.com/EmoryaFinance","https://t.me/EmoryaFinanceInternational","https://discord.com/invite/9Jrj7U9Y9R"],"unlockRules":{"all":[{"type":"connected_social_count","value":1}]},"rewardConfig":{"xp":{"base":75,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":22}}}'::jsonb
   ),
   (
     '3275f8ca-13cd-4297-94fc-f0f45458d225',
@@ -475,7 +523,7 @@ INSERT INTO quest_definitions (
     3,
     FALSE,
     TRUE,
-    '{"track":"referral","targetUrl":"https://example.com/accountability-partner","unlockRules":{"all":[{"type":"min_level","value":3}]},"rewardConfig":{"xp":{"base":80,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"referral","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/referral-invite","_urlNote":"PENDING: Should link to the referral code sharing screen in the Emorya app or gamification platform.","unlockRules":{"all":[{"type":"min_level","value":3}]},"rewardConfig":{"xp":{"base":80,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '0baa67a0-0d57-42fd-87e5-d77052986842',
@@ -491,7 +539,7 @@ INSERT INTO quest_definitions (
     4,
     FALSE,
     TRUE,
-    '{"track":"referral","targetUrl":"https://example.com/referral-conversion","unlockRules":{"all":[{"type":"min_level","value":4},{"type":"successful_referrals","value":1}]},"rewardConfig":{"xp":{"base":180,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":40}}}'::jsonb
+    '{"track":"referral","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/referral-conversion","_urlNote":"PENDING: Should link to the referral tracking screen showing referred user status.","unlockRules":{"all":[{"type":"min_level","value":4},{"type":"successful_referrals","value":1}]},"rewardConfig":{"xp":{"base":180,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":40}}}'::jsonb
   ),
   (
     '379b37d0-8cdd-4e93-95bc-f8b1b5a6afe0',
@@ -507,7 +555,7 @@ INSERT INTO quest_definitions (
     3,
     FALSE,
     TRUE,
-    '{"track":"premium","targetUrl":"https://example.com/upgrade-monthly","unlockRules":{"all":[{"type":"min_level","value":3},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":450,"premiumMultiplierEligible":false},"tokenEffect":"token_bonus","tokenBonus":{"multiplier":1.3}}}'::jsonb
+    '{"track":"premium","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/upgrade-monthly","_urlNote":"PENDING: Need Emorya app deep link to the monthly Premium upgrade/purchase screen.","unlockRules":{"all":[{"type":"min_level","value":3},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":450,"premiumMultiplierEligible":false},"tokenEffect":"token_bonus","tokenBonus":{"multiplier":1.3}}}'::jsonb
   ),
   (
     'b2e73062-4fa1-4ed7-af5c-f5d75c9f1103',
@@ -522,8 +570,8 @@ INSERT INTO quest_definitions (
     'free',
     3,
     FALSE,
-    FALSE,
-    '{"track":"campaign","targetUrl":"https://example.com/zealy-bridge","unlockRules":{"all":[{"type":"campaign_source","value":"zealy"}]},"rewardConfig":{"xp":{"base":85,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}}}'::jsonb
+    TRUE,
+    '{"track":"campaign","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/zealy-bridge","_urlNote":"PENDING: Replace with live Zealy campaign URL once campaign is published (e.g., https://zealy.io/c/emorya/questboard).","unlockRules":{"all":[{"type":"campaign_source","value":"zealy"}]},"rewardConfig":{"xp":{"base":85,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}}}'::jsonb
   ),
   (
     '75d12a7a-c326-4fb5-9af4-fec69f04ccab',
@@ -538,8 +586,8 @@ INSERT INTO quest_definitions (
     'free',
     3,
     FALSE,
-    FALSE,
-    '{"track":"campaign","targetUrl":"https://example.com/galxe-bridge","unlockRules":{"all":[{"type":"campaign_source","value":"galxe"}]},"rewardConfig":{"xp":{"base":90,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}}}'::jsonb
+    TRUE,
+    '{"track":"campaign","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/galxe-bridge","_urlNote":"PENDING: Replace with live Galxe campaign URL once campaign is published.","unlockRules":{"all":[{"type":"campaign_source","value":"galxe"}]},"rewardConfig":{"xp":{"base":90,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}}}'::jsonb
   ),
   (
     '59a8048b-8c8a-4f7a-b383-a08cf69ee6d4',
@@ -554,8 +602,8 @@ INSERT INTO quest_definitions (
     'free',
     3,
     FALSE,
-    FALSE,
-    '{"track":"campaign","targetUrl":"https://example.com/taskon-bridge","unlockRules":{"all":[{"type":"campaign_source","value":"taskon"}]},"rewardConfig":{"xp":{"base":90,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}}}'::jsonb
+    TRUE,
+    '{"track":"campaign","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/taskon-bridge","_urlNote":"PENDING: Replace with live TaskOn campaign URL once campaign is published.","unlockRules":{"all":[{"type":"campaign_source","value":"taskon"}]},"rewardConfig":{"xp":{"base":90,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}}}'::jsonb
   ),
   (
     '8ec2112e-eebc-48dd-a32c-a2ca6c705c5a',
@@ -603,7 +651,7 @@ INSERT INTO quest_definitions (
     5,
     FALSE,
     TRUE,
-    '{"track":"premium","targetUrl":"https://example.com/upgrade-annual","unlockRules":{"all":[{"type":"min_level","value":5},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":3200,"premiumMultiplierEligible":false},"tokenEffect":"direct_token_reward","directTokenReward":{"asset":"EMR","amount":25,"requiresWallet":true}},"annualBonus":{"stakedEmrBase":25,"perConvertedReferral":10}}'::jsonb
+    '{"track":"premium","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/upgrade-annual","_urlNote":"PENDING: Need Emorya app deep link to the annual Premium upgrade/purchase screen.","unlockRules":{"all":[{"type":"min_level","value":5},{"type":"starter_path_complete","value":true}]},"rewardConfig":{"xp":{"base":3200,"premiumMultiplierEligible":false},"tokenEffect":"direct_token_reward","directTokenReward":{"asset":"EMR","amount":25,"requiresWallet":true}},"annualBonus":{"stakedEmrBase":25,"perConvertedReferral":10}}'::jsonb
   ),
   (
     '0cf45bc5-66d8-46cb-a2aa-d8fcf0c86f03',
@@ -619,7 +667,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/emrs-reward-path","unlockRules":{"all":[{"type":"min_level","value":2},{"type":"quest_completed","value":"connect-your-xportal-wallet"}]},"rewardConfig":{"xp":{"base":125,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":16}}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/emrs-reward-path","_urlNote":"PENDING: Need Emorya app deep link to the EMRS reward path screen.","unlockRules":{"all":[{"type":"min_level","value":2},{"type":"quest_completed","value":"connect-your-xportal-wallet"}]},"rewardConfig":{"xp":{"base":125,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":16}}}'::jsonb
   ),
   (
     'f973f98e-df98-4213-b6f3-0586c7bd093c',
@@ -635,7 +683,7 @@ INSERT INTO quest_definitions (
     3,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/activation-complete","unlockRules":{"all":[{"type":"min_level","value":3},{"type":"quest_completed","value":"convert-your-first-calories"}]},"rewardConfig":{"xp":{"base":750,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":60}},"previewConfig":{"label":"Activation complete"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/activation-complete","_urlNote":"PENDING: Need Emorya app deep link or gamification platform URL for activation completion confirmation.","unlockRules":{"all":[{"type":"min_level","value":3},{"type":"quest_completed","value":"convert-your-first-calories"}]},"rewardConfig":{"xp":{"base":750,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":60}},"previewConfig":{"label":"Activation complete"}}'::jsonb
   ),
   (
     '2f675c6a-8d50-4136-8534-7aec49f5dc94',
@@ -747,7 +795,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"social","platformLabel":"Telegram","targetUrl":"https://example.com/join-telegram","proofType":"screenshot","proofInstructions":"Submit a screenshot showing that you joined the official Emorya Telegram community.","submissionGuidance":{"evidence":["Telegram join screenshot"]},"unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"social","platformLabel":"Telegram","targetUrl":"https://t.me/EmoryaFinanceInternational","proofType":"screenshot","proofInstructions":"Submit a screenshot showing that you joined the official Emorya Telegram community.","submissionGuidance":{"evidence":["Telegram join screenshot"]},"unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '42011d57-13d1-4d3c-8cbf-af9db7f693b8',
@@ -763,7 +811,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"social","platformLabel":"Discord","targetUrl":"https://example.com/join-discord","proofType":"screenshot","proofInstructions":"Submit a screenshot showing that you joined the official Emorya Discord server.","submissionGuidance":{"evidence":["Discord join screenshot"]},"unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"social","platformLabel":"Discord","targetUrl":"https://discord.com/invite/9Jrj7U9Y9R","proofType":"screenshot","proofInstructions":"Submit a screenshot showing that you joined the official Emorya Discord server.","submissionGuidance":{"evidence":["Discord join screenshot"]},"unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '7c8f4788-f2dd-45ad-a150-7f5957d4dd7f',
@@ -779,7 +827,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"social","platformLabel":"X","targetUrl":"https://example.com/follow-x","proofType":"screenshot","proofInstructions":"Submit a screenshot or profile link showing that you followed the official Emorya X account.","submissionGuidance":{"evidence":["X profile screenshot","X profile link"]},"unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"social","platformLabel":"X","targetUrl":"https://x.com/EmoryaFinance","proofType":"screenshot","proofInstructions":"Submit a screenshot or profile link showing that you followed the official Emorya X account.","submissionGuidance":{"evidence":["X profile screenshot","X profile link"]},"unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":20,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'a96ee831-911f-4e15-86db-e8bbf8eb8a90',
@@ -795,7 +843,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"social","targetUrl":"https://example.com/weekly-post","unlockRules":{"all":[]},"submissionGuidance":{"evidence":["post link"]},"rewardConfig":{"xp":{"base":15,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"social","targetUrl":"https://x.com/EmoryaFinance","unlockRules":{"all":[]},"submissionGuidance":{"evidence":["post link"]},"rewardConfig":{"xp":{"base":15,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '8738e1e6-18d7-4f6f-85fe-860a4f14b0b1',
@@ -811,7 +859,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"track":"social","platformLabel":"X","ctaLabel":"Open X task","targetUrl":"https://x.com/emoryaapp","proofType":"url","proofInstructions":"Open the active Emorya post, share or repost it on X, then submit the public post URL for review.","taskBlocks":[{"id":"open-x-thread","label":"Open the active Emorya post","platformLabel":"X","ctaLabel":"Open thread","targetUrl":"https://x.com/emoryaapp/status/example","proofType":"link","proofInstructions":"Open the active X thread before completing the proof step.","required":true},{"id":"submit-share-proof","label":"Submit your shared-post proof","description":"Paste the repost, quote post, or reply link.","platformLabel":"X","proofType":"url","proofInstructions":"Paste the public X URL for review.","required":true}],"unlockRules":{"all":[{"type":"min_level","value":2}]},"submissionGuidance":{"evidence":["shared post link"]},"rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"social","platformLabel":"X","ctaLabel":"Open X task","targetUrl":"https://x.com/EmoryaApp","proofType":"url","proofInstructions":"Open the active Emorya post, share or repost it on X, then submit the public post URL for review.","taskBlocks":[{"id":"open-x-thread","label":"Open the active Emorya post","platformLabel":"X","ctaLabel":"Open thread","targetUrl":"https://x.com/EmoryaApp","proofType":"link","proofInstructions":"Open the active X thread before completing the proof step.","required":true},{"id":"submit-share-proof","label":"Submit your shared-post proof","description":"Paste the repost, quote post, or reply link.","platformLabel":"X","proofType":"url","proofInstructions":"Paste the public X URL for review.","required":true}],"unlockRules":{"all":[{"type":"min_level","value":2}]},"submissionGuidance":{"evidence":["shared post link"]},"rewardConfig":{"xp":{"base":35,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'ec56aab7-6330-4dce-8687-f1a519b7c4d6',
@@ -827,7 +875,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/download-app","unlockRules":{"all":[]},"submissionGuidance":{"evidence":["app install screenshot"]},"rewardConfig":{"xp":{"base":75,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://website.emorya.com/#/landing","unlockRules":{"all":[]},"submissionGuidance":{"evidence":["app install screenshot"]},"rewardConfig":{"xp":{"base":75,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'd6f49297-0d44-49d4-a0f4-4f8da7fd59d7',
@@ -843,7 +891,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://example.com/open-app","unlockRules":{"all":[{"type":"quest_completed","value":"download-the-emorya-app"}]},"rewardConfig":{"xp":{"base":100,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/app-open","_urlNote":"PENDING: Need Emorya app deep link or universal link to open the app. Ask dev team. Fall back to app store page if no deep link exists.","unlockRules":{"all":[{"type":"quest_completed","value":"download-the-emorya-app"}]},"rewardConfig":{"xp":{"base":100,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'bc875346-df7c-4e85-b5d6-67065be56c6b',
@@ -859,7 +907,7 @@ INSERT INTO quest_definitions (
     3,
     FALSE,
     TRUE,
-    '{"track":"social","targetUrl":"https://example.com/app-store-rating","unlockRules":{"all":[{"type":"min_level","value":3}]},"submissionGuidance":{"evidence":["rating confirmation screenshot"]},"rewardConfig":{"xp":{"base":60,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"social","targetUrl":"https://apps.apple.com/us/app/emorya/id6449254736","unlockRules":{"all":[{"type":"min_level","value":3}]},"submissionGuidance":{"evidence":["rating confirmation screenshot"]},"rewardConfig":{"xp":{"base":60,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '7f53ce74-c4da-4d4c-a968-d39b442a7e7e',
@@ -875,7 +923,7 @@ INSERT INTO quest_definitions (
     4,
     FALSE,
     TRUE,
-    '{"track":"social","platformLabel":"App Store","ctaLabel":"Open store listing","targetUrl":"https://apps.apple.com/app/example","helpUrl":"https://example.com/review-guide","proofType":"screenshot","proofInstructions":"Leave a genuine written review, then upload a review screenshot or paste the visible review proof for moderation.","unlockRules":{"all":[{"type":"min_level","value":4}]},"submissionGuidance":{"evidence":["review screenshot","review text excerpt"]},"rewardConfig":{"xp":{"base":120,"premiumMultiplierEligible":true},"tokenEffect":"none"},"previewConfig":{"label":"Review credibility quest"}}'::jsonb
+    '{"track":"social","platformLabel":"App Store","ctaLabel":"Open store listing","targetUrl":"https://apps.apple.com/us/app/emorya/id6449254736","helpUrl":"https://apps.apple.com/us/app/emorya/id6449254736","proofType":"screenshot","proofInstructions":"Leave a genuine written review, then upload a review screenshot or paste the visible review proof for moderation.","unlockRules":{"all":[{"type":"min_level","value":4}]},"submissionGuidance":{"evidence":["review screenshot","review text excerpt"]},"rewardConfig":{"xp":{"base":120,"premiumMultiplierEligible":true},"tokenEffect":"none"},"previewConfig":{"label":"Review credibility quest"}}'::jsonb
   ),
   (
     '9d955d0c-a8cf-45d0-b5a2-e28f5de26468',
@@ -939,7 +987,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     FALSE,
-    '{"track":"campaign","platformLabel":"Zealy","ctaLabel":"Open Zealy task","targetUrl":"https://zealy.io/c/example/quest-board","proofType":"url","proofInstructions":"Complete the Zealy task, then submit the external reference URL or completion id for verification.","apiVerification":{"endpointUrl":"https://example.com/api/verify/zealy","method":"POST","failureMode":"pending-review"},"rewardConfig":{"xp":{"base":80,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":15}},"previewConfig":{"label":"Zealy API check"}}'::jsonb
+    '{"track":"campaign","platformLabel":"Zealy","ctaLabel":"Open Zealy task","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/zealy-quest","_urlNote":"PENDING: Both the Zealy task URL and the API verification endpoint need real values.","proofType":"url","proofInstructions":"Complete the Zealy task, then submit the external reference URL or completion id for verification.","apiVerification":{"endpointUrl":"https://PENDING-API.emorya.com/api/verify/zealy","method":"POST","failureMode":"pending-review"},"rewardConfig":{"xp":{"base":80,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":15}},"previewConfig":{"label":"Zealy API check"}}'::jsonb
   ),
   (
     'c7a9917c-02ad-46ef-94fd-6850c2a88647',
@@ -955,7 +1003,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     FALSE,
-    '{"track":"campaign","platformLabel":"Galxe","ctaLabel":"Open Galxe campaign","targetUrl":"https://app.galxe.com/quest/example","proofType":"url","proofInstructions":"Complete the credential step, then submit the Galxe profile or participation reference for verification.","apiVerification":{"endpointUrl":"https://example.com/api/verify/galxe","method":"POST","failureMode":"pending-review"},"rewardConfig":{"xp":{"base":70,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}},"previewConfig":{"label":"Galxe credential check"}}'::jsonb
+    '{"track":"campaign","platformLabel":"Galxe","ctaLabel":"Open Galxe campaign","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/galxe-credential","_urlNote":"PENDING: Both the Galxe campaign URL and the API verification endpoint need real values.","proofType":"url","proofInstructions":"Complete the credential step, then submit the Galxe profile or participation reference for verification.","apiVerification":{"endpointUrl":"https://PENDING-API.emorya.com/api/verify/galxe","method":"POST","failureMode":"pending-review"},"rewardConfig":{"xp":{"base":70,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}},"previewConfig":{"label":"Galxe credential check"}}'::jsonb
   ),
   (
     '1ec4b47a-905b-444a-a0c9-8021f5b7bda8',
@@ -987,7 +1035,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     FALSE,
-    '{"track":"campaign","platformLabel":"Website","ctaLabel":"Open demo destination","targetUrl":"https://example.com/demo/link-visit","campaignPackId":"admin-verification-demo","campaignPackLabel":"Admin verification demo","previewConfig":{"label":"Link visit lane"}}'::jsonb
+    '{"track":"campaign","platformLabel":"Website","ctaLabel":"Open demo destination","targetUrl":"https://demo.emorya.internal/link-visit","campaignPackId":"admin-verification-demo","campaignPackLabel":"Admin verification demo","previewConfig":{"label":"Link visit lane"}}'::jsonb
   ),
   (
     'b3bf5b0d-d3b5-44c7-bf57-1fcb3ef4c16a',
@@ -1003,7 +1051,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     FALSE,
-    '{"track":"creative","platformLabel":"Review queue","ctaLabel":"Open upload brief","targetUrl":"https://example.com/demo/manual-review","proofType":"file-upload","proofInstructions":"Upload one proof file and add a short reviewer note.","campaignPackId":"admin-verification-demo","campaignPackLabel":"Admin verification demo","taskBlocks":[{"id":"open-brief","label":"Open the demo brief","platformLabel":"Website","ctaLabel":"Open brief","targetUrl":"https://example.com/demo/manual-review","proofType":"link","proofInstructions":"Open the instructions before submitting.","required":true},{"id":"upload-proof","label":"Upload proof and context","description":"Attach a proof file and explain what you completed.","platformLabel":"Review queue","proofType":"file-upload","proofInstructions":"Upload a file and add a note for moderation.","required":true}],"previewConfig":{"label":"Manual review lane"}}'::jsonb
+    '{"track":"creative","platformLabel":"Review queue","ctaLabel":"Open upload brief","targetUrl":"https://demo.emorya.internal/manual-review","proofType":"file-upload","proofInstructions":"Upload one proof file and add a short reviewer note.","campaignPackId":"admin-verification-demo","campaignPackLabel":"Admin verification demo","taskBlocks":[{"id":"open-brief","label":"Open the demo brief","platformLabel":"Website","ctaLabel":"Open brief","targetUrl":"https://demo.emorya.internal/manual-review","proofType":"link","proofInstructions":"Open the instructions before submitting.","required":true},{"id":"upload-proof","label":"Upload proof and context","description":"Attach a proof file and explain what you completed.","platformLabel":"Review queue","proofType":"file-upload","proofInstructions":"Upload a file and add a note for moderation.","required":true}],"previewConfig":{"label":"Manual review lane"}}'::jsonb
   ),
   (
     'c8688e5c-5631-4942-8942-bd7c52c61f5e',
@@ -1067,7 +1115,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     FALSE,
-    '{"track":"campaign","platformLabel":"Webhook verifier","ctaLabel":"Open verifier guide","targetUrl":"https://example.com/demo/api-check","proofType":"url","proofInstructions":"Submit an external reference, then resolve it later through the callback endpoint.","apiVerification":{"endpointUrl":"https://example.com/api/verify/demo","method":"POST","failureMode":"pending-review","callbackToken":"demo-callback-token"},"campaignPackId":"admin-verification-demo","campaignPackLabel":"Admin verification demo","previewConfig":{"label":"API callback lane"}}'::jsonb
+    '{"track":"campaign","platformLabel":"Webhook verifier","ctaLabel":"Open verifier guide","targetUrl":"https://demo.emorya.internal/api-check","proofType":"url","proofInstructions":"Submit an external reference, then resolve it later through the callback endpoint.","apiVerification":{"endpointUrl":"https://demo.emorya.internal/api/verify/demo","method":"POST","failureMode":"pending-review","callbackToken":"demo-callback-token"},"campaignPackId":"admin-verification-demo","campaignPackLabel":"Admin verification demo","previewConfig":{"label":"API callback lane"}}'::jsonb
   )
 ON CONFLICT (id) DO UPDATE SET
   slug = EXCLUDED.slug,
@@ -1268,7 +1316,7 @@ INSERT INTO quest_completions (id, user_id, quest_id, status, submission_data, c
     '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c',
     'e62bc5b8-3280-4d18-b2fd-a1524c21b453',
     'pending',
-    '{"platform":"Emorya App","contentUrl":"https://example.com/calorie-burn-summary","screenshotUrl":"https://example.com/proof.png","note":"Calorie burn target completed and converted to EMRS","submittedAt":"2026-03-12T09:00:00.000Z"}'::jsonb,
+    '{"platform":"Emorya App","contentUrl":"https://PENDING-DEV-INPUT.emorya.com/calorie-burn-summary","screenshotUrl":"https://PENDING-DEV-INPUT.emorya.com/calorie-burn-proof","note":"Calorie burn target completed and converted to EMRS","submittedAt":"2026-03-12T09:00:00.000Z"}'::jsonb,
     NULL
   ),
   (
@@ -1721,7 +1769,7 @@ INSERT INTO quest_definition_templates (
     'Zealy bridge quest',
     'Live Zealy bridge step that turns campaign momentum into wallet-linked Emorya progress.',
     '{"category":"app","difficulty":"medium","verificationType":"link-visit","recurrence":"one-time","requiredTier":"free","requiredLevel":1,"xpReward":85,"isPremiumPreview":false,"isActive":true}'::jsonb,
-    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://example.com/zealy-bridge","campaignTemplateKind":"bridge","campaignAttributionSource":"zealy","campaignExperienceLane":"zealy","rewardConfig":{"xp":{"base":85,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}},"unlockRules":{"all":[{"type":"campaign_source","value":"zealy"}]},"previewConfig":{"label":"Zealy bridge"}}'::jsonb,
+    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/zealy-bridge","_urlNote":"PENDING: Replace with live Zealy campaign URL once campaign is published (e.g., https://zealy.io/c/emorya/questboard).","campaignTemplateKind":"bridge","campaignAttributionSource":"zealy","campaignExperienceLane":"zealy","rewardConfig":{"xp":{"base":85,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":18}},"unlockRules":{"all":[{"type":"campaign_source","value":"zealy"}]},"previewConfig":{"label":"Zealy bridge"}}'::jsonb,
     TRUE
   ),
   (
@@ -1729,7 +1777,7 @@ INSERT INTO quest_definition_templates (
     'Galxe feeder quest',
     'External discovery quest that captures Galxe users and hands them into the Zealy bridge.',
     '{"category":"social","difficulty":"easy","verificationType":"link-visit","recurrence":"one-time","requiredTier":"free","requiredLevel":1,"xpReward":55,"isPremiumPreview":false,"isActive":true}'::jsonb,
-    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://example.com/galxe-bridge","campaignTemplateKind":"feeder","campaignAttributionSource":"galxe","campaignExperienceLane":"zealy","requiresUpstreamDifferentiation":false,"rewardConfig":{"xp":{"base":55,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}},"unlockRules":{"all":[{"type":"campaign_source","value":"galxe"}]},"previewConfig":{"label":"Galxe to Zealy feeder"}}'::jsonb,
+    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/galxe-bridge","_urlNote":"PENDING: Replace with live Galxe campaign URL once campaign is published.","campaignTemplateKind":"feeder","campaignAttributionSource":"galxe","campaignExperienceLane":"zealy","requiresUpstreamDifferentiation":false,"rewardConfig":{"xp":{"base":55,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":10}},"unlockRules":{"all":[{"type":"campaign_source","value":"galxe"}]},"previewConfig":{"label":"Galxe to Zealy feeder"}}'::jsonb,
     TRUE
   ),
   (
@@ -1737,7 +1785,7 @@ INSERT INTO quest_definition_templates (
     'TaskOn feeder quest',
     'Task-completion handoff quest that moves TaskOn users into the Zealy bridge path.',
     '{"category":"app","difficulty":"medium","verificationType":"link-visit","recurrence":"one-time","requiredTier":"free","requiredLevel":1,"xpReward":60,"isPremiumPreview":false,"isActive":true}'::jsonb,
-    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://example.com/taskon-bridge","campaignTemplateKind":"feeder","campaignAttributionSource":"taskon","campaignExperienceLane":"zealy","requiresUpstreamDifferentiation":false,"rewardConfig":{"xp":{"base":60,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}},"unlockRules":{"all":[{"type":"campaign_source","value":"taskon"}]},"previewConfig":{"label":"TaskOn to Zealy feeder"}}'::jsonb,
+    '{"track":"campaign","rewardProgramId":"fcae87e5-6f1b-4157-aa26-4c96cdfdd8d6","targetUrl":"https://PENDING-CAMPAIGN.emorya.com/taskon-bridge","_urlNote":"PENDING: Replace with live TaskOn campaign URL once campaign is published.","campaignTemplateKind":"feeder","campaignAttributionSource":"taskon","campaignExperienceLane":"zealy","requiresUpstreamDifferentiation":false,"rewardConfig":{"xp":{"base":60,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":12}},"unlockRules":{"all":[{"type":"campaign_source","value":"taskon"}]},"previewConfig":{"label":"TaskOn to Zealy feeder"}}'::jsonb,
     TRUE
   )
 ON CONFLICT (label) DO UPDATE SET

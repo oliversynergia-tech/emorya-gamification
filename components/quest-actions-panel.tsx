@@ -536,6 +536,16 @@ export function QuestActionsPanel({
                 </p>
               ) : null}
               {quest.proofInstructions ? <p className="form-note">{quest.proofInstructions}</p> : null}
+              {quest.submissionEvidence?.length ? (
+                <div className="form-stack">
+                  <p className="form-note">Evidence to submit:</p>
+                  <ul className="form-note" aria-label={`Submission guidance for ${quest.title}`}>
+                    {quest.submissionEvidence.map((evidence) => (
+                      <li key={evidence}>{evidence}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               <small className="quest-card__note">{getQuestStatusNote(quest.status)}</small>
               {quest.targetUrl || quest.helpUrl || quest.verificationReferenceUrl ? (
                 <div className="form-stack">

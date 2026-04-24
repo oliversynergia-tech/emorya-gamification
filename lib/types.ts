@@ -103,6 +103,7 @@ export type Quest = {
   verificationReferenceUrl?: string;
   proofType?: string;
   proofInstructions?: string;
+  submissionEvidence?: string[];
   campaignPackId?: string;
   campaignPackLabel?: string;
   taskBlocks?: QuestTaskBlock[];

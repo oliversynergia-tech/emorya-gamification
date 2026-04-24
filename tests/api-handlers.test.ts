@@ -46,6 +46,40 @@ test("handleSignUpRequest rejects short passwords", async () => {
   });
 });
 
+test("handleSignUpRequest normalizes email, referral code, and forwards source", async () => {
+  let receivedEmail = "";
+  let receivedReferralCode = "";
+  let receivedSource = "";
+
+  const result = await handleSignUpRequest(
+    {
+      email: "  CASEY@EXAMPLE.COM ",
+      password: "valid-password",
+      displayName: "Casey",
+      referralCode: " emorya-8w3k9r ",
+      source: "galxe",
+    },
+    async ({ email, referralCode, source }) => {
+      receivedEmail = email;
+      receivedReferralCode = referralCode ?? "";
+      receivedSource = source ?? "";
+
+      return {
+        id: "user-1",
+        email,
+        displayName: "Casey",
+        subscriptionTier: "free",
+      };
+    },
+  );
+
+  assert.equal(receivedEmail, "casey@example.com");
+  assert.equal(receivedReferralCode, "EMORYA-8W3K9R");
+  assert.equal(receivedSource, "galxe");
+  assert.equal(result.status, 201);
+  assert.equal(result.body.ok, true);
+});
+
 test("handleSignInRequest normalizes email and returns the signed-in user", async () => {
   let receivedEmail = "";
 

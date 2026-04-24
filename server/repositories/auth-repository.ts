@@ -4,6 +4,7 @@ import type { QueryResultRow } from "pg";
 
 import type { AuthSession, AuthUser } from "@/lib/types";
 import { runQuery } from "@/server/db/client";
+import type { AttributionSource } from "@/lib/attribution-source";
 
 type UserRow = QueryResultRow & {
   id: string;
@@ -55,11 +56,13 @@ export async function createEmailUser({
   email,
   displayName,
   passwordHash,
+  attributionSource,
   referredByUserId,
 }: {
   email: string;
   displayName: string;
   passwordHash: string;
+  attributionSource: AttributionSource;
   referredByUserId?: string | null;
 }) {
   const userId = randomUUID();
@@ -70,9 +73,9 @@ export async function createEmailUser({
   const result = await runQuery<UserRow>(
     `WITH inserted_user AS (
        INSERT INTO users (
-         id, email, password_hash, display_name, referral_code, referred_by
+         id, email, password_hash, display_name, attribution_source, referral_code, referred_by
        ) VALUES (
-         $1, $2, $3, $4, $5, $6
+         $1, $2, $3, $4, $5, $6, $7
        )
        RETURNING id, email, password_hash, display_name, subscription_tier
      ),
@@ -80,7 +83,7 @@ export async function createEmailUser({
        INSERT INTO user_identities (
          id, user_id, provider, provider_subject, status
        ) VALUES (
-         $7, $1, 'email', $2, 'active'
+         $8, $1, 'email', $2, 'active'
        )
        RETURNING user_id
      ),
@@ -88,14 +91,14 @@ export async function createEmailUser({
        INSERT INTO referrals (
          id, referrer_user_id, referee_user_id
        )
-       SELECT $8, $6, $1
-       WHERE $6 IS NOT NULL
+       SELECT $9, $7, $1
+       WHERE $7 IS NOT NULL
        ON CONFLICT (referrer_user_id, referee_user_id) DO NOTHING
        RETURNING referee_user_id
      )
      SELECT id, email, password_hash, display_name, subscription_tier
      FROM inserted_user`,
-    [userId, email, passwordHash, displayName, referralCode, referredByUserId ?? null, identityId, referralId],
+    [userId, email, passwordHash, displayName, attributionSource, referralCode, referredByUserId ?? null, identityId, referralId],
   );
 
   return result.rows[0];
