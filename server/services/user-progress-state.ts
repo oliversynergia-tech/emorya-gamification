@@ -43,6 +43,7 @@ type CompletedQuestRow = QueryResultRow & {
   verification_type: string;
   required_level: number;
   is_premium_preview: boolean;
+  completed_at: string | Date | null;
 };
 
 type DeriveUserProgressStateInput = {
@@ -64,10 +65,16 @@ type DeriveUserProgressStateInput = {
     verificationType: string;
     requiredLevel: number;
     isPremiumPreview: boolean;
+    completedAt?: string | Date | null;
   }>;
   campaignSource: string | null;
   ambassadorActive?: boolean;
 };
+
+function getUtcStartOfTodayIso() {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
+}
 
 function normalizeCampaignSource(source: string | null): UserProgressState["campaignSource"] {
   return normalizeCampaignAttributionSource(source);
@@ -132,6 +139,20 @@ export function deriveUserProgressState(input: DeriveUserProgressStateInput): Us
     (connectedSocialCount > 0 ? 1 : 0);
   const approvedQuestCount = input.approvedQuests.length;
   const completedQuestSlugs = input.approvedQuests.map((quest) => quest.slug);
+  const utcStartOfToday = Date.parse(getUtcStartOfTodayIso());
+  const completedQuestSlugsToday = input.approvedQuests
+    .filter((quest) => {
+      if (!quest.completedAt) {
+        return false;
+      }
+
+      const completedAt =
+        quest.completedAt instanceof Date
+          ? quest.completedAt.getTime()
+          : Date.parse(quest.completedAt);
+      return Number.isFinite(completedAt) && completedAt >= utcStartOfToday;
+    })
+    .map((quest) => quest.slug);
   const trustScoreBand = getTrustScoreBand({
     walletLinked: input.walletLinked,
     subscriptionTier: input.subscriptionTier,
@@ -177,6 +198,7 @@ export function deriveUserProgressState(input: DeriveUserProgressStateInput): Us
     wellnessQuestCount,
     socialQuestCount,
     completedQuestSlugs,
+    completedQuestSlugsToday,
     ambassadorCandidate,
     ambassadorActive: input.ambassadorActive ?? false,
     campaignSource: normalizeCampaignSource(input.campaignSource),
@@ -228,7 +250,7 @@ export async function getUserProgressState(userId: string): Promise<UserProgress
       [userId],
     ),
     runQuery<CompletedQuestRow>(
-      `SELECT q.slug, q.category, q.verification_type, q.required_level, q.is_premium_preview
+      `SELECT q.slug, q.category, q.verification_type, q.required_level, q.is_premium_preview, qc.completed_at
        FROM quest_completions qc
        INNER JOIN quest_definitions q ON q.id = qc.quest_id
        WHERE qc.user_id = $1
@@ -268,6 +290,7 @@ export async function getUserProgressState(userId: string): Promise<UserProgress
       verificationType: quest.verification_type,
       requiredLevel: quest.required_level,
       isPremiumPreview: quest.is_premium_preview,
+      completedAt: quest.completed_at,
     })),
     campaignSource: user.attribution_source,
   });

@@ -34,6 +34,8 @@ function formatSingleRule(rule: UnlockRule) {
       return `Keep your wallet linked for ${rule.value} days`;
     case "quest_completed":
       return "Complete the prerequisite quest first";
+    case "quest_completed_today":
+      return "Complete the required daily quest first";
     case "weekly_xp_min":
       return `Earn ${rule.value} XP this week`;
     case "runtime_flag":

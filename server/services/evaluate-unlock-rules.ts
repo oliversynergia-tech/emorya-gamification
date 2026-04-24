@@ -51,6 +51,8 @@ export function evaluateUnlockRule(
       return state.walletAgeDays >= rule.value;
     case "quest_completed":
       return state.completedQuestSlugs.includes(rule.value);
+    case "quest_completed_today":
+      return state.completedQuestSlugsToday.includes(rule.value);
     case "weekly_xp_min":
       return state.weeklyXp >= rule.value;
     case "runtime_flag":

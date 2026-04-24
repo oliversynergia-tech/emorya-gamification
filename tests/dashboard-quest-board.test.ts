@@ -25,6 +25,7 @@ const baseUserState = {
   wellnessQuestCount: 1,
   socialQuestCount: 2,
   completedQuestSlugs: ["create-emorya-account"],
+  completedQuestSlugsToday: [],
   ambassadorCandidate: false,
   ambassadorActive: false,
   campaignSource: "zealy" as const,

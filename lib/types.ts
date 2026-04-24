@@ -1218,6 +1218,7 @@ export type UnlockRule =
   | { type: "trust_score_band"; value: Exclude<TrustScoreBand, "low"> }
   | { type: "wallet_age_days"; value: number }
   | { type: "quest_completed"; value: string }
+  | { type: "quest_completed_today"; value: string }
   | { type: "weekly_xp_min"; value: number }
   | { type: "runtime_flag"; value: "flashRewardDay" | "referralBoostWeek" };
 
@@ -1422,6 +1423,7 @@ export type UserProgressState = {
   wellnessQuestCount: number;
   socialQuestCount: number;
   completedQuestSlugs: string[];
+  completedQuestSlugsToday: string[];
   ambassadorCandidate: boolean;
   ambassadorActive: boolean;
   campaignSource: CampaignSource | null;

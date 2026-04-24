@@ -27,6 +27,7 @@ const baseState = {
   wellnessQuestCount: 1,
   socialQuestCount: 2,
   completedQuestSlugs: ["connect-xportal", "visit-premium-explainer"],
+  completedQuestSlugsToday: ["log-todays-calorie-burn"],
   ambassadorCandidate: false,
   ambassadorActive: false,
   campaignSource: "zealy" as const,
@@ -107,6 +108,29 @@ test("evaluateUnlockRuleGroup enforces minimum streak requirements", () => {
   const unlockedResult = evaluateUnlockRuleGroup(
     {
       all: [{ type: "min_streak", value: 3 }],
+    },
+    baseState,
+    createDefaultQuestRuntimeContext(),
+  );
+
+  assert.equal(unlockedResult.unlocked, true);
+});
+
+test("evaluateUnlockRuleGroup enforces quest completion on the current UTC day", () => {
+  const lockedResult = evaluateUnlockRuleGroup(
+    {
+      all: [{ type: "quest_completed_today", value: "complete-daily-wheel-spin" }],
+    },
+    baseState,
+    createDefaultQuestRuntimeContext(),
+  );
+
+  assert.equal(lockedResult.unlocked, false);
+  assert.deepEqual(lockedResult.unmetAll, [{ type: "quest_completed_today", value: "complete-daily-wheel-spin" }]);
+
+  const unlockedResult = evaluateUnlockRuleGroup(
+    {
+      all: [{ type: "quest_completed_today", value: "log-todays-calorie-burn" }],
     },
     baseState,
     createDefaultQuestRuntimeContext(),

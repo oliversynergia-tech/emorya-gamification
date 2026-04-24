@@ -178,6 +178,7 @@ type PackCompletedQuestRow = QueryResultRow & {
   verification_type: VerificationType;
   required_level: number;
   is_premium_preview: boolean;
+  completed_at: string | null;
 };
 
 type PackFirstInteractionRow = QueryResultRow & {
@@ -1219,7 +1220,8 @@ async function buildUserProgressSnapshot(userIds: string[]) {
               q.category,
               q.verification_type,
               q.required_level,
-              q.is_premium_preview
+              q.is_premium_preview,
+              qc.completed_at
        FROM quest_completions qc
        INNER JOIN quest_definitions q ON q.id = qc.quest_id
        WHERE qc.user_id = ANY($1::uuid[])
@@ -1274,6 +1276,7 @@ async function buildUserProgressSnapshot(userIds: string[]) {
           verificationType: quest.verification_type,
           requiredLevel: quest.required_level,
           isPremiumPreview: quest.is_premium_preview,
+          completedAt: quest.completed_at,
         })),
         campaignSource: user.attribution_source,
       }),

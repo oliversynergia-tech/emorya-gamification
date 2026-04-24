@@ -427,7 +427,7 @@ INSERT INTO quest_definitions (
     2,
     FALSE,
     TRUE,
-    '{"track":"daily","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/emoryan-adventure","_urlNote":"PENDING: Need Emorya app deep link to the Emoryan Adventure game.","unlockRules":{"all":[{"type":"quest_completed","value":"complete-daily-wheel-spin"}]},"rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"daily","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/emoryan-adventure","_urlNote":"PENDING: Need Emorya app deep link to the Emoryan Adventure game.","unlockRules":{"all":[{"type":"quest_completed_today","value":"log-todays-calorie-burn"}]},"rewardConfig":{"xp":{"base":30,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     'ef257868-6d9d-4fcf-9ce9-3ee1920548e4',

@@ -33,6 +33,7 @@ test("deriveUserProgressState marks starter path and reward eligibility when thr
   assert.equal(state.starterPathComplete, true);
   assert.equal(state.rewardEligible, true);
   assert.equal(state.trustScoreBand, "medium");
+  assert.deepEqual(state.completedQuestSlugsToday, []);
   assert.equal(resolveUserJourneyState(state), "reward_eligible_free");
 });
 

@@ -35,6 +35,7 @@ const allowedUnlockRuleTypes = new Set([
   "trust_score_band",
   "wallet_age_days",
   "quest_completed",
+  "quest_completed_today",
   "weekly_xp_min",
   "runtime_flag",
 ]);
