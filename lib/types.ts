@@ -1203,6 +1203,7 @@ export type AuthSession = {
 
 export type UnlockRule =
   | { type: "min_level"; value: number }
+  | { type: "min_streak"; value: number }
   | { type: "wallet_linked"; value: true }
   | { type: "starter_path_complete"; value: true }
   | { type: "subscription_tier"; value: Extract<SubscriptionTier, "monthly" | "annual"> }

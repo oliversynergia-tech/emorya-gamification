@@ -20,6 +20,7 @@ const allowedTokenEffects = new Set([
 
 const allowedUnlockRuleTypes = new Set([
   "min_level",
+  "min_streak",
   "wallet_linked",
   "starter_path_complete",
   "subscription_tier",

@@ -4,6 +4,8 @@ function formatSingleRule(rule: UnlockRule) {
   switch (rule.type) {
     case "min_level":
       return `Reach Level ${rule.value}`;
+    case "min_streak":
+      return `Reach a ${rule.value}-day streak`;
     case "wallet_linked":
       return "Connect xPortal";
     case "starter_path_complete":

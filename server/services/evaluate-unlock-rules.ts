@@ -19,6 +19,8 @@ export function evaluateUnlockRule(
   switch (rule.type) {
     case "min_level":
       return state.level >= rule.value;
+    case "min_streak":
+      return state.currentStreak >= rule.value;
     case "wallet_linked":
       return state.walletLinked;
     case "starter_path_complete":

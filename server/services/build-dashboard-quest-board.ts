@@ -59,6 +59,8 @@ const EMORYA_LAUNCH_ORDER = new Map<string, number>([
   ["check-your-emrs-balance", 8.2],
   ["complete-daily-wheel-spin", 8.3],
   ["play-emoryan-adventure-game", 8.4],
+  ["engage-with-todays-emorya-post", 8.5],
+  ["share-your-daily-streak", 8.6],
   ["download-xportal", 10],
   ["open-or-create-your-xportal-wallet", 11],
   ["connect-your-xportal-wallet", 12],

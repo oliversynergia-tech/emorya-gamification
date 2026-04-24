@@ -37,6 +37,7 @@ test("evaluateUnlockRuleGroup unlocks quests when all rules pass", () => {
     {
       all: [
         { type: "min_level", value: 5 },
+        { type: "min_streak", value: 3 },
         { type: "wallet_linked", value: true },
         { type: "subscription_tier", value: "monthly" },
       ],
@@ -89,4 +90,27 @@ test("generateUnlockHint explains campaign-source gates clearly", () => {
   const hint = generateUnlockHint([{ type: "campaign_source", value: "galxe" }]);
 
   assert.equal(hint, "Available to galxe campaign entrants");
+});
+
+test("evaluateUnlockRuleGroup enforces minimum streak requirements", () => {
+  const lockedResult = evaluateUnlockRuleGroup(
+    {
+      all: [{ type: "min_streak", value: 4 }],
+    },
+    baseState,
+    createDefaultQuestRuntimeContext(),
+  );
+
+  assert.equal(lockedResult.unlocked, false);
+  assert.deepEqual(lockedResult.unmetAll, [{ type: "min_streak", value: 4 }]);
+
+  const unlockedResult = evaluateUnlockRuleGroup(
+    {
+      all: [{ type: "min_streak", value: 3 }],
+    },
+    baseState,
+    createDefaultQuestRuntimeContext(),
+  );
+
+  assert.equal(unlockedResult.unlocked, true);
 });
