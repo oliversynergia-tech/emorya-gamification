@@ -1561,6 +1561,145 @@ canvas {
   background: var(--reward-timeline-active-bg, radial-gradient(circle at top right, rgba(240, 80, 158, 0.08), transparent 0 36%), linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)), rgba(19, 10, 32, 0.92));
 }
 
+.landing-section {
+  margin-top: 1.5rem;
+}
+
+.landing-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.landing-journey {
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+.landing-journey__step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem 1.125rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012));
+}
+
+.landing-journey__index {
+  min-width: 3rem;
+  min-height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.landing-journey__step h3,
+.landing-activity__item strong,
+.landing-final-cta h2 {
+  margin: 0;
+}
+
+.landing-journey__step p,
+.landing-activity__item p {
+  margin: 0;
+  color: var(--muted-text);
+}
+
+.landing-section--split {
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+}
+
+.landing-leaderboard {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.landing-leaderboard__header,
+.landing-leaderboard__row {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 120px 120px;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.landing-leaderboard__header {
+  padding: 0 0.875rem;
+  color: var(--muted-text);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.landing-leaderboard__list {
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+}
+
+.landing-leaderboard__row {
+  padding: 0.875rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.landing-leaderboard__rank,
+.landing-leaderboard__xp {
+  font-weight: 700;
+}
+
+.landing-leaderboard__level {
+  color: var(--muted-text);
+}
+
+.landing-inline-cta {
+  margin-top: 1rem;
+}
+
+.landing-activity {
+  list-style: none;
+  display: grid;
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+}
+
+.landing-activity__item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.landing-activity__item p {
+  margin-top: 0.25rem;
+}
+
+.landing-activity__item span {
+  color: var(--muted-text);
+  white-space: nowrap;
+}
+
+.landing-final-cta {
+  text-align: center;
+}
+
 .referral-campaign-card {
   padding: 20px;
   border-radius: 24px;
@@ -2888,6 +3027,25 @@ body[data-brand-theme="xportal"] .button--primary {
   .achievement-card__side > *,
   .mission-ladder-card__side > * {
     max-width: 100%;
+  }
+
+  .landing-stat-grid,
+  .landing-section--split,
+  .landing-leaderboard__header,
+  .landing-leaderboard__row {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-leaderboard__header {
+    display: none;
+  }
+
+  .landing-leaderboard__row {
+    gap: 0.35rem;
+  }
+
+  .landing-activity__item {
+    flex-direction: column;
   }
 
   .review-history__meta,
