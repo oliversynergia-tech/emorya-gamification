@@ -11,6 +11,10 @@ const protectedRoutes = [
 ];
 
 function isProtectedPath(pathname: string) {
+  if (pathname === "/leaderboard/public" || pathname.startsWith("/leaderboard/public/")) {
+    return false;
+  }
+
   return protectedRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 

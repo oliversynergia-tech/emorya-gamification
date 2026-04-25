@@ -15,7 +15,6 @@ const navItems = [
   { href: "/", label: "Home" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/achievements", label: "Achievements" },
-  { href: "/leaderboard", label: "Leaderboard" },
   { href: "/profile", label: "Profile" },
 ];
 
@@ -33,6 +32,17 @@ export async function SiteShell({
   const activeBrandTheme = await resolveRuntimeBrandTheme(currentUser);
   const showBrandCopy = activeBrandTheme.id === "emorya";
   const canSwitchThemes = await isAdminUser(currentUser);
+  const navItems = [
+    { href: "/", label: "Home" },
+    ...(currentUser
+      ? [
+          { href: "/dashboard", label: "Dashboard" },
+          { href: "/achievements", label: "Achievements" },
+          { href: "/leaderboard", label: "Leaderboard" },
+          { href: "/profile", label: "Profile" },
+        ]
+      : [{ href: "/leaderboard/public", label: "Leaderboard" }]),
+  ];
 
   return (
     <div className="shell">

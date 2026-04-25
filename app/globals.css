@@ -1666,6 +1666,10 @@ canvas {
 
 .landing-inline-cta {
   margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+  align-items: center;
 }
 
 .landing-activity {
@@ -1698,6 +1702,96 @@ canvas {
 
 .landing-final-cta {
   text-align: center;
+}
+
+.landing-inline-link {
+  font-weight: 600;
+}
+
+.public-leaderboard-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.public-leaderboard-tabs__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.public-leaderboard-tabs__link--active {
+  border-color: rgba(203, 179, 255, 0.28);
+  background: rgba(203, 179, 255, 0.12);
+}
+
+.public-leaderboard {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.public-leaderboard__header,
+.public-leaderboard__row {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1.2fr) 110px 140px 140px;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.public-leaderboard__header {
+  padding: 0 0.875rem;
+  color: var(--muted-text);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.public-leaderboard__list {
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+}
+
+.public-leaderboard__row {
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.public-leaderboard__row--gold {
+  border-color: rgba(240, 214, 160, 0.36);
+  background: linear-gradient(180deg, rgba(240, 214, 160, 0.1), rgba(255, 255, 255, 0.02));
+}
+
+.public-leaderboard__row--silver {
+  border-color: rgba(214, 220, 234, 0.28);
+  background: linear-gradient(180deg, rgba(214, 220, 234, 0.08), rgba(255, 255, 255, 0.02));
+}
+
+.public-leaderboard__row--bronze {
+  border-color: rgba(217, 152, 112, 0.28);
+  background: linear-gradient(180deg, rgba(217, 152, 112, 0.08), rgba(255, 255, 255, 0.02));
+}
+
+.public-leaderboard__rank,
+.public-leaderboard__score,
+.public-leaderboard__name {
+  font-weight: 700;
+}
+
+.public-leaderboard__level,
+.public-leaderboard__streak {
+  color: var(--muted-text);
 }
 
 .referral-campaign-card {

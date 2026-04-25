@@ -38,6 +38,11 @@ export default async function LeaderboardPage() {
             ))}
           </div>
           <p className="form-note">Every quest, streak, and referral can help move you up the board.</p>
+          <p className="form-note">
+            <a className="text-link" href="/leaderboard/public">
+              Public view
+            </a>
+          </p>
         </div>
         <div className="panel panel--stack page-aside">
           <div className="metric-card">

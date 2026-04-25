@@ -194,6 +194,9 @@ export default async function HomePage() {
             <Link className="button button--secondary" href="/auth">
               Where would you rank?
             </Link>
+            <Link className="text-link landing-inline-link" href="/leaderboard/public">
+              View full leaderboard
+            </Link>
           </div>
         </section>
 
