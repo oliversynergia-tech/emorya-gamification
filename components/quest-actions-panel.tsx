@@ -123,6 +123,7 @@ const milestoneTriggers: Record<string, string> = {
   "weekly-warrior": "weekly_warrior_complete",
   "upgrade-to-premium-monthly": "premium_unlock",
   "emorya-marathon": "marathon_complete",
+  "accountability-duo": "duo_completion",
 };
 
 async function trackMissionSubmitAttempt(payload: {

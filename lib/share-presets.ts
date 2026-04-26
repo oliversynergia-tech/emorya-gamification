@@ -69,6 +69,14 @@ export function getSharePreset(
         profileUrl,
         milestone,
       };
+    case "duo_completion":
+      return {
+        title: "Accountability Duo Complete!",
+        message: `${userDisplayName} and a referred friend just cleared the Accountability Duo challenge on Emorya. Shared momentum hits differently.`,
+        hashtags: ["Emorya", "AccountabilityDuo", "Referral"],
+        profileUrl,
+        milestone,
+      };
     case "streak_milestone":
       return {
         title: "Streak Milestone!",

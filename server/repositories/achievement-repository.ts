@@ -20,6 +20,7 @@ type AchievementProgressContextRow = QueryResultRow & {
   linked_wallet_count: string;
   approved_manual_review_count: string;
   approved_daily_quest_count: string;
+  duo_completion_count: string;
 };
 
 export async function getAchievementDefinitions() {
@@ -115,7 +116,15 @@ export async function getAchievementProgressContext(userId: string) {
          WHERE qc.user_id = $1
            AND qc.status = 'approved'
            AND q.recurrence = 'daily'
-       ), 0)::text AS approved_daily_quest_count`,
+       ), 0)::text AS approved_daily_quest_count,
+       COALESCE((
+         SELECT COUNT(*)
+         FROM quest_completions qc
+         INNER JOIN quest_definitions q ON q.id = qc.quest_id
+         WHERE qc.user_id = $1
+           AND qc.status = 'approved'
+           AND q.slug = 'accountability-duo'
+       ), 0)::text AS duo_completion_count`,
     [userId],
   );
 
@@ -126,5 +135,6 @@ export async function getAchievementProgressContext(userId: string) {
     linkedWalletCount: Number(result.rows[0]?.linked_wallet_count ?? 0),
     approvedManualReviewCount: Number(result.rows[0]?.approved_manual_review_count ?? 0),
     approvedDailyQuestCount: Number(result.rows[0]?.approved_daily_quest_count ?? 0),
+    duoCompletionCount: Number(result.rows[0]?.duo_completion_count ?? 0),
   };
 }

@@ -1476,6 +1476,7 @@ export type ReviewQueueItem = {
   id: string;
   questId: string;
   questTitle: string;
+  adminReviewNote?: string | null;
   userDisplayName: string;
   userEmail: string | null;
   verificationType: VerificationType;
@@ -1488,6 +1489,7 @@ export type ReviewHistoryItem = {
   id: string;
   questId: string;
   questTitle: string;
+  adminReviewNote?: string | null;
   userDisplayName: string;
   userEmail: string | null;
   reviewerDisplayName: string | null;

@@ -89,6 +89,7 @@ const EMORYA_LAUNCH_ORDER = new Map<string, number>([
   ["leave-your-first-emorya-review", 29],
   ["share-your-verified-progress-screenshot", 30],
   ["invite-your-first-accountability-partner", 31],
+  ["accountability-duo", 31.5],
   ["refer-one-user-who-converts-calories", 32],
   ["share-your-referral-signup-win", 32.1],
   ["this-weeks-ugc-challenge", 33],

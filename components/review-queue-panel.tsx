@@ -503,6 +503,7 @@ export function ReviewQueuePanel({
                   {item.userDisplayName}
                   {item.userEmail ? ` · ${item.userEmail}` : ""}
                 </p>
+                {item.adminReviewNote ? <p className="form-note">Admin note: {item.adminReviewNote}</p> : null}
                 {renderSubmissionSummary(item.verificationType, item.submissionData)}
                 <div className="review-history__meta">
                   <span>Reviewer: {item.reviewerDisplayName ?? "Unknown"}</span>
@@ -610,6 +611,7 @@ export function ReviewQueuePanel({
               {item.userDisplayName}
               {item.userEmail ? ` · ${item.userEmail}` : ""}
             </p>
+            {item.adminReviewNote ? <p className="form-note">Admin note: {item.adminReviewNote}</p> : null}
             {renderSubmissionSummary(item.verificationType, item.submissionData)}
             <pre className="review-payload">{JSON.stringify(item.submissionData, null, 2)}</pre>
             <label className="field">

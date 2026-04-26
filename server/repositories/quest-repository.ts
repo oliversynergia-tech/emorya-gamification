@@ -45,6 +45,7 @@ type ReviewQueueRow = QueryResultRow & {
   id: string;
   quest_id: string;
   quest_title: string;
+  admin_review_note: string | null;
   display_name: string;
   email: string | null;
   verification_type: VerificationType;
@@ -57,6 +58,7 @@ type ReviewHistoryRow = QueryResultRow & {
   id: string;
   quest_id: string;
   quest_title: string;
+  admin_review_note: string | null;
   display_name: string;
   email: string | null;
   reviewer_display_name: string | null;
@@ -255,7 +257,8 @@ export async function setQuestCompletionAwardedXp({
 
 export async function getPendingReviewQueue() {
   const result = await runQuery<ReviewQueueRow>(
-    `SELECT qc.id, qc.quest_id, q.title AS quest_title, u.display_name, u.email,
+    `SELECT qc.id, qc.quest_id, q.title AS quest_title, q.metadata->>'adminReviewNote' AS admin_review_note,
+            u.display_name, u.email,
             q.verification_type, qc.submission_data, qc.status, qc.created_at
      FROM quest_completions qc
      INNER JOIN quest_definitions q ON q.id = qc.quest_id
@@ -268,6 +271,7 @@ export async function getPendingReviewQueue() {
     id: row.id,
     questId: row.quest_id,
     questTitle: row.quest_title,
+    adminReviewNote: row.admin_review_note,
     userDisplayName: row.display_name,
     userEmail: row.email,
     verificationType: row.verification_type,
@@ -279,7 +283,8 @@ export async function getPendingReviewQueue() {
 
 export async function getRecentReviewHistory(limit = 12): Promise<ReviewHistoryItem[]> {
   const result = await runQuery<ReviewHistoryRow>(
-    `SELECT qc.id, qc.quest_id, q.title AS quest_title, u.display_name, u.email,
+    `SELECT qc.id, qc.quest_id, q.title AS quest_title, q.metadata->>'adminReviewNote' AS admin_review_note,
+            u.display_name, u.email,
             reviewer.display_name AS reviewer_display_name,
             q.verification_type, qc.submission_data, qc.status, qc.awarded_xp,
             COALESCE(
@@ -305,6 +310,7 @@ export async function getRecentReviewHistory(limit = 12): Promise<ReviewHistoryI
     id: row.id,
     questId: row.quest_id,
     questTitle: row.quest_title,
+    adminReviewNote: row.admin_review_note,
     userDisplayName: row.display_name,
     userEmail: row.email,
     reviewerDisplayName: row.reviewer_display_name,

@@ -116,6 +116,11 @@ async function syncAchievementProgress({
       progress = dailyTarget > 0 ? Math.min(metrics.approvedDailyQuestCount / dailyTarget, 1) : 0;
     }
 
+    if (definition.slug === "accountability-partner") {
+      const duoTarget = Number(definition.condition.duoCompletions ?? 0);
+      progress = duoTarget > 0 ? Math.min(metrics.duoCompletionCount / duoTarget, 1) : 0;
+    }
+
     const existing = userAchievements.get(definition.slug);
     const clampedProgress = Math.max(progress, existing?.progress ?? 0);
     const shouldUnlock = clampedProgress >= 1;
