@@ -73,6 +73,7 @@ import {
   listRecentModerationNotificationDeliveries,
   syncModerationNotificationHistory,
 } from "@/server/repositories/moderation-notification-repository";
+import { getQuestRuntimeContext } from "@/server/repositories/runtime-flag-repository";
 import {
   listRecentCampaignPackAudit,
 } from "@/server/repositories/campaign-pack-audit-repository";
@@ -917,7 +918,7 @@ async function getQuestBoard({
   journeyState: UserJourneyState;
   economySettings?: EconomySettings;
 }): Promise<Quest[]> {
-  const [result, runtimeBrandThemeId] = await Promise.all([
+  const [result, runtimeBrandThemeId, runtimeContext] = await Promise.all([
     runQuery<QuestRow>(
       `SELECT q.id, q.slug, q.title, q.description, q.category, q.xp_reward, q.difficulty, q.verification_type,
               q.required_level, q.required_tier, q.is_premium_preview, q.recurrence, q.metadata,
@@ -932,6 +933,7 @@ async function getQuestBoard({
       [user.id],
     ),
     resolveRuntimeBrandThemeId(),
+    getQuestRuntimeContext(),
   ]);
 
   return buildDashboardQuestBoard({
@@ -940,6 +942,7 @@ async function getQuestBoard({
     journeyState,
     settings: economySettings,
     runtimeBrandThemeId,
+    runtimeContext,
   });
 }
 

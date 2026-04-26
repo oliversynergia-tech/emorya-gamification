@@ -1,10 +1,10 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, type ReactNode } from "react";
 
 import { ShareModal } from "@/components/share-modal";
 import { useShareModal } from "@/hooks/use-share-modal";
-import type { ShareData } from "@/lib/share-presets";
+import { getMilestoneQuestSlugForShare, type ShareData } from "@/lib/share-presets";
 
 type ShareProfile = {
   displayName: string;
@@ -23,11 +23,52 @@ const ShareContext = createContext<ShareContextValue | null>(null);
 export function ShareProvider({
   children,
   shareProfile,
+  initialShareData = null,
 }: {
   children: ReactNode;
   shareProfile: ShareProfile | null;
+  initialShareData?: ShareData | null;
 }) {
   const modal = useShareModal();
+  const initialPromptOpenedRef = useRef(false);
+
+  useEffect(() => {
+    if (initialPromptOpenedRef.current || !initialShareData || modal.isOpen) {
+      return;
+    }
+
+    initialPromptOpenedRef.current = true;
+    modal.openShareModal(initialShareData);
+  }, [initialShareData, modal]);
+
+  async function handleShare(platform: string) {
+    const questSlug = getMilestoneQuestSlugForShare(modal.shareData?.milestone);
+
+    if (!questSlug || !modal.shareData) {
+      return;
+    }
+
+    try {
+      await fetch("/api/quests/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          questSlug,
+          submissionData: {
+            contentUrl: modal.shareData.profileUrl,
+            platform,
+            profileUrl: modal.shareData.profileUrl,
+            sharedAt: new Date().toISOString(),
+            note: `Shared via ${platform} from milestone prompt`,
+          },
+        }),
+      });
+    } catch {
+      // Ignore share submission errors so the share action itself stays smooth.
+    }
+  }
 
   return (
     <ShareContext.Provider value={{ ...modal, shareProfile }}>
@@ -37,6 +78,7 @@ export function ShareProvider({
           isOpen={modal.isOpen}
           onClose={modal.closeShareModal}
           shareData={modal.shareData}
+          onShare={handleShare}
         />
       ) : null}
     </ShareContext.Provider>

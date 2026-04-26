@@ -67,6 +67,7 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
         : referral.annual_direct_token_rewarded_at;
 
     if (update.signupRewardXp > referral.signup_reward_xp) {
+      // TODO: Auto-trigger the referral milestone share prompt for the referrer when signup confirmation UX is ready.
       await createActivityLogEntry({
         userId: referrerUserId,
         actionType: "referral-signup-reward",

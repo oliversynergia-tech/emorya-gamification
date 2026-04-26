@@ -75,16 +75,23 @@ test("evaluateUnlockRuleGroup supports runtime flags through any-rules", () => {
       any: [
         { type: "runtime_flag", value: "flashRewardDay" },
         { type: "runtime_flag", value: "referralBoostWeek" },
+        { type: "runtime_flag", value: "milestone_share_enabled" },
       ],
     },
     baseState,
     {
       ...createDefaultQuestRuntimeContext(),
-      referralBoostWeek: true,
+      milestone_share_enabled: true,
     },
   );
 
   assert.equal(result.unlocked, true);
+});
+
+test("generateUnlockHint explains milestone share runtime gates", () => {
+  const hint = generateUnlockHint([{ type: "runtime_flag", value: "milestone_share_enabled" }]);
+
+  assert.equal(hint, "Available while milestone sharing is live");
 });
 
 test("generateUnlockHint explains campaign-source gates clearly", () => {

@@ -18,6 +18,7 @@ import type {
   QuestCadence,
   QuestCategory,
   QuestTaskBlock,
+  QuestRuntimeContext,
   SubscriptionTier,
   UserJourneyState,
   UserProgressState,
@@ -66,12 +67,15 @@ const EMORYA_LAUNCH_ORDER = new Map<string, number>([
   ["connect-your-xportal-wallet", 12],
   ["view-your-emrs-reward-path", 13],
   ["convert-your-first-calories", 14],
+  ["share-first-calorie-conversion-celebration", 14.1],
   ["complete-the-full-activation-ladder", 15],
   ["stake-your-first-emr", 16],
   ["upgrade-to-premium-monthly", 17],
+  ["share-your-premium-unlock", 17.1],
   ["500-in-24", 18],
   ["reach-staking-threshold-a", 19],
   ["weekly-warrior", 20],
+  ["share-your-7-day-streak-win", 20.05],
   ["fourteen-day-calorie-streak", 20.1],
   ["convert-2000-calories-to-emrs", 21],
   ["upgrade-to-annual", 22],
@@ -80,11 +84,13 @@ const EMORYA_LAUNCH_ORDER = new Map<string, number>([
   ["strengthen-the-core-30-day-hold", 25],
   ["referred-staker-bonus", 26],
   ["emorya-marathon", 27],
+  ["share-your-marathon-completion", 27.1],
   ["rate-emorya-on-the-app-store", 28],
   ["leave-your-first-emorya-review", 29],
   ["share-your-verified-progress-screenshot", 30],
   ["invite-your-first-accountability-partner", 31],
   ["refer-one-user-who-converts-calories", 32],
+  ["share-your-referral-signup-win", 32.1],
   ["this-weeks-ugc-challenge", 33],
   ["create-an-emorya-progress-reel", 34],
   ["join-emorya-discord", 35],
@@ -220,15 +226,16 @@ export function buildDashboardQuestBoard({
   journeyState,
   settings = defaultEconomySettings,
   runtimeBrandThemeId = "emorya",
+  runtimeContext = createDefaultQuestRuntimeContext(),
 }: {
   quests: DashboardQuestRow[];
   userProgressState: UserProgressState;
   journeyState: UserJourneyState;
   settings?: EconomySettings;
   runtimeBrandThemeId?: BrandThemeId;
+  runtimeContext?: QuestRuntimeContext;
 }) {
   const visibleQuests = quests.filter((quest) => questVisibleForBrand(quest.metadata, runtimeBrandThemeId));
-  const runtimeContext = createDefaultQuestRuntimeContext();
   const activeCampaignLane = resolveCampaignExperienceSource(settings, userProgressState.campaignSource);
   const featuredTracks = getCampaignFeaturedTracks(
     activeCampaignLane,

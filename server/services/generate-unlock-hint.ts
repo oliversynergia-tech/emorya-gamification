@@ -39,9 +39,15 @@ function formatSingleRule(rule: UnlockRule) {
     case "weekly_xp_min":
       return `Earn ${rule.value} XP this week`;
     case "runtime_flag":
-      return rule.value === "flashRewardDay"
-        ? "Available on Flash Reward Days"
-        : "Available during Referral Boost Weeks";
+      if (rule.value === "flashRewardDay") {
+        return "Available on Flash Reward Days";
+      }
+
+      if (rule.value === "referralBoostWeek") {
+        return "Available during Referral Boost Weeks";
+      }
+
+      return "Available while milestone sharing is live";
     default:
       return "Complete the required prerequisite";
   }

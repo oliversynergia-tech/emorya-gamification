@@ -1220,7 +1220,10 @@ export type UnlockRule =
   | { type: "quest_completed"; value: string }
   | { type: "quest_completed_today"; value: string }
   | { type: "weekly_xp_min"; value: number }
-  | { type: "runtime_flag"; value: "flashRewardDay" | "referralBoostWeek" };
+  | {
+      type: "runtime_flag";
+      value: "flashRewardDay" | "referralBoostWeek" | "milestone_share_enabled";
+    };
 
 export type UnlockRuleGroup = {
   all?: UnlockRule[];
@@ -1434,6 +1437,7 @@ export type QuestRuntimeContext = {
   activeCampaignSlugs: string[];
   flashRewardDay: boolean;
   referralBoostWeek: boolean;
+  milestone_share_enabled: boolean;
 };
 
 export type EvaluatedQuest = {
@@ -1502,6 +1506,8 @@ export type ManualReviewSubmission = {
   proofFileType?: string | null;
   platform: string | null;
   note: string | null;
+  profileUrl?: string | null;
+  sharedAt?: string | null;
   taskSubmissions?: QuestTaskSubmission[];
   submittedAt: string;
   moderationNote?: string | null;

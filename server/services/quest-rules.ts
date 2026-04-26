@@ -58,6 +58,8 @@ export function normalizeManualReviewSubmission(
   const proofFileType = normalizeText(payload.proofFileType);
   const platform = normalizeText(payload.platform);
   const note = normalizeText(payload.note);
+  const profileUrl = normalizeText(payload.profileUrl);
+  const sharedAt = normalizeText(payload.sharedAt);
   const taskSubmissions = normalizeTaskSubmissions(payload.taskSubmissions);
   const requiredTaskCount = countRequiredTaskBlocks(metadata);
 
@@ -77,6 +79,8 @@ export function normalizeManualReviewSubmission(
     proofFileType: proofFileType || null,
     platform: platform || null,
     note: note || null,
+    profileUrl: profileUrl || null,
+    sharedAt: sharedAt || null,
     taskSubmissions: taskSubmissions.length > 0 ? taskSubmissions : undefined,
     submittedAt,
   };
@@ -154,6 +158,8 @@ export function mergeModerationIntoSubmission(
       typeof submissionData.proofFileType === "string" ? submissionData.proofFileType : null,
     platform: typeof submissionData.platform === "string" ? submissionData.platform : null,
     note: typeof submissionData.note === "string" ? submissionData.note : null,
+    profileUrl: typeof submissionData.profileUrl === "string" ? submissionData.profileUrl : null,
+    sharedAt: typeof submissionData.sharedAt === "string" ? submissionData.sharedAt : null,
     taskSubmissions: Array.isArray(submissionData.taskSubmissions)
       ? (submissionData.taskSubmissions as QuestTaskSubmission[])
       : undefined,

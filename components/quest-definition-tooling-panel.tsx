@@ -13,6 +13,7 @@ const supportedTracks = [
 
 const supportedRules = [
   "min_level",
+  "min_streak",
   "wallet_linked",
   "starter_path_complete",
   "subscription_tier",
@@ -27,6 +28,7 @@ const supportedRules = [
   "trust_score_band",
   "wallet_age_days",
   "quest_completed",
+  "quest_completed_today",
   "weekly_xp_min",
   "runtime_flag",
 ] as const;

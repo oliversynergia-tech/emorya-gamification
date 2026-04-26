@@ -62,6 +62,8 @@ test("normalizeManualReviewSubmission enforces contentUrl and normalizes optiona
     proofFileType: null,
     platform: "x",
     note: "Posted a recap thread.",
+    profileUrl: null,
+    sharedAt: null,
     taskSubmissions: undefined,
     submittedAt,
   });
@@ -107,6 +109,8 @@ test("normalizeManualReviewSubmission accepts task-level evidence for multi-step
     proofFileType: null,
     platform: null,
     note: null,
+    profileUrl: null,
+    sharedAt: null,
     taskSubmissions: [
       {
         taskId: "join-discord",
@@ -173,6 +177,8 @@ test("mergeModerationIntoSubmission attaches moderation details without losing s
     proofFileType: null,
     platform: "x",
     note: "Initial submission note",
+    profileUrl: null,
+    sharedAt: null,
     taskSubmissions: [{ taskId: "join-discord", contentUrl: "https://discord.gg/emorya", note: null }],
     submittedAt: "2026-03-13T12:00:00.000Z",
     moderationNote: "Great submission, approved.",

@@ -7,6 +7,22 @@ export type ShareData = {
   milestone?: string;
 };
 
+const milestoneQuestMap = {
+  first_calorie_conversion: "share-first-calorie-conversion-celebration",
+  weekly_warrior_complete: "share-your-7-day-streak-win",
+  referral_signup: "share-your-referral-signup-win",
+  premium_unlock: "share-your-premium-unlock",
+  marathon_complete: "share-your-marathon-completion",
+} as const;
+
+export function getMilestoneQuestSlugForShare(milestone?: string | null) {
+  if (!milestone) {
+    return null;
+  }
+
+  return milestoneQuestMap[milestone as keyof typeof milestoneQuestMap] ?? null;
+}
+
 export function getSharePreset(
   milestone: string,
   userDisplayName: string,

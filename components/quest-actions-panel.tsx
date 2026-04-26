@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { useShare } from "@/components/share-provider";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
+import { getSharePreset } from "@/lib/share-presets";
 import type { DashboardData, Quest, QuestProgressUpdate } from "@/lib/types";
 
 type SubmissionState = Record<string, string>;
@@ -117,6 +118,13 @@ function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progr
   }
 }
 
+const milestoneTriggers: Record<string, string> = {
+  "convert-your-first-calories": "first_calorie_conversion",
+  "weekly-warrior": "weekly_warrior_complete",
+  "upgrade-to-premium-monthly": "premium_unlock",
+  "emorya-marathon": "marathon_complete",
+};
+
 async function trackMissionSubmitAttempt(payload: {
   packId: string;
   eventType: string;
@@ -192,6 +200,7 @@ export function QuestActionsPanel({
   const [progressQuestTitle, setProgressQuestTitle] = useState<string | null>(null);
   const [progressQuestXp, setProgressQuestXp] = useState<number | null>(null);
   const { openShareModal, shareProfile } = useShare();
+  const lastAutoShareSignatureRef = useRef<string | null>(null);
 
   const missionCelebration = useMemo(() => {
     if (!activeCampaignPack || !progressUpdate) {
@@ -242,6 +251,33 @@ export function QuestActionsPanel({
     () => getQuestMilestoneCelebration(progressQuest, progressUpdate),
     [progressQuest, progressUpdate],
   );
+
+  useEffect(() => {
+    if (!progressQuest?.slug || !progressUpdate || !shareProfile) {
+      return;
+    }
+
+    const milestoneKey = milestoneTriggers[progressQuest.slug];
+
+    if (!milestoneKey) {
+      return;
+    }
+
+    const signature = [
+      progressQuest.slug,
+      progressUpdate.level,
+      progressUpdate.currentStreak,
+      progressUpdate.deltaXp,
+      progressUpdate.xpAwarded,
+    ].join(":");
+
+    if (lastAutoShareSignatureRef.current === signature) {
+      return;
+    }
+
+    lastAutoShareSignatureRef.current = signature;
+    openShareModal(getSharePreset(milestoneKey, shareProfile.displayName, shareProfile.profileUrl));
+  }, [openShareModal, progressQuest?.slug, progressUpdate, shareProfile]);
 
   async function submitQuest(
     quest: Quest,

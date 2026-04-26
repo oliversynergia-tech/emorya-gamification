@@ -26,6 +26,7 @@ import {
   getQuestCompletionById,
   getQuestCompletionForUser,
   getQuestDefinitionById,
+  getQuestDefinitionBySlug,
   getRecentReviewHistory,
   getReviewerWorkload,
   getUserQuestAccess,
@@ -396,6 +397,25 @@ export async function submitQuest({
   }
 
   throw new Error(`Verification type ${quest.verification_type} is not supported yet.`);
+}
+
+export async function submitQuestBySlug({
+  questSlug,
+  payload,
+}: {
+  questSlug: string;
+  payload: Record<string, unknown>;
+}) {
+  const quest = await getQuestDefinitionBySlug(questSlug);
+
+  if (!quest) {
+    throw new Error("Quest not found.");
+  }
+
+  return submitQuest({
+    questId: quest.id,
+    payload,
+  });
 }
 
 export async function listPendingQuestReviews(): Promise<ReviewQueueItem[]> {

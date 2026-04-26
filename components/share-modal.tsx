@@ -8,6 +8,7 @@ export interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   shareData: ShareData;
+  onShare?: (platform: string) => void;
 }
 
 type SharePlatformButton = {
@@ -62,7 +63,7 @@ function getFocusableElements(container: HTMLElement | null) {
   );
 }
 
-export function ShareModal({ isOpen, onClose, shareData }: ShareModalProps) {
+export function ShareModal({ isOpen, onClose, shareData, onShare }: ShareModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -172,8 +173,9 @@ export function ShareModal({ isOpen, onClose, shareData }: ShareModalProps) {
     }
   }
 
-  function handleShareIntent(href: string) {
+  function handleShareIntent(platform: SharePlatformButton["key"], href: string) {
     window.open(href, "_blank", "noopener,noreferrer");
+    onShare?.(platform);
   }
 
   return (
@@ -214,7 +216,7 @@ export function ShareModal({ isOpen, onClose, shareData }: ShareModalProps) {
               key={button.key}
               type="button"
               className="button button--secondary share-modal__platform"
-              onClick={() => handleShareIntent(button.href)}
+              onClick={() => handleShareIntent(button.key, button.href)}
             >
               <span className="share-modal__platform-icon">{button.icon}</span>
               <span>{button.label}</span>

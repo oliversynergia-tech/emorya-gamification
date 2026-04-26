@@ -1253,8 +1253,8 @@ INSERT INTO quest_definitions (
     'free',
     3,
     FALSE,
-    FALSE,
-    '{"track":"social","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"emorya_only","shareTrigger":"first_calorie_conversion","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"convert-your-first-calories"}]},"previewConfig":{"label":"Milestone share placeholder"}}'::jsonb
+    TRUE,
+    '{"track":"social","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"emorya_only","shareTrigger":"first_calorie_conversion","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"convert-your-first-calories"}]},"rewardConfig":{"xp":{"base":140,"premiumMultiplierEligible":true},"tokenEffect":"none"},"previewConfig":{"label":"Milestone share placeholder"}}'::jsonb
   ),
   (
     '33d95da7-b7cb-4838-b24b-a65f8d636ad9',
@@ -1269,8 +1269,8 @@ INSERT INTO quest_definitions (
     'free',
     5,
     FALSE,
-    FALSE,
-    '{"track":"social","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"emorya_only","shareTrigger":"weekly_warrior_complete","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"weekly-warrior"}]},"previewConfig":{"label":"Weekly streak share"}}'::jsonb
+    TRUE,
+    '{"track":"social","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"emorya_only","shareTrigger":"weekly_warrior_complete","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"weekly-warrior"}]},"rewardConfig":{"xp":{"base":220,"premiumMultiplierEligible":true},"tokenEffect":"none"},"previewConfig":{"label":"Weekly streak share"}}'::jsonb
   ),
   (
     'f626b825-bb4f-42bd-b5c3-80eb59371c0e',
@@ -1285,8 +1285,8 @@ INSERT INTO quest_definitions (
     'free',
     3,
     FALSE,
-    FALSE,
-    '{"track":"referral","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"portable_adapt","shareTrigger":"referral_signup","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"send-your-first-referral-wave"}]},"previewConfig":{"label":"Referral win share"}}'::jsonb
+    TRUE,
+    '{"track":"referral","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"portable_adapt","shareTrigger":"referral_signup","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"send-your-first-referral-wave"}]},"rewardConfig":{"xp":{"base":160,"premiumMultiplierEligible":true},"tokenEffect":"none"},"previewConfig":{"label":"Referral win share"}}'::jsonb
   ),
   (
     'ad58f425-d60d-4df9-875b-7c93b6cadfa4',
@@ -1301,8 +1301,8 @@ INSERT INTO quest_definitions (
     'monthly',
     4,
     FALSE,
-    FALSE,
-    '{"track":"premium","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"portable_adapt","shareTrigger":"premium_unlock","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"upgrade-to-premium-monthly"}]},"previewConfig":{"label":"Premium unlock share"}}'::jsonb
+    TRUE,
+    '{"track":"premium","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"portable_adapt","shareTrigger":"premium_unlock","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"upgrade-to-premium-monthly"}]},"rewardConfig":{"xp":{"base":260,"premiumMultiplierEligible":true},"tokenEffect":"none"},"previewConfig":{"label":"Premium unlock share"}}'::jsonb
   ),
   (
     '24820e34-e627-4979-90dc-d63c2714c077',
@@ -1317,8 +1317,8 @@ INSERT INTO quest_definitions (
     'free',
     8,
     FALSE,
-    FALSE,
-    '{"track":"ambassador","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"emorya_only","shareTrigger":"marathon_complete","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"emorya-marathon"}]},"previewConfig":{"label":"Marathon share"}}'::jsonb
+    TRUE,
+    '{"track":"ambassador","platformLabel":"Milestone share","proofType":"url","proofInstructions":"Submit the public share URL once the milestone-share flow is live.","questPortability":"emorya_only","shareTrigger":"marathon_complete","unlockRules":{"all":[{"type":"runtime_flag","value":"milestone_share_enabled"},{"type":"quest_completed","value":"emorya-marathon"}]},"rewardConfig":{"xp":{"base":420,"premiumMultiplierEligible":true},"tokenEffect":"none"},"previewConfig":{"label":"Marathon share"}}'::jsonb
   )
 ON CONFLICT (id) DO UPDATE SET
   slug = EXCLUDED.slug,
@@ -1764,6 +1764,18 @@ ON CONFLICT (id) DO UPDATE SET
   minimum_eligibility_points = EXCLUDED.minimum_eligibility_points,
   points_per_token = EXCLUDED.points_per_token,
   notes = EXCLUDED.notes,
+  updated_at = NOW();
+
+INSERT INTO runtime_flags (
+  flag_key,
+  enabled
+) VALUES
+  (
+    'milestone_share_enabled',
+    TRUE
+  )
+ON CONFLICT (flag_key) DO UPDATE SET
+  enabled = EXCLUDED.enabled,
   updated_at = NOW();
 
 INSERT INTO quest_definition_templates (

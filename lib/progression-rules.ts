@@ -533,5 +533,6 @@ export function createDefaultQuestRuntimeContext(now = new Date()): QuestRuntime
     activeCampaignSlugs: [],
     flashRewardDay: false,
     referralBoostWeek: false,
+    milestone_share_enabled: false,
   };
 }
