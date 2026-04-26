@@ -64,7 +64,10 @@ export function AuthClientPanel({
         window.localStorage.setItem("emorya-profile-mission-view", "active");
       }
       router.refresh();
-      router.push("/dashboard#campaign-mission");
+      const shouldShowReferralWelcome =
+        mode === "signup" &&
+        referralCode.trim().length > 0;
+      router.push(shouldShowReferralWelcome ? "/welcome" : "/dashboard#campaign-mission");
     } catch {
       setError("Unable to reach the auth service.");
     } finally {

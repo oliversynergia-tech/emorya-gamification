@@ -1885,6 +1885,104 @@ canvas {
   margin: 0;
 }
 
+.referral-welcome {
+  min-height: calc(100vh - 160px);
+  display: grid;
+  place-items: center;
+  padding: 16px 0 8px;
+}
+
+.referral-welcome__content {
+  width: min(100%, 760px);
+  display: grid;
+  gap: 1rem;
+  animation: referralWelcomeFadeIn 300ms ease-out;
+}
+
+.referral-welcome__intro,
+.referral-welcome__actions {
+  text-align: center;
+}
+
+.referral-welcome__intro h1,
+.referral-welcome__card h2 {
+  margin-bottom: 0.45rem;
+}
+
+.referral-welcome__card {
+  padding: 1.4rem;
+}
+
+.referral-welcome__card-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.referral-welcome__card-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.referral-welcome__card-copy .lane-chip-row,
+.referral-welcome__actions .button {
+  justify-content: center;
+}
+
+.referral-welcome__next {
+  padding: 1.25rem;
+}
+
+.referral-welcome__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.65rem;
+  color: var(--text);
+}
+
+.referral-welcome__actions {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: center;
+}
+
+@keyframes referralWelcomeFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 720px) {
+  .referral-welcome__card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .referral-welcome__content {
+    width: 100%;
+  }
+
+  .referral-welcome__actions {
+    justify-items: stretch;
+  }
+
+  .referral-welcome__card-copy .lane-chip-row {
+    justify-content: flex-start;
+  }
+
+  .referral-welcome__actions .button {
+    width: 100%;
+  }
+}
+
 .share-inline-actions {
   display: flex;
   flex-wrap: wrap;
