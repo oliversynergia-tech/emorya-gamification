@@ -112,11 +112,17 @@ export default async function PublicLeaderboardPage({
               <ol className="public-leaderboard__list">
                 {data.entries.map((entry) => (
                   <li
-                    key={`${period}-${entry.rank}-${entry.displayName}`}
+                    key={`${period}-${entry.rank}-${entry.displayName}-${entry.referralCode ?? "no-code"}`}
                     className={`public-leaderboard__row${getPodiumClass(entry.rank)}`}
                   >
                     <span className="public-leaderboard__rank">#{entry.rank}</span>
-                    <strong className="public-leaderboard__name">{entry.displayName}</strong>
+                    {entry.referralCode ? (
+                      <Link className="public-leaderboard__name public-leaderboard__name-link" href={`/u/${entry.referralCode}`}>
+                        {entry.displayName}
+                      </Link>
+                    ) : (
+                      <strong className="public-leaderboard__name">{entry.displayName}</strong>
+                    )}
                     <span className="public-leaderboard__level">Lv. {entry.level}</span>
                     <span className="public-leaderboard__streak">{entry.currentStreak}-day streak</span>
                     <span className="public-leaderboard__score">

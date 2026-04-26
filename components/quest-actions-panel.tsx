@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 
+import { useShare } from "@/components/share-provider";
 import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
 import type { DashboardData, Quest, QuestProgressUpdate } from "@/lib/types";
 
@@ -189,6 +190,8 @@ export function QuestActionsPanel({
   const [progressUpdate, setProgressUpdate] = useState<QuestProgressUpdate | null>(null);
   const [progressQuest, setProgressQuest] = useState<Pick<Quest, "slug" | "title"> | null>(null);
   const [progressQuestTitle, setProgressQuestTitle] = useState<string | null>(null);
+  const [progressQuestXp, setProgressQuestXp] = useState<number | null>(null);
+  const { openShareModal, shareProfile } = useShare();
 
   const missionCelebration = useMemo(() => {
     if (!activeCampaignPack || !progressUpdate) {
@@ -251,6 +254,7 @@ export function QuestActionsPanel({
     setProgressUpdate(null);
     setProgressQuest(null);
     setProgressQuestTitle(null);
+    setProgressQuestXp(null);
 
     if (
       activeCampaignPack &&
@@ -291,6 +295,7 @@ export function QuestActionsPanel({
       setProgressUpdate(result.progressUpdate ?? null);
       setProgressQuest(result.progressUpdate ? { slug: quest.slug, title: quest.title } : null);
       setProgressQuestTitle(result.progressUpdate ? quest.title : null);
+      setProgressQuestXp(result.progressUpdate ? quest.xpReward : null);
       if (result.outcome) {
         onQuestResult?.({
           questId: quest.id,
@@ -925,6 +930,25 @@ export function QuestActionsPanel({
           <small className="form-note">
             Total credited for this quest: {progressUpdate.xpAwarded} XP.
           </small>
+          {shareProfile && progressQuestTitle && progressQuestXp !== null ? (
+            <div className="share-inline-actions">
+              <button
+                type="button"
+                className="button button--secondary"
+                onClick={() =>
+                  openShareModal({
+                    title: `Quest Complete: ${progressQuestTitle}`,
+                    message: `Just completed "${progressQuestTitle}" on Emorya for ${progressQuestXp} XP.`,
+                    hashtags: ["Emorya"],
+                    profileUrl: shareProfile.profileUrl,
+                    milestone: "quest_complete",
+                  })
+                }
+              >
+                Share this
+              </button>
+            </div>
+          ) : null}
           {questMilestoneCelebration ? (
             <article className={`milestone-celebration milestone-celebration--${questMilestoneCelebration.tone}`}>
               <div>

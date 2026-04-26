@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { PublicProfileShareButton } from "@/components/public-profile-share-button";
 import { ProfileEditor } from "@/components/profile-editor";
 import { ProfileSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
@@ -34,6 +35,8 @@ export default async function ProfilePage() {
     walletCount > 0
       ? "Your wallet is already linked. Head back to the dashboard and keep going."
       : `Connect ${brandCopy.walletProduct} when you are ready to unlock more quests and features.`;
+  const appUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://gravity.emorya.com").replace(/\/$/, "");
+  const publicProfileUrl = `${appUrl}/u/${data.user.referralCode}`;
 
   return (
     <SiteShell eyebrow="Profile" currentUser={session.user}>
@@ -67,6 +70,7 @@ export default async function ProfilePage() {
             <span>Current referral code</span>
             <strong>{data.user.referralCode}</strong>
             <small>Share this code with friends so they can join you and you can grow your referral progress together.</small>
+            <PublicProfileShareButton profileUrl={publicProfileUrl} />
           </div>
           <div className="metric-card">
             <span>Membership</span>

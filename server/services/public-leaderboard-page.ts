@@ -10,6 +10,7 @@ export type PublicLeaderboardEntry = {
   displayName: string;
   level: number;
   currentStreak: number;
+  referralCode: string | null;
   score: number;
 };
 
@@ -41,12 +42,14 @@ const loadCachedSnapshotLeaderboard = unstable_cache(
       display_name: string | null;
       level: number | string;
       current_streak: number | string;
+      referral_code: string | null;
       xp: number | string;
       rank: number | string;
     }>(
       `SELECT u.display_name,
               u.level,
               u.current_streak,
+              u.referral_code,
               ls.xp,
               ls.rank
        FROM leaderboard_snapshots ls
@@ -70,6 +73,7 @@ const loadCachedSnapshotLeaderboard = unstable_cache(
         displayName: sanitizeDisplayName(row.display_name),
         level: Number(row.level),
         currentStreak: Number(row.current_streak),
+        referralCode: row.referral_code,
         score: Number(row.xp),
       })),
     };
@@ -84,12 +88,14 @@ const loadCachedReferralSnapshotLeaderboard = unstable_cache(
       display_name: string | null;
       level: number | string;
       current_streak: number | string;
+      referral_code: string | null;
       xp: number | string;
       rank: number | string;
     }>(
       `SELECT u.display_name,
               u.level,
               u.current_streak,
+              u.referral_code,
               ls.xp,
               ls.rank
        FROM leaderboard_snapshots ls
@@ -113,6 +119,7 @@ const loadCachedReferralSnapshotLeaderboard = unstable_cache(
           displayName: sanitizeDisplayName(row.display_name),
           level: Number(row.level),
           currentStreak: Number(row.current_streak),
+          referralCode: row.referral_code,
           score: Number(row.xp),
         })),
       };
@@ -122,11 +129,13 @@ const loadCachedReferralSnapshotLeaderboard = unstable_cache(
       display_name: string | null;
       level: number | string;
       current_streak: number | string;
+      referral_code: string | null;
       referral_count: number | string;
     }>(
       `SELECT u.display_name,
               u.level,
               u.current_streak,
+              u.referral_code,
               COUNT(r.id)::int AS referral_count
        FROM referrals r
        JOIN users u ON u.id = r.referrer_user_id
@@ -143,6 +152,7 @@ const loadCachedReferralSnapshotLeaderboard = unstable_cache(
         displayName: sanitizeDisplayName(row.display_name),
         level: Number(row.level),
         currentStreak: Number(row.current_streak),
+        referralCode: row.referral_code,
         score: Number(row.referral_count),
       })),
     };

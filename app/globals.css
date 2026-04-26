@@ -1789,9 +1789,258 @@ canvas {
   font-weight: 700;
 }
 
+.public-leaderboard__name-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.public-leaderboard__name-link:hover,
+.public-leaderboard__name-link:focus-visible {
+  text-decoration: underline;
+}
+
 .public-leaderboard__level,
 .public-leaderboard__streak {
   color: var(--muted-text);
+}
+
+.public-profile-hero {
+  align-items: stretch;
+}
+
+.public-profile-card {
+  width: 100%;
+}
+
+.public-profile-card__header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.public-profile-card__avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.public-profile-card__avatar--fallback {
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text);
+  background: radial-gradient(circle at top right, rgba(203, 179, 255, 0.28), rgba(255, 255, 255, 0.06));
+}
+
+.public-profile-card__intro {
+  min-width: 0;
+}
+
+.public-profile-achievements {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.public-achievement-card {
+  align-items: start;
+}
+
+.public-achievement-card h3 {
+  margin-bottom: 0.35rem;
+}
+
+.public-achievement-card p {
+  margin-bottom: 0.75rem;
+}
+
+.public-profile-not-found {
+  text-align: center;
+}
+
+.profile-share {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 0.9rem;
+}
+
+.profile-share__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.profile-share__url {
+  color: var(--muted-text);
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.profile-share__status {
+  margin: 0;
+}
+
+.share-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.share-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(5, 4, 12, 0.72);
+}
+
+.share-modal-overlay--open {
+  animation: share-overlay-fade-in 200ms ease-out forwards;
+}
+
+.share-modal-overlay--closing {
+  animation: share-overlay-fade-out 150ms ease-in forwards;
+}
+
+.share-modal {
+  width: min(100%, 640px);
+  max-height: min(100vh - 2.5rem, 760px);
+  overflow: auto;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--panel-glass-surface, linear-gradient(180deg, rgba(62, 41, 98, 0.92), rgba(30, 18, 51, 0.95)));
+  box-shadow: var(--shadow, 0 28px 80px rgba(4, 2, 12, 0.44));
+}
+
+.share-modal--open {
+  animation: share-modal-enter 200ms ease-out forwards;
+}
+
+.share-modal--closing {
+  animation: share-modal-exit 150ms ease-in forwards;
+}
+
+.share-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.share-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.share-modal__close span {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.share-modal__preview {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.share-modal__preview p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.share-modal__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.share-modal__platform {
+  width: 100%;
+  justify-content: center;
+  gap: 0.625rem;
+  text-align: center;
+}
+
+.share-modal__platform-icon {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.share-modal__platform-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.share-modal__copy {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+@keyframes share-overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes share-overlay-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes share-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes share-modal-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
 }
 
 .referral-campaign-card {
@@ -3126,7 +3375,8 @@ body[data-brand-theme="xportal"] .button--primary {
   .landing-stat-grid,
   .landing-section--split,
   .landing-leaderboard__header,
-  .landing-leaderboard__row {
+  .landing-leaderboard__row,
+  .public-profile-achievements {
     grid-template-columns: 1fr;
   }
 
@@ -3134,12 +3384,30 @@ body[data-brand-theme="xportal"] .button--primary {
     display: none;
   }
 
-  .landing-leaderboard__row {
+  .landing-leaderboard__row,
+  .public-leaderboard__row {
     gap: 0.35rem;
   }
 
   .landing-activity__item {
     flex-direction: column;
+  }
+
+  .public-leaderboard__header {
+    display: none;
+  }
+
+  .public-leaderboard__row {
+    grid-template-columns: 1fr;
+  }
+
+  .public-profile-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .share-modal__actions {
+    grid-template-columns: 1fr;
   }
 
   .review-history__meta,
