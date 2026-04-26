@@ -109,6 +109,11 @@ export default async function PublicProfilePage({
               ) : (
                 <p className="form-note">Not yet ranked.</p>
               )}
+              {profile.referralRank ? (
+                <p className="form-note">
+                  Ranked <Link href="/leaderboard/public?period=referral">#{profile.referralRank.rank} in referrals</Link>
+                </p>
+              ) : null}
             </div>
           </div>
         </div>

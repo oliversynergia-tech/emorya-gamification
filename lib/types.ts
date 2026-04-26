@@ -71,6 +71,13 @@ export type QuestCategory =
 export type QuestStatus = "available" | "locked" | "in-progress" | "completed" | "rejected";
 export type CompletionStatus = "pending" | "approved" | "rejected";
 
+export type QuestQuizQuestion = {
+  id: string;
+  text: string;
+  options: string[];
+  correctIndex: number;
+};
+
 export type Quest = {
   id: string;
   slug?: string;
@@ -104,6 +111,8 @@ export type Quest = {
   proofType?: string;
   proofInstructions?: string;
   submissionEvidence?: string[];
+  quizPassScore?: number;
+  questions?: QuestQuizQuestion[];
   campaignPackId?: string;
   campaignPackLabel?: string;
   taskBlocks?: QuestTaskBlock[];

@@ -58,7 +58,7 @@ export default async function LeaderboardPage() {
           <div className="metric-card">
             <span>Top referrer</span>
             <strong>{topReferralEntry ? topReferralEntry.displayName : "No referral leader yet"}</strong>
-            <small>{topReferralEntry ? `${topReferralEntry.xp.toLocaleString()} referral XP on the invite board.` : "Referral standings appear once invite rewards start moving."}</small>
+            <small>{topReferralEntry ? `${topReferralEntry.xp.toLocaleString()} referrals on the invite board.` : "Referral standings appear once invite activity starts moving."}</small>
           </div>
           <div className="metric-card">
             <span>Next rank push</span>

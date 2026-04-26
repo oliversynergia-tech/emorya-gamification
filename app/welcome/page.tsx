@@ -41,6 +41,7 @@ export default async function WelcomePage() {
             avatarUrl: context.referrer.avatarUrl,
             referralCode: context.referrer.referralCode,
             rank: context.referrer.rank,
+            referralCount: context.referrer.referralCount,
             questsCompleted: context.referrer.questsCompleted,
             attributionSource: context.referrer.attributionSource,
           }}

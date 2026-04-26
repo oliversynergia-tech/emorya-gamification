@@ -117,6 +117,52 @@ function validateUnlockRuleGroup(slug, unlockRules, errors) {
   }
 }
 
+function validateQuizQuestions(slug, metadata, row, errors) {
+  if (row.verification_type !== "quiz") {
+    return;
+  }
+
+  if (!Array.isArray(metadata.questions) || metadata.questions.length === 0) {
+    errors.push(`${slug}: quiz quests must include metadata.questions with at least one question.`);
+    return;
+  }
+
+  for (const [index, question] of metadata.questions.entries()) {
+    if (!isRecord(question)) {
+      errors.push(`${slug}: metadata.questions[${index}] must be an object.`);
+      continue;
+    }
+
+    if (typeof question.id !== "string" || !question.id.trim()) {
+      errors.push(`${slug}: metadata.questions[${index}].id must be a non-empty string.`);
+    }
+
+    if (typeof question.text !== "string" || !question.text.trim()) {
+      errors.push(`${slug}: metadata.questions[${index}].text must be a non-empty string.`);
+    }
+
+    if (!Array.isArray(question.options) || question.options.length < 2) {
+      errors.push(`${slug}: metadata.questions[${index}].options must include at least two choices.`);
+    } else if (question.options.some((option) => typeof option !== "string" || !option.trim())) {
+      errors.push(`${slug}: metadata.questions[${index}].options must only contain non-empty strings.`);
+    }
+
+    if (!Number.isInteger(question.correctIndex)) {
+      errors.push(`${slug}: metadata.questions[${index}].correctIndex must be an integer.`);
+    } else if (Array.isArray(question.options) && (question.correctIndex < 0 || question.correctIndex >= question.options.length)) {
+      errors.push(`${slug}: metadata.questions[${index}].correctIndex must point at a valid option.`);
+    }
+  }
+
+  if (typeof metadata.totalQuestions === "number" && metadata.totalQuestions !== metadata.questions.length) {
+    errors.push(`${slug}: metadata.totalQuestions must match metadata.questions.length.`);
+  }
+
+  if (typeof metadata.passScore !== "number" || metadata.passScore < 1 || metadata.passScore > metadata.questions.length) {
+    errors.push(`${slug}: metadata.passScore must be between 1 and the total question count.`);
+  }
+}
+
 export function validateQuestDefinitionRow(row) {
   const slug = String(row.slug ?? "unknown-quest");
   const metadata = isRecord(row.metadata) ? row.metadata : {};
@@ -149,6 +195,8 @@ export function validateQuestDefinitionRow(row) {
       errors.push(`${slug}: metadata.previewConfig.desirability must be a number when present.`);
     }
   }
+
+  validateQuizQuestions(slug, metadata, row, errors);
 
   return errors;
 }

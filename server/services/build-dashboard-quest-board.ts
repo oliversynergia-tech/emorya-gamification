@@ -17,6 +17,7 @@ import type {
   Quest,
   QuestCadence,
   QuestCategory,
+  QuestQuizQuestion,
   QuestTaskBlock,
   QuestRuntimeContext,
   SubscriptionTier,
@@ -55,6 +56,7 @@ const EMORYA_LAUNCH_ORDER = new Map<string, number>([
   ["create-emorya-account", 5],
   ["complete-your-profile", 6],
   ["confirm-your-starter-setup", 7],
+  ["daily-emorya-tip", 7.5],
   ["log-todays-calorie-burn", 8],
   ["hit-daily-200-calorie-target", 8.1],
   ["check-your-emrs-balance", 8.2],
@@ -71,6 +73,7 @@ const EMORYA_LAUNCH_ORDER = new Map<string, number>([
   ["complete-the-full-activation-ladder", 15],
   ["stake-your-first-emr", 16],
   ["upgrade-to-premium-monthly", 17],
+  ["premium-economics-quiz", 17.05],
   ["share-your-premium-unlock", 17.1],
   ["500-in-24", 18],
   ["reach-staking-threshold-a", 19],
@@ -138,6 +141,47 @@ function normalizeQuestTaskBlocks(metadata: Record<string, unknown>): QuestTaskB
   }, []);
 
   return taskBlocks.length > 0 ? taskBlocks : undefined;
+}
+
+function normalizeQuestQuestions(metadata: Record<string, unknown>): QuestQuizQuestion[] | undefined {
+  const rawQuestions = metadata.questions;
+  if (!Array.isArray(rawQuestions)) {
+    return undefined;
+  }
+
+  const questions = rawQuestions.reduce<QuestQuizQuestion[]>((allQuestions, rawQuestion, index) => {
+    if (!rawQuestion || typeof rawQuestion !== "object") {
+      return allQuestions;
+    }
+
+    const question = rawQuestion as Record<string, unknown>;
+    const text = typeof question.text === "string" ? question.text.trim() : "";
+    const options = Array.isArray(question.options)
+      ? question.options.filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0)
+      : [];
+    const correctIndex =
+      typeof question.correctIndex === "number" && Number.isInteger(question.correctIndex)
+        ? question.correctIndex
+        : -1;
+
+    if (!text || options.length < 2 || correctIndex < 0 || correctIndex >= options.length) {
+      return allQuestions;
+    }
+
+    allQuestions.push({
+      id:
+        typeof question.id === "string" && question.id.trim().length > 0
+          ? question.id.trim()
+          : `question-${index + 1}`,
+      text,
+      options,
+      correctIndex,
+    });
+
+    return allQuestions;
+  }, []);
+
+  return questions.length > 0 ? questions : undefined;
 }
 
 function deriveCompletionStatus(quest: DashboardQuestRow): Quest["status"] {
@@ -215,6 +259,8 @@ function mapEvaluatedQuestToQuest({
             (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
           )
         : undefined,
+    quizPassScore: typeof quest.metadata?.passScore === "number" ? quest.metadata.passScore : undefined,
+    questions: normalizeQuestQuestions(quest.metadata),
     taskBlocks: normalizeQuestTaskBlocks(quest.metadata),
     campaignPackId: typeof quest.metadata?.campaignPackId === "string" ? quest.metadata.campaignPackId : undefined,
     campaignPackLabel: typeof quest.metadata?.campaignPackLabel === "string" ? quest.metadata.campaignPackLabel : undefined,

@@ -139,8 +139,8 @@ const loadCachedReferralSnapshotLeaderboard = unstable_cache(
               COUNT(r.id)::int AS referral_count
        FROM referrals r
        JOIN users u ON u.id = r.referrer_user_id
-       GROUP BY u.id, u.display_name, u.level, u.current_streak, u.created_at
-       ORDER BY referral_count DESC, u.created_at ASC
+       GROUP BY u.id, u.display_name, u.level, u.current_streak
+       ORDER BY referral_count DESC, MIN(r.created_at) ASC
        LIMIT 20`,
     );
 

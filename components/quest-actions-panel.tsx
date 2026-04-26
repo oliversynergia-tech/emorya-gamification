@@ -19,6 +19,16 @@ type MilestoneQuestSummary = {
   title: string;
 };
 
+type QuizSelectionState = Record<string, number[]>;
+type QuizAttemptState = Record<
+  string,
+  {
+    answersCorrect: number;
+    totalQuestions: number;
+    passScore: number;
+  }
+>;
+
 function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progressUpdate: QuestProgressUpdate | null) {
   if (!quest || !progressUpdate || !quest.slug) {
     return null;
@@ -184,6 +194,8 @@ export function QuestActionsPanel({
     [highlightedQuestId, quests],
   );
   const [answersCorrect, setAnswersCorrect] = useState<SubmissionState>({});
+  const [quizSelections, setQuizSelections] = useState<QuizSelectionState>({});
+  const [quizAttemptResults, setQuizAttemptResults] = useState<QuizAttemptState>({});
   const [contentUrls, setContentUrls] = useState<SubmissionState>({});
   const [screenshotUrls, setScreenshotUrls] = useState<SubmissionState>({});
   const [proofFiles, setProofFiles] = useState<ProofFileState>({});
@@ -347,8 +359,106 @@ export function QuestActionsPanel({
     }
   }
 
+  function setQuizSelection(questId: string, questionIndex: number, optionIndex: number) {
+    setQuizSelections((current) => {
+      const nextSelections = [...(current[questId] ?? [])];
+      nextSelections[questionIndex] = optionIndex;
+      return {
+        ...current,
+        [questId]: nextSelections,
+      };
+    });
+    setQuizAttemptResults((current) => {
+      if (!current[questId]) {
+        return current;
+      }
+
+      const nextResults = { ...current };
+      delete nextResults[questId];
+      return nextResults;
+    });
+    setError(null);
+    setMessage(null);
+  }
+
+  function resetQuizAttempt(questId: string) {
+    setQuizSelections((current) => {
+      if (!current[questId]) {
+        return current;
+      }
+
+      const nextSelections = { ...current };
+      delete nextSelections[questId];
+      return nextSelections;
+    });
+    setQuizAttemptResults((current) => {
+      if (!current[questId]) {
+        return current;
+      }
+
+      const nextResults = { ...current };
+      delete nextResults[questId];
+      return nextResults;
+    });
+    setError(null);
+    setMessage(null);
+  }
+
   function handleQuizSubmit(event: FormEvent<HTMLFormElement>, quest: Quest) {
     event.preventDefault();
+
+    if (quest.questions?.length) {
+      const selections = quizSelections[quest.id] ?? [];
+      const totalQuestions = quest.questions.length;
+      const passScore = Math.min(Math.max(quest.quizPassScore ?? totalQuestions, 1), totalQuestions);
+
+      if (selections.length < totalQuestions || selections.some((selection) => !Number.isInteger(selection))) {
+        setError("Answer every question before submitting the quiz.");
+        setMessage(null);
+        return;
+      }
+
+      const answersCorrect = quest.questions.reduce((score, question, index) => {
+        return score + (selections[index] === question.correctIndex ? 1 : 0);
+      }, 0);
+
+      if (answersCorrect < passScore) {
+        setQuizAttemptResults((current) => ({
+          ...current,
+          [quest.id]: {
+            answersCorrect,
+            totalQuestions,
+            passScore,
+          },
+        }));
+        setMessage(null);
+        setProgressUpdate(null);
+        setProgressQuest(null);
+        setProgressQuestTitle(null);
+        setProgressQuestXp(null);
+        setError(null);
+        return;
+      }
+
+      setQuizAttemptResults((current) => {
+        if (!current[quest.id]) {
+          return current;
+        }
+
+        const nextResults = { ...current };
+        delete nextResults[quest.id];
+        return nextResults;
+      });
+
+      void submitQuest(
+        quest,
+        {
+          answersCorrect,
+        },
+        `Quiz passed with ${answersCorrect}/${totalQuestions}.`,
+      );
+      return;
+    }
 
     void submitQuest(
       quest,
@@ -661,22 +771,94 @@ export function QuestActionsPanel({
               ) : null}
               {quest.verificationType === "quiz" ? (
                 <form className="form-stack" onSubmit={(event) => handleQuizSubmit(event, quest)}>
-                  <label className="field">
-                    <span>Correct answers</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="5"
-                      value={answersCorrect[quest.id] ?? ""}
-                      onChange={(event) =>
-                        setAnswersCorrect((current) => ({ ...current, [quest.id]: event.target.value }))
-                      }
-                      disabled={disabled || pending}
-                    />
-                  </label>
-                  <button className="button button--primary" type="submit" disabled={disabled || pending}>
-                    {pending ? "Submitting..." : "Submit quiz"}
-                  </button>
+                  {quest.questions?.length ? (
+                    <>
+                      <div className="quiz-stack" role="group" aria-label={`${quest.title} quiz questions`}>
+                        {quest.questions.map((question, questionIndex) => {
+                          const selectedOption = quizSelections[quest.id]?.[questionIndex];
+
+                          return (
+                            <fieldset key={question.id} className="quiz-question" disabled={disabled || pending}>
+                              <legend>
+                                <span className="eyebrow">Question {questionIndex + 1}</span>
+                                <strong>{question.text}</strong>
+                              </legend>
+                              <div className="quiz-options">
+                                {question.options.map((option, optionIndex) => {
+                                  const checked = selectedOption === optionIndex;
+                                  const inputId = `${quest.id}-${question.id}-${optionIndex}`;
+
+                                  return (
+                                    <label
+                                      key={inputId}
+                                      className={`quiz-option${checked ? " quiz-option--selected" : ""}`}
+                                      htmlFor={inputId}
+                                    >
+                                      <input
+                                        id={inputId}
+                                        type="radio"
+                                        name={`${quest.id}-${question.id}`}
+                                        checked={checked}
+                                        onChange={() => setQuizSelection(quest.id, questionIndex, optionIndex)}
+                                        disabled={disabled || pending}
+                                      />
+                                      <span>{option}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </fieldset>
+                          );
+                        })}
+                      </div>
+                      {quizAttemptResults[quest.id] ? (
+                        <div className="status status--warning" role="status" aria-live="polite">
+                          <p>
+                            You scored {quizAttemptResults[quest.id].answersCorrect}/{quizAttemptResults[quest.id].totalQuestions}. You need{" "}
+                            {quizAttemptResults[quest.id].passScore} to pass. Try again.
+                          </p>
+                          <button
+                            className="button button--secondary button--small"
+                            type="button"
+                            onClick={() => resetQuizAttempt(quest.id)}
+                          >
+                            Retry quiz
+                          </button>
+                        </div>
+                      ) : null}
+                      <button
+                        className="button button--primary"
+                        type="submit"
+                        disabled={
+                          disabled ||
+                          pending ||
+                          (quizSelections[quest.id]?.length ?? 0) < quest.questions.length ||
+                          quest.questions.some((_, index) => !Number.isInteger(quizSelections[quest.id]?.[index]))
+                        }
+                      >
+                        {pending ? "Submitting..." : "Submit quiz"}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <label className="field">
+                        <span>Correct answers</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="5"
+                          value={answersCorrect[quest.id] ?? ""}
+                          onChange={(event) =>
+                            setAnswersCorrect((current) => ({ ...current, [quest.id]: event.target.value }))
+                          }
+                          disabled={disabled || pending}
+                        />
+                      </label>
+                      <button className="button button--primary" type="submit" disabled={disabled || pending}>
+                        {pending ? "Submitting..." : "Submit quiz"}
+                      </button>
+                    </>
+                  )}
                 </form>
               ) : null}
               {quest.verificationType === "manual-review" ? (

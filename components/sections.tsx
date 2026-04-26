@@ -13,6 +13,7 @@ import { CampaignMissionInboxPanel } from "@/components/campaign-mission-inbox-p
 import { CampaignMissionCtaAnalyticsPanel } from "@/components/campaign-mission-cta-analytics-panel";
 import { CampaignPackNotificationHistoryPanel } from "@/components/campaign-pack-notification-history-panel";
 import { MissionLink } from "@/components/mission-link";
+import { ReferralRankShareButton } from "@/components/referral-rank-share-button";
 import { MissionEventHistoryPanel } from "@/components/mission-event-history-panel";
 import { MissionPackDetailPanel } from "@/components/mission-pack-detail-panel";
 import { ProfileMissionRecapPanel } from "@/components/profile-mission-recap-panel";
@@ -1018,6 +1019,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
   const topReferralEntry = data.referralLeaderboard[0];
   const campaignPreset = data.economy.campaignPreset;
   const rankPressurePack = data.campaignPacks[0] ?? null;
+  // TODO: Auto-detect referral rank climbs by comparing the latest referral snapshot to the previous one.
   const renderLeaderboardRows = (entries: DashboardData["leaderboard"], scoreLabel: string) => {
     if (entries.length === 0) {
       return (
@@ -1197,11 +1199,11 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         <div className="referral-campaign-card" id="referral-board">
           <div className="quest-card__meta">
             <span>Current referral leader</span>
-            <span>{topReferralEntry ? `${topReferralEntry.xp} XP` : "No referral XP yet"}</span>
+            <span>{topReferralEntry ? `${topReferralEntry.xp} referrals` : "No referrals yet"}</span>
           </div>
           <strong>{topReferralEntry ? topReferralEntry.displayName : "Campaign waiting for invites"}</strong>
           <p>
-            Referral rank reflects both the number of people you bring in and how far they go once they join.
+            Referral rank reflects how many people you bring into Emorya, with earlier invite momentum winning ties.
           </p>
           <div className="info-grid">
             <div className="info-card">
@@ -1225,6 +1227,9 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
               <strong>Future reward path</strong>
             </div>
           </div>
+          <div className="hero__actions">
+            <ReferralRankShareButton rank={data.user.referral.rank} />
+          </div>
         </div>
         <div className="leaderboard leaderboard--referral" role="table" aria-label="Referral leaderboard">
           <div className="sr-only" role="row">
@@ -1234,7 +1239,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
             <span role="columnheader">Score</span>
             <span role="columnheader">Change</span>
           </div>
-          {renderLeaderboardRows(data.referralLeaderboard, "referral XP")}
+          {renderLeaderboardRows(data.referralLeaderboard, "referrals")}
         </div>
         <div className="leaderboard-view-card">
           <div className="panel__header">

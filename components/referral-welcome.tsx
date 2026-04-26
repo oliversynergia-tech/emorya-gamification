@@ -10,6 +10,7 @@ type ReferralWelcomeReferrer = {
   avatarUrl: string | null;
   referralCode: string;
   rank: number | null;
+  referralCount: number;
   questsCompleted: number;
   attributionSource?: string | null;
 };
@@ -72,6 +73,7 @@ export function ReferralWelcome({ referrer, onContinue }: ReferralWelcomeProps) 
                 {referrer.totalXp.toLocaleString()} XP · {referrer.currentStreak}-day streak ·{" "}
                 {referrer.questsCompleted.toLocaleString()} quests completed
               </p>
+              <p className="form-note">{referrer.referralCount.toLocaleString()} people invited</p>
               {referrer.rank ? (
                 <p className="mission-cue mission-cue--ready">
                   <strong>Leaderboard momentum</strong> Ranked #{referrer.rank} on the leaderboard.

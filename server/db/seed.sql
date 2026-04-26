@@ -234,8 +234,24 @@ INSERT INTO quest_definitions (
     'free',
     2,
     FALSE,
+    TRUE,
+    '{"track":"quiz","passScore":4,"totalQuestions":5,"unlockRules":{"all":[{"type":"min_level","value":2}]},"rewardConfig":{"xp":{"base":45,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":16}},"questions":[{"id":"q1","text":"What XP multiplier does an Annual Premium subscriber receive?","options":["1.10x","1.25x","1.50x","2.00x"],"correctIndex":2},{"id":"q2","text":"What token multiplier does a Monthly Premium subscriber receive compared to the free tier?","options":["Same as free","1.15x","1.30x","1.50x"],"correctIndex":1},{"id":"q3","text":"How many eligibility points are needed before token redemption becomes available?","options":["50 points","75 points","100 points","200 points"],"correctIndex":2},{"id":"q4","text":"What happens to your XP earnings when you upgrade from Monthly to Annual Premium?","options":["They stay the same","They increase from 1.25x to 1.50x","They double","They reset to zero"],"correctIndex":1},{"id":"q5","text":"What direct token reward does the Annual upgrade quest include?","options":["10 EMR","25 EMR","50 EMR","100 EMR"],"correctIndex":1}]}'::jsonb
+  ),
+  (
+    'f53ec235-3fba-4517-ae82-8d35f4f7ccff',
+    'daily-emorya-tip',
+    'Daily Emorya tip',
+    'Read today''s Emorya tip and confirm you''ve seen it to keep your learning streak active.',
+    'learn',
+    15,
+    'easy',
+    'link-visit',
+    'daily',
+    'free',
+    1,
     FALSE,
-    '{"track":"quiz","passScore":4,"totalQuestions":5,"unlockRules":{"all":[{"type":"min_level","value":2}]},"rewardConfig":{"xp":{"base":45,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":16}}}'::jsonb
+    TRUE,
+    '{"track":"starter","targetUrl":"/tips","unlockRules":{"all":[]},"rewardConfig":{"xp":{"base":15,"premiumMultiplierEligible":true},"tokenEffect":"none"},"questPortability":"emorya_only"}'::jsonb
   ),
   (
     'd19f442f-3b81-454c-aa94-6f33b7524d59',
@@ -1131,7 +1147,7 @@ INSERT INTO quest_definitions (
     1,
     FALSE,
     FALSE,
-    '{"track":"quiz","totalQuestions":3,"passScore":2,"campaignPackId":"admin-verification-demo","campaignPackLabel":"Admin verification demo","previewConfig":{"label":"Quiz lane"}}'::jsonb
+    '{"track":"quiz","totalQuestions":3,"passScore":2,"campaignPackId":"admin-verification-demo","campaignPackLabel":"Admin verification demo","previewConfig":{"label":"Quiz lane"},"questions":[{"id":"q1","text":"What does the quiz verification lane validate?","options":["Screenshot evidence","Wallet ownership","Knowledge through scored questions","External API callback"],"correctIndex":2},{"id":"q2","text":"What happens if a user fails a quiz quest?","options":["Their account is locked","They can retry","The quest is permanently failed","An admin must reset it"],"correctIndex":1},{"id":"q3","text":"Which field in the quest metadata controls the minimum correct answers needed?","options":["minScore","passScore","requiredCorrect","threshold"],"correctIndex":1}]}'::jsonb
   ),
   (
     '82bc2777-cfc4-4264-9654-810bfe4abd4f',
@@ -1194,6 +1210,7 @@ WHERE slug IN (
   'confirm-your-starter-setup',
   'play-emoryan-adventure-game',
   'complete-daily-wheel-spin',
+  'daily-emorya-tip',
   'download-xportal',
   'open-or-create-your-xportal-wallet',
   'view-your-emrs-reward-path',
@@ -1526,7 +1543,8 @@ INSERT INTO leaderboard_snapshots (id, user_id, period, xp, rank, snapshot_date)
   ('18ced7b2-9908-4fb2-aa02-0a04549d8c99', 'c657ad58-bf65-4def-8cab-5f2bd4a85dbf', 'all-time', 34100, 3, CURRENT_DATE),
   ('07c15333-4cda-47c1-bf4f-909bc95282f4', '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'all-time', 4520, 34, CURRENT_DATE),
   ('d21b6ed0-765d-4a4f-997d-0550c3bef91f', '8cc801df-004b-4e20-a5c1-cf5f0f1f642d', 'all-time', 4485, 35, CURRENT_DATE),
-  ('1ba52233-efec-4631-998e-b9f00b1f1176', '2b74bcd9-98e8-455a-bede-d1a5876775fd', 'all-time', 4440, 36, CURRENT_DATE)
+  ('1ba52233-efec-4631-998e-b9f00b1f1176', '2b74bcd9-98e8-455a-bede-d1a5876775fd', 'all-time', 4440, 36, CURRENT_DATE),
+  ('08d0d08c-50e2-4686-a1ee-31691bf83623', '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'referral', 2, 1, CURRENT_DATE)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO activity_log (id, user_id, action_type, xp_earned, metadata, created_at) VALUES

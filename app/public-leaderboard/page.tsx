@@ -54,6 +54,14 @@ function getPodiumClass(rank: number) {
   return "";
 }
 
+function formatPublicScore(score: number, scoreLabel: "XP" | "Referrals") {
+  if (scoreLabel === "Referrals") {
+    return `${score.toLocaleString("en-US")} referral${score === 1 ? "" : "s"}`;
+  }
+
+  return `${score.toLocaleString("en-US")} XP`;
+}
+
 export default async function PublicLeaderboardPage({
   searchParams,
 }: {
@@ -126,7 +134,7 @@ export default async function PublicLeaderboardPage({
                     <span className="public-leaderboard__level">Lv. {entry.level}</span>
                     <span className="public-leaderboard__streak">{entry.currentStreak}-day streak</span>
                     <span className="public-leaderboard__score">
-                      {entry.score.toLocaleString("en-US")} {data.scoreLabel}
+                      {formatPublicScore(entry.score, data.scoreLabel)}
                     </span>
                   </li>
                 ))}

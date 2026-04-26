@@ -10,6 +10,7 @@ export type ReferralWelcomeReferrer = {
   referralCode: string;
   attributionSource: string | null;
   rank: number | null;
+  referralCount: number;
   questsCompleted: number;
 };
 
@@ -69,7 +70,7 @@ export async function getReferralWelcomeContextForUser(userId: string): Promise<
     };
   }
 
-  const [referrerResult, rankResult, questCountResult] = await Promise.all([
+  const [referrerResult, rankResult, questCountResult, referralCountResult] = await Promise.all([
     runQuery<ReferrerRow>(
       `SELECT id, display_name, level, total_xp, current_streak, avatar_url, referral_code, attribution_source
        FROM users
@@ -95,6 +96,12 @@ export async function getReferralWelcomeContextForUser(userId: string): Promise<
        FROM quest_completions
        WHERE user_id = $1
          AND status = 'approved'`,
+      [user.referred_by],
+    ),
+    runQuery<CountRow>(
+      `SELECT COUNT(*)::text AS count
+       FROM referrals
+       WHERE referrer_user_id = $1`,
       [user.referred_by],
     ),
   ]);
@@ -124,6 +131,7 @@ export async function getReferralWelcomeContextForUser(userId: string): Promise<
       referralCode: referrer.referral_code,
       attributionSource: referrer.attribution_source,
       rank: rankResult.rows[0] ? Number(rankResult.rows[0].rank) : null,
+      referralCount: Number(referralCountResult.rows[0]?.count ?? 0),
       questsCompleted: Number(questCountResult.rows[0]?.count ?? 0),
     },
   };

@@ -15,6 +15,7 @@ type ReferralWelcomeScreenProps = {
     avatarUrl: string | null;
     referralCode: string;
     rank: number | null;
+    referralCount: number;
     questsCompleted: number;
     attributionSource?: string | null;
   };

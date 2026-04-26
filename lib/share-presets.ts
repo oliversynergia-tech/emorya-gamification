@@ -53,6 +53,14 @@ export function getSharePreset(
         profileUrl,
         milestone,
       };
+    case "referral_rank_climb":
+      return {
+        title: "Climbing the Referral Board!",
+        message: `${userDisplayName} is climbing the Emorya referral leaderboard. Join through my link and let's keep moving together.`,
+        hashtags: ["Emorya", "Referral"],
+        profileUrl,
+        milestone,
+      };
     case "premium_unlock":
       return {
         title: "Premium Unlocked!",

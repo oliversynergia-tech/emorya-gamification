@@ -16,6 +16,11 @@ export type PublicProfileLeaderboardRank = {
   xp: number;
 } | null;
 
+export type PublicProfileReferralRank = {
+  rank: number;
+  referrals: number;
+} | null;
+
 export type PublicProfileData = {
   id: string;
   displayName: string;
@@ -29,6 +34,7 @@ export type PublicProfileData = {
   completedQuests: number;
   achievements: PublicProfileAchievement[];
   leaderboardRank: PublicProfileLeaderboardRank;
+  referralRank: PublicProfileReferralRank;
 };
 
 type PublicProfileRow = {
@@ -93,7 +99,7 @@ const loadCachedPublicProfileByReferralCode = unstable_cache(
       return null;
     }
 
-    const [achievementsResult, leaderboardResult, completedQuestsResult] = await Promise.all([
+    const [achievementsResult, leaderboardResult, referralRankResult, completedQuestsResult] = await Promise.all([
       runQuery<PublicProfileAchievementRow>(
         `SELECT a.name,
                 a.description,
@@ -120,6 +126,19 @@ const loadCachedPublicProfileByReferralCode = unstable_cache(
          LIMIT 1`,
         [user.id],
       ),
+      runQuery<PublicProfileLeaderboardRow>(
+        `SELECT rank, xp
+         FROM leaderboard_snapshots
+         WHERE user_id = $1
+           AND period = 'referral'
+           AND snapshot_date = (
+             SELECT MAX(snapshot_date)
+             FROM leaderboard_snapshots
+             WHERE period = 'referral'
+           )
+         LIMIT 1`,
+        [user.id],
+      ),
       runQuery<PublicProfileCompletionRow>(
         `SELECT COUNT(*)::int AS completed_quests
          FROM quest_completions
@@ -130,6 +149,7 @@ const loadCachedPublicProfileByReferralCode = unstable_cache(
     ]);
 
     const leaderboardRow = leaderboardResult.rows[0];
+    const referralRankRow = referralRankResult.rows[0];
     const completionRow = completedQuestsResult.rows[0];
 
     return {
@@ -154,6 +174,12 @@ const loadCachedPublicProfileByReferralCode = unstable_cache(
         ? {
             rank: Number(leaderboardRow.rank),
             xp: Number(leaderboardRow.xp),
+          }
+        : null,
+      referralRank: referralRankRow
+        ? {
+            rank: Number(referralRankRow.rank),
+            referrals: Number(referralRankRow.xp),
           }
         : null,
     };
