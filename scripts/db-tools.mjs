@@ -130,6 +130,18 @@ export function createDbToolContext(rootDir) {
     `);
   }
 
+  async function ensureBaseSchema(client) {
+    const result = await client.query(
+      "SELECT to_regclass('public.users')::text AS users_table",
+    );
+
+    if (result.rows[0]?.users_table) {
+      return;
+    }
+
+    await runSqlFile(client, resolve(dbDir, "schema.sql"), "Applying schema");
+  }
+
   function checksumFor(source) {
     return createHash("sha256").update(source).digest("hex");
   }
@@ -176,6 +188,7 @@ export function createDbToolContext(rootDir) {
     }
 
     await withClient(async (client) => {
+      await ensureBaseSchema(client);
       await ensureMigrationTable(client);
 
       const appliedRows = await client.query("SELECT filename, checksum FROM schema_migrations");

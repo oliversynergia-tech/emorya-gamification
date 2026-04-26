@@ -1538,14 +1538,16 @@ INSERT INTO referrals (
 ON CONFLICT (referrer_user_id, referee_user_id) DO NOTHING;
 
 INSERT INTO leaderboard_snapshots (id, user_id, period, xp, rank, snapshot_date) VALUES
-  ('55730039-a930-421a-bea5-f02e7a0685f7', '2196480b-b0fc-4e15-8837-e1d02177c7ed', 'all-time', 37140, 1, CURRENT_DATE),
-  ('14d3fb4c-1e8f-407f-b8e1-c4f0b96c4bb6', '9010db77-a008-4f24-ac2c-af801dca9a6b', 'all-time', 35520, 2, CURRENT_DATE),
-  ('18ced7b2-9908-4fb2-aa02-0a04549d8c99', 'c657ad58-bf65-4def-8cab-5f2bd4a85dbf', 'all-time', 34100, 3, CURRENT_DATE),
-  ('07c15333-4cda-47c1-bf4f-909bc95282f4', '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'all-time', 4520, 34, CURRENT_DATE),
-  ('d21b6ed0-765d-4a4f-997d-0550c3bef91f', '8cc801df-004b-4e20-a5c1-cf5f0f1f642d', 'all-time', 4485, 35, CURRENT_DATE),
-  ('1ba52233-efec-4631-998e-b9f00b1f1176', '2b74bcd9-98e8-455a-bede-d1a5876775fd', 'all-time', 4440, 36, CURRENT_DATE),
-  ('08d0d08c-50e2-4686-a1ee-31691bf83623', '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'referral', 2, 1, CURRENT_DATE)
-ON CONFLICT (id) DO NOTHING;
+  (gen_random_uuid(), '2196480b-b0fc-4e15-8837-e1d02177c7ed', 'all-time', 37140, 1, CURRENT_DATE),
+  (gen_random_uuid(), '9010db77-a008-4f24-ac2c-af801dca9a6b', 'all-time', 35520, 2, CURRENT_DATE),
+  (gen_random_uuid(), 'c657ad58-bf65-4def-8cab-5f2bd4a85dbf', 'all-time', 34100, 3, CURRENT_DATE),
+  (gen_random_uuid(), '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'all-time', 4520, 34, CURRENT_DATE),
+  (gen_random_uuid(), '8cc801df-004b-4e20-a5c1-cf5f0f1f642d', 'all-time', 4485, 35, CURRENT_DATE),
+  (gen_random_uuid(), '2b74bcd9-98e8-455a-bede-d1a5876775fd', 'all-time', 4440, 36, CURRENT_DATE),
+  (gen_random_uuid(), '6f56c71e-6d79-4b18-bf43-d42d15eb0b8c', 'referral', 2, 1, CURRENT_DATE)
+ON CONFLICT (user_id, period, snapshot_date) DO UPDATE SET
+  xp = EXCLUDED.xp,
+  rank = EXCLUDED.rank;
 
 INSERT INTO activity_log (id, user_id, action_type, xp_earned, metadata, created_at) VALUES
   (
