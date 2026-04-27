@@ -33,6 +33,7 @@ test("getReferralRewardTargets respects configured campaign overrides", () => {
       campaignOverrides: {
         ...defaultEconomySettings.campaignOverrides,
         galxe: {
+          ...defaultEconomySettings.campaignOverrides.galxe,
           signupBonusXp: 12,
           monthlyConversionBonusXp: 44,
           annualConversionBonusXp: 88,

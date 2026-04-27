@@ -1,40 +1,26 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { EconomySettings, TokenSettlementItem } from "../lib/types.ts";
+import { defaultEconomySettings } from "../lib/economy-settings.ts";
+import type { AuthUser, EconomySettings, TokenSettlementItem } from "../lib/types.ts";
 import { transitionPendingTokenRedemptionWithDependencies } from "../server/services/token-redemption-transition.ts";
 
 function createEconomySettings(overrides: Partial<EconomySettings> = {}): EconomySettings {
   return {
+    ...defaultEconomySettings,
     id: "economy-1",
-    payoutAsset: "EMR",
     payoutMode: "review_required",
     redemptionEnabled: true,
     settlementProcessingEnabled: true,
     directRewardQueueEnabled: true,
     settlementNotesRequired: false,
-    directRewardsEnabled: true,
-    directAnnualReferralEnabled: true,
-    directPremiumFlashEnabled: true,
-    directAmbassadorEnabled: true,
-    minimumEligibilityPoints: 100,
     pointsPerToken: 10,
-    xpTierMultipliers: {
-      free: 1,
-      monthly: 1.25,
-      annual: 1.5,
-    },
     tokenTierMultipliers: {
       free: 1,
       monthly: 1.25,
       annual: 1.5,
     },
     referralSignupBaseXp: 20,
-    referralMonthlyConversionBaseXp: 150,
-    referralAnnualConversionBaseXp: 300,
-    annualReferralDirectTokenAmount: 25,
-    campaignOverrides: {},
-    differentiateUpstreamCampaignSources: false,
     updatedAt: "2026-03-17T00:00:00.000Z",
     ...overrides,
   };
@@ -69,6 +55,7 @@ function createSettlement(overrides: Partial<TokenSettlementItem> = {}): TokenSe
     cancelledByDisplayName: null,
     cancellationReason: null,
     retryCount: 0,
+    updatedAt: "2026-03-17T00:00:00.000Z",
     settledAt: null,
     receiptReference: null,
     settlementNote: null,
@@ -79,13 +66,14 @@ function createSettlement(overrides: Partial<TokenSettlementItem> = {}): TokenSe
 }
 
 function createDependencies(options?: {
-  currentUser?: { id: string } | null;
+  currentUser?: AuthUser | null;
   economySettings?: EconomySettings;
   queue?: TokenSettlementItem[];
   approveResult?: boolean;
   processingResult?: boolean;
   settleResult?: boolean;
 }) {
+  type TransitionDependencies = Parameters<typeof transitionPendingTokenRedemptionWithDependencies>[1];
   const auditCalls: Array<Record<string, unknown>> = [];
   const approveCalls: Array<Record<string, unknown>> = [];
   const processingCalls: Array<Record<string, unknown>> = [];
@@ -109,7 +97,13 @@ function createDependencies(options?: {
     settleCalls,
     listCalls,
     dependencies: {
-      getCurrentUser: async () => options?.currentUser ?? { id: "admin-1" },
+      getCurrentUser: async () =>
+        options?.currentUser ?? {
+          id: "admin-1",
+          email: "admin@emorya.com",
+          displayName: "Admin User",
+          subscriptionTier: "annual",
+        },
       assertAdmin: async () => undefined,
       assertSuperAdmin: async () => undefined,
       getEconomySettings: async () => options?.economySettings ?? createEconomySettings(),
@@ -148,7 +142,7 @@ function createDependencies(options?: {
       createAuditEntry: async (input: Record<string, unknown>) => {
         auditCalls.push(input);
       },
-    },
+    } satisfies TransitionDependencies,
   };
 }
 

@@ -177,13 +177,10 @@ test("projectTokenRedemption can unlock through active economy settings", () => 
     rewardEligible: true,
     walletLinked: true,
     settings: {
+      ...defaultEconomySettings,
       id: "economy",
       payoutAsset: "EGLD",
       redemptionEnabled: true,
-      directRewardsEnabled: true,
-      directAnnualReferralEnabled: true,
-      directPremiumFlashEnabled: true,
-      directAmbassadorEnabled: true,
       minimumEligibilityPoints: 100,
       pointsPerToken: 20,
       xpTierMultipliers: { free: 1, monthly: 1.25, annual: 1.5 },
@@ -192,7 +189,6 @@ test("projectTokenRedemption can unlock through active economy settings", () => 
       referralMonthlyConversionBaseXp: 150,
       referralAnnualConversionBaseXp: 300,
       annualReferralDirectTokenAmount: 25,
-      campaignOverrides: defaultEconomySettings.campaignOverrides,
       updatedAt: "2026-03-14T00:00:00.000Z",
     },
   });

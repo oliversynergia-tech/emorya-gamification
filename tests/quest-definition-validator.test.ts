@@ -53,9 +53,9 @@ test("validateQuestDefinitionRow rejects malformed metadata", () => {
     },
   });
 
-  assert.ok(errors.some((entry) => entry.includes("metadata.track")));
-  assert.ok(errors.some((entry) => entry.includes("xp.base")));
-  assert.ok(errors.some((entry) => entry.includes("tokenEffect")));
-  assert.ok(errors.some((entry) => entry.includes("unsupported rule type")));
-  assert.ok(errors.some((entry) => entry.includes("previewConfig.desirability")));
+  assert.ok(errors.some((entry: string) => entry.includes("metadata.track")));
+  assert.ok(errors.some((entry: string) => entry.includes("xp.base")));
+  assert.ok(errors.some((entry: string) => entry.includes("tokenEffect")));
+  assert.ok(errors.some((entry: string) => entry.includes("unsupported rule type")));
+  assert.ok(errors.some((entry: string) => entry.includes("previewConfig.desirability")));
 });
