@@ -300,17 +300,30 @@ export function createDbToolContext(rootDir) {
           : null;
     const xpExpression =
       period === "referral"
-        ? "COALESCE(SUM(r.signup_reward_xp + r.conversion_reward_xp), 0)::int"
+        ? "sub.referral_count::int"
         : activityWindow
           ? "COALESCE(SUM(al.xp_earned), 0)::int"
           : "u.total_xp";
     const rankOrder =
       period === "referral"
-        ? `${xpExpression} DESC, COUNT(*) FILTER (WHERE r.referee_subscribed = TRUE) DESC, u.created_at ASC`
+        ? `${xpExpression} DESC, sub.earliest_referral ASC`
         : activityWindow
           ? `${xpExpression} DESC, u.total_xp DESC, u.level DESC, u.created_at ASC`
           : "u.total_xp DESC, u.level DESC, u.created_at ASC";
-    const referralJoin = period === "referral" ? "LEFT JOIN referrals r ON r.referrer_user_id = u.id" : "";
+    const referralSource =
+      period === "referral"
+        ? `SELECT sub.user_id,
+                  ${xpExpression} AS xp,
+                  ROW_NUMBER() OVER (ORDER BY ${rankOrder}) AS rank
+           FROM (
+             SELECT r.referrer_user_id AS user_id,
+                    COUNT(r.id) AS referral_count,
+                    MIN(r.created_at) AS earliest_referral
+             FROM referrals r
+             GROUP BY r.referrer_user_id
+             HAVING COUNT(r.id) > 0
+           ) sub`
+        : null;
     const activityJoin = activityWindow
       ? `LEFT JOIN activity_log al
     ON al.user_id = u.id
@@ -319,14 +332,19 @@ export function createDbToolContext(rootDir) {
       : "";
 
     const query = `
+BEGIN;
+${period === "referral" ? `DELETE FROM leaderboard_snapshots WHERE period = 'referral' AND snapshot_date = ${dateClause};` : ""}
 WITH snapshot_source AS (
-  SELECT u.id AS user_id,
+  ${
+    referralSource
+      ? referralSource
+      : `SELECT u.id AS user_id,
          ${xpExpression} AS xp,
          RANK() OVER (ORDER BY ${rankOrder}) AS rank
   FROM users u
-  ${referralJoin}
   ${activityJoin}
-  GROUP BY u.id, u.total_xp, u.level, u.created_at
+  GROUP BY u.id, u.total_xp, u.level, u.created_at`
+  }
 )
 INSERT INTO leaderboard_snapshots (id, user_id, period, xp, rank, snapshot_date)
 SELECT (
@@ -344,6 +362,7 @@ SELECT (
 FROM snapshot_source
 ON CONFLICT (user_id, period, snapshot_date)
 DO UPDATE SET xp = EXCLUDED.xp, rank = EXCLUDED.rank;
+COMMIT;
 `;
 
     await withClient(async (client) => {

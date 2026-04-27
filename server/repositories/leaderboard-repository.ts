@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import type { QueryResultRow } from "pg";
 
 import type { LeaderboardEntry, SubscriptionTier } from "@/lib/types";
-import { runQuery } from "@/server/db/client";
+import { getDbPool, runQuery } from "@/server/db/client";
 import { mapLeaderboardDelta } from "@/server/repositories/leaderboard-rules";
 
 type CurrentRankRow = QueryResultRow & {
@@ -93,6 +93,36 @@ export async function syncLeaderboardSnapshot({
 }) {
   const source = await getSnapshotSource(period, snapshotDate);
   const resolvedSnapshotDate = getSnapshotDate(snapshotDate);
+
+  if (period === "referral") {
+    const client = await getDbPool().connect();
+
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        `DELETE FROM leaderboard_snapshots
+         WHERE period = 'referral'
+           AND snapshot_date = $1`,
+        [resolvedSnapshotDate],
+      );
+
+      for (const row of source.rows) {
+        await client.query(
+          `INSERT INTO leaderboard_snapshots (id, user_id, period, xp, rank, snapshot_date)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [randomUUID(), row.user_id, period, row.xp, row.rank, resolvedSnapshotDate],
+        );
+      }
+
+      await client.query("COMMIT");
+      return;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
 
   for (const row of source.rows) {
     await runQuery(
