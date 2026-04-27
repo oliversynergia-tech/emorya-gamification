@@ -26,7 +26,12 @@ type ReferralRewardRow = QueryResultRow & {
   signup_rewarded_at: string | null;
   conversion_rewarded_at: string | null;
   annual_direct_token_rewarded_at: string | null;
+  share_prompted_at: string | null;
   created_at: string;
+};
+
+type PendingReferralSharePromptRow = QueryResultRow & {
+  id: string;
 };
 
 type RecentReferralRow = QueryResultRow & {
@@ -116,7 +121,8 @@ export async function listReferralRewardStates(referrerUserId: string) {
             u.attribution_source AS referee_attribution_source,
             (u.subscription_tier <> 'free') AS referee_subscribed,
             r.signup_reward_xp, r.conversion_reward_xp, r.annual_direct_token_amount,
-            r.signup_rewarded_at, r.conversion_rewarded_at, r.annual_direct_token_rewarded_at, r.created_at
+            r.signup_rewarded_at, r.conversion_rewarded_at, r.annual_direct_token_rewarded_at,
+            r.share_prompted_at, r.created_at
      FROM referrals r
      INNER JOIN users u ON u.id = r.referee_user_id
      WHERE r.referrer_user_id = $1
@@ -135,6 +141,7 @@ export async function updateReferralRewardState({
   signupRewardedAt,
   conversionRewardedAt,
   annualDirectTokenRewardedAt,
+  sharePromptedAt,
   refereeSubscribed,
 }: {
   referralId: string;
@@ -144,6 +151,7 @@ export async function updateReferralRewardState({
   signupRewardedAt: string | null;
   conversionRewardedAt: string | null;
   annualDirectTokenRewardedAt: string | null;
+  sharePromptedAt: string | null;
   refereeSubscribed: boolean;
 }) {
   await runQuery(
@@ -154,7 +162,8 @@ export async function updateReferralRewardState({
          signup_rewarded_at = $5,
          conversion_rewarded_at = $6,
          annual_direct_token_rewarded_at = $7,
-         referee_subscribed = $8
+         referee_subscribed = $8,
+         share_prompted_at = $9
      WHERE id = $1`,
     [
       referralId,
@@ -165,8 +174,51 @@ export async function updateReferralRewardState({
       conversionRewardedAt,
       annualDirectTokenRewardedAt,
       refereeSubscribed,
+      sharePromptedAt,
     ],
   );
+}
+
+export async function getPendingReferralSignupSharePrompt(referrerUserId: string) {
+  const result = await runQuery<PendingReferralSharePromptRow>(
+    `SELECT r.id
+     FROM referrals r
+     WHERE r.referrer_user_id = $1
+       AND r.signup_rewarded_at IS NOT NULL
+       AND r.share_prompted_at IS NULL
+       AND r.created_at > NOW() - INTERVAL '48 hours'
+       AND NOT EXISTS (
+         SELECT 1
+         FROM quest_completions qc
+         INNER JOIN quest_definitions q ON q.id = qc.quest_id
+         WHERE qc.user_id = $1
+           AND q.slug = 'share-your-referral-signup-win'
+       )
+     ORDER BY r.signup_rewarded_at DESC NULLS LAST, r.created_at DESC
+     LIMIT 1`,
+    [referrerUserId],
+  );
+
+  return result.rows[0]?.id ?? null;
+}
+
+export async function markReferralSharePrompted({
+  referralId,
+  referrerUserId,
+}: {
+  referralId: string;
+  referrerUserId: string;
+}) {
+  const result = await runQuery(
+    `UPDATE referrals
+     SET share_prompted_at = NOW()
+     WHERE id = $1
+       AND referrer_user_id = $2
+       AND share_prompted_at IS NULL`,
+    [referralId, referrerUserId],
+  );
+
+  return (result.rowCount ?? 0) > 0;
 }
 
 export async function getReferralSummary(userId: string) {

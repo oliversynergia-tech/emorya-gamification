@@ -157,6 +157,7 @@ CREATE TABLE referrals (
   signup_rewarded_at TIMESTAMPTZ,
   conversion_rewarded_at TIMESTAMPTZ,
   annual_direct_token_rewarded_at TIMESTAMPTZ,
+  share_prompted_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (referrer_user_id, referee_user_id)
 );

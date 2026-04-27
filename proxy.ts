@@ -11,6 +11,13 @@ const protectedRoutes = [
 ];
 
 function isProtectedPath(pathname: string) {
+  // Intentionally public routes:
+  // - /
+  // - /auth
+  // - /leaderboard/public
+  // - /u/[code]
+  // - /tips
+  // - /api/og/[code]
   if (pathname === "/leaderboard/public" || pathname.startsWith("/leaderboard/public/")) {
     return false;
   }
@@ -48,6 +55,8 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    // Intentionally public routes stay outside this matcher unless explicitly added later:
+    // /, /auth, /leaderboard/public, /u/[code], /tips, /api/og/[code]
     "/dashboard/:path*",
     "/profile/:path*",
     "/leaderboard/:path*",

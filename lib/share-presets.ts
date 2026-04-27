@@ -5,6 +5,7 @@ export type ShareData = {
   profileUrl: string;
   platform?: string;
   milestone?: string;
+  referralPromptId?: string;
 };
 
 const milestoneQuestMap = {

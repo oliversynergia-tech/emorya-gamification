@@ -1,0 +1,2 @@
+ALTER TABLE referrals
+ADD COLUMN IF NOT EXISTS share_prompted_at TIMESTAMPTZ;

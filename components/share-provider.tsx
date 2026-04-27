@@ -31,6 +31,7 @@ export function ShareProvider({
 }) {
   const modal = useShareModal();
   const initialPromptOpenedRef = useRef(false);
+  const referralPromptEndpoint = "/api/referrals/share-prompt" as string;
 
   useEffect(() => {
     if (initialPromptOpenedRef.current || !initialShareData || modal.isOpen) {
@@ -39,6 +40,20 @@ export function ShareProvider({
 
     initialPromptOpenedRef.current = true;
     modal.openShareModal(initialShareData);
+
+    if (initialShareData.milestone === "referral_signup" && initialShareData.referralPromptId) {
+      fetch(referralPromptEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          referralId: initialShareData.referralPromptId,
+        }),
+      }).catch(() => {
+        // Ignore prompt-marking errors so the share prompt still opens.
+      });
+    }
   }, [initialShareData, modal]);
 
   async function handleShare(platform: string) {

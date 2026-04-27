@@ -65,6 +65,10 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
       (update.directTokenReward ?? 0) > Number(referral.annual_direct_token_amount ?? 0)
         ? new Date().toISOString()
         : referral.annual_direct_token_rewarded_at;
+    const sharePromptedAt =
+      update.signupRewardXp > referral.signup_reward_xp
+        ? null
+        : referral.share_prompted_at;
 
     if (update.signupRewardXp > referral.signup_reward_xp) {
       // TODO: Auto-trigger the referral milestone share prompt for the referrer when signup confirmation UX is ready.
@@ -140,6 +144,7 @@ export async function syncReferralRewardsForReferrer(referrerUserId: string) {
       signupRewardedAt,
       conversionRewardedAt,
       annualDirectTokenRewardedAt,
+      sharePromptedAt,
       refereeSubscribed: referral.referee_subscribed,
     });
   }

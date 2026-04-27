@@ -13,6 +13,7 @@ import type { AuthUser } from "@/lib/types";
 import { isAdminUser } from "@/server/auth/admin";
 import { getShareProfileForUser } from "@/server/services/share-profile-service";
 import { getPendingMilestoneSharePromptForUser } from "@/server/services/milestone-share-service";
+import { getPendingReferralSignupSharePromptForUser } from "@/server/services/referral-share-prompt-service";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -36,14 +37,22 @@ export async function SiteShell({
   const showBrandCopy = activeBrandTheme.id === "emorya";
   const canSwitchThemes = await isAdminUser(currentUser);
   const shareProfile = currentUser ? await getShareProfileForUser(currentUser.id) : null;
-  const initialShareData =
+  const [initialReferralShareData, initialMilestoneShareData] =
     currentUser && shareProfile
-      ? await getPendingMilestoneSharePromptForUser({
-          userId: currentUser.id,
-          displayName: shareProfile.displayName,
-          profileUrl: shareProfile.profileUrl,
-        })
-      : null;
+      ? await Promise.all([
+          getPendingReferralSignupSharePromptForUser({
+            userId: currentUser.id,
+            displayName: shareProfile.displayName,
+            profileUrl: shareProfile.profileUrl,
+          }),
+          getPendingMilestoneSharePromptForUser({
+            userId: currentUser.id,
+            displayName: shareProfile.displayName,
+            profileUrl: shareProfile.profileUrl,
+          }),
+        ])
+      : [null, null];
+  const initialShareData = initialReferralShareData ?? initialMilestoneShareData;
   const navItems = [
     { href: "/", label: "Home" },
     ...(currentUser

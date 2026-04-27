@@ -65,7 +65,7 @@ async function getWalletProvider() {
         metadata: {
           name: activeBrandTheme.brand.platformName,
           description: `${activeBrandTheme.brand.platformName} account wallet linking`,
-          url: typeof window !== "undefined" ? window.location.origin : "http://localhost:3000",
+          url: typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL || "",
           icons: [],
         },
       },
