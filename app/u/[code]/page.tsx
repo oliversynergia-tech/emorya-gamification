@@ -44,6 +44,8 @@ export async function generateMetadata({
   }
 
   const description = `${user.displayName} is Level ${user.level} with ${user.totalXp.toLocaleString("en-US")} XP and a ${user.currentStreak}-day streak on Emorya.`;
+  const appUrl = process.env.APP_URL || "https://gravity.emorya.com";
+  const ogImageUrl = `${appUrl}/api/og/${user.referralCode}`;
 
   return {
     title: `${user.displayName} — Level ${user.level} on Emorya`,
@@ -52,12 +54,21 @@ export async function generateMetadata({
       title: `${user.displayName} — Level ${user.level} on Emorya`,
       description,
       type: "profile",
-      url: `${process.env.APP_URL || "https://gravity.emorya.com"}/u/${user.referralCode}`,
+      url: `${appUrl}/u/${user.referralCode}`,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${user.displayName} — Level ${user.level} on Emorya`,
+        },
+      ],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: `${user.displayName} — Level ${user.level} on Emorya`,
       description: `Level ${user.level} · ${user.totalXp.toLocaleString("en-US")} XP · ${user.currentStreak}-day streak`,
+      images: [ogImageUrl],
     },
   };
 }
