@@ -121,6 +121,7 @@ import type { UserProgressState, UserJourneyState } from "@/lib/types";
 
 type UserRow = QueryResultRow & {
   id: string;
+  created_at: string;
   display_name: string;
   attribution_source: string | null;
   level: number;
@@ -371,7 +372,7 @@ async function resolveDashboardUserId(currentUser?: AuthUser | null) {
 
 async function getDashboardUser(userId: string): Promise<UserRow> {
   const userResult = await runQuery<UserRow>(
-    `SELECT id, display_name, attribution_source, level, total_xp, current_streak, subscription_tier, referral_code
+    `SELECT id, created_at::text, display_name, attribution_source, level, total_xp, current_streak, subscription_tier, referral_code
      FROM users
      WHERE id = $1`,
     [userId],
@@ -697,10 +698,12 @@ async function getUserSnapshot(
 
   return {
     userId: user.id,
+    createdAt: user.created_at,
     displayName: user.display_name,
     level: user.level,
     totalXp: user.total_xp,
     currentStreak: user.current_streak,
+    approvedQuestCount: progressState.approvedQuestCount,
     xpMultiplier: getXpTierMultiplier(economySettings, user.subscription_tier, progressState.campaignSource),
     nextLevelXp,
     tier: user.subscription_tier,

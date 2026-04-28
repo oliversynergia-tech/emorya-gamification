@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 
+import { OnboardingHint } from "@/components/onboarding-hint";
+import { onboardingHints } from "@/lib/onboarding-hints";
 import type { DashboardData, Quest, QuestProgressUpdate, QuestStatus } from "@/lib/types";
 import { DashboardSnapshot, QuestBoardSection } from "@/components/sections";
 import { QuestActionsPanel } from "@/components/quest-actions-panel";
@@ -228,10 +230,14 @@ function updateCampaignPackHistory(
 export function DashboardExperience({
   initialData,
   isAuthenticated,
+  isNewUser,
+  userId,
   walletAddresses = [],
 }: {
   initialData: DashboardData;
   isAuthenticated: boolean;
+  isNewUser: boolean;
+  userId: string;
   walletAddresses?: string[];
 }) {
   const [data, setData] = useState(initialData);
@@ -347,8 +353,25 @@ export function DashboardExperience({
 
   return (
     <>
+      <OnboardingHint
+        hintKey={onboardingHints.dashboard.hintKey}
+        title={onboardingHints.dashboard.title}
+        body={onboardingHints.dashboard.body}
+        secondaryAction={onboardingHints.dashboard.secondaryAction}
+        isNewUser={isNewUser}
+        userId={userId}
+      />
+      {data.user.approvedQuestCount === 1 ? (
+        <OnboardingHint
+          hintKey={onboardingHints.firstQuestComplete.hintKey}
+          title={onboardingHints.firstQuestComplete.title}
+          body={onboardingHints.firstQuestComplete.body}
+          isNewUser={isNewUser}
+          userId={userId}
+        />
+      ) : null}
       <DashboardSnapshot data={filteredData} missionView={missionView} />
-      <QuestBoardSection data={filteredData} />
+      <QuestBoardSection data={filteredData} isNewUser={isNewUser} userId={userId} />
       <QuestActionsPanel
         quests={filteredData.quests}
         isAuthenticated={isAuthenticated}

@@ -3962,3 +3962,66 @@ body[data-brand-theme="xportal"] .button--primary {
     font-size: clamp(2rem, 12vw, 2.8rem);
   }
 }
+
+.onboarding-hint {
+  margin-bottom: 20px;
+  border-left: 3px solid var(--theme-accent, #7b61ff);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--panel) 88%, var(--theme-accent, #7b61ff) 12%);
+  box-shadow: var(--shadow-soft);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.onboarding-hint--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.onboarding-hint__content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 20px;
+}
+
+.onboarding-hint__copy {
+  display: grid;
+  gap: 8px;
+}
+
+.onboarding-hint__copy strong {
+  font-size: 0.98rem;
+}
+
+.onboarding-hint__copy p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 68ch;
+}
+
+.onboarding-hint__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.onboarding-hint__secondary,
+.onboarding-hint__primary {
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .onboarding-hint__content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .onboarding-hint__actions {
+    justify-content: flex-start;
+  }
+}

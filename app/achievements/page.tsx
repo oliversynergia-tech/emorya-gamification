@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 
+import { OnboardingHint } from "@/components/onboarding-hint";
 import { AchievementsHubSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
+import { onboardingHints, onboardingHintWindowMs } from "@/lib/onboarding-hints";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -19,9 +21,19 @@ export default async function AchievementsPage() {
   const nextAchievement = data.achievements
     .filter((achievement) => !achievement.unlocked)
     .sort((left, right) => right.progress - left.progress)[0];
+  const isNewUser =
+    Number.isFinite(Date.parse(data.user.createdAt)) &&
+    Date.parse(data.user.createdAt) > Date.now() - onboardingHintWindowMs;
 
   return (
     <SiteShell eyebrow="Achievements" currentUser={session.user}>
+      <OnboardingHint
+        hintKey={onboardingHints.achievements.hintKey}
+        title={onboardingHints.achievements.title}
+        body={onboardingHints.achievements.body}
+        isNewUser={isNewUser}
+        userId={data.user.userId}
+      />
       <section className="page-hero page-hero--achievements">
         <div className="panel panel--hero panel--hero-compact page-hero__single">
           <p className="eyebrow">Achievements</p>

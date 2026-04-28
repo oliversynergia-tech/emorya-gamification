@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 
+import { OnboardingHint } from "@/components/onboarding-hint";
 import { MissionLink } from "@/components/mission-link";
 import { LeaderboardSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
 import { Tooltip } from "@/components/tooltip";
 import { emptyStates } from "@/lib/empty-state-content";
+import { onboardingHints, onboardingHintWindowMs } from "@/lib/onboarding-hints";
 import { tooltips } from "@/lib/tooltip-content";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
@@ -25,9 +27,19 @@ export default async function LeaderboardPage() {
   const weeklyProgressRemaining = data.user.weeklyProgress.nextThreshold
     ? Math.max(data.user.weeklyProgress.nextThreshold - data.user.weeklyProgress.xp, 0)
     : 0;
+  const isNewUser =
+    Number.isFinite(Date.parse(data.user.createdAt)) &&
+    Date.parse(data.user.createdAt) > Date.now() - onboardingHintWindowMs;
 
   return (
     <SiteShell eyebrow="Leaderboard" currentUser={session.user}>
+      <OnboardingHint
+        hintKey={onboardingHints.leaderboard.hintKey}
+        title={onboardingHints.leaderboard.title}
+        body={onboardingHints.leaderboard.body}
+        isNewUser={isNewUser}
+        userId={data.user.userId}
+      />
       <section className="page-hero page-hero--leaderboard">
         <div className="panel panel--hero panel--hero-compact">
           <p className="eyebrow">Leaderboard</p>

@@ -4,8 +4,10 @@ import {
   getCampaignPremiumOffer,
 } from "@/lib/campaign-source";
 import { EmptyState } from "@/components/empty-state";
+import { OnboardingHint } from "@/components/onboarding-hint";
 import { Tooltip } from "@/components/tooltip";
 import { emptyStates } from "@/lib/empty-state-content";
+import { onboardingHints } from "@/lib/onboarding-hints";
 import { getQuestDisplayStatusMessage } from "@/lib/quest-help-content";
 import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
@@ -1081,7 +1083,15 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
   );
 }
 
-export function QuestBoardSection({ data }: { data: DashboardData }) {
+export function QuestBoardSection({
+  data,
+  isNewUser = false,
+  userId,
+}: {
+  data: DashboardData;
+  isNewUser?: boolean;
+  userId?: string;
+}) {
   const activeQuests = data.quests.filter((quest) => quest.status !== "locked");
   const lockedPreviews = data.quests.filter((quest) => quest.status === "locked");
   const visibleDailyQuests = data.quests.filter((quest) => quest.cadence === "daily" && quest.status !== "locked");
@@ -1096,6 +1106,13 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
 
   return (
     <section className="panel" id="quest-board" role="region" aria-labelledby="quest-board-title">
+      <OnboardingHint
+        hintKey={onboardingHints.questBoard.hintKey}
+        title={onboardingHints.questBoard.title}
+        body={onboardingHints.questBoard.body}
+        isNewUser={isNewUser}
+        userId={userId}
+      />
       <div className="panel__header">
         <div>
           <p className="eyebrow">Quest board</p>

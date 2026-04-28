@@ -269,10 +269,12 @@ export type Achievement = {
 
 export type UserSnapshot = {
   userId: string;
+  createdAt: string;
   displayName: string;
   level: number;
   totalXp: number;
   currentStreak: number;
+  approvedQuestCount: number;
   xpMultiplier: number;
   nextLevelXp: number;
   tier: SubscriptionTier;

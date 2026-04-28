@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 
+import { OnboardingHint } from "@/components/onboarding-hint";
 import { PublicProfileShareButton } from "@/components/public-profile-share-button";
 import { ProfileEditor } from "@/components/profile-editor";
 import { ProfileSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
 import { Tooltip } from "@/components/tooltip";
+import { onboardingHints, onboardingHintWindowMs } from "@/lib/onboarding-hints";
 import { tooltips } from "@/lib/tooltip-content";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
 import { getActiveBrandTheme } from "@/lib/brand-themes";
@@ -39,9 +41,20 @@ export default async function ProfilePage() {
       : `Connect ${brandCopy.walletProduct} when you are ready to unlock more quests and features.`;
   const appUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://gravity.emorya.com").replace(/\/$/, "");
   const publicProfileUrl = `${appUrl}/u/${data.user.referralCode}`;
+  const isNewUser =
+    Number.isFinite(Date.parse(data.user.createdAt)) &&
+    Date.parse(data.user.createdAt) > Date.now() - onboardingHintWindowMs;
 
   return (
     <SiteShell eyebrow="Profile" currentUser={session.user}>
+      {/* TODO: Wire the profile onboarding hint secondary action into the share modal once this page has a client-side bridge for useShare. */}
+      <OnboardingHint
+        hintKey={onboardingHints.profile.hintKey}
+        title={onboardingHints.profile.title}
+        body={onboardingHints.profile.body}
+        isNewUser={isNewUser}
+        userId={data.user.userId}
+      />
       <section className="page-hero page-hero--profile">
         <div className="panel panel--hero panel--hero-compact">
           <p className="eyebrow">Profile</p>
