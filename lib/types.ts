@@ -33,6 +33,7 @@ export type VerificationType =
   | "quiz"
   | "manual-review"
   | "link-visit"
+  | "completion-check"
   | "api-check"
   | "text-submission";
 

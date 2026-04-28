@@ -1884,7 +1884,7 @@ export function QuestDefinitionManagementPanel({
         <label className="field">
           <span>Verification</span>
           <select value={form.verificationType} onChange={(event) => setForm((current) => ({ ...current, verificationType: event.target.value }))}>
-            {["wallet-check", "quiz", "manual-review", "link-visit", "api-check", "text-submission"].map((value) => (
+            {["wallet-check", "quiz", "manual-review", "link-visit", "completion-check", "api-check", "text-submission"].map((value) => (
               <option key={value} value={value}>{value}</option>
             ))}
           </select>

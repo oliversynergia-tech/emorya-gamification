@@ -34,6 +34,7 @@ import {
   upsertQuestCompletionForUser,
   userCanAccessQuest,
 } from "@/server/repositories/quest-repository";
+import { getUserProgressState } from "@/server/services/user-progress-state";
 
 function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -216,6 +217,62 @@ export async function submitQuest({
       outcome: "approved" as const,
       progressUpdate,
       message: "Link visit recorded.",
+    };
+  }
+
+  if (quest.verification_type === "completion-check") {
+    const completionCheckSlugs = Array.isArray(quest.metadata.completionCheckSlugs)
+      ? quest.metadata.completionCheckSlugs
+          .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+          .map((value) => value.trim())
+      : [];
+
+    if (completionCheckSlugs.length === 0) {
+      throw new Error("Completion-check quests require completionCheckSlugs metadata.");
+    }
+
+    const progressState = await getUserProgressState(currentUser.id);
+    const completedQuestSlugs = new Set(progressState.completedQuestSlugs);
+    const missingSlugs = completionCheckSlugs.filter((slug) => !completedQuestSlugs.has(slug));
+
+    if (missingSlugs.length > 0) {
+      const missingQuestDefinitions = await Promise.all(
+        missingSlugs.map((slug) => getQuestDefinitionBySlug(slug)),
+      );
+      const missingQuestTitles = missingQuestDefinitions.map((item, index) => item?.title ?? missingSlugs[index]);
+
+      throw new Error(`You still need to finish: ${missingQuestTitles.join(", ")}.`);
+    }
+
+    const completion = await upsertQuestCompletionForUser({
+      userId: currentUser.id,
+      questId,
+      status: "approved",
+      awardedXp: existingCompletion?.awardedXp ?? 0,
+      reviewedBy: currentUser.id,
+      completedAt: submittedAt,
+      submissionData: {
+        completionCheckSlugs,
+        verified: true,
+        submittedAt,
+      },
+    });
+
+    const progressUpdate = await applyQuestRewardTransition({
+      userId: currentUser.id,
+      completionId: completion.id,
+      questId,
+      questTitle: quest.title,
+      questXpReward: quest.xp_reward,
+      previousAwardedXp: existingCompletion?.awardedXp ?? 0,
+      shouldBeApproved: true,
+    });
+
+    return {
+      completion,
+      outcome: "approved" as const,
+      progressUpdate,
+      message: "Activation confirmed.",
     };
   }
 

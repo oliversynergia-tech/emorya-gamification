@@ -3,6 +3,8 @@ import type { Quest, QuestCadence, QuestUnlockRequirement, VerificationType } fr
 export const questHowToComplete: Record<string, string> = {
   "link-visit":
     "Tap the button to open the link. Once the page loads, the quest completes automatically. No submission needed.",
+  "completion-check":
+    "Tap confirm to let the platform verify your completed activation steps automatically. If every required quest has already been approved, this quest completes immediately.",
   "manual-review":
     "Complete the action described above, then submit your proof. This could be a screenshot, a link, or whatever the quest asks for. The team will review your submission, usually within 24 hours. You'll get a notification when it's approved or if anything needs fixing.",
   quiz:
@@ -222,6 +224,10 @@ export function getPostSubmissionMessage(
   },
 ) {
   if (quest.verificationType === "link-visit") {
+    return postSubmissionMessages.linkVisitCompleted;
+  }
+
+  if (quest.verificationType === "completion-check") {
     return postSubmissionMessages.linkVisitCompleted;
   }
 

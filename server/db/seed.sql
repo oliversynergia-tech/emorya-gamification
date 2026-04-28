@@ -571,7 +571,7 @@ INSERT INTO quest_definitions (
     3,
     FALSE,
     TRUE,
-    '{"track":"referral","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/referral-invite","_urlNote":"PENDING: Should link to the referral code sharing screen in the Emorya app or gamification platform.","unlockRules":{"all":[{"type":"min_level","value":3}]},"rewardConfig":{"xp":{"base":80,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
+    '{"track":"referral","targetUrl":"/profile","unlockRules":{"all":[{"type":"min_level","value":3}]},"rewardConfig":{"xp":{"base":80,"premiumMultiplierEligible":true},"tokenEffect":"none"}}'::jsonb
   ),
   (
     '0baa67a0-0d57-42fd-87e5-d77052986842',
@@ -587,7 +587,7 @@ INSERT INTO quest_definitions (
     4,
     FALSE,
     TRUE,
-    '{"track":"referral","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/referral-conversion","_urlNote":"PENDING: Should link to the referral tracking screen showing referred user status.","unlockRules":{"all":[{"type":"min_level","value":4},{"type":"successful_referrals","value":1}]},"rewardConfig":{"xp":{"base":180,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":40}}}'::jsonb
+    '{"track":"referral","targetUrl":"/profile","unlockRules":{"all":[{"type":"min_level","value":4},{"type":"successful_referrals","value":1}]},"rewardConfig":{"xp":{"base":180,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":40}}}'::jsonb
   ),
   (
     'b4b72ae9-9f73-4a15-8cb5-25bd096cd65d',
@@ -741,13 +741,13 @@ INSERT INTO quest_definitions (
     'app',
     750,
     'medium',
-    'link-visit',
+    'completion-check',
     'one-time',
     'free',
     3,
     FALSE,
     TRUE,
-    '{"track":"starter","targetUrl":"https://PENDING-DEV-INPUT.emorya.com/activation-complete","_urlNote":"PENDING: Need Emorya app deep link or gamification platform URL for activation completion confirmation.","unlockRules":{"all":[{"type":"min_level","value":3},{"type":"quest_completed","value":"convert-your-first-calories"}]},"rewardConfig":{"xp":{"base":750,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":60}},"previewConfig":{"label":"Activation complete"}}'::jsonb
+    '{"track":"starter","ctaLabel":"Confirm Activation","completionCheckSlugs":["download-the-emorya-app","open-the-app-for-the-first-time","create-emorya-account","complete-your-profile","confirm-your-starter-setup","complete-daily-wheel-spin","play-emoryan-adventure-game","download-xportal","open-or-create-your-xportal-wallet","connect-your-xportal-wallet","view-your-emrs-reward-path","convert-your-first-calories"],"unlockRules":{"all":[{"type":"min_level","value":3},{"type":"quest_completed","value":"convert-your-first-calories"}]},"rewardConfig":{"xp":{"base":750,"premiumMultiplierEligible":true},"tokenEffect":"eligibility_progress","tokenEligibility":{"progressPoints":60}},"previewConfig":{"label":"Activation complete"}}'::jsonb
   ),
   (
     '2f675c6a-8d50-4136-8534-7aec49f5dc94',

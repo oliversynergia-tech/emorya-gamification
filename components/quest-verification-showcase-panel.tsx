@@ -4,6 +4,7 @@ type AvailableVerificationType = Exclude<VerificationType, "social-oauth">;
 
 const verificationOrder: AvailableVerificationType[] = [
   "link-visit",
+  "completion-check",
   "manual-review",
   "text-submission",
   "quiz",
@@ -23,6 +24,11 @@ const verificationProfiles: Record<
     label: "Link visit",
     summary: "Fast outbound quests that send users straight to a destination and optionally ask for follow-up proof.",
     bestFor: "Landing pages, app downloads, docs, wallet setup guides, and partner handoff flows.",
+  },
+  "completion-check": {
+    label: "Completion check",
+    summary: "Internal state checks that auto-complete once the required quest chain or criteria has already been satisfied.",
+    bestFor: "Activation ladders, bundled milestones, and aggregate progress confirmations inside the platform.",
   },
   "manual-review": {
     label: "Manual review",

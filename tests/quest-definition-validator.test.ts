@@ -6,6 +6,7 @@ import { validateQuestDefinitionRow } from "../scripts/quest-definition-validato
 test("validateQuestDefinitionRow accepts structured quest metadata", () => {
   const errors = validateQuestDefinitionRow({
     slug: "connect-xportal",
+    verification_type: "wallet-check",
     xp_reward: 75,
     metadata: {
       track: "wallet",

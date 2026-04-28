@@ -3,6 +3,7 @@ export const supportedLiveQuestVerificationTypes = [
   "quiz",
   "manual-review",
   "link-visit",
+  "completion-check",
   "api-check",
   "text-submission",
 ] as const;

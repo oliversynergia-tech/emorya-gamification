@@ -2272,7 +2272,9 @@ async function getUserCampaignPackJourneys({
         cadence: row.recurrence,
         verificationType: row.verification_type,
         status,
-        actionable: ["quiz", "manual-review", "link-visit", "wallet-check", "api-check", "text-submission"].includes(row.verification_type),
+        actionable: ["quiz", "manual-review", "link-visit", "completion-check", "wallet-check", "api-check", "text-submission"].includes(
+          row.verification_type,
+        ),
         nextHint:
           status === "completed"
             ? "This quest step is already banked."
@@ -2311,7 +2313,9 @@ async function getUserCampaignPackJourneys({
         }),
         dependencyProgressLabel: getQuestDependencyProgressLabel(
           index,
-          ["quiz", "manual-review", "link-visit", "wallet-check", "api-check", "text-submission"].includes(row.verification_type),
+          ["quiz", "manual-review", "link-visit", "completion-check", "wallet-check", "api-check", "text-submission"].includes(
+            row.verification_type,
+          ),
           status,
         ),
         rewardTimingLabel:

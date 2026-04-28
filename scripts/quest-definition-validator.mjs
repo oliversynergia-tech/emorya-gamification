@@ -40,8 +40,23 @@ const allowedUnlockRuleTypes = new Set([
   "runtime_flag",
 ]);
 
+const allowedVerificationTypes = new Set([
+  "social-oauth",
+  "wallet-check",
+  "quiz",
+  "manual-review",
+  "link-visit",
+  "completion-check",
+  "api-check",
+  "text-submission",
+]);
+
 function isRecord(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function getVerificationType(row) {
+  return String(row.verification_type ?? row.verificationType ?? "");
 }
 
 function validateRewardConfig(slug, rewardConfig, xpReward, errors) {
@@ -88,6 +103,16 @@ function validateRewardConfig(slug, rewardConfig, xpReward, errors) {
   }
 }
 
+function validateCompletionCheck(slug, row, errors) {
+  if (getVerificationType(row) !== "completion-check") {
+    return;
+  }
+
+  if (!Array.isArray(row.metadata.completionCheckSlugs) || row.metadata.completionCheckSlugs.length === 0) {
+    errors.push(`${slug}: completion-check quests must include metadata.completionCheckSlugs with at least one quest slug.`);
+  }
+}
+
 function validateUnlockRuleGroup(slug, unlockRules, errors) {
   if (!isRecord(unlockRules)) {
     errors.push(`${slug}: metadata.unlockRules must be an object.`);
@@ -118,7 +143,7 @@ function validateUnlockRuleGroup(slug, unlockRules, errors) {
 }
 
 function validateQuizQuestions(slug, metadata, row, errors) {
-  if (row.verification_type !== "quiz") {
+  if (getVerificationType(row) !== "quiz") {
     return;
   }
 
@@ -173,6 +198,10 @@ export function validateQuestDefinitionRow(row) {
     errors.push(`${slug}: metadata.track is required and must be a supported quest track.`);
   }
 
+  if (!allowedVerificationTypes.has(getVerificationType(row))) {
+    errors.push(`${slug}: verification_type must be a supported verification lane.`);
+  }
+
   if (!isRecord(metadata.rewardConfig)) {
     errors.push(`${slug}: metadata.rewardConfig is required.`);
   } else {
@@ -197,6 +226,7 @@ export function validateQuestDefinitionRow(row) {
   }
 
   validateQuizQuestions(slug, metadata, row, errors);
+  validateCompletionCheck(slug, row, errors);
 
   return errors;
 }

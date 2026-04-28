@@ -256,7 +256,7 @@ export function createDbToolContext(rootDir) {
   async function validateQuests() {
     await withClient(async (client) => {
       const result = await client.query(
-        `SELECT slug, xp_reward, metadata
+        `SELECT slug, verification_type, xp_reward, metadata
          FROM quest_definitions
          WHERE is_active = TRUE
          ORDER BY slug ASC`,

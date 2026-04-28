@@ -71,6 +71,8 @@ function getVerificationTooltipKey(verificationType: VerificationType): TooltipK
       return "verificationLinkVisit";
     case "manual-review":
       return "verificationManualReview";
+    case "completion-check":
+      return "verificationLinkVisit";
     case "quiz":
       return "verificationQuiz";
     case "wallet-check":
@@ -260,7 +262,7 @@ export function QuestActionsPanel({
   const actionableQuests = useMemo(
     () =>
       quests.filter((quest) =>
-        ["quiz", "manual-review", "link-visit", "wallet-check", "api-check", "text-submission"].includes(quest.verificationType),
+        ["quiz", "manual-review", "link-visit", "completion-check", "wallet-check", "api-check", "text-submission"].includes(quest.verificationType),
       ).sort((left, right) => {
         if (highlightedQuestId && left.id === highlightedQuestId) {
           return -1;
@@ -700,6 +702,14 @@ export function QuestActionsPanel({
       {
         targetUrl: quest.targetUrl ?? "",
       },
+      () => getPostSubmissionMessage(quest, { success: true }),
+    );
+  }
+
+  function handleCompletionCheck(quest: Quest) {
+    void submitQuest(
+      quest,
+      {},
       () => getPostSubmissionMessage(quest, { success: true }),
     );
   }
@@ -1164,6 +1174,20 @@ export function QuestActionsPanel({
                     aria-label={`Record ${quest.ctaLabel?.toLowerCase() ?? "visit"} for ${quest.title}`}
                   >
                     {pending ? "Submitting..." : `Record ${quest.ctaLabel?.toLowerCase() ?? "visit"}`}
+                  </button>
+                </div>
+              ) : null}
+              {quest.verificationType === "completion-check" ? (
+                <div className="form-stack">
+                  <p className="form-note">{howToText}</p>
+                  <button
+                    className="button button--primary"
+                    type="button"
+                    onClick={() => handleCompletionCheck(quest)}
+                    disabled={disabled || pending}
+                    aria-label={`Confirm activation progress for ${quest.title}`}
+                  >
+                    {pending ? "Checking..." : quest.ctaLabel ?? "Confirm Activation"}
                   </button>
                 </div>
               ) : null}

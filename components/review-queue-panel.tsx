@@ -152,6 +152,19 @@ function renderSubmissionSummary(verificationType: string, submissionData: Recor
     ) : null;
   }
 
+  if (verificationType === "completion-check") {
+    return (
+      <div className="form-stack">
+        <p className="form-note">Verified internally against the required activation quest completions.</p>
+        {Array.isArray(submissionData.completionCheckSlugs) && submissionData.completionCheckSlugs.length > 0 ? (
+          <p className="form-note">
+            Checked slugs: {submissionData.completionCheckSlugs.map((slug) => String(slug)).join(", ")}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
   if (verificationType === "wallet-check") {
     return (
       <div className="review-history__meta">

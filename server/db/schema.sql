@@ -8,6 +8,7 @@ CREATE TYPE verification_type AS ENUM (
   'quiz',
   'manual-review',
   'link-visit',
+  'completion-check',
   'api-check',
   'text-submission'
 );
