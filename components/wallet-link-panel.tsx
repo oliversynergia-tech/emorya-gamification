@@ -7,8 +7,12 @@ import { Message } from "@multiversx/sdk-core/out/core/message";
 import { WalletConnectV2Provider } from "@multiversx/sdk-wallet-connect-provider";
 import QRCode from "qrcode";
 
+import { EmptyState } from "@/components/empty-state";
+import { Tooltip } from "@/components/tooltip";
 import { defaultBrandThemeId, getBrandTheme } from "@/lib/brand-themes";
 import { getBrandCopyProfile } from "@/lib/brand-copy";
+import { emptyStates } from "@/lib/empty-state-content";
+import { tooltips } from "@/lib/tooltip-content";
 
 type WalletLinkPanelProps = {
   walletAddresses: string[];
@@ -371,9 +375,18 @@ export function WalletLinkPanel({
             </div>
           ))
         ) : (
-          <p className="form-note">No wallet linked yet.</p>
+          <EmptyState
+            title={emptyStates.walletNotConnected.title}
+            message={emptyStates.walletNotConnected.message}
+          />
         )}
       </div>
+      <p className="form-note">
+        <span className="label-with-tooltip">
+          <span>Wallet connection status</span>
+          <Tooltip text={walletAddresses.length > 0 ? tooltips.walletConnected : tooltips.walletNotConnected} />
+        </span>
+      </p>
       <form className="form-stack" onSubmit={requestChallenge}>
         <label className="field">
           <span>Wallet address</span>

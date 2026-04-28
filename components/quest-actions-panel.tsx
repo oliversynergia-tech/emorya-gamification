@@ -1,11 +1,21 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 
 import { useShare } from "@/components/share-provider";
-import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
+import { Tooltip } from "@/components/tooltip";
+import {
+  getPostSubmissionMessage,
+  getQuestDisplayStatusMessage,
+  getQuestHowToComplete,
+  getSubmissionGuidance,
+} from "@/lib/quest-help-content";
+import { getTokenEffectLabel } from "@/lib/progression-rules";
+import { getQuestStatusLabel } from "@/lib/quest-state";
 import { getSharePreset } from "@/lib/share-presets";
-import type { DashboardData, Quest, QuestProgressUpdate } from "@/lib/types";
+import { tooltips, type TooltipKey } from "@/lib/tooltip-content";
+import type { DashboardData, Quest, QuestCadence, QuestProgressUpdate, QuestStatus, VerificationType } from "@/lib/types";
 
 type SubmissionState = Record<string, string>;
 type ProofFileState = Record<string, File | null>;
@@ -28,6 +38,77 @@ type QuizAttemptState = Record<
     passScore: number;
   }
 >;
+
+function getQuestStatusTooltipKey(status: QuestStatus, cadence?: QuestCadence): TooltipKey {
+  switch (status) {
+    case "available":
+      return "questStatusAvailable";
+    case "locked":
+      return "questStatusLocked";
+    case "in-progress":
+      return "questStatusPendingReview";
+    case "rejected":
+      return "questStatusRejected";
+    case "completed":
+      if (cadence === "daily") {
+        return "questStatusResetsDaily";
+      }
+      if (cadence === "weekly") {
+        return "questStatusResetsWeekly";
+      }
+      if (cadence === "monthly") {
+        return "questStatusResetsMonthly";
+      }
+      return "questStatusCompletedOneTime";
+    default:
+      return "questStatusAvailable";
+  }
+}
+
+function getVerificationTooltipKey(verificationType: VerificationType): TooltipKey {
+  switch (verificationType) {
+    case "link-visit":
+      return "verificationLinkVisit";
+    case "manual-review":
+      return "verificationManualReview";
+    case "quiz":
+      return "verificationQuiz";
+    case "wallet-check":
+      return "verificationWalletCheck";
+    case "text-submission":
+      return "verificationTextSubmission";
+    case "api-check":
+      return "verificationApiCheck";
+    default:
+      return "verificationLinkVisit";
+  }
+}
+
+function getDifficultyTooltipKey(difficulty: Quest["difficulty"]): TooltipKey {
+  switch (difficulty) {
+    case "easy":
+      return "difficultyEasy";
+    case "medium":
+      return "difficultyMedium";
+    case "hard":
+      return "difficultyHard";
+    default:
+      return "difficultyEasy";
+  }
+}
+
+function getRecurrenceTooltipKey(cadence?: QuestCadence): TooltipKey | null {
+  switch (cadence) {
+    case "daily":
+      return "questStatusResetsDaily";
+    case "weekly":
+      return "questStatusResetsWeekly";
+    case "monthly":
+      return "questStatusResetsMonthly";
+    default:
+      return null;
+  }
+}
 
 function getQuestMilestoneCelebration(quest: MilestoneQuestSummary | null, progressUpdate: QuestProgressUpdate | null) {
   if (!quest || !progressUpdate || !quest.slug) {
@@ -208,6 +289,7 @@ export function QuestActionsPanel({
   const [pendingQuestId, setPendingQuestId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [expandedHelp, setExpandedHelp] = useState<Record<string, boolean>>({});
   const [progressUpdate, setProgressUpdate] = useState<QuestProgressUpdate | null>(null);
   const [progressQuest, setProgressQuest] = useState<Pick<Quest, "slug" | "title"> | null>(null);
   const [progressQuestTitle, setProgressQuestTitle] = useState<string | null>(null);
@@ -295,7 +377,10 @@ export function QuestActionsPanel({
   async function submitQuest(
     quest: Quest,
     payload: Record<string, unknown>,
-    successMessage: string,
+    resolveMessage?: (result: {
+      outcome?: "approved" | "pending" | "rejected";
+      progressUpdate?: QuestProgressUpdate | null;
+    }) => string,
   ) {
     setPendingQuestId(quest.id);
     setMessage(null);
@@ -340,7 +425,7 @@ export function QuestActionsPanel({
         return;
       }
 
-      setMessage(result.message ?? successMessage);
+      setMessage(resolveMessage ? resolveMessage(result) : result.message ?? getPostSubmissionMessage(quest, {}));
       setProgressUpdate(result.progressUpdate ?? null);
       setProgressQuest(result.progressUpdate ? { slug: quest.slug, title: quest.title } : null);
       setProgressQuestTitle(result.progressUpdate ? quest.title : null);
@@ -455,7 +540,12 @@ export function QuestActionsPanel({
         {
           answersCorrect,
         },
-        `Quiz passed with ${answersCorrect}/${totalQuestions}.`,
+        () =>
+          getPostSubmissionMessage(quest, {
+            passed: true,
+            score: answersCorrect,
+            total: totalQuestions,
+          }),
       );
       return;
     }
@@ -465,7 +555,6 @@ export function QuestActionsPanel({
       {
         answersCorrect: answersCorrect[quest.id] ?? "",
       },
-      "Quiz submitted.",
     );
   }
 
@@ -601,7 +690,6 @@ export function QuestActionsPanel({
           note: notes[quest.id] ?? "",
           taskSubmissions,
         },
-        "Submitted for review.",
       );
     })();
   }
@@ -612,7 +700,7 @@ export function QuestActionsPanel({
       {
         targetUrl: quest.targetUrl ?? "",
       },
-      "Visit recorded.",
+      () => getPostSubmissionMessage(quest, { success: true }),
     );
   }
 
@@ -622,7 +710,7 @@ export function QuestActionsPanel({
       {
         walletAddress: walletSelections[quest.id] ?? "",
       },
-      "Wallet quest submitted.",
+      () => getPostSubmissionMessage(quest, { success: true }),
     );
   }
 
@@ -635,7 +723,10 @@ export function QuestActionsPanel({
         platform: platforms[quest.id] ?? "",
         note: notes[quest.id] ?? "",
       },
-      "Verification submitted.",
+      (result) =>
+        getPostSubmissionMessage(quest, {
+          verified: result.outcome === "approved",
+        }),
     );
   }
 
@@ -648,7 +739,6 @@ export function QuestActionsPanel({
         referenceUrl: contentUrls[quest.id] ?? "",
         platform: platforms[quest.id] ?? "",
       },
-      "Text submission sent.",
     );
   }
 
@@ -667,6 +757,10 @@ export function QuestActionsPanel({
         {actionableQuests.map((quest) => {
           const disabled = !isAuthenticated || quest.status === "locked" || quest.status === "completed";
           const pending = pendingQuestId === quest.id;
+          const recurrenceTooltipKey = getRecurrenceTooltipKey(quest.cadence);
+          const submissionGuidance = getSubmissionGuidance(quest);
+          const howToText = getQuestHowToComplete(quest);
+          const isHelpExpanded = expandedHelp[quest.id] ?? false;
 
           return (
             <article
@@ -675,11 +769,76 @@ export function QuestActionsPanel({
               className={`quest-action-card quest-card--state-${quest.status} ${highlightedQuestId === quest.id ? "quest-action-card--highlighted" : ""}`}
             >
               <div className="quest-card__meta">
-                <span>{quest.verificationType}</span>
-                <span>{getQuestStatusLabel(quest.status)}</span>
+                <span className="label-with-tooltip">
+                  <span>{quest.verificationType}</span>
+                  <Tooltip text={tooltips[getVerificationTooltipKey(quest.verificationType)]} />
+                </span>
+                <span className="label-with-tooltip">
+                  <span>{getQuestStatusLabel(quest.status)}</span>
+                  <Tooltip text={tooltips[getQuestStatusTooltipKey(quest.status, quest.cadence)]} />
+                </span>
+                <span className="label-with-tooltip">
+                  <span>{quest.difficulty}</span>
+                  <Tooltip text={tooltips[getDifficultyTooltipKey(quest.difficulty)]} />
+                </span>
               </div>
               <h4>{quest.title}</h4>
               <p>{quest.description}</p>
+              <div className="quest-help-disclosure">
+                <button
+                  className="quest-help-disclosure__toggle"
+                  type="button"
+                  aria-expanded={isHelpExpanded}
+                  aria-controls={`quest-help-${quest.id}`}
+                  onClick={() =>
+                    setExpandedHelp((current) => ({
+                      ...current,
+                      [quest.id]: !isHelpExpanded,
+                    }))
+                  }
+                >
+                  <span>How to complete</span>
+                  <span aria-hidden="true">{isHelpExpanded ? "▾" : "▸"}</span>
+                </button>
+                {isHelpExpanded ? (
+                  <p id={`quest-help-${quest.id}`} className="quest-help-disclosure__body">
+                    {howToText}
+                  </p>
+                ) : null}
+              </div>
+              <p className="form-note">
+                <span className="label-with-tooltip">
+                  <span>{quest.xpReward} XP</span>
+                  <Tooltip text={tooltips.xp} />
+                </span>
+                {quest.tokenEffect && quest.tokenEffect !== "none" ? (
+                  <>
+                    {" · "}
+                    <span className="label-with-tooltip">
+                      <span>{getTokenEffectLabel(quest)}</span>
+                      <Tooltip text={tooltips.eligibilityPoints} />
+                    </span>
+                  </>
+                ) : null}
+                {quest.premiumPreview ? (
+                  <>
+                    {" · "}
+                    <span className="label-with-tooltip">
+                      <span>Premium preview</span>
+                      <Tooltip text={tooltips.premiumPreview} />
+                    </span>
+                  </>
+                ) : null}
+                {recurrenceTooltipKey ? (
+                  <>
+                    {" · "}
+                    <span className="label-with-tooltip">
+                      <span>{quest.cadence}</span>
+                      <Tooltip text={tooltips[recurrenceTooltipKey]} />
+                    </span>
+                  </>
+                ) : null}
+              </p>
               {quest.platformLabel || quest.proofType ? (
                 <p className="form-note">
                   {quest.platformLabel ? `${quest.platformLabel}` : "Custom quest"}
@@ -698,7 +857,14 @@ export function QuestActionsPanel({
                   </ul>
                 </div>
               ) : null}
-              <small className="quest-card__note">{getQuestStatusNote(quest.status)}</small>
+              <div className="form-stack">
+                <small className="quest-card__note">{getQuestDisplayStatusMessage(quest)}</small>
+                {quest.status === "rejected" ? (
+                  <p className="form-note">
+                    Need help? <Link href="/faq">See our FAQ</Link>.
+                  </p>
+                ) : null}
+              </div>
               {quest.targetUrl || quest.helpUrl || quest.verificationReferenceUrl ? (
                 <div className="form-stack">
                   {quest.targetUrl ? (
@@ -771,6 +937,7 @@ export function QuestActionsPanel({
               ) : null}
               {quest.verificationType === "quiz" ? (
                 <form className="form-stack" onSubmit={(event) => handleQuizSubmit(event, quest)}>
+                  <p className="form-note">{howToText}</p>
                   {quest.questions?.length ? (
                     <>
                       <div className="quiz-stack" role="group" aria-label={`${quest.title} quiz questions`}>
@@ -814,8 +981,11 @@ export function QuestActionsPanel({
                       {quizAttemptResults[quest.id] ? (
                         <div className="status status--warning" role="status" aria-live="polite">
                           <p>
-                            You scored {quizAttemptResults[quest.id].answersCorrect}/{quizAttemptResults[quest.id].totalQuestions}. You need{" "}
-                            {quizAttemptResults[quest.id].passScore} to pass. Try again.
+                            {getPostSubmissionMessage(quest, {
+                              passed: false,
+                              score: quizAttemptResults[quest.id].answersCorrect,
+                              total: quizAttemptResults[quest.id].totalQuestions,
+                            })}
                           </p>
                           <button
                             className="button button--secondary button--small"
@@ -863,6 +1033,7 @@ export function QuestActionsPanel({
               ) : null}
               {quest.verificationType === "manual-review" ? (
                 <form className="form-stack" onSubmit={(event) => handleManualSubmit(event, quest)}>
+                  {submissionGuidance ? <p className="form-note">{submissionGuidance}</p> : null}
                   <label className="field">
                     <span>Platform</span>
                     <input
@@ -984,6 +1155,7 @@ export function QuestActionsPanel({
               ) : null}
               {quest.verificationType === "link-visit" ? (
                 <div className="form-stack">
+                  <p className="form-note">{howToText}</p>
                   <button
                     className="button button--primary"
                     type="button"
@@ -997,6 +1169,7 @@ export function QuestActionsPanel({
               ) : null}
               {quest.verificationType === "wallet-check" ? (
                 <div className="form-stack">
+                  <p className="form-note">{howToText}</p>
                   <label className="field">
                     <span>Linked wallet</span>
                     <select
@@ -1030,6 +1203,7 @@ export function QuestActionsPanel({
               ) : null}
               {quest.verificationType === "api-check" ? (
                 <form className="form-stack" onSubmit={(event) => handleApiCheckSubmit(event, quest)}>
+                  <p className="form-note">{howToText}</p>
                   <label className="field">
                     <span>Platform</span>
                     <input
@@ -1068,6 +1242,7 @@ export function QuestActionsPanel({
               ) : null}
               {quest.verificationType === "text-submission" ? (
                 <form className="form-stack" onSubmit={(event) => handleTextSubmit(event, quest)}>
+                  {submissionGuidance ? <p className="form-note">{submissionGuidance}</p> : null}
                   <label className="field">
                     <span>Platform</span>
                     <input
@@ -1108,9 +1283,9 @@ export function QuestActionsPanel({
               {disabled ? (
                 <small className="form-note">
                   {quest.status === "locked"
-                    ? quest.unlockHint ?? "Unlock this quest by reaching the required level or tier."
+                    ? getQuestDisplayStatusMessage(quest)
                     : quest.status === "completed"
-                      ? "This quest is already approved and cannot be resubmitted."
+                      ? getQuestDisplayStatusMessage(quest)
                       : "Sign in to submit."}
                 </small>
               ) : null}

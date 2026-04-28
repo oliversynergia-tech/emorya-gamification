@@ -14,6 +14,7 @@ function isProtectedPath(pathname: string) {
   // Intentionally public routes:
   // - /
   // - /auth
+  // - /faq
   // - /leaderboard/public
   // - /u/[code]
   // - /tips
@@ -56,7 +57,7 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Intentionally public routes stay outside this matcher unless explicitly added later:
-    // /, /auth, /leaderboard/public, /u/[code], /tips, /api/og/[code]
+    // /, /auth, /faq, /leaderboard/public, /u/[code], /tips, /api/og/[code]
     "/dashboard/:path*",
     "/profile/:path*",
     "/leaderboard/:path*",

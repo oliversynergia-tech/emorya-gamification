@@ -4,6 +4,8 @@ import { PublicProfileShareButton } from "@/components/public-profile-share-butt
 import { ProfileEditor } from "@/components/profile-editor";
 import { ProfileSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
+import { Tooltip } from "@/components/tooltip";
+import { tooltips } from "@/lib/tooltip-content";
 import { WalletLinkPanel } from "@/components/wallet-link-panel";
 import { getActiveBrandTheme } from "@/lib/brand-themes";
 import { getBrandCopyProfile } from "@/lib/brand-copy";
@@ -58,7 +60,10 @@ export default async function ProfilePage() {
         </div>
         <div className="panel panel--stack page-aside">
           <div className="metric-card">
-            <span>Connected wallets</span>
+            <span className="label-with-tooltip">
+              <span>Connected wallets</span>
+              <Tooltip text={walletCount > 0 ? tooltips.walletConnected : tooltips.walletNotConnected} />
+            </span>
             <strong>{walletCount}</strong>
             <small>
               {walletCount > 0
@@ -67,13 +72,19 @@ export default async function ProfilePage() {
             </small>
           </div>
           <div className="metric-card">
-            <span>Current referral code</span>
+            <span className="label-with-tooltip">
+              <span>Current referral code</span>
+              <Tooltip text={tooltips.referralCode} />
+            </span>
             <strong>{data.user.referralCode}</strong>
             <small>Share this code with friends so they can join you and you can grow your referral progress together.</small>
             <PublicProfileShareButton profileUrl={publicProfileUrl} />
           </div>
           <div className="metric-card">
-            <span>Membership</span>
+            <span className="label-with-tooltip">
+              <span>Membership</span>
+              <Tooltip text={tooltips.subscriptionTier} />
+            </span>
             <strong>{subscriptionLabel}</strong>
             <small>
               {subscriptionLabel === "Free"

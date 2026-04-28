@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { EmptyState } from "@/components/empty-state";
+import { emptyStates } from "@/lib/empty-state-content";
 import type { QuestProgressUpdate, ReviewHistoryItem, ReviewQueueItem } from "@/lib/types";
 
 type ReviewOutcome = {
@@ -550,7 +552,7 @@ export function ReviewQueuePanel({
           {filteredHistory.length === 0 ? <p className="form-note">No review history matches the current filters.</p> : null}
         </div>
       ) : null}
-      {queue.length === 0 ? <p className="form-note">No pending submissions right now.</p> : null}
+      {queue.length === 0 ? <EmptyState {...emptyStates.adminQueueEmpty} /> : null}
       {queue.length > 0 ? (
         <div className="review-bulk-actions">
           <p className="form-note">

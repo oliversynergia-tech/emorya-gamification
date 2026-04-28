@@ -116,6 +116,7 @@ export type Quest = {
   campaignPackId?: string;
   campaignPackLabel?: string;
   taskBlocks?: QuestTaskBlock[];
+  unlockRequirements?: QuestUnlockRequirement[];
 };
 
 export type UserRecord = {
@@ -1239,6 +1240,10 @@ export type UnlockRuleGroup = {
   any?: UnlockRule[];
 };
 
+export type QuestUnlockRequirement = UnlockRule & {
+  prerequisiteTitle?: string;
+};
+
 export type RewardConfig = {
   xp: {
     base: number;
@@ -1458,6 +1463,7 @@ export type EvaluatedQuest = {
   visible: boolean;
   lockedReason: string | null;
   unlockHint: string | null;
+  unmetRules: UnlockRule[];
   projectedReward: {
     xp: number;
     tokenEffect: TokenEffect;

@@ -20,6 +20,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/achievements", label: "Achievements" },
   { href: "/profile", label: "Profile" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 export async function SiteShell({
@@ -61,8 +62,12 @@ export async function SiteShell({
           { href: "/achievements", label: "Achievements" },
           { href: "/leaderboard", label: "Leaderboard" },
           { href: "/profile", label: "Profile" },
+          { href: "/faq", label: "FAQ" },
         ]
-      : [{ href: "/leaderboard/public", label: "Leaderboard" }]),
+      : [
+          { href: "/leaderboard/public", label: "Leaderboard" },
+          { href: "/faq", label: "FAQ" },
+        ]),
   ];
 
   return (

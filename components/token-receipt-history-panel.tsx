@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 
+import { EmptyState } from "@/components/empty-state";
+import { emptyStates } from "@/lib/empty-state-content";
 import type { DashboardData } from "@/lib/types";
 
 function getWorkflowTone(
@@ -243,9 +245,7 @@ export function TokenReceiptHistoryPanel({
           </div>
         </div>
       ) : (
-        <p className="form-note">
-          No payout receipts yet. Claimed and settled token history will appear here as the token layer activates.
-        </p>
+        <EmptyState {...emptyStates.tokenRedemptionsNone} />
       )}
     </div>
   );

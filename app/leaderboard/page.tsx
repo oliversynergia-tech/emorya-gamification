@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { MissionLink } from "@/components/mission-link";
 import { LeaderboardSection } from "@/components/sections";
 import { SiteShell } from "@/components/site-shell";
+import { Tooltip } from "@/components/tooltip";
+import { emptyStates } from "@/lib/empty-state-content";
+import { tooltips } from "@/lib/tooltip-content";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { loadDashboardOverview } from "@/server/services/platform-overview";
 
@@ -46,22 +49,38 @@ export default async function LeaderboardPage() {
         </div>
         <div className="panel panel--stack page-aside">
           <div className="metric-card">
-            <span>Current leader</span>
+            <span className="label-with-tooltip">
+              <span>Current leader</span>
+              <Tooltip text={tooltips.leaderboardAllTime} />
+            </span>
             <strong>{topEntry ? topEntry.displayName : "No leader yet"}</strong>
             <small>{topEntry ? `${topEntry.xp.toLocaleString()} XP on the board.` : "Live rankings appear once users exist."}</small>
           </div>
           <div className="metric-card">
-            <span>Your current rank</span>
-            <strong>#{data.user.rank}</strong>
-            <small>Climb by completing quests, keeping your streak alive, and inviting others in.</small>
+            <span className="label-with-tooltip">
+              <span>Your current rank</span>
+              <Tooltip text={tooltips.leaderboardRank} />
+            </span>
+            <strong>{data.user.rank > 0 ? `#${data.user.rank}` : emptyStates.leaderboardNotRanked.title}</strong>
+            <small>
+              {data.user.rank > 0
+                ? "Climb by completing quests, keeping your streak alive, and inviting others in."
+                : emptyStates.leaderboardNotRanked.message}
+            </small>
           </div>
           <div className="metric-card">
-            <span>Top referrer</span>
+            <span className="label-with-tooltip">
+              <span>Top referrer</span>
+              <Tooltip text={tooltips.leaderboardReferral} />
+            </span>
             <strong>{topReferralEntry ? topReferralEntry.displayName : "No referral leader yet"}</strong>
             <small>{topReferralEntry ? `${topReferralEntry.xp.toLocaleString()} referrals on the invite board.` : "Referral standings appear once invite activity starts moving."}</small>
           </div>
           <div className="metric-card">
-            <span>Next rank push</span>
+            <span className="label-with-tooltip">
+              <span>Next rank push</span>
+              <Tooltip text={tooltips.weeklyXp} />
+            </span>
             <strong>{weeklyProgressRemaining > 0 ? `${weeklyProgressRemaining} XP to the next band` : "Next band reached"}</strong>
             <small>
               Keep quests, streaks, and referrals moving to gain ground quickly.

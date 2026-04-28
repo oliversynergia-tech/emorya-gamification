@@ -19,6 +19,7 @@ import type {
   QuestCategory,
   QuestQuizQuestion,
   QuestTaskBlock,
+  QuestUnlockRequirement,
   QuestRuntimeContext,
   SubscriptionTier,
   UserJourneyState,
@@ -204,11 +205,24 @@ function mapEvaluatedQuestToQuest({
   quest,
   evaluatedQuest,
   cadence,
+  questTitleBySlug,
 }: {
   quest: DashboardQuestRow;
   evaluatedQuest: EvaluatedQuest;
   cadence: QuestCadence;
+  questTitleBySlug: Map<string, string>;
 }): Quest {
+  const unlockRequirements = evaluatedQuest.unmetRules.map<QuestUnlockRequirement>((rule) => {
+    if (rule.type === "quest_completed" || rule.type === "quest_completed_today") {
+      return {
+        ...rule,
+        prerequisiteTitle: questTitleBySlug.get(rule.value),
+      };
+    }
+
+    return rule;
+  });
+
   return {
     id: quest.id,
     slug: quest.slug,
@@ -264,6 +278,7 @@ function mapEvaluatedQuestToQuest({
     taskBlocks: normalizeQuestTaskBlocks(quest.metadata),
     campaignPackId: typeof quest.metadata?.campaignPackId === "string" ? quest.metadata.campaignPackId : undefined,
     campaignPackLabel: typeof quest.metadata?.campaignPackLabel === "string" ? quest.metadata.campaignPackLabel : undefined,
+    unlockRequirements: unlockRequirements.length > 0 ? unlockRequirements : undefined,
   };
 }
 
@@ -368,6 +383,7 @@ export function buildDashboardQuestBoard({
     campaignSource: activeCampaignLane,
     featuredTracks,
   });
+  const questTitleBySlug = new Map(quests.map((quest) => [quest.slug, getBrandSafeQuestTitle(quest.title)]));
 
   return selectedBoard.quests
     .map((selectedQuest) => {
@@ -382,6 +398,7 @@ export function buildDashboardQuestBoard({
         quest,
         evaluatedQuest: evaluated.evaluatedQuest,
         cadence: evaluated.cadence,
+        questTitleBySlug,
       });
     })
     .filter((quest): quest is Quest => quest !== null);

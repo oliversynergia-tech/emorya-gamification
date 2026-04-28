@@ -1,11 +1,17 @@
+import Link from "next/link";
 import {
   getCampaignPremiumJourney,
   getCampaignPremiumOffer,
 } from "@/lib/campaign-source";
+import { EmptyState } from "@/components/empty-state";
+import { Tooltip } from "@/components/tooltip";
+import { emptyStates } from "@/lib/empty-state-content";
+import { getQuestDisplayStatusMessage } from "@/lib/quest-help-content";
 import { getTokenEffectLabel } from "@/lib/progression-rules";
 import { getLevelProgress, getTierLabel } from "@/lib/progression";
-import { getQuestStatusLabel, getQuestStatusNote } from "@/lib/quest-state";
-import type { AdminOverviewData, DashboardData, Quest, SubscriptionTier } from "@/lib/types";
+import { getQuestStatusLabel } from "@/lib/quest-state";
+import { tooltips, type TooltipKey } from "@/lib/tooltip-content";
+import type { AdminOverviewData, DashboardData, Quest, QuestCadence, QuestStatus, SubscriptionTier, VerificationType } from "@/lib/types";
 import { CampaignPackAnalyticsPanel } from "@/components/campaign-pack-analytics-panel";
 import { CampaignPackAlertPanel } from "@/components/campaign-pack-alert-panel";
 import { CampaignPackAuditPanel } from "@/components/campaign-pack-audit-panel";
@@ -91,6 +97,86 @@ const QUEST_BOARD_PHASES = [
     ],
   },
 ] as const;
+
+function LabelWithTooltip({ label, tooltipKey }: { label: string; tooltipKey: TooltipKey }) {
+  return (
+    <span className="label-with-tooltip">
+      <span>{label}</span>
+      <Tooltip text={tooltips[tooltipKey]} />
+    </span>
+  );
+}
+
+function getQuestStatusTooltipKey(status: QuestStatus, cadence?: QuestCadence): TooltipKey {
+  switch (status) {
+    case "available":
+      return "questStatusAvailable";
+    case "locked":
+      return "questStatusLocked";
+    case "in-progress":
+      return "questStatusPendingReview";
+    case "rejected":
+      return "questStatusRejected";
+    case "completed":
+      if (cadence === "daily") {
+        return "questStatusResetsDaily";
+      }
+      if (cadence === "weekly") {
+        return "questStatusResetsWeekly";
+      }
+      if (cadence === "monthly") {
+        return "questStatusResetsMonthly";
+      }
+      return "questStatusCompletedOneTime";
+    default:
+      return "questStatusAvailable";
+  }
+}
+
+function getVerificationTooltipKey(verificationType: VerificationType): TooltipKey {
+  switch (verificationType) {
+    case "link-visit":
+      return "verificationLinkVisit";
+    case "manual-review":
+      return "verificationManualReview";
+    case "quiz":
+      return "verificationQuiz";
+    case "wallet-check":
+      return "verificationWalletCheck";
+    case "text-submission":
+      return "verificationTextSubmission";
+    case "api-check":
+      return "verificationApiCheck";
+    default:
+      return "verificationLinkVisit";
+  }
+}
+
+function getDifficultyTooltipKey(difficulty: Quest["difficulty"]): TooltipKey {
+  switch (difficulty) {
+    case "easy":
+      return "difficultyEasy";
+    case "medium":
+      return "difficultyMedium";
+    case "hard":
+      return "difficultyHard";
+    default:
+      return "difficultyEasy";
+  }
+}
+
+function getRecurrenceTooltipKey(cadence?: QuestCadence): TooltipKey | null {
+  switch (cadence) {
+    case "daily":
+      return "questStatusResetsDaily";
+    case "weekly":
+      return "questStatusResetsWeekly";
+    case "monthly":
+      return "questStatusResetsMonthly";
+    default:
+      return null;
+  }
+}
 
 function tierClass(tier: SubscriptionTier) {
   return `tier-pill tier-pill--${tier}`;
@@ -369,6 +455,8 @@ function getDashboardPriorityAction(data: DashboardData) {
 }
 
 function renderQuestCard(quest: Quest) {
+  const recurrenceTooltipKey = getRecurrenceTooltipKey(quest.cadence);
+
   return (
     <article
       key={quest.id}
@@ -377,21 +465,39 @@ function renderQuestCard(quest: Quest) {
     >
       <div className="quest-card__meta">
         <span>{quest.category}</span>
-        <span>{quest.tokenEffect && quest.tokenEffect !== "none" ? getTokenEffectLabel(quest) : `Lv ${quest.requiredLevel}+`}</span>
+        <span>{quest.tokenEffect && quest.tokenEffect !== "none" ? <LabelWithTooltip label={getTokenEffectLabel(quest)} tooltipKey="eligibilityPoints" /> : `Lv ${quest.requiredLevel}+`}</span>
       </div>
       <h4>{quest.title}</h4>
       <p>{quest.description}</p>
-      <small className="quest-card__note">
-        {quest.status === "locked" && quest.unlockHint ? quest.unlockHint : getQuestStatusNote(quest.status)}
-      </small>
+      <div className="form-stack">
+        <small className="quest-card__note">{getQuestDisplayStatusMessage(quest)}</small>
+        {quest.status === "rejected" ? (
+          <p className="form-note">
+            Need help? <Link href="/faq">See our FAQ</Link>.
+          </p>
+        ) : null}
+      </div>
       <div className="quest-card__footer">
-        <span>{quest.xpReward} XP</span>
+        <span>
+          <LabelWithTooltip label={`${quest.xpReward} XP`} tooltipKey="xp" />
+        </span>
         <strong>
-          {quest.status === "locked"
-            ? quest.requiredTier === "free"
-              ? "Locked"
-              : `${getTierLabel(quest.requiredTier)}`
-            : getQuestStatusLabel(quest.status)}
+          <LabelWithTooltip
+            label={
+              quest.status === "locked"
+                ? quest.requiredTier === "free"
+                  ? "Locked"
+                  : `${getTierLabel(quest.requiredTier)}`
+                : getQuestStatusLabel(quest.status)
+            }
+            tooltipKey={
+              quest.status === "locked" && quest.requiredTier !== "free"
+                ? quest.premiumPreview
+                  ? "premiumPreview"
+                  : "premiumQuest"
+                : getQuestStatusTooltipKey(quest.status, quest.cadence)
+            }
+          />
         </strong>
       </div>
       {quest.projectedDirectTokenReward ? (
@@ -399,7 +505,9 @@ function renderQuestCard(quest: Quest) {
           Future reward path
         </small>
       ) : null}
-      {quest.timebox ? <small>{quest.timebox}</small> : null}
+      {quest.timebox ? (
+        <small>{recurrenceTooltipKey ? <LabelWithTooltip label={quest.timebox} tooltipKey={recurrenceTooltipKey} /> : quest.timebox}</small>
+      ) : null}
     </article>
   );
 }
@@ -494,8 +602,12 @@ export function DashboardSnapshot({
           </div>
           <div className="xp-meter">
             <div className="xp-meter__meta">
-              <span>Level {progress.level}</span>
-              <span>{data.user.totalXp} XP</span>
+              <span>
+                <LabelWithTooltip label={`Level ${progress.level}`} tooltipKey="level" />
+              </span>
+              <span>
+                <LabelWithTooltip label={`${data.user.totalXp} XP`} tooltipKey="totalXp" />
+              </span>
             </div>
             <div className="xp-meter__track">
               <div className="xp-meter__fill" style={{ width: `${progress.progress * 100}%` }} />
@@ -504,24 +616,34 @@ export function DashboardSnapshot({
           </div>
           <div className="info-grid">
             <div className="info-card">
-              <span>Rank</span>
-              <strong>#{data.user.rank}</strong>
+              <span>
+                <LabelWithTooltip label="Rank" tooltipKey="leaderboardRank" />
+              </span>
+              <strong>{data.user.rank > 0 ? `#${data.user.rank}` : "—"}</strong>
             </div>
             <div className="info-card">
-              <span>Referral code</span>
+              <span>
+                <LabelWithTooltip label="Referral code" tooltipKey="referralCode" />
+              </span>
               <strong>{data.user.referralCode}</strong>
             </div>
             <div className="info-card">
-              <span>Invited</span>
+              <span>
+                <LabelWithTooltip label="Invited" tooltipKey="referrals" />
+              </span>
               <strong>{data.user.referral.invitedCount}</strong>
             </div>
             <div className="info-card">
-              <span>Referral XP</span>
+              <span>
+                <LabelWithTooltip label="Referral XP" tooltipKey="xp" />
+              </span>
               <strong>{data.user.referral.rewardXpEarned}</strong>
             </div>
             <div className="info-card">
-              <span>Referral rank</span>
-              <strong>#{data.user.referral.rank}</strong>
+              <span>
+                <LabelWithTooltip label="Referral rank" tooltipKey="leaderboardReferral" />
+              </span>
+              <strong>{data.user.referral.rank > 0 ? `#${data.user.referral.rank}` : "—"}</strong>
             </div>
             <div className="info-card">
               <span>Account progress</span>
@@ -724,13 +846,17 @@ export function DashboardSnapshot({
               <p className="eyebrow">Progress and XP</p>
               <h2>How your progress is building</h2>
             </div>
-            <span className="badge badge--pink">{data.user.tokenProgram.eligibilityPoints} pts</span>
+            <span className="badge badge--pink">
+              <LabelWithTooltip label={`${data.user.tokenProgram.eligibilityPoints} pts`} tooltipKey="eligibilityPoints" />
+            </span>
           </div>
           <div className="economy-stack">
             <article className="economy-step-card economy-step-card--core">
               <div className="quest-card__meta">
                 <span className="economy-badge economy-badge--core">XP core</span>
-                <span>{data.user.totalXp.toLocaleString()} XP</span>
+                <span>
+                  <LabelWithTooltip label={`${data.user.totalXp.toLocaleString()} XP`} tooltipKey="totalXp" />
+                </span>
               </div>
               <strong>XP keeps everything moving.</strong>
               <p>Levels, streaks, weekly progress, and referrals all build from here.</p>
@@ -738,7 +864,9 @@ export function DashboardSnapshot({
             <article className="economy-step-card economy-step-card--bridge">
               <div className="quest-card__meta">
                 <span className="economy-badge economy-badge--bridge">Reward progress</span>
-                <span>{data.user.tokenProgram.eligibilityPoints} pts</span>
+                <span>
+                  <LabelWithTooltip label={`${data.user.tokenProgram.eligibilityPoints} pts`} tooltipKey="eligibilityPoints" />
+                </span>
               </div>
               <strong>Your progress moves you closer to rewards.</strong>
               <p>Wallet connection, steady activity, and completed quests all help move this forward.</p>
@@ -762,7 +890,9 @@ export function DashboardSnapshot({
               <strong>{data.user.tokenProgram.minimumPoints} pts</strong>
             </div>
             <div className="info-card">
-              <span>Bonus multiplier</span>
+              <span>
+                <LabelWithTooltip label="Bonus multiplier" tooltipKey="tokenMultiplier" />
+              </span>
               <strong>{data.user.tokenProgram.tierMultiplier.toFixed(2)}x</strong>
             </div>
             <div className="info-card">
@@ -792,7 +922,9 @@ export function DashboardSnapshot({
               <p className="eyebrow">Weekly progress</p>
               <h2>{data.user.weeklyProgress.tierLabel}</h2>
             </div>
-            <span className="badge">{data.user.weeklyProgress.xp} XP</span>
+            <span className="badge">
+              <LabelWithTooltip label={`${data.user.weeklyProgress.xp} XP`} tooltipKey="weeklyXp" />
+            </span>
           </div>
           <div className="xp-meter">
             <div className="xp-meter__meta">
@@ -952,6 +1084,9 @@ export function PremiumFunnelSection({ data }: { data: DashboardData }) {
 export function QuestBoardSection({ data }: { data: DashboardData }) {
   const activeQuests = data.quests.filter((quest) => quest.status !== "locked");
   const lockedPreviews = data.quests.filter((quest) => quest.status === "locked");
+  const visibleDailyQuests = data.quests.filter((quest) => quest.cadence === "daily" && quest.status !== "locked");
+  const actionableQuests = data.quests.filter((quest) => quest.status === "available" || quest.status === "in-progress" || quest.status === "rejected");
+  const allDailyDone = visibleDailyQuests.length > 0 && visibleDailyQuests.every((quest) => quest.status === "completed");
   const groupedActivePhases = QUEST_BOARD_PHASES.map((phase) => ({
     ...phase,
     quests: activeQuests.filter((quest) => Boolean(quest.slug && phase.slugs.some((slug) => slug === quest.slug))),
@@ -966,12 +1101,28 @@ export function QuestBoardSection({ data }: { data: DashboardData }) {
           <p className="eyebrow">Quest board</p>
           <h2 id="quest-board-title">Your quests, ordered by what matters most next</h2>
         </div>
-        <span className="badge">{activeQuests.length} active / {lockedPreviews.length} previewed</span>
+        <span className="badge">
+          <LabelWithTooltip
+            label={`${activeQuests.length} active / ${lockedPreviews.length} previewed`}
+            tooltipKey="activeQuests"
+          />
+        </span>
       </div>
       <p className="form-note">
         Start with activation, build consistency, then move into optional commitment, rewards, and growth quests.
       </p>
       <div className="track-board">
+        {activeQuests.length === 0 ? (
+          <div className="form-stack">
+            <EmptyState {...emptyStates.questBoardNoQuests} />
+            <p className="form-note">
+              Need a little more context? <Link href="/faq">Check our FAQ</Link>.
+            </p>
+          </div>
+        ) : null}
+        {activeQuests.length > 0 && actionableQuests.length === 0 && allDailyDone ? (
+          <EmptyState {...emptyStates.questBoardAllDailyDone} />
+        ) : null}
         {groupedActivePhases.map((group) => (
           <section key={group.key} className="panel panel--glass" role="region" aria-labelledby={`quest-phase-${group.key}`}>
             <div className="panel__header">
@@ -1022,11 +1173,7 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
   // TODO: Auto-detect referral rank climbs by comparing the latest referral snapshot to the previous one.
   const renderLeaderboardRows = (entries: DashboardData["leaderboard"], scoreLabel: string) => {
     if (entries.length === 0) {
-      return (
-        <div className="leaderboard__row" role="row">
-          <span role="cell">Rankings appear here once activity starts moving.</span>
-        </div>
-      );
+      return <EmptyState {...emptyStates.leaderboardNoData} />;
     }
 
     return entries.map((entry) => (
@@ -1052,7 +1199,9 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">All-time leaderboard</p>
-            <h2 id="leaderboard-title">See who is leading right now</h2>
+            <h2 id="leaderboard-title">
+              <LabelWithTooltip label="See who is leading right now" tooltipKey="leaderboardAllTime" />
+            </h2>
           </div>
           <span className="badge">All-time rank</span>
         </div>
@@ -1070,7 +1219,9 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           <div className="panel__header">
             <div>
               <p className="eyebrow">Weekly view</p>
-              <h3>This week’s movers</h3>
+              <h3>
+                <LabelWithTooltip label="This week’s movers" tooltipKey="leaderboardWeekly" />
+              </h3>
             </div>
             <span className="badge">Resets Monday 00:00 UTC</span>
           </div>
@@ -1102,10 +1253,10 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
               <span>Launch status</span>
               <strong>XP-first</strong>
             </div>
-          <div className="info-card">
-            <span>Current momentum</span>
-            <strong>{campaignPreset.leaderboardMomentumMultiplier.toFixed(2)}x</strong>
-          </div>
+            <div className="info-card">
+              <span>Current momentum</span>
+              <strong>{campaignPreset.leaderboardMomentumMultiplier.toFixed(2)}x</strong>
+            </div>
           <div className="info-card">
             <span>Premium boost</span>
             <strong>{campaignPreset.premiumUpsellMultiplier.toFixed(2)}x</strong>
@@ -1192,10 +1343,15 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
         <div className="panel__header">
           <div>
             <p className="eyebrow">Referrals</p>
-            <h3>Who is bringing in the strongest invites</h3>
+            <h3>
+              <LabelWithTooltip label="Who is bringing in the strongest invites" tooltipKey="leaderboardReferral" />
+            </h3>
           </div>
-          <span className="badge badge--pink">#{data.user.referral.rank} for you</span>
+          <span className="badge badge--pink">
+            {data.user.referral.rank > 0 ? `#${data.user.referral.rank} for you` : "Not ranked"}
+          </span>
         </div>
+        {data.user.referral.rank <= 0 ? <EmptyState {...emptyStates.leaderboardNotRanked} /> : null}
         <div className="referral-campaign-card" id="referral-board">
           <div className="quest-card__meta">
             <span>Current referral leader</span>
@@ -1245,7 +1401,9 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           <div className="panel__header">
             <div>
               <p className="eyebrow">Monthly view</p>
-              <h3>This month’s strongest progress</h3>
+              <h3>
+                <LabelWithTooltip label="This month’s strongest progress" tooltipKey="leaderboardMonthly" />
+              </h3>
             </div>
             <span className="badge">Calendar month</span>
           </div>
@@ -1283,15 +1441,19 @@ export function LeaderboardSection({ data }: { data: DashboardData }) {
           </div>
         </div>
         <div className="activity-list">
-          {data.activityFeed.map((item) => (
-            <article key={item.id} className="activity-item">
-              <strong>{item.actor}</strong>
-              <p>
-                {item.action} <span>{item.detail}</span>
-              </p>
-              <small>{item.timeAgo}</small>
-            </article>
-          ))}
+          {data.activityFeed.length ? (
+            data.activityFeed.map((item) => (
+              <article key={item.id} className="activity-item">
+                <strong>{item.actor}</strong>
+                <p>
+                  {item.action} <span>{item.detail}</span>
+                </p>
+                <small>{item.timeAgo}</small>
+              </article>
+            ))
+          ) : (
+            <EmptyState {...emptyStates.activityFeedEmpty} />
+          )}
         </div>
       </div>
     </section>
@@ -1355,11 +1517,16 @@ export function ProfileSection({ data }: { data: DashboardData }) {
             <p className="eyebrow">Referrals</p>
             <h3>Referral progress</h3>
           </div>
-          <span className="badge">{data.user.referralCode}</span>
+          <span className="badge">
+            <LabelWithTooltip label={data.user.referralCode} tooltipKey="referralCode" />
+          </span>
         </div>
+        {data.user.referral.invitedCount === 0 ? <EmptyState {...emptyStates.referralsNone} /> : null}
         <div className="info-grid">
           <div className="info-card">
-            <span>Invited</span>
+            <span>
+              <LabelWithTooltip label="Invited" tooltipKey="referrals" />
+            </span>
             <strong>{data.user.referral.invitedCount}</strong>
           </div>
           <div className="info-card">
@@ -1367,7 +1534,9 @@ export function ProfileSection({ data }: { data: DashboardData }) {
             <strong>{data.user.referral.convertedCount}</strong>
           </div>
           <div className="info-card">
-            <span>Reward XP</span>
+            <span>
+              <LabelWithTooltip label="Reward XP" tooltipKey="xp" />
+            </span>
             <strong>{data.user.referral.rewardXpEarned}</strong>
           </div>
           <div className="info-card">
@@ -1530,7 +1699,7 @@ export function ProfileSection({ data }: { data: DashboardData }) {
             </div>
           </div>
           {!unlockedAchievements.length && !progressingAchievements.length ? (
-            <p className="form-note">No achievements available yet.</p>
+            <EmptyState {...emptyStates.achievementsNone} />
           ) : null}
         </div>
       </div>
@@ -1568,11 +1737,15 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
             <strong>{data.achievements.length}</strong>
           </div>
           <div className="info-card">
-            <span>Current streak</span>
+            <span>
+              <LabelWithTooltip label="Current streak" tooltipKey="currentStreak" />
+            </span>
             <strong>{data.user.currentStreak} days</strong>
           </div>
           <div className="info-card">
-            <span>Current tier</span>
+            <span>
+              <LabelWithTooltip label="Current tier" tooltipKey="subscriptionTier" />
+            </span>
             <strong>{getTierLabel(data.user.tier)}</strong>
           </div>
         </div>
@@ -1616,7 +1789,7 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
               </article>
             ))
           ) : (
-            <p className="form-note">No achievements unlocked yet. Keep moving through the active quests.</p>
+            <EmptyState {...emptyStates.achievementsNone} />
           )}
         </div>
       </div>
@@ -1647,7 +1820,10 @@ export function AchievementsHubSection({ data }: { data: DashboardData }) {
               </article>
             ))
           ) : (
-            <p className="form-note">No active progress items right now.</p>
+            <EmptyState
+              title="No active progress items"
+              message="You’ve cleared the current in-progress achievement targets. New progress will appear as you unlock more goals."
+            />
           )}
         </div>
       </div>

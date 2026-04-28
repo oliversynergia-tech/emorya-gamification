@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { EmptyState } from "@/components/empty-state";
 import { SiteShell } from "@/components/site-shell";
+import { Tooltip } from "@/components/tooltip";
+import { emptyStates } from "@/lib/empty-state-content";
+import { tooltips } from "@/lib/tooltip-content";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import {
   loadPublicLeaderboardData,
@@ -94,16 +98,26 @@ export default async function PublicLeaderboardPage({
           <nav className="public-leaderboard-tabs" aria-label="Leaderboard periods">
             {leaderboardTabs.map((tab) => {
               const isActive = tab.period === period;
+              const tooltipKey =
+                tab.period === "weekly"
+                  ? "leaderboardWeekly"
+                  : tab.period === "monthly"
+                    ? "leaderboardMonthly"
+                    : tab.period === "referral"
+                      ? "leaderboardReferral"
+                      : "leaderboardAllTime";
 
               return (
-                <Link
-                  key={tab.period}
-                  href={getPeriodHref(tab.period)}
-                  className={`public-leaderboard-tabs__link${isActive ? " public-leaderboard-tabs__link--active" : ""}`}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  {tab.label}
-                </Link>
+                <span key={tab.period} className="label-with-tooltip">
+                  <Link
+                    href={getPeriodHref(tab.period)}
+                    className={`public-leaderboard-tabs__link${isActive ? " public-leaderboard-tabs__link--active" : ""}`}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    {tab.label}
+                  </Link>
+                  <Tooltip text={tooltips[tooltipKey]} />
+                </span>
               );
             })}
           </nav>
@@ -141,7 +155,7 @@ export default async function PublicLeaderboardPage({
               </ol>
             </div>
           ) : (
-            <p className="form-note">No data for this period yet. Check back soon.</p>
+            <EmptyState {...emptyStates.leaderboardNoData} />
           )}
         </section>
       </section>

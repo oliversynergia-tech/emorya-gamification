@@ -2864,6 +2864,234 @@ canvas {
   background: var(--qr-card-image-bg, white);
 }
 
+.tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-left: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: help;
+}
+
+.tooltip-trigger--content {
+  margin-left: 0;
+}
+
+.tooltip-trigger__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 200, 248, 0.16);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.tooltip-trigger:hover .tooltip-trigger__icon,
+.tooltip-trigger:focus-visible .tooltip-trigger__icon {
+  color: var(--text);
+  border-color: rgba(214, 200, 248, 0.32);
+}
+
+.tooltip-bubble {
+  position: absolute;
+  left: 50%;
+  z-index: 50;
+  display: block;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 32px));
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(214, 200, 248, 0.16);
+  background: rgba(18, 9, 31, 0.98);
+  box-shadow: var(--shadow-soft);
+  color: #f7f2ff;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: normal;
+  transform: translateX(-50%);
+}
+
+.tooltip-bubble--above {
+  bottom: calc(100% + 10px);
+}
+
+.tooltip-bubble--below {
+  top: calc(100% + 10px);
+}
+
+.tooltip-bubble__arrow {
+  position: absolute;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-right: 1px solid rgba(214, 200, 248, 0.16);
+  border-bottom: 1px solid rgba(214, 200, 248, 0.16);
+  background: rgba(18, 9, 31, 0.98);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.tooltip-bubble--above .tooltip-bubble__arrow {
+  bottom: -6px;
+}
+
+.tooltip-bubble--below .tooltip-bubble__arrow {
+  top: -6px;
+  transform: translateX(-50%) rotate(225deg);
+}
+
+.label-with-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.empty-state {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(214, 200, 248, 0.12);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.empty-state strong {
+  font-size: 1rem;
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.quest-help-disclosure {
+  display: grid;
+  gap: 8px;
+}
+
+.quest-help-disclosure__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.quest-help-disclosure__toggle:hover,
+.quest-help-disclosure__toggle:focus-visible {
+  color: var(--text);
+}
+
+.quest-help-disclosure__body {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.faq-page__section {
+  margin-top: 24px;
+}
+
+.faq-page__content {
+  display: grid;
+  gap: 18px;
+  width: min(100%, 880px);
+  margin: 0 auto;
+}
+
+.faq-filter-panel,
+.faq-page__intro,
+.faq-section,
+.faq-community-cta {
+  width: min(100%, 880px);
+  margin: 0 auto;
+}
+
+.faq-filter-tabs {
+  flex-wrap: wrap;
+}
+
+.faq-groups {
+  display: grid;
+  gap: 18px;
+}
+
+.faq-list {
+  display: grid;
+  gap: 12px;
+}
+
+.faq-item {
+  border-radius: 18px;
+  border: 1px solid rgba(214, 200, 248, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+
+.faq-item__trigger {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 18px 20px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.faq-item__trigger strong {
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.faq-item__trigger:hover,
+.faq-item__trigger:focus-visible {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.faq-item__chevron {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.faq-item__panel {
+  padding: 0 20px 20px;
+}
+
+.faq-item__panel p {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
 .challenge-card {
   margin-top: 18px;
   padding: 18px;

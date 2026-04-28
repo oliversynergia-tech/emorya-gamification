@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SiteShell } from "@/components/site-shell";
+import { Tooltip } from "@/components/tooltip";
+import { tooltips } from "@/lib/tooltip-content";
 import { resolveCurrentSession } from "@/server/auth/current-user";
 import { getPublicProfileByReferralCode } from "@/server/services/public-profile-page";
 
@@ -106,16 +108,31 @@ export default async function PublicProfilePage({
               <p className="eyebrow">Public profile</p>
               <h1>{profile.displayName}</h1>
               <div className="lane-chip-row">
-                <span className="badge">Lv. {profile.level}</span>
+                <span className="badge">
+                  <span className="label-with-tooltip">
+                    <span>Lv. {profile.level}</span>
+                    <Tooltip text={tooltips.level} />
+                  </span>
+                </span>
                 <span className="badge">Joined {formatJoinedDate(profile.createdAt)}</span>
               </div>
               <p className="lede">
-                {profile.totalXp.toLocaleString("en-US")} XP earned and a {profile.currentStreak}-day streak built on
+                <span className="label-with-tooltip">
+                  <span>{profile.totalXp.toLocaleString("en-US")} XP</span>
+                  <Tooltip text={tooltips.totalXp} />
+                </span>{" "}
+                earned and a{" "}
+                <span className="label-with-tooltip">
+                  <span>{profile.currentStreak}-day streak</span>
+                  <Tooltip text={tooltips.currentStreak} />
+                </span>{" "}
+                built on
                 Emorya.
               </p>
               {profile.leaderboardRank ? (
                 <p className="form-note">
-                  Ranked <Link href="/leaderboard/public">#{profile.leaderboardRank.rank} on the all-time leaderboard</Link>
+                  Ranked <Link href="/leaderboard/public">#{profile.leaderboardRank.rank} on the all-time leaderboard</Link>{" "}
+                  <Tooltip text={tooltips.leaderboardRank} />
                 </p>
               ) : (
                 <p className="form-note">Not yet ranked.</p>
@@ -140,22 +157,34 @@ export default async function PublicProfilePage({
           </div>
           <div className="landing-stat-grid" role="region" aria-label={`${profile.displayName} public stats`}>
             <article className="metric-card">
-              <span>Total XP</span>
+              <span className="label-with-tooltip">
+                <span>Total XP</span>
+                <Tooltip text={tooltips.totalXp} />
+              </span>
               <strong>{formatCount(profile.totalXp)}</strong>
               <small>Total XP earned on the platform.</small>
             </article>
             <article className="metric-card">
-              <span>Day Streak</span>
+              <span className="label-with-tooltip">
+                <span>Day Streak</span>
+                <Tooltip text={tooltips.currentStreak} />
+              </span>
               <strong>{profile.currentStreak > 0 ? `🔥 ${formatCount(profile.currentStreak)}` : "0"}</strong>
               <small>Current streak in progress.</small>
             </article>
             <article className="metric-card">
-              <span>Best Streak</span>
+              <span className="label-with-tooltip">
+                <span>Best Streak</span>
+                <Tooltip text={tooltips.longestStreak} />
+              </span>
               <strong>{formatCount(profile.longestStreak)}</strong>
               <small>Longest streak reached so far.</small>
             </article>
             <article className="metric-card">
-              <span>Quests Done</span>
+              <span className="label-with-tooltip">
+                <span>Quests Done</span>
+                <Tooltip text={tooltips.questsCompleted} />
+              </span>
               <strong>{formatCount(profile.completedQuests)}</strong>
               <small>Approved quests completed.</small>
             </article>

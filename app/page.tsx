@@ -237,6 +237,9 @@ export default async function HomePage() {
             </Link>
           </div>
           <p className="form-note">
+            Have questions? <Link href="/faq">Check our FAQ</Link>
+          </p>
+          <p className="form-note">
             Already have an account? <Link href="/auth">Sign in</Link>
           </p>
         </section>

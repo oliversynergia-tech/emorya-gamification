@@ -94,6 +94,7 @@ export function evaluateQuest({
     visible: !hiddenByCampaignSourceMismatch && (status !== "completed" || track === "daily"),
     lockedReason: status === "locked" ? "Requirements not met yet." : null,
     unlockHint,
+    unmetRules,
     projectedReward,
     sortScore,
   };
